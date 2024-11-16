@@ -35,7 +35,7 @@ const Month = () => {
   }
 
   return (
-    <div className="mt-[120px]" style={{ minHeight: "80vh" }}>
+    <div className='my-[120px]' style={{ minHeight: "80vh" }}>
       {months.monthData.image && (
         <MonthHeader
           image={months.monthData.image}
@@ -44,9 +44,9 @@ const Month = () => {
         />
       )}
 
-      <div className="w-[90%] m-auto border shadow my-[50px] p-3">
-        <div className="flex text-xl">
-          <h1 className="font-bold">
+      <div className='w-[90%] m-auto border shadow my-[50px] p-3'>
+        <div className='flex text-xl'>
+          <h1 className='font-bold'>
             عدد المحاضرات: ({months.monthData.noflecture})
           </h1>
         </div>

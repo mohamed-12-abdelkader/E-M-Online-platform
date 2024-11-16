@@ -14,24 +14,24 @@ import { FaBookOpen } from "react-icons/fa";
 import { AiFillStar } from "react-icons/ai";
 import Links from "../../components/links/Links";
 const HomeLogin = () => {
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/login";
-    // يمكنك إضافة أي إجراءات إضافية هنا، على سبيل المثال إعادة توجيه المستخدم إلى صفحة تسجيل الدخول
-  };
+  const user = JSON.parse(localStorage.getItem("user"));
+
   return (
-    <div className="flex flex-row-reverse">
+    <div className='flex flex-row-reverse'>
       {" "}
       {/* تم اضافة flex-row-reverse هنا */}
       {/* Sidebar */}
-      <div className="hidden md:block w-[22%] h-screen fixed top-0 right-0 mt-[20px]  z-30 bg-[#edf2f7] shadow-lg p-4 pt-[80px]">
+      <div className='hidden md:block w-[22%] h-screen fixed top-0 right-0 mt-[20px]  z-30 bg-[#edf2f7] shadow-lg p-4 pt-[80px]'>
         {" "}
+        <h1 className='my-5 font-bold text-xl'>
+          {" "}
+          اهلا : {user.name || user.fname + "" + user.lname}
+        </h1>
         {/* تم تغيير left إلى right */}
         <Links />
       </div>
       {/* Main Content */}
-      <div className="flex-1 mt-[80px]  md:mr-[20%] w-full">
+      <div className='flex-1 mt-[80px]  md:mr-[20%] w-full'>
         {" "}
         {/* تم تغيير ml إلى mr */}
         <Outlet />

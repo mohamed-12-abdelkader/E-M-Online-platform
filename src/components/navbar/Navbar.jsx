@@ -45,57 +45,58 @@ export default function Nav() {
   const isMobile = useBreakpointValue({ base: true, md: false });
   const [eventsLoading, events] = useGitEvents();
   console.log(events.totalEvents);
+  console.log(user);
   return (
     <Box
       bg={useColorModeValue("gray.100", "gray.900")}
       px={4}
-      position="fixed"
+      position='fixed'
       top={0}
       left={0}
-      width="100%"
-      height="80px"
+      width='100%'
+      height='80px'
       zIndex={1000}
       style={{ direction: "ltr" }}
     >
       <Flex h={16} alignItems={"center"} justifyContent={"space-between"}>
         <Link to={user ? `/home` : "/"}>
-          <img src={logo} className="h-[80px] w-[120px] my-2" alt="logo" />
+          <img src={logo} className='h-[80px] w-[120px] my-2' alt='logo' />
         </Link>
 
         <Flex alignItems={"center"}>
           <Stack direction={"row"} spacing={2}>
             {user ? (
               <>
-                <Popover placement="bottom-end" isLazy>
+                <Popover placement='bottom-end' isLazy>
                   <PopoverTrigger>
-                    <Button variant="ghost" position="relative">
-                      <MdNotificationsActive className="text-3xl" />
+                    <Button variant='ghost' position='relative'>
+                      <MdNotificationsActive className='text-3xl' />
                       {/* Notification count bubble */}
                       {events?.totalEvents > 0 && (
                         <Text
-                          fontSize="xs"
-                          color="white"
-                          bg="red.500"
-                          borderRadius="full"
-                          position="absolute"
-                          top="-1"
-                          right="-1"
-                          px="2"
-                          py="0.5"
-                          lineHeight="shorter"
+                          fontSize='xs'
+                          color='white'
+                          bg='red.500'
+                          borderRadius='full'
+                          position='absolute'
+                          top='-1'
+                          right='-1'
+                          px='2'
+                          py='0.5'
+                          lineHeight='shorter'
                         >
                           {events.totalEvents}
                         </Text>
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent width="300px">
+                  <PopoverContent width='300px'>
                     <PopoverArrow />
                     <PopoverCloseButton />
-                    <PopoverHeader fontWeight="bold">
+                    <PopoverHeader fontWeight='bold'>
                       Notifications
                     </PopoverHeader>
-                    <PopoverBody maxH="300px" overflowY="auto">
+                    <PopoverBody maxH='300px' overflowY='auto'>
                       {notificationsLoading ? (
                         <p>Loading...</p>
                       ) : notifications &&
@@ -108,19 +109,19 @@ export default function Nav() {
                           switch (notification.variant) {
                             case "reply":
                               icon = (
-                                <FaReply className="text-xl text-blue-500" />
+                                <FaReply className='text-xl text-blue-500' />
                               );
                               actionText = "رد عليك";
                               break;
                             case "likes":
                               icon = (
-                                <FaHeart className="text-xl text-red-500" />
+                                <FaHeart className='text-xl text-red-500' />
                               );
                               actionText = "  اعجب بمنشورك";
                               break;
                             case "comments":
                               icon = (
-                                <FaRegComment className="text-xl text-green-500" />
+                                <FaRegComment className='text-xl text-green-500' />
                               );
                               actionText = "علق";
                               break;
@@ -136,13 +137,13 @@ export default function Nav() {
                             >
                               <Box
                                 p={2}
-                                borderBottom="1px solid"
-                                borderColor="gray.200"
+                                borderBottom='1px solid'
+                                borderColor='gray.200'
                                 _hover={{ bg: "gray.100" }}
                               >
-                                <Flex alignItems="center">
+                                <Flex alignItems='center'>
                                   <Avatar
-                                    size="sm"
+                                    size='sm'
                                     src={
                                       notification.interactors[0]?.from?.cover
                                     }
@@ -152,9 +153,9 @@ export default function Nav() {
                                     }
                                   />
                                   <Box ml={3}>
-                                    <Flex alignItems="center">
+                                    <Flex alignItems='center'>
                                       {icon}
-                                      <p className="ml-2">
+                                      <p className='ml-2'>
                                         <strong>
                                           {
                                             notification.interactors[0]?.from
@@ -164,7 +165,7 @@ export default function Nav() {
                                         {actionText}
                                       </p>
                                     </Flex>
-                                    <p className="text-gray-500 text-xs">
+                                    <p className='text-gray-500 text-xs'>
                                       {new Date(
                                         notification.last_event
                                       ).toLocaleString()}
@@ -179,8 +180,8 @@ export default function Nav() {
                         <p>No new notifications</p>
                       )}
                     </PopoverBody>
-                    <PopoverFooter textAlign="center">
-                      <Button size="sm" variant="link" onClick={onClose}>
+                    <PopoverFooter textAlign='center'>
+                      <Button size='sm' variant='link' onClick={onClose}>
                         View All Notifications
                       </Button>
                     </PopoverFooter>
@@ -188,17 +189,20 @@ export default function Nav() {
                 </Popover>
 
                 {isMobile && (
-                  <Button onClick={onOpen} variant="outline">
+                  <Button onClick={onOpen} variant='outline'>
                     ☰
                   </Button>
                 )}
 
-                <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+                <Drawer isOpen={isOpen} placement='right' onClose={onClose}>
                   <DrawerOverlay />
                   <DrawerContent>
-                    <DrawerHeader>
-                      <DrawerCloseButton />
-                      Menu
+                    <DrawerHeader className='flex' style={{ display: "flex" }}>
+                      <DrawerCloseButton className='' dir='ltr' />
+                      <h1 className='mt-5'>
+                        {" "}
+                        اهلا : {user.name || user.fname + "" + user.lname}
+                      </h1>
                     </DrawerHeader>
                     <DrawerBody>
                       <Links onClose={onClose} />
@@ -207,19 +211,19 @@ export default function Nav() {
                 </Drawer>
               </>
             ) : (
-              <Stack direction="row" spacing={2}>
-                <Link to="/login">
+              <Stack direction='row' spacing={2}>
+                <Link to='/login'>
                   <img
-                    src="log in (1).png"
-                    className="h-[60px] w-[160px]"
-                    alt="login"
+                    src='log in (1).png'
+                    className='h-[60px] w-[160px]'
+                    alt='login'
                   />
                 </Link>
-                <Link to="/singup">
+                <Link to='/singup'>
                   <img
-                    src="signup2.png"
-                    className="h-[60px] w-[160px]"
-                    alt="signup"
+                    src='signup2.png'
+                    className='h-[60px] w-[160px]'
+                    alt='signup'
                   />
                 </Link>
               </Stack>
