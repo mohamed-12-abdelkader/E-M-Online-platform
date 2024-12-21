@@ -36,7 +36,6 @@ export const CoursesCard = ({
         <div className='my-2'></div>
         <div className='flex justify-between flex-wrap my-4'>
           <h1 className='font-bold'> {lectre.description || lectre.name} </h1>
-
           <h1 className='font-bold'>عدد المحاضرات: {lectre.noflecture}</h1>
 
           {lectre.price || lectre.price === 0 ? (
@@ -46,6 +45,7 @@ export const CoursesCard = ({
               </h1>
             </div>
           ) : null}
+
           {isAdmin && type === "subject_exam" ? (
             <div className='flex justify-center gap-2 -3'>
               <Button colorScheme='red' variant='solid' onClick={handleDeleate}>
@@ -60,9 +60,7 @@ export const CoursesCard = ({
                 <MdCheckCircle />
               </Button>
             </div>
-          ) : (
-            <div></div>
-          )}
+          ) : null}
 
           {!(
             type === "lecture" ||
@@ -178,7 +176,7 @@ export const CoursesCard = ({
             </div>
           )
         ) : type === "teacher_courses" ? (
-          lectre.purchased ? (
+          lectre.open ? (
             <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
               <Link to={href} className='w-[90%]'>
                 <Button colorScheme='blue' variant='outline' className='w-full'>
@@ -196,9 +194,7 @@ export const CoursesCard = ({
               شراء الكورس
             </Button>
           )
-        ) : type === "teacher_courses" ||
-          isTeacher ||
-          (type == "freeCourses" && lectre.open) ? (
+        ) : lectre.open ? (
           <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
             <Link to={href} className='w-[90%]'>
               <Button colorScheme='blue' variant='outline' className='w-full'>
@@ -213,9 +209,7 @@ export const CoursesCard = ({
             className='w-[90%] m-auto'
             onClick={onClick}
           >
-            {type === "monthly_exam" || type === "subject_exam"
-              ? "تفعيل الامتحان"
-              : "تفعيل الكورس"}
+            تفعيل الكورس
           </Button>
         )}
       </div>
