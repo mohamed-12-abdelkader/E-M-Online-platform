@@ -32,7 +32,7 @@ const useCreateCode = () => {
       localStorage.setItem("code", JSON.stringify(response.data));
       toast.success("تم  انشاء الاكواد  بنجاح");
       setTimeout(() => {
-        window.location.href = "/admin/all_codee";
+        window.location.href = "/teacher_code";
       }, 500);
     } catch (error) {
       toast.error("An error occurred. Please try again later.");

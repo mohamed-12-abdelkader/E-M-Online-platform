@@ -24,36 +24,36 @@ const MultipleImageInput = ({ onImagesChange }) => {
             justifyContent: "space-between",
             alignItems: "center",
           }}
-          htmlFor="upload-photo"
+          htmlFor='upload-photo'
         >
           <img
             src={img}
-            alt="Upload"
+            alt='Upload'
             style={{ height: "30px", width: "30px", cursor: "pointer" }}
-            className="my-4 mx-2"
+            className='my-4 mx-2'
           />
         </label>
         <input
-          type="file"
-          name="photo"
-          id="upload-photo"
+          type='file'
+          name='photo'
+          id='upload-photo'
           multiple
           onChange={handleImageChange}
           style={{ display: "none" }}
         />
 
         {/* Display selected image previews */}
-        <div className="my-4">
+        <div className='my-4'>
           {images.length > 0 && (
             <div>
-              <h3 className="font-semibold">الصور المختارة:</h3>
-              <div className="flex flex-wrap">
+              <h3 className='font-semibold'>الصور المختارة:</h3>
+              <div className='flex flex-wrap'>
                 {images.map((image, index) => (
                   <img
                     key={index}
                     src={URL.createObjectURL(image)}
                     alt={`Selected ${index}`}
-                    className="m-2"
+                    className='m-2'
                     style={{
                       width: "50px",
                       height: "50px",
@@ -75,27 +75,34 @@ const AddPost = () => {
     useAddPost();
   const user = JSON.parse(localStorage.getItem("user"));
   return (
-    <div className="my-5 md:px-5">
-      <div className="flex md:w-[85%] m-auto">
+    <div className='my-5 md:px-5'>
+      <div className='flex md:w-[85%] m-auto'>
         {/* MultipleImageInput Component */}
         <MultipleImageInput onImagesChange={handleImagesChange} />
 
-        <FormControl mt="4" className="mx-2">
-          <Input
+        <FormControl mt='4' className='mx-2'>
+          <textarea
             value={content}
             onChange={(e) => {
               setContent(e.target.value);
+              e.target.style.height = "auto"; // إعادة التعيين لتجنب زيادة الطول المتكررة
+              e.target.style.height = `${e.target.scrollHeight}px`; // ضبط الارتفاع بناءً على النص
             }}
-            type="text"
-            placeholder="اكتب سؤالك ..........."
-            className="h-[80px]"
-            style={{ borderRadius: "20px", height: "50px" }}
+            placeholder='اكتب سؤالك ...........'
+            className='w-full p-2 rounded-lg border border-gray-300'
+            style={{
+              borderRadius: "20px",
+              resize: "none", // منع المستخدم من تغيير الحجم يدويًا
+              overflow: "hidden", // إخفاء أي جزء زائد
+              height: "50px", // ارتفاع ابتدائي
+            }}
           />
         </FormControl>
+
         <Button
-          colorScheme="blue"
+          colorScheme='blue'
           ml={3}
-          className="my-6 mx-2"
+          className='my-6 mx-2'
           onClick={handleSubmit}
           isDisabled={!content || loading}
         >
@@ -103,8 +110,8 @@ const AddPost = () => {
         </Button>
       </div>
       {user.role == null ? (
-        <div className="text-center">
-          <h1 className="text-xl font-bold ">كود الطالب :{user.id}</h1>
+        <div className='text-center'>
+          <h1 className='text-xl font-bold '>كود الطالب :{user.id}</h1>
         </div>
       ) : null}
     </div>

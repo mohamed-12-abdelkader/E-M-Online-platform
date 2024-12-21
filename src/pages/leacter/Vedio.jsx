@@ -26,13 +26,13 @@ const Vedio = () => {
 
   if (vedioLoading || vedioLoadingt) {
     return (
-      <div style={{ minHeight: "70vh" }} className="flex items-center">
-        <Stack className="w-[90%] m-auto ">
-          <Skeleton height="20px" className="mt-5" />
-          <Skeleton height="20px" />
-          <Skeleton height="20px" />
-          <Skeleton height="20px" />
-          <Skeleton height="20px" />
+      <div style={{ minHeight: "70vh" }} className='flex items-center'>
+        <Stack className='w-[90%] m-auto '>
+          <Skeleton height='20px' className='mt-5' />
+          <Skeleton height='20px' />
+          <Skeleton height='20px' />
+          <Skeleton height='20px' />
+          <Skeleton height='20px' />
           <ScrollToTop />
         </Stack>
       </div>
@@ -43,10 +43,10 @@ const Vedio = () => {
   const isYoutubeLink = videoUrl && videoUrl.startsWith("https://youtu");
   console.log("vdiourl", vdiourlt.video);
   return (
-    <div className="w-100% mt-[50px]">
+    <div className='w-100% mt-[50px]'>
       {isYoutubeLink ? (
         <div
-          className="mt-[120px] flex justify-center items-center"
+          className='mt-[120px] flex justify-center items-center'
           style={{ height: "80vh" }}
         >
           <ReactPlayer
@@ -57,14 +57,14 @@ const Vedio = () => {
       ) : (
         <iframe
           src={vdiourl.video || vdiourlt.video}
-          loading="lazy"
-          className="w-[100%] h-[120vh] m-auto border"
-          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+          loading='lazy'
+          className='w-[100%] h-[120vh] m-auto border'
+          allow='accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;'
           allowFullScreen
         ></iframe>
       )}
       <ScrollToTop />
-      <input ref={inputRef} className="input-vedio" type="password" />
+      <input ref={inputRef} className='input-vedio' type='password' />
     </div>
   );
 };

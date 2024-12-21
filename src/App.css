@@ -15,6 +15,34 @@ body {
   background-repeat: no-repeat;
   border-radius: 10px;
 }
+.code {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden; /* لإخفاء أي شيء خارج الحدود */
+
+  /* الخلفية */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url(../public/Red_and_Blue_Badminton_Team_Sport_Logo__6_-removebg-preview.png);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 0.5; /* درجة الشفافية للصورة */
+    z-index: 0;
+  }
+
+  /* المحتوى */
+  & > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
 .month-content {
   background-image: url(../public/start3.png);
   background-position: center;
@@ -90,6 +118,7 @@ body {
   align-items: end;
   text-decoration: none;
 }
+
 .links-container div:hover {
   transform: scale(1.1);
   color: #3b82f6;
@@ -302,4 +331,18 @@ body {
 
 .section-one {
   background-image: url(../public/cb538a60-0865-4d86-8f2a-f7884951d90e.jpeg);
+}
+
+/* تخصيص شريط التمرير */
+div::-webkit-scrollbar {
+  width: 8px;
+}
+
+div::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0; /* لون الشريط */
+  border-radius: 4px; /* زوايا مستديرة */
+}
+
+div::-webkit-scrollbar-thumb:hover {
+  background-color: #a0aec0; /* لون الشريط عند التمرير */
 }

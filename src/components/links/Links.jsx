@@ -1,214 +1,139 @@
 import {
-  FaBookOpen,
   FaChalkboardTeacher,
-  FaMedal,
-  FaTrophy,
   FaWallet,
+  FaTrophy,
+  FaBookReader,
+  FaEdit,
+  FaMedal,
 } from "react-icons/fa";
-import { FaClipboardQuestion } from "react-icons/fa6";
-import { IoIosLogOut, IoMdHome } from "react-icons/io";
-import { MdVideoLibrary } from "react-icons/md";
-import { PiExamFill } from "react-icons/pi";
-import { Link } from "react-router-dom";
-import { AiFillStar } from "react-icons/ai";
-import { IoPerson } from "react-icons/io5";
+import {
+  MdDashboard,
+  MdEventNote,
+  MdLogout,
+  MdOutlineCategory,
+  MdLibraryAdd,
+  MdVideoLibrary,
+  MdQuestionAnswer,
+  MdEventAvailable,
+  MdGrade,
+  MdBookmark,
+} from "react-icons/md";
+import { BiListCheck, BiUserCircle } from "react-icons/bi";
+import {
+  AiOutlineForm,
+  AiFillRead,
+  AiOutlineFileDone,
+  AiOutlineFileSearch,
+  AiOutlineStar,
+} from "react-icons/ai";
+import { GiTeacher, GiArchiveRegister } from "react-icons/gi";
+
 import UserType from "../../Hooks/auth/userType";
-import { MdAdminPanelSettings } from "react-icons/md";
-import { GrGroup } from "react-icons/gr";
+import { NavLink } from "react-router-dom";
+
+const NavLinkItem = ({ to, Icon, label, onClick }) => (
+  <li>
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `font-semibold flex items-center ${
+          isActive ? "text-blue-500" : "hover:text-blue-500"
+        }`
+      }
+      onClick={onClick}
+    >
+      <Icon className='m-1 text-xl text-blue-500' />
+      {label}
+    </NavLink>
+  </li>
+);
 
 const Links = ({ onClose }) => {
   const [userData, isAdmin, isTeacher, isStudent] = UserType();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    ["token", "user", "examAnswers", "examTimeLeft"].forEach((item) =>
+      localStorage.removeItem(item)
+    );
     window.location.href = "/login";
   };
 
+  const commonLinks = [
+    { to: "/home", Icon: MdDashboard, label: "الصفحة الرئيسية" },
+  ];
+
+  const adminLinks = [
+    { to: "/admin/management", Icon: MdDashboard, label: "لوحة التحكم" },
+    { to: "/create_comp", Icon: AiOutlineForm, label: "إنشاء مسابقة" },
+    { to: "/allComps", Icon: BiListCheck, label: "عرض المسابقات" },
+    { to: "/create_exam", Icon: FaEdit, label: "إنشاء امتحان شهري" },
+    { to: "/add_sub_exam", Icon: MdLibraryAdd, label: "إنشاء امتحان المادة" },
+    {
+      to: "/add_video_exam",
+      Icon: MdVideoLibrary,
+      label: "إضافة فيديو للامتحان",
+    },
+    {
+      to: "/add_sup_questions",
+      Icon: MdQuestionAnswer,
+      label: "إضافة أسئلة للامتحان",
+    },
+    { to: "/view_exams", Icon: MdEventAvailable, label: "عرض الامتحانات" },
+    { to: "/show_grades", Icon: MdGrade, label: "عرض درجات الامتحان" },
+  ];
+
+  const teacherLinks = [
+    { to: "/admin/add_month", Icon: MdEventNote, label: "لوحة التحكم" },
+    { to: "/my_groups", Icon: GiTeacher, label: "مجموعاتي" },
+    { to: "/teacher_courses", Icon: FaBookReader, label: "كورساتي" },
+    { to: "/teacher_wallet", Icon: FaWallet, label: "محفظتي" },
+  ];
+
+  const studentLinks = [
+    { to: "/teachers", Icon: FaChalkboardTeacher, label: "المدرسين" },
+    { to: "/view_exams", Icon: AiOutlineFileDone, label: "امتحانات المنصة" },
+    { to: "/my_courses", Icon: FaBookReader, label: "كورساتي" },
+    { to: "/free_courses", Icon: AiOutlineStar, label: "الكورسات المجانية" },
+    { to: "/question_bank", Icon: GiArchiveRegister, label: "بنك الأسئلة" },
+    { to: "/results", Icon: AiOutlineFileSearch, label: "نتائج الامتحانات" },
+    { to: "/competitions", Icon: FaTrophy, label: "المسابقات" },
+    { to: "/the_Firsts", Icon: FaMedal, label: "أوائل المسابقات" },
+    { to: "/save_posts", Icon: MdBookmark, label: "المنشورات المحفوظة" },
+    { to: "/profile", Icon: BiUserCircle, label: "الملف الشخصي" },
+    { to: "/wallet", Icon: FaWallet, label: "محفظة الطالب" },
+  ];
+
   return (
     <div>
-      <ul className="space-y-4">
-        <li>
-          <Link
-            to="/home"
-            className="text-gray-700 font-semibold flex hover:text-blue-500"
-            onClick={onClose}
-          >
-            <IoMdHome className="m-1 text-xl text-blue-500" />
-            الصفحة الرئيسية
-          </Link>
-        </li>
-        {isAdmin && (
-          <li>
-            <Link
-              to="/admin/management"
-              className="text-gray-700 font-semibold flex hover:text-blue-500"
-              onClick={onClose}
-            >
-              <MdAdminPanelSettings className="m-1 text-xl text-blue-500" />
-              لوحة التحكم
-            </Link>
-          </li>
-        )}
-        {isTeacher && (
-          <div>
-            <li className="my-3">
-              <Link
-                to="/admin/add_month"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <MdAdminPanelSettings className="m-1 text-xl text-blue-500" />
-                لوحة التحكم
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/my_groups"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <GrGroup className="m-1 text-xl text-blue-500" />
-                مجموعاتى
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/teacher_courses"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <FaBookOpen className="m-1 text-xl text-blue-500" />
-                كورساتى
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/teacher_wallet"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <FaWallet className="m-1 text-xl text-blue-500" />
-                محفظتى
-              </Link>
-            </li>
-          </div>
-        )}
-        {isStudent && (
-          <div>
-            <li className="my-3">
-              <Link
-                to="/teachers"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <FaChalkboardTeacher className="m-1 text-xl text-blue-500" />
-                المدرسين
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/my_courses"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <FaBookOpen className="m-1 text-xl text-blue-500" />
-                كورساتى
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/profile"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <IoPerson className="m-1 text-xl text-blue-500" />
-                الملف الشخصى
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/wallet"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <FaWallet className="m-1 text-xl text-blue-500" />
-                محفظة الطالب
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/free_courses"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <MdVideoLibrary className="m-1 text-xl text-blue-500" />
-                الكورسات المجانية
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/question_bank"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <FaClipboardQuestion className="m-1 text-xl text-blue-500" />
-                بنك الاسئلة
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/results"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <PiExamFill className="m-1 text-xl text-blue-500" />
-                نتائج الامتحانات
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/competitions"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <FaTrophy className="m-1 text-xl text-blue-500" />
-                المسابقات
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/the_Firsts"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <FaMedal className="m-1 text-xl text-blue-500" />
-                اوائل المسابقات
-              </Link>
-            </li>
-            <li className="my-3">
-              <Link
-                to="/save_posts"
-                className="text-gray-700 font-semibold flex hover:text-blue-500"
-                onClick={onClose}
-              >
-                <AiFillStar className="m-1 text-xl text-blue-500" />
-                المنشورات المحفوظة
-              </Link>
-            </li>
-          </div>
-        )}
+      <ul className='space-y-4'>
+        {commonLinks.map((link, idx) => (
+          <NavLinkItem key={idx} {...link} onClick={onClose} />
+        ))}
 
-        <li className="my-3">
+        {isAdmin &&
+          adminLinks.map((link, idx) => (
+            <NavLinkItem key={idx} {...link} onClick={onClose} />
+          ))}
+
+        {isTeacher &&
+          teacherLinks.map((link, idx) => (
+            <NavLinkItem key={idx} {...link} onClick={onClose} />
+          ))}
+
+        {isStudent &&
+          studentLinks.map((link, idx) => (
+            <NavLinkItem key={idx} {...link} onClick={onClose} />
+          ))}
+
+        <li className='my-3'>
           <div
             onClick={() => {
               handleLogout();
               onClose();
             }}
-            style={{ cursor: "pointer" }}
-            className="text-gray-700 font-semibold flex hover:text-blue-500"
+            className='font-semibold flex items-center hover:text-blue-500 cursor-pointer'
           >
-            <IoIosLogOut className="m-1 text-xl text-red-500" />
+            <MdLogout className='m-1 text-xl text-red-500' />
             تسجيل الخروج
           </div>
         </li>

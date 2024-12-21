@@ -44,8 +44,7 @@ export default function Nav() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, md: false });
   const [eventsLoading, events] = useGitEvents();
-  console.log(events.totalEvents);
-  console.log(user);
+
   return (
     <Box
       bg={useColorModeValue("gray.100", "gray.900")}
@@ -64,14 +63,22 @@ export default function Nav() {
         </Link>
 
         <Flex alignItems={"center"}>
-          <Stack direction={"row"} spacing={2}>
+          <Stack direction={"row"} spacing={4}>
+            <Button
+              onClick={toggleColorMode}
+              className='my-2'
+              variant='outline'
+              leftIcon={colorMode === "light" ? <FaMoon /> : <FaSun />}
+            >
+              {colorMode === "light" ? " " : " "}
+            </Button>
+
             {user ? (
               <>
                 <Popover placement='bottom-end' isLazy>
                   <PopoverTrigger>
                     <Button variant='ghost' position='relative'>
                       <MdNotificationsActive className='text-3xl' />
-                      {/* Notification count bubble */}
                       {events?.totalEvents > 0 && (
                         <Text
                           fontSize='xs'
@@ -99,83 +106,57 @@ export default function Nav() {
                     <PopoverBody maxH='300px' overflowY='auto'>
                       {notificationsLoading ? (
                         <p>Loading...</p>
-                      ) : notifications &&
-                        notifications.notifications.length > 0 ? (
-                        notifications.notifications.map((notification) => {
-                          let icon;
-                          let actionText;
-
-                          // Determine the icon and text based on the notification variant
-                          switch (notification.variant) {
-                            case "reply":
-                              icon = (
-                                <FaReply className='text-xl text-blue-500' />
-                              );
-                              actionText = "رد عليك";
-                              break;
-                            case "likes":
-                              icon = (
-                                <FaHeart className='text-xl text-red-500' />
-                              );
-                              actionText = "  اعجب بمنشورك";
-                              break;
-                            case "comments":
-                              icon = (
-                                <FaRegComment className='text-xl text-green-500' />
-                              );
-                              actionText = "علق";
-                              break;
-                            default:
-                              icon = null;
-                              actionText = notification.variant;
-                          }
-
-                          return (
-                            <Link
-                              to={`post/${notification.post_id}`}
-                              key={notification.id}
+                      ) : notifications?.notifications?.length > 0 ? (
+                        notifications.notifications.map((notification) => (
+                          <Link
+                            to={`post/${notification.post_id}`}
+                            key={notification.id}
+                          >
+                            <Box
+                              p={2}
+                              borderBottom='1px solid'
+                              borderColor='gray.200'
+                              _hover={{ bg: "gray.100" }}
                             >
-                              <Box
-                                p={2}
-                                borderBottom='1px solid'
-                                borderColor='gray.200'
-                                _hover={{ bg: "gray.100" }}
-                              >
-                                <Flex alignItems='center'>
-                                  <Avatar
-                                    size='sm'
-                                    src={
-                                      notification.interactors[0]?.from?.cover
-                                    }
-                                    name={
-                                      notification.interactors[0]?.from
-                                        ?.username
-                                    }
-                                  />
-                                  <Box ml={3}>
-                                    <Flex alignItems='center'>
-                                      {icon}
-                                      <p className='ml-2'>
-                                        <strong>
-                                          {
-                                            notification.interactors[0]?.from
-                                              ?.username
-                                          }
-                                        </strong>{" "}
-                                        {actionText}
-                                      </p>
-                                    </Flex>
-                                    <p className='text-gray-500 text-xs'>
-                                      {new Date(
-                                        notification.last_event
-                                      ).toLocaleString()}
+                              <Flex alignItems='center'>
+                                <Avatar
+                                  size='sm'
+                                  src={notification.interactors[0]?.from?.cover}
+                                  name={
+                                    notification.interactors[0]?.from?.username
+                                  }
+                                />
+                                <Box ml={3}>
+                                  <Flex alignItems='center'>
+                                    {notification.variant === "reply" && (
+                                      <FaReply className='text-xl text-blue-500' />
+                                    )}
+                                    {notification.variant === "likes" && (
+                                      <FaHeart className='text-xl text-red-500' />
+                                    )}
+                                    {notification.variant === "comments" && (
+                                      <FaRegComment className='text-xl text-green-500' />
+                                    )}
+                                    <p className='ml-2'>
+                                      <strong>
+                                        {
+                                          notification.interactors[0]?.from
+                                            ?.username
+                                        }
+                                      </strong>{" "}
+                                      قام بفعل ما!
                                     </p>
-                                  </Box>
-                                </Flex>
-                              </Box>
-                            </Link>
-                          );
-                        })
+                                  </Flex>
+                                  <p className='text-gray-500 text-xs'>
+                                    {new Date(
+                                      notification.last_event
+                                    ).toLocaleString()}
+                                  </p>
+                                </Box>
+                              </Flex>
+                            </Box>
+                          </Link>
+                        ))
                       ) : (
                         <p>No new notifications</p>
                       )}
@@ -197,11 +178,10 @@ export default function Nav() {
                 <Drawer isOpen={isOpen} placement='right' onClose={onClose}>
                   <DrawerOverlay />
                   <DrawerContent>
-                    <DrawerHeader className='flex' style={{ display: "flex" }}>
+                    <DrawerHeader className='flex'>
                       <DrawerCloseButton className='' dir='ltr' />
                       <h1 className='mt-5'>
-                        {" "}
-                        اهلا : {user.name || user.fname + "" + user.lname}
+                        مرحباً: {user.name || user.fname + " " + user.lname}
                       </h1>
                     </DrawerHeader>
                     <DrawerBody>
@@ -219,7 +199,7 @@ export default function Nav() {
                     alt='login'
                   />
                 </Link>
-                <Link to='/singup'>
+                <Link to='/signup'>
                   <img
                     src='signup2.png'
                     className='h-[60px] w-[160px]'

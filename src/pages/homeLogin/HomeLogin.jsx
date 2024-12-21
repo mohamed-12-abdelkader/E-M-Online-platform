@@ -1,42 +1,56 @@
 import React from "react";
-import { Link, Outlet } from "react-router-dom";
-import { IoIosPeople, IoMdHome } from "react-icons/io";
-import { FaVideo, FaWallet } from "react-icons/fa";
-import { MdVideoLibrary } from "react-icons/md";
-import { FaClipboardQuestion } from "react-icons/fa6";
-import { PiExamFill } from "react-icons/pi";
-import { IoPerson } from "react-icons/io5";
-import { IoIosLogOut } from "react-icons/io";
-import { FaTrophy } from "react-icons/fa";
-import { FaMedal } from "react-icons/fa";
-import { FaChalkboardTeacher } from "react-icons/fa";
-import { FaBookOpen } from "react-icons/fa";
-import { AiFillStar } from "react-icons/ai";
+import { Outlet } from "react-router-dom";
+import { Box, Flex, useColorModeValue, Text } from "@chakra-ui/react";
 import Links from "../../components/links/Links";
+
 const HomeLogin = () => {
   const user = JSON.parse(localStorage.getItem("user"));
 
   return (
-    <div className='flex flex-row-reverse'>
-      {" "}
-      {/* تم اضافة flex-row-reverse هنا */}
+    <Flex
+      direction={{ base: "column", md: "row-reverse" }}
+      minHeight='100vh'
+      bg={useColorModeValue("gray.100", "gray.900")}
+    >
       {/* Sidebar */}
-      <div className='hidden md:block w-[22%] h-screen fixed top-0 right-0 mt-[20px]  z-30 bg-[#edf2f7] shadow-lg p-4 pt-[80px]'>
-        {" "}
-        <h1 className='my-5 font-bold text-xl'>
-          {" "}
-          اهلا : {user.name || user.fname + "" + user.lname}
-        </h1>
-        {/* تم تغيير left إلى right */}
+      <Box
+        display={{ base: "none", md: "block" }}
+        width={{ md: "22%" }}
+        height='100vh'
+        position='fixed'
+        top={0}
+        right={0}
+        mt={{ base: "0", md: "20px" }}
+        zIndex={30}
+        bg={useColorModeValue("white", "gray.800")}
+        shadow='lg'
+        p={4}
+        pt='80px'
+        overflowY='auto'
+      >
+        <Text
+          my={5}
+          fontWeight='bold'
+          color={useColorModeValue("gray.800", "white")}
+        >
+          اهلا : {user?.name || `${user?.fname} - ${user?.lname}`}
+        </Text>
         <Links />
-      </div>
+      </Box>
+
       {/* Main Content */}
-      <div className='flex-1 mt-[80px]  md:mr-[20%] w-full'>
-        {" "}
-        {/* تم تغيير ml إلى mr */}
+      <Box
+        flex={1}
+        mt={{ base: "80px", md: "80px" }}
+        mr={{ md: "22%" }}
+        width='full'
+        px={4}
+        bg={useColorModeValue("gray.50", "gray.900")}
+        color={useColorModeValue("gray.800", "white")}
+      >
         <Outlet />
-      </div>
-    </div>
+      </Box>
+    </Flex>
   );
 };
 

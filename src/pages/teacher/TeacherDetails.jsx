@@ -1,26 +1,20 @@
 import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import {
-  Stack,
-  Skeleton,
-  Button,
-  Spinner,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { useParams } from "react-router-dom";
+import { useDisclosure } from "@chakra-ui/react";
 import { MdCancelPresentation } from "react-icons/md";
 import { FaFileVideo } from "react-icons/fa6";
-import { Zoom } from "react-awesome-reveal";
+
 import PurchaseAlert from "../../ui/modal/PurchaseAlert";
 import GitTeacherDetails from "../../Hooks/teacher/GitTeacherDetails";
 import GitLecture from "../../Hooks/student/GitLecture";
 import BuyLecture from "../../Hooks/student/BuyLecture";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
 import GitMonthes from "../../Hooks/student/GitMonths";
-import TeacherHeader from "../../components/teacher/TeacherHeader";
+
 import TeacherInfo from "../../components/teacher/TeacherInfo";
-import LectureCard from "../../components/teacher/LectureCard";
 
 import Loading from "../../components/loading/Loading";
+import { CoursesCard } from "../../ui/card/CoursesCard";
 
 const TeacherDetails = () => {
   const { id } = useParams();
@@ -45,7 +39,7 @@ const TeacherDetails = () => {
       </div>
     );
   }
-
+  console.log(teacher.months);
   return (
     <div className='mt-[80px] mb-[120px]'>
       <div className='m-auto mx-auto mb-[50px]'>
@@ -63,15 +57,18 @@ const TeacherDetails = () => {
           <div>
             {teacher.months && teacher.months.length > 0 ? (
               <div
-                className='flex flex-wrap justify-center my-3 bg-white w-[95%] m-auto p-3 md:justify-start flex-wrap'
+                className='flex flex-wrap justify-center my-3  w-[95%] m-auto p-3 md:justify-start flex-wrap'
                 style={{ borderRadius: "20px" }}
               >
                 {teacher.months.map((lecture) => (
-                  <LectureCard
-                    key={lecture.id}
-                    lecture={lecture}
-                    onOpen={onOpen}
-                    setSelectedLecture={setSelectedLecture}
+                  <CoursesCard
+                    href={`/month/${lecture.id}`}
+                    lectre={lecture}
+                    onClick={() => {
+                      setSelectedLecture(lecture);
+                      onOpen();
+                    }}
+                    type={"teacher_courses"}
                   />
                 ))}
               </div>

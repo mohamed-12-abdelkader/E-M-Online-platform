@@ -13,7 +13,7 @@ const Post = ({ post }) => {
   console.log(imagePath); // اطبع الـ path
 
   return (
-    <div className="w-[100%]  mx-auto border shadow rounded-lg p-4 bg-white md:w-[80%]">
+    <div className='w-[100%]  mx-auto border shadow rounded-lg p-4  md:w-[80%]'>
       {/* Header */}
       <PostHeader
         post={post}

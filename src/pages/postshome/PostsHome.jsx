@@ -13,6 +13,7 @@ import Post from "../../components/posts/Post";
 import useGitPosts from "../../Hooks/posts/useGitPosts";
 import AddPost from "../../components/posts/AddPost";
 import { usePosts } from "../../Hooks/posts/PostsContext";
+import { Card } from "../../ui";
 
 const PostsHome = () => {
   const { posts, postsLoading } = usePosts();
@@ -29,25 +30,25 @@ const PostsHome = () => {
   }, [postId, posts]); // Re-run if postId or posts change
   console.log(posts);
   return (
-    <div className="space-y-6 mb-[80px]">
+    <div className='space-y-6 mb-[80px]'>
       <AddPost />
       {postsLoading ? (
-        <VStack spacing="6" align="stretch">
+        <VStack spacing='6' align='stretch'>
           {[...Array(3)].map((_, i) => (
             <Box
               key={i}
-              p="4"
-              borderWidth="1px"
-              borderRadius="lg"
-              shadow="sm"
-              className="w-[100%] md:w-[80%] m-auto"
+              p='4'
+              borderWidth='1px'
+              borderRadius='lg'
+              shadow='sm'
+              className='w-[100%] md:w-[80%] m-auto'
             >
-              <HStack spacing="4" mb="4">
-                <SkeletonCircle size="10" />
-                <Skeleton height="20px" width="40%" />
+              <HStack spacing='4' mb='4'>
+                <SkeletonCircle size='10' />
+                <Skeleton height='20px' width='40%' />
               </HStack>
-              <SkeletonText mt="4" noOfLines={4} spacing="4" />
-              <Skeleton height="20px" mt="4" width="20%" />
+              <SkeletonText mt='4' noOfLines={4} spacing='4' />
+              <Skeleton height='20px' mt='4' width='20%' />
             </Box>
           ))}
         </VStack>
@@ -56,12 +57,12 @@ const PostsHome = () => {
           {posts.posts.map((post) => (
             <Box key={post.id} id={`post-${post.id}`}>
               <Post post={post} />
-              <div className="h-[10px] bg-[#ccc] md:w-[80%] m-auto "></div>
+              <div className='h-[10px] bg-[#ccc] md:w-[80%] m-auto '></div>
             </Box>
           ))}
         </div>
       ) : (
-        <Text fontSize="xl" textAlign="center" mt="4">
+        <Text fontSize='xl' textAlign='center' mt='4'>
           لا يوجد بوستات حاليا
         </Text>
       )}

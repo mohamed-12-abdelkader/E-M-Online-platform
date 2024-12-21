@@ -79,11 +79,11 @@ const Commint = ({
     <div>
       <div>
         {commintsLoading ? (
-          <Box p={3} borderWidth="1px" borderRadius="lg" boxShadow="md" mb={4}>
-            <Skeleton height="15px" width="30%" mb={2} /> {/* اسم المستخدم */}
-            <Skeleton height="10px" width="80%" mb={1} /> {/* محتوى التعليق */}
-            <Skeleton height="10px" width="90%" mb={1} />
-            <Skeleton height="10px" width="60%" />
+          <Box p={3} borderWidth='1px' borderRadius='lg' boxShadow='md' mb={4}>
+            <Skeleton height='15px' width='30%' mb={2} /> {/* اسم المستخدم */}
+            <Skeleton height='10px' width='80%' mb={1} /> {/* محتوى التعليق */}
+            <Skeleton height='10px' width='90%' mb={1} />
+            <Skeleton height='10px' width='60%' />
           </Box>
         ) : commints.length === 0 ? (
           <p>لا توجد تعليقات بعد.</p>
@@ -94,41 +94,41 @@ const Commint = ({
             return (
               <div
                 key={commint.id}
-                className="p-2 my-2 border rounded-md bg-gray-100 flex justify-between items-start"
+                className=' p-2 my-2 border rounded-md shadow-md  flex justify-between items-start'
               >
                 <div>
                   {commint.user.cover ? (
-                    <div className="flex">
+                    <div className='flex '>
                       <img
                         src={commint.user.cover}
-                        className="h-[40px] w-[40px] rounded-full mr-3 mx-2"
-                        alt="User avatar"
+                        className='h-[40px] w-[40px] rounded-full mr-3 mx-2 '
+                        alt='User avatar'
                       />
-                      <div className=" ">
-                        <p className="font-bold m-2">{commint.user.username}</p>
+                      <div className=' '>
+                        <p className='font-bold m-2'>{commint.user.username}</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center">
+                    <div className='flex items-center'>
                       <div
                         style={{ backgroundColor: color }}
-                        className="flex items-center justify-center w-10 h-10 rounded-full text-white font-bold mr-3"
+                        className='flex items-center justify-center w-10 h-10 rounded-full text-white font-bold mr-3'
                       >
                         {firstLetter}
                       </div>
-                      <div className=" ">
-                        <p className="font-bold m-2">{commint.user.username}</p>
+                      <div className=' '>
+                        <p className='font-bold m-2'>{commint.user.username}</p>
                       </div>
                     </div>
                   )}
-                  <div className="px-5">
-                    <p className="text-sm m-3 font-bold">{commint.content}</p>
+                  <div className='px-5'>
+                    <p className='text-sm m-3 font-bold'>{commint.content}</p>
                     {(user.role == null && user.id == commint.user_id) ||
                     (user.role == "teacher" && user.id == commint.teacher_id) ||
                     (user.role == "admin" &&
                       user.id == commint.admin_id) ? null : (
                       <button
-                        className="text-blue-500 text-sm "
+                        className='text-blue-500 text-sm '
                         onClick={() => handleReplyClick(commint.id)}
                       >
                         رد
@@ -136,15 +136,15 @@ const Commint = ({
                     )}
 
                     {replyingToId === commint.id && (
-                      <div className="mt-2 flex items-center gap-2">
+                      <div className='mt-2 flex items-center gap-2'>
                         <Input
-                          placeholder="أكتب ردك هنا..."
+                          placeholder='أكتب ردك هنا...'
                           value={replyContent}
                           onChange={handleReplyContentChange}
-                          className="w-full mb-2"
+                          className='w-full mb-2'
                         />
                         <Button
-                          colorScheme="green"
+                          colorScheme='green'
                           onClick={(e) =>
                             handleAddReply(
                               e,
@@ -159,7 +159,7 @@ const Commint = ({
                           <IoSend />
                         </Button>
                         <Button
-                          colorScheme="red"
+                          colorScheme='red'
                           onClick={() => setReplyingToId(null)}
                         >
                           X
@@ -169,7 +169,7 @@ const Commint = ({
                     {commint.replies && commint.replies.length > 0 ? (
                       <div>
                         <button
-                          className="text-blue-500 text-sm mt-2 ml-2"
+                          className='text-blue-500 text-sm mt-2 ml-2'
                           onClick={() => toggleReplies(commint.id)}
                         >
                           {showReplies[commint.id]
@@ -188,25 +188,25 @@ const Commint = ({
                         return (
                           <div
                             key={reply.id}
-                            className="ml-12 mt-2 p-2 flex border-l-4 w-[90%] m-auto border-gray-300 bg-gray-50 rounded-md"
+                            className='ml-12 mt-2 p-2 flex border-l-4 w-[90%] m-auto  border rounded-md'
                           >
                             {reply.user.cover ? (
                               <img
                                 src={reply.user.cover}
-                                className="h-[30px] w-[30px] rounded-full mr-3"
-                                alt="User avatar"
+                                className='h-[30px] w-[30px] rounded-full mr-3'
+                                alt='User avatar'
                               />
                             ) : (
                               <div
                                 style={{ backgroundColor: replyColor }}
-                                className="flex items-center justify-center w-8 h-8 rounded-full text-white font-bold mr-3"
+                                className='flex items-center justify-center w-8 h-8 rounded-full  font-bold mr-3'
                               >
                                 {replyFirstLetter}
                               </div>
                             )}
                             <div>
-                              <div className="flex">
-                                <p className="font-bold mx-2 my-1">
+                              <div className='flex'>
+                                <p className='font-bold mx-2 my-1'>
                                   {reply.user.username}
                                 </p>
                                 {(user.role == null &&
@@ -214,13 +214,13 @@ const Commint = ({
                                 (user.role == "teacher" &&
                                   user.id == reply.teacher_id) ||
                                 user.role == "admin" ? (
-                                  <div className="mx-5">
+                                  <div className='mx-5'>
                                     <Menu>
                                       <MenuButton
                                         as={IconButton}
                                         icon={<MdMoreHoriz />}
-                                        variant="ghost"
-                                        aria-label="Options"
+                                        variant='ghost'
+                                        aria-label='Options'
                                       />
                                       <MenuList>
                                         <MenuItem
@@ -243,11 +243,11 @@ const Commint = ({
 
                               <div></div>
 
-                              <p className="text-gray-500 text-xs"></p>
-                              <p className="text-sm m-2 text-blue-500">
+                              <p className='text-gray-500 text-xs'></p>
+                              <p className='text-sm m-2 text-blue-500'>
                                 {reply.replyingTo} @
                               </p>
-                              <p className="text-sm m-2">{reply.content}</p>
+                              <p className='text-sm m-2'>{reply.content}</p>
                               {(user.role == null &&
                                 user.id == reply.user_id) ||
                               (user.role == "teacher" &&
@@ -255,7 +255,7 @@ const Commint = ({
                               (user.role == "admin" &&
                                 user.id == reply.admin_id) ? null : (
                                 <button
-                                  className="text-blue-500 text-sm mt-2"
+                                  className='text-blue-500 text-sm mt-2'
                                   onClick={() => handleReplyClick(reply.id)}
                                 >
                                   رد
@@ -264,15 +264,15 @@ const Commint = ({
 
                               <div>
                                 {replyingToId === reply.id && (
-                                  <div className="mt-2 flex items-center gap-2">
+                                  <div className='mt-2 flex items-center gap-2 '>
                                     <Input
-                                      placeholder="أكتب ردك هنا..."
+                                      placeholder='أكتب ردك هنا...'
                                       value={replyContent}
                                       onChange={handleReplyContentChange}
-                                      className="w-full mb-2"
+                                      className='w-full mb-2'
                                     />
                                     <Button
-                                      colorScheme="green"
+                                      colorScheme='green'
                                       onClick={(e) =>
                                         handleAddReply(
                                           e,
@@ -287,7 +287,7 @@ const Commint = ({
                                       <IoSend />
                                     </Button>
                                     <Button
-                                      colorScheme="red"
+                                      colorScheme='red'
                                       onClick={() => setReplyingToId(null)}
                                     >
                                       X
@@ -310,8 +310,8 @@ const Commint = ({
                         <MenuButton
                           as={IconButton}
                           icon={<MdMoreHoriz />}
-                          variant="ghost"
-                          aria-label="Options"
+                          variant='ghost'
+                          aria-label='Options'
                         />
                         <MenuList>
                           <MenuItem onClick={() => openEditModal(commint)}>

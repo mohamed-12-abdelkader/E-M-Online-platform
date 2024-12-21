@@ -15,7 +15,7 @@ const useAddTeacher = () => {
   const [facebook, setFacebook] = useState("");
   const [tele, setTele] = useState("");
   const [img, setImg] = useState(avatar);
-  const [classes, setSelectedGrades] = useState([1, 2, 3]);
+  const [classes, setSelectedGrades] = useState([]);
   const handleCheckboxChange = (value) => {
     if (classes.includes(value)) {
       setSelectedGrades(classes.filter((grade) => grade !== value));
@@ -88,6 +88,7 @@ const useAddTeacher = () => {
       setSubject(null);
       setTele("");
       setSelectedGrades("");
+      console.log(classes);
     }
   };
 

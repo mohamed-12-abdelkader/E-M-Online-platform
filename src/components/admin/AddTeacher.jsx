@@ -29,7 +29,7 @@ const AddTeacher = () => {
   return (
     <div>
       <div>
-        <h1 className="text-center font-bold text-xl ">اضافة مدرس جديد</h1>
+        <h1 className='text-center font-bold text-xl '>اضافة مدرس جديد</h1>
       </div>
       <div style={{ margin: "10px 0", width: "100%" }}>
         <label
@@ -39,9 +39,9 @@ const AddTeacher = () => {
             justifyContent: "space-between",
             alignItems: "center",
           }}
-          htmlFor="upload-photo"
+          htmlFor='upload-photo'
         >
-          <h5 className="font-bold">
+          <h5 className='font-bold'>
             {" "}
             اختر صورة <span style={{ color: "red" }}> المدرس </span>
           </h5>
@@ -51,40 +51,40 @@ const AddTeacher = () => {
           />
         </label>
         <input
-          type="file"
-          name="photo"
-          id="upload-photo"
+          type='file'
+          name='photo'
+          id='upload-photo'
           style={{ display: "none" }}
           onChange={onImageChange}
         />
       </div>
-      <div className="my-3">
-        <h1 className="my-2 font-bold"> اسم المدرس </h1>
+      <div className='my-3'>
+        <h1 className='my-2 font-bold'> اسم المدرس </h1>
         <Input
-          placeholder="اسم المدرس "
-          size="lg"
+          placeholder='اسم المدرس '
+          size='lg'
           value={name}
           onChange={(e) => {
             setName(e.target.value);
           }}
         />
       </div>
-      <div className="my-3">
-        <h1 className="my-2 font-bold"> ايميل المدرس </h1>
+      <div className='my-3'>
+        <h1 className='my-2 font-bold'> ايميل المدرس </h1>
         <Input
-          placeholder="ايميل المدرس "
-          size="lg"
+          placeholder='ايميل المدرس '
+          size='lg'
           value={mail}
           onChange={(e) => {
             setMail(e.target.value);
           }}
         />
       </div>
-      <div className="my-3">
-        <h1 className="my-2 font-bold"> كلمة سر المدرس </h1>
+      <div className='my-3'>
+        <h1 className='my-2 font-bold'> كلمة سر المدرس </h1>
         <Input
-          placeholder="كلمة سر المدرس "
-          size="lg"
+          placeholder='كلمة سر المدرس '
+          size='lg'
           value={pass}
           onChange={(e) => {
             setPass(e.target.value);
@@ -92,50 +92,50 @@ const AddTeacher = () => {
         />
       </div>
 
-      <div className="my-3">
-        <h1 className="my-2 font-bold"> وصف للمدرس </h1>
+      <div className='my-3'>
+        <h1 className='my-2 font-bold'> وصف للمدرس </h1>
         <Input
-          placeholder="وصف للمدرس  "
-          size="lg"
+          placeholder='وصف للمدرس  '
+          size='lg'
           value={description}
           onChange={(e) => {
             setDescription(e.target.value);
           }}
         />
       </div>
-      <div className=" md:flex flex-wrap">
-        <div className="m-3">
-          <h1 className="my-2 font-bold"> تليجرام المدرس </h1>
+      <div className=' md:flex flex-wrap'>
+        <div className='m-3'>
+          <h1 className='my-2 font-bold'> تليجرام المدرس </h1>
           <Input
-            placeholder="تليجرام المدرس "
-            size="lg"
+            placeholder='تليجرام المدرس '
+            size='lg'
             value={tele}
             onChange={(e) => {
               setTele(e.target.value);
             }}
           />
         </div>
-        <div className="m-3">
-          <h1 className="my-2 font-bold"> فيس المدرس </h1>
+        <div className='m-3'>
+          <h1 className='my-2 font-bold'> فيس المدرس </h1>
           <Input
-            placeholder="فيس المدرس "
-            size="lg"
+            placeholder='فيس المدرس '
+            size='lg'
             value={facebook}
             onChange={(e) => {
               setFacebook(e.target.value);
             }}
           />
         </div>
-        <div className="my-3">
-          <h1 className="my-2 font-bold"> يوتيوب المدرس </h1>
-          <Input placeholder="يوتيوب المدرس " size="lg" />
+        <div className='my-3'>
+          <h1 className='my-2 font-bold'> يوتيوب المدرس </h1>
+          <Input placeholder='يوتيوب المدرس ' size='lg' />
         </div>
       </div>
       <div>
-        <h1 className="my-2 font-bold">اختر مادة المدرس</h1>
+        <h1 className='my-2 font-bold'>اختر مادة المدرس</h1>
         <Select
-          placeholder="اختر مادة المدرس "
-          size="lg"
+          placeholder='اختر مادة المدرس '
+          size='lg'
           style={{ direction: "ltr" }}
           onChange={(e) => {
             setSubject(e.target.value);
@@ -156,37 +156,62 @@ const AddTeacher = () => {
         </Select>
       </div>
       <div>
-        <h1 className="my-2 font-bold">اختر صفوف المدرس </h1>
-        <div className="flex ">
+        <h1 className='my-2 font-bold'>اختر صفوف المدرس </h1>
+        <div className='flex flex-wrap'>
           <Checkbox
-            defaultChecked
             value={1}
-            className="m-3"
+            className='m-3'
             onChange={() => handleCheckboxChange(1)}
           >
-            {" "}
-            الصف الاول الثانوى{" "}
+            الصف الاول الثانوى
           </Checkbox>
           <Checkbox
-            defaultChecked
             value={2}
-            className="m-3"
+            className='m-3'
             onChange={() => handleCheckboxChange(2)}
           >
-            الصف الثانى الثانوى{" "}
+            الصف الثانى الثانوى
           </Checkbox>
           <Checkbox
-            defaultChecked
             value={3}
-            className="m-3"
+            className='m-3'
             onChange={() => handleCheckboxChange(3)}
           >
-            الصف الثالث الثانوى{" "}
+            الصف الثالث الثانوى
+          </Checkbox>
+          <Checkbox
+            value={4}
+            className='m-3'
+            onChange={() => handleCheckboxChange(4)}
+          >
+            الصف الاول الاعدادى
+          </Checkbox>
+          <Checkbox
+            value={5}
+            className='m-3'
+            onChange={() => handleCheckboxChange(5)}
+          >
+            الصف الثانى الاعدادى
+          </Checkbox>
+          <Checkbox
+            value={6}
+            className='m-3'
+            onChange={() => handleCheckboxChange(6)}
+          >
+            الصف الثالث الاعدادى
+          </Checkbox>
+          <Checkbox
+            value={7}
+            className='m-3'
+            onChange={() => handleCheckboxChange(7)}
+          >
+            كورسات اخرى
           </Checkbox>
         </div>
       </div>
-      <div className="text-center mt-3">
-        <Button colorScheme="blue" onClick={handleSubmit}>
+
+      <div className='text-center mt-3'>
+        <Button colorScheme='blue' onClick={handleSubmit}>
           {loading ? <Spinner /> : "  اضافة المدرس"}
         </Button>
       </div>

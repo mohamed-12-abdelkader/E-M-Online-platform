@@ -40,33 +40,33 @@ const CommentsSection = ({
         return (
           <div
             key={commint.id}
-            className="p-2 my-2 border rounded-md bg-gray-100 flex items-start"
+            className='p-2 my-2 border rounded-md  flex items-start'
           >
             {commint.user.cover ? (
               <img
                 src={commint.user.cover}
-                className="h-[40px] w-[40px] rounded-full mr-3 mx-2"
-                alt="User avatar"
+                className='h-[40px] w-[40px] rounded-full mr-3 mx-2'
+                alt='User avatar'
               />
             ) : (
               <div
                 style={{ backgroundColor: color }}
-                className="flex items-center justify-center w-10 h-10 rounded-full text-white font-bold mr-3"
+                className='flex items-center justify-center w-10 h-10 rounded-full  font-bold mr-3'
               >
                 {firstLetter}
               </div>
             )}
 
             <div>
-              <p className="font-bold m-2">{commint.user.username}</p>
-              <p className="text-gray-500 text-xs">
+              <p className='font-bold m-2'>{commint.user.username}</p>
+              <p className='text-gray-500 text-xs'>
                 {new Date(commint.created_at).toLocaleString()}
               </p>
-              <p className="text-sm m-2 font-bold">{commint.content}</p>
+              <p className='text-sm m-2 font-bold'>{commint.content}</p>
 
               {user.id === commint.user_id ? null : (
                 <button
-                  className="text-blue-500 text-sm mt-2"
+                  className='text-blue-500 text-sm mt-2'
                   onClick={() => handleReplyClick(commint.id)}
                 >
                   رد
@@ -74,15 +74,15 @@ const CommentsSection = ({
               )}
 
               {replyingToId === commint.id && (
-                <div className="mt-2 flex items-center gap-2">
+                <div className='mt-2 flex items-center gap-2'>
                   <Input
-                    placeholder="أكتب ردك هنا..."
+                    placeholder='أكتب ردك هنا...'
                     value={replyContent}
                     onChange={handleReplyContentChange}
-                    className="w-full mb-2"
+                    className='w-full mb-2'
                   />
                   <Button
-                    colorScheme="green"
+                    colorScheme='green'
                     onClick={(e) =>
                       handleAddReply(
                         e,
@@ -97,7 +97,7 @@ const CommentsSection = ({
                     <IoSend />
                   </Button>
                   <Button
-                    colorScheme="red"
+                    colorScheme='red'
                     onClick={() => setReplyingToId(null)}
                   >
                     X
@@ -109,7 +109,7 @@ const CommentsSection = ({
               {commint.replies.length > 0 && (
                 <div>
                   <button
-                    className="text-blue-500 text-sm mt-2 ml-2"
+                    className='text-blue-500 text-sm mt-2 ml-2'
                     onClick={() => toggleReplies(commint.id)}
                   >
                     {showReplies[commint.id]
@@ -128,29 +128,29 @@ const CommentsSection = ({
                   return (
                     <div
                       key={reply.id}
-                      className="ml-12 mt-2 p-2 flex border-l-4 w-[90%] m-auto border-gray-300 bg-gray-50 rounded-md"
+                      className='ml-12 mt-2 p-2 flex border-l-4 w-[90%] m-auto border-gray-300 bg-gray-50 rounded-md'
                     >
                       {reply.user.cover ? (
                         <img
                           src={reply.user.cover}
-                          className="h-[30px] w-[30px] rounded-full mr-3"
-                          alt="User avatar"
+                          className='h-[30px] w-[30px] rounded-full mr-3'
+                          alt='User avatar'
                         />
                       ) : (
                         <div
                           style={{ backgroundColor: replyColor }}
-                          className="flex items-center justify-center w-8 h-8 rounded-full text-white font-bold mr-3"
+                          className='flex items-center justify-center w-8 h-8 rounded-full text-white font-bold mr-3'
                         >
                           {replyFirstLetter}
                         </div>
                       )}
 
                       <div>
-                        <p className="font-bold m-2">{reply.user.username}</p>
-                        <p className="text-gray-500 text-xs">
+                        <p className='font-bold m-2'>{reply.user.username}</p>
+                        <p className='text-gray-500 text-xs'>
                           {new Date(reply.created_at).toLocaleString()}
                         </p>
-                        <p className="text-sm m-2">{reply.content}</p>
+                        <p className='text-sm m-2'>{reply.content}</p>
                       </div>
                     </div>
                   );

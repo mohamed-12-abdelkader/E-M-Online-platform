@@ -60,15 +60,32 @@ import SupjectQuestion from "../pages/Question Bank/SupjectQuestion";
 import ChapterQuestion from "../pages/Question Bank/ChapterQuestion";
 import PostDetails from "../pages/post/PostDetails";
 import SavePosts from "../pages/post/SavePosts";
+import CreateComp from "../components/admin/CreateComp";
+import AllComps from "../components/admin/AllComps";
+import CompetitionDetails from "../pages/competitions/CompetitionDetails";
+import PlatformExams from "../pages/PlatformExams/PlatformExams";
+import Exams from "../pages/PlatformExams/Exams";
+import TeacherCode from "../pages/code/TeacherCode";
+import CreateExams from "../pages/monthlyExams/CreateExams";
+import ViewExams from "../pages/monthlyExams/ViewExams";
+import ShowGrades from "../pages/monthlyExams/ShowGrades";
+import ExamContent from "../pages/monthlyExams/ExamContent";
+import ExamDetails from "../pages/monthlyExams/ExamDetails";
+import AllExams from "../pages/monthlyExams/AllExams";
+import AddSExam from "../pages/monthlyExams/AddSExam";
+import MonthlyExams from "../pages/monthlyExams/MonthlyExams";
+import AddSubQuestions from "../pages/monthlyExams/AddSubQuestions";
+import SubjectExam from "../pages/monthlyExams/SubjectExam";
+import ExamQuestions from "../pages/monthlyExams/ExamQuestions";
 
 const AppRouter = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
   return (
     <div>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path='/' element={<Home />} />
         <Route
-          path="/login"
+          path='/login'
           element={
             <ProtectedLogin auth={isAdmin || student || isTeacher}>
               <LoginPage />
@@ -76,7 +93,7 @@ const AppRouter = () => {
           }
         />
         <Route
-          path="/student_login"
+          path='/student_login'
           element={
             <ProtectedLogin auth={isAdmin || student || isTeacher}>
               <Login />
@@ -84,7 +101,7 @@ const AppRouter = () => {
           }
         />
         <Route
-          path="/teacher_login"
+          path='/teacher_login'
           element={
             <ProtectedLogin auth={isAdmin || student || isTeacher}>
               <TeacherLogin />
@@ -92,7 +109,7 @@ const AppRouter = () => {
           }
         />
         <Route
-          path="/admin_login"
+          path='/admin_login'
           element={
             <ProtectedLogin auth={isAdmin || student || isTeacher}>
               <AdminLogin />
@@ -100,7 +117,7 @@ const AppRouter = () => {
           }
         />
         <Route
-          path="/singup"
+          path='/signup'
           element={
             <ProtectedLogin auth={isAdmin || student || isTeacher}>
               <SingUp />
@@ -108,13 +125,13 @@ const AppRouter = () => {
           }
         />
 
-        <Route path="*" element={<NotFound />} />
+        <Route path='*' element={<NotFound />} />
 
-        <Route path="/verify_code" element={<VerifyCode />} />
-        <Route path="/rest_pass" element={<ResetPassword />} />
+        <Route path='/verify_code' element={<VerifyCode />} />
+        <Route path='/rest_pass' element={<ResetPassword />} />
 
         <Route
-          path="/admin/*"
+          path='/admin/*'
           element={
             <ProtectedRoute auth={isAdmin || isTeacher}>
               <Admin />
@@ -122,53 +139,72 @@ const AppRouter = () => {
           }
         >
           <Route element={<ProtectedRoute auth={isAdmin} />}>
-            <Route path="management" element={<AdminMange />} />
-            <Route path="addteacher" element={<AddTeacher />} />
-            <Route path="create_code" element={<AdminCreateCode />} />
-            <Route path="cridet" element={<AdminTeacherBalances />} />
-            <Route path="open_phone" element={<OpenPhone />} />
+            <Route path='management' element={<AdminMange />} />
+            <Route path='addteacher' element={<AddTeacher />} />
+            <Route path='create_code' element={<AdminCreateCode />} />
+            <Route path='cridet' element={<AdminTeacherBalances />} />
+            <Route path='open_phone' element={<OpenPhone />} />
           </Route>
           <Route element={<ProtectedRoute auth={isTeacher} />}>
-            <Route path="create_lecture" element={<CreateLecture />} />
-            <Route path="add_video" element={<AddVideo />} />
-            <Route path="add_month" element={<AddMonth />} />
-            <Route path="add_lecture_month" element={<AddLectureToMonth />} />
-            <Route path="create_group" element={<CreateGroup />} />
-            <Route path="add_student" element={<AddStudent />} />
-            <Route path="addexam" element={<AddExam />} />
-            <Route path="add_pdf" element={<AddPdf />} />
-            <Route path="create_codee" element={<CreateCode />} />
-            <Route path="add_question" element={<AddQuestion />} />
-            <Route path="result/" element={<AllResult />}>
-              <Route path="all_result/:resId" element={<StudentResult />} />
+            <Route path='create_lecture' element={<CreateLecture />} />
+            <Route path='add_video' element={<AddVideo />} />
+            <Route path='add_month' element={<AddMonth />} />
+            <Route path='add_lecture_month' element={<AddLectureToMonth />} />
+            <Route path='create_group' element={<CreateGroup />} />
+            <Route path='add_student' element={<AddStudent />} />
+            <Route path='addexam' element={<AddExam />} />
+            <Route path='add_pdf' element={<AddPdf />} />
+            <Route path='create_codee' element={<CreateCode />} />
+            <Route path='add_question' element={<AddQuestion />} />
+            <Route path='result/' element={<AllResult />}>
+              <Route path='all_result/:resId' element={<StudentResult />} />
             </Route>
           </Route>
         </Route>
 
         <Route
-          path="/*"
+          path='/*'
           element={
             <ProtectedRoute auth={isAdmin || isTeacher || student}>
               <HomeLogin />
             </ProtectedRoute>
           }
         >
-          <Route path="home" element={<PostsHome />} />
-          <Route path="teachers" element={<AllTeacherLogin />} />
-          <Route path="my_courses" element={<MyLecture />} />
-          <Route path="free_courses" element={<FreeCourses />} />
-          <Route path="competitions" element={<Competitions />} />
-          <Route path="the_Firsts" element={<TheFirsts />} />
-          <Route path="save_posts" element={<SavePosts />} />
+          <Route path='home' element={<PostsHome />} />
+          <Route path='teachers' element={<AllTeacherLogin />} />
+          <Route path='my_courses' element={<MyLecture />} />
+          <Route path='free_courses' element={<FreeCourses />} />
+          <Route path='competitions' element={<Competitions />} />
+          <Route path='the_Firsts' element={<TheFirsts />} />
+          <Route path='save_posts' element={<SavePosts />} />
+          <Route path='create_comp' element={<CreateComp />} />
+          <Route path='allComps' element={<AllComps />} />
+          <Route path='add_sub_exam' element={<AddSExam />} />
+          <Route path='monthly_exam/:id' element={<MonthlyExams />} />
 
-          <Route path="question_bank" element={<QuestionBank />} />
-          <Route path="supject/:id" element={<SupjectQuestion />} />
-          <Route path="chapter/:id" element={<ChapterQuestion />} />
-          <Route path="post/:id" element={<PostDetails />} />
+          <Route path='question_bank' element={<QuestionBank />} />
+          <Route path='supject/:id' element={<SupjectQuestion />} />
+          <Route path='chapter/:id' element={<ChapterQuestion />} />
+          <Route path='post/:id' element={<PostDetails />} />
+          <Route path='competition/:id' element={<CompetitionDetails />} />
+          <Route path='Platform_exams' element={<PlatformExams />} />
+          <Route path='exams/:id' element={<Exams />} />
+          <Route path='exam_content/:id' element={<ExamContent />} />
+          <Route path='create_exam' element={<CreateExams />} />
+          <Route path='add_sup_questions' element={<AddSubQuestions />} />
+          <Route path='view_exams' element={<ViewExams />} />
+          <Route path='all_exams' element={<AllExams />} />
+          <Route path='show_grades' element={<ShowGrades />} />
+          <Route path='exam_details/:id' element={<ExamDetails />} />
+          <Route path='subject_exam/:id' element={<SubjectExam />} />
+          <Route
+            path='subject_exam/:id/questions'
+            element={<ExamQuestions />}
+          />
         </Route>
 
         <Route
-          path="/code"
+          path='/code'
           element={
             <ProtectedRoute auth={isAdmin}>
               <Code />
@@ -176,29 +212,31 @@ const AppRouter = () => {
           }
         />
         <Route element={<ProtectedRoute auth={student} />}>
-          <Route path="/wallet" element={<Wallet />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/my_lecture" element={<MyLecture />} />
-          <Route path="/teacher/:id" element={<TeacherDetails />} />
-          <Route path="/exam/:examId" element={<Exam />} />
+          <Route path='/wallet' element={<Wallet />} />
+
+          <Route path='/profile' element={<Profile />} />
+          <Route path='/my_lecture' element={<MyLecture />} />
+          <Route path='/teacher/:id' element={<TeacherDetails />} />
+          <Route path='/exam/:examId' element={<Exam />} />
         </Route>
         <Route element={<ProtectedRoute auth={isTeacher} />}>
-          <Route path="/teacher_wallet" element={<TeacherWallet />} />
-          <Route path="/teacher_exam/:examId" element={<ExamTeacher />} />
-          <Route path="/teacher_courses/*" element={<TeacherCourses />}>
-            <Route path="courses/:id" element={<AllCourses />} />
+          <Route path='/teacher_wallet' element={<TeacherWallet />} />
+          <Route path='/teacher_code' element={<TeacherCode />} />
+          <Route path='/teacher_exam/:examId' element={<ExamTeacher />} />
+          <Route path='/teacher_courses/*' element={<TeacherCourses />}>
+            <Route path='courses/:id' element={<AllCourses />} />
           </Route>
-          <Route path="/my_groups" element={<MyGroups />}>
-            <Route path="group/:id" element={<Groups />} />
+          <Route path='/my_groups' element={<MyGroups />}>
+            <Route path='group/:id' element={<Groups />} />
           </Route>
-          <Route path="/group/:id" element={<GroupDetails />} />
+          <Route path='/group/:id' element={<GroupDetails />} />
         </Route>
         <Route element={<ProtectedRoute auth={isTeacher || student} />}>
-          <Route path="/lecture/:id/" element={<LecturDetails />}></Route>
-          <Route path="/month/:id/" element={<Month />}></Route>
-          <Route path="/video/:videoId" element={<Vedio />} />
+          <Route path='/lecture/:id' element={<LecturDetails />} />
+          <Route path='/month/:id/' element={<Month />} />
+          <Route path='/video/:videoId' element={<Vedio />} />
 
-          <Route path="/video/:videoId" element={<Vedio />} />
+          <Route path='/video/:videoId' element={<Vedio />} />
         </Route>
         {""}
       </Routes>

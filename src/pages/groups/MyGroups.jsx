@@ -10,17 +10,17 @@ const MyGroups = () => {
 
   if (classesLoading) {
     return (
-      <Stack className="w-[90%] m-auto" style={{ minHeight: "75vh" }}>
-        <div className="flex justify-center">
-          <div className="ribbon">
-            <h1 className="font-bold m-4 text-xl text-center">مجموعاتى</h1>
+      <Stack className='w-[90%] m-auto' style={{ minHeight: "75vh" }}>
+        <div className='flex justify-center'>
+          <div className='ribbon'>
+            <h1 className='font-bold m-4 text-xl text-center'>مجموعاتى</h1>
           </div>
         </div>
-        <Skeleton height="20px" className="mt-5" />
-        <Skeleton height="20px" />
-        <Skeleton height="20px" />
-        <Skeleton height="20px" />
-        <Skeleton height="20px" />
+        <Skeleton height='20px' className='mt-5' />
+        <Skeleton height='20px' />
+        <Skeleton height='20px' />
+        <Skeleton height='20px' />
+        <Skeleton height='20px' />
       </Stack>
     );
   }
@@ -31,16 +31,16 @@ const MyGroups = () => {
   };
 
   return (
-    <div className="mt-[150px]" style={{ minHeight: "60vh" }}>
-      <div className="border shadow w-[90%] m-auto">
-        <div className="flex justify-center my-5">
-          <div className="ribbon">
-            <h1 className="font-bold m-4 mx-9 text-xl text-center">مجموعاتى</h1>
+    <div className='mt-[150px]' style={{ minHeight: "60vh" }}>
+      <div className='border shadow w-[90%] m-auto'>
+        <div className='flex justify-center my-5'>
+          <div className='ribbon'>
+            <h1 className='font-bold m-4 mx-9 text-xl text-center'>مجموعاتى</h1>
           </div>
         </div>
         <div>
           {classes ? (
-            <div className="grid justify-center md:flex">
+            <div className='grid justify-center md:flex flex-wrap'>
               {classes.map((classe) => {
                 const isSelected = selectedClassId === classe.id;
 
@@ -51,13 +51,13 @@ const MyGroups = () => {
                     onClick={() => handleClassClick(classe.id)}
                   >
                     <Box
-                      cursor="pointer"
-                      borderWidth="1px"
-                      borderRadius="md"
-                      boxShadow="md"
+                      cursor='pointer'
+                      borderWidth='1px'
+                      borderRadius='md'
+                      boxShadow='md'
                       px={5}
                       py={3}
-                      className="m-2"
+                      className='m-2'
                       bg={isSelected ? "#00204a" : "white"} // تغيير لون الخلفية إذا كان الصف مختارًا
                       color={isSelected ? "white" : "black"} // تغيير لون النص إذا كان الصف مختارًا
                       borderColor={isSelected ? "#00204a" : "gray.300"}

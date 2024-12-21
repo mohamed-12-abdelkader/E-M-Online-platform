@@ -39,89 +39,89 @@ const SectionOne = () => {
   }, []);
 
   return (
-    <div className="bg-[#03a9f5]  - relative overflow-hidden">
+    <div className='bg-[#03a9f5]  - relative overflow-hidden'>
       {/* النقاط الخلفية */}
-      <div className="absolute inset-0 bg-dots-pattern bg-dots opacity-10"></div>
-      <div className="relative z-10 py-20">
-        <div className="container mx-auto flex flex-col items-center">
+      <div className='absolute inset-0 bg-dots-pattern bg-dots opacity-10'></div>
+      <div className='relative z-10 py-20'>
+        <div className='container mx-auto flex flex-col items-center'>
           {/* صورة الشعار */}
           <Zoom>
             <img
               src={img}
-              alt="Logo"
-              className="h-[300px] w-[300px] md:h-[350px] md:w-[350px] "
+              alt='Logo'
+              className='h-[300px] w-[300px] md:h-[350px] md:w-[350px] '
             />
           </Zoom>
           {/* نص متحرك */}
-          <h1 className="text-2xl text-white w-[100%] m-auto md:text-3xl w-[65%] m-auto font-bold text-center mb-4">
+          <h1 className='text-2xl text-white w-[100%] m-auto md:text-3xl w-[65%] m-auto font-bold text-center mb-4'>
             {displayedName}
           </h1>
           {/* خط فاصل */}
-          <div className="h-1 w-[150px] bg-[#ff6600] mb-6"></div>
+          <div className='h-1 w-[150px] bg-[#ff6600] mb-6'></div>
           {/* حالة المستخدم */}
           {isTeacher ? (
-            <div className="flex justify-center">
-              <h1 className="text-lg md:text-xl font-medium text-gray-800">
+            <div className='flex justify-center'>
+              <h1 className='text-lg md:text-xl font-medium text-gray-800'>
                 {messages[currentMessageIndex]}
               </h1>
             </div>
           ) : student ? (
-            <div className="flex flex-col items-center my-4">
-              <h1 className="text-2xl text-black md:text-3xl font-bold text-center mb-4">
+            <div className='flex flex-col items-center my-4'>
+              <h1 className='text-2xl text-black md:text-3xl font-bold text-center mb-4'>
                 كود الطالب: {userData.id}
               </h1>
             </div>
           ) : isAdmin ? (
-            <div className="flex justify-center">
-              <h1 className="text-lg md:text-xl font-medium text-gray-800">
+            <div className='flex justify-center'>
+              <h1 className='text-lg md:text-xl font-medium text-gray-800'>
                 مرحباً، يمكنك إدارة المنصة من هنا.
               </h1>
             </div>
           ) : (
-            <div className="flex space-x-4">
-              <Link to="/login">
-                <img src="log in (1).png" className="h-[60px] w-[160px]" />
+            <div className='flex space-x-4'>
+              <Link to='/login'>
+                <img src='log in (1).png' className='h-[60px] w-[160px]' />
               </Link>
-              <Link to="/singup">
-                <img src="signup2.png" className="h-[60px] w-[160px]" />
+              <Link to='/singup'>
+                <img src='signup2.png' className='h-[60px] w-[160px]' />
               </Link>
             </div>
           )}
         </div>
       </div>
       <svg
-        className="waves"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 24 150 28"
-        preserveAspectRatio="none"
-        shape-rendering="auto"
+        className='waves'
+        xmlns='http://www.w3.org/2000/svg'
+        viewBox='0 24 150 28'
+        preserveAspectRatio='none'
+        shape-rendering='auto'
       >
         <defs>
           <path
-            id="gentle-wave"
-            d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"
+            id='gentle-wave'
+            d='M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z'
           />
         </defs>
-        <g className="parallax">
+        <g className='parallax'>
           <use
-            xlinkHref="#gentle-wave"
-            x="48"
-            y="0"
-            fill="rgba(255,255,255,0.7"
+            xlinkHref='#gentle-wave'
+            x='48'
+            y='0'
+            fill='rgba(255,255,255,0.7'
           />
           <use
-            xlinkHref="#gentle-wave"
-            x="48"
-            y="3"
-            fill="rgba(255,255,255,0.5)"
+            xlinkHref='#gentle-wave'
+            x='48'
+            y='3'
+            fill='rgba(255,255,255,0.5)'
           />
           <use
-            xlinkHref="#gentle-wave"
-            x="48"
-            y="5"
-            fill="rgba(255,255,255,0.3)"
+            xlinkHref='#gentle-wave'
+            x='48'
+            y='5'
+            fill='rgba(255,255,255,0.3)'
           />
-          <use xlinkHref="#gentle-wave" x="48" y="7" fill="#fff" />
+          <use xlinkHref='#gentle-wave' x='48' y='7' fill='#fff' />
         </g>
       </svg>
     </div>

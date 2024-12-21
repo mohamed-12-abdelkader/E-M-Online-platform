@@ -13,7 +13,7 @@ export const PostsProvider = ({ children }) => {
     const token = localStorage.getItem("token");
     try {
       setPostsLoading(true);
-      const response = await baseUrl.get(`api/posts`, {
+      const response = await baseUrl.get(`api/posts?limit=500`, {
         headers: { token: token },
       });
       setPosts(response.data);
