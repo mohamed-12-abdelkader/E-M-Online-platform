@@ -36,11 +36,10 @@ export const CoursesCard = ({
         <div className='my-2'></div>
         <div className='flex justify-between flex-wrap my-4'>
           <h1 className='font-bold'> {lectre.description || lectre.name} </h1>
-          {lectre.noflecture && (
-            <h1 className='font-bold'>عدد المحاضرات: {lectre.noflecture}</h1>
-          )}
 
-          {lectre.price || lectre.price == 0 ? (
+          <h1 className='font-bold'>عدد المحاضرات: {lectre.noflecture}</h1>
+
+          {lectre.price || lectre.price === 0 ? (
             <div>
               <h1 className='font-bold'>
                 السعر: <span className='text-red-500'>{lectre.price} جنية</span>
@@ -69,7 +68,7 @@ export const CoursesCard = ({
             type === "lecture" ||
             type === "comp" ||
             type === "monthly_exam" ||
-            type == "subject_exam"
+            type === "subject_exam"
           ) && (
             <div>
               {lectre.price || lectre.price === 0 ? (
@@ -178,7 +177,27 @@ export const CoursesCard = ({
               </Link>
             </div>
           )
+        ) : type === "teacher_courses" ? (
+          lectre.purchased ? (
+            <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
+              <Link to={href} className='w-[90%]'>
+                <Button colorScheme='blue' variant='outline' className='w-full'>
+                  دخول للكورس
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <Button
+              colorScheme='blue'
+              variant='solid'
+              className='w-[90%] m-auto'
+              onClick={onClick}
+            >
+              شراء الكورس
+            </Button>
+          )
         ) : type === "teacher_courses" ||
+          isTeacher ||
           (type == "freeCourses" && lectre.open) ? (
           <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
             <Link to={href} className='w-[90%]'>
