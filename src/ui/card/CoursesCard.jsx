@@ -35,30 +35,32 @@ export const CoursesCard = ({
         />
         <div className='my-2'></div>
         <div className='flex justify-between flex-wrap my-4'>
-          <h1 className='font-bold'> {lectre.description || lectre.name} </h1>
-          <h1 className='font-bold'>عدد المحاضرات: {lectre.noflecture}</h1>
+          <h1 className='font-bold'>
+            {" "}
+            {lectre.name || lectre.description || lectre.title}{" "}
+          </h1>
+          {type == "subject_exam" ? (
+            <>
+              <h1 className='font-bold'>
+                عدد الاسئلة :{lectre.questions_num}{" "}
+              </h1>
+              <h1 className='font-bold'>
+                وقت الامتحان :{lectre.time_minutes}دقيقة{" "}
+              </h1>
+            </>
+          ) : null}
+          {type == "lecture" ||
+          type == "subject_exam" ||
+          type == "monthly_exam" ||
+          type === "comp" ? null : (
+            <h1 className='font-bold'>عدد المحاضرات: {lectre.noflecture}</h1>
+          )}
 
           {lectre.price || lectre.price === 0 ? (
             <div>
               <h1 className='font-bold'>
                 السعر: <span className='text-red-500'>{lectre.price} جنية</span>
               </h1>
-            </div>
-          ) : null}
-
-          {isAdmin && type === "subject_exam" ? (
-            <div className='flex justify-center gap-2 -3'>
-              <Button colorScheme='red' variant='solid' onClick={handleDeleate}>
-                <MdDelete />
-              </Button>
-
-              <Button
-                colorScheme='green'
-                variant='solid'
-                onClick={() => handleactive(lectre)}
-              >
-                <MdCheckCircle />
-              </Button>
             </div>
           ) : null}
 
@@ -77,7 +79,9 @@ export const CoursesCard = ({
             </div>
           )}
         </div>
-        {(isAdmin && type === "comp") || type === "monthly_exam" ? (
+        {(isAdmin && type === "comp") ||
+        type === "monthly_exam" ||
+        type == "subject_exam" ? (
           <div fontSize='sm' className='flex justify-between'>
             <div>
               <Badge
@@ -194,7 +198,7 @@ export const CoursesCard = ({
               شراء الكورس
             </Button>
           )
-        ) : lectre.open ? (
+        ) : lectre.open || isTeacher ? (
           <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
             <Link to={href} className='w-[90%]'>
               <Button colorScheme='blue' variant='outline' className='w-full'>
@@ -209,7 +213,7 @@ export const CoursesCard = ({
             className='w-[90%] m-auto'
             onClick={onClick}
           >
-            تفعيل الكورس
+            {type === "monthly_exam" ? "تفعيل الامتحان " : " تفعيل الكورس"}
           </Button>
         )}
       </div>

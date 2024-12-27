@@ -29,6 +29,7 @@ const usePuyExam = () => {
       console.log(response);
     } catch (error) {
       console.error(error);
+      toast.error("رصيدك غير كافى ");
     } finally {
       setactivComp(false);
     }

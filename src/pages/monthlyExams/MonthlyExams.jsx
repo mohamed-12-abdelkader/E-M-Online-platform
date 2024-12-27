@@ -93,7 +93,7 @@ const MonthlyExams = () => {
                   lectre={exam}
                   type={"subject_exam"}
                   img={exam.cover?.path}
-                  href={`/monthly_exam/${exam.id}`}
+                  href={`/subject_exam/${exam.id}`}
                   handleactive={() => handleActiveClick(exam.id)}
                   handleDeleate={() => handleDeleteClick(exam.id)}
                 />

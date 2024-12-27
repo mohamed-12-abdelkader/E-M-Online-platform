@@ -28,7 +28,7 @@ import {
 import { FaHeart, FaMoon, FaRegComment, FaReply, FaSun } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { MdNotificationsActive } from "react-icons/md";
-import logo from "../../img/Red_and_Blue_Badminton_Team_Sport_Logo__6_-removebg-preview.png";
+import logo from "../../img/new-logo.png";
 import UserType from "../../Hooks/auth/userType";
 import MyWallet from "../../Hooks/student/MyWallet";
 import useGitNotification from "../../Hooks/posts/useGitNotification";
@@ -41,9 +41,15 @@ export default function Nav() {
   const user = JSON.parse(localStorage.getItem("user"));
   const { colorMode, toggleColorMode } = useColorMode();
   const [notificationsLoading, notifications] = useGitNotification();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure(); // تعريف onClose هنا
   const isMobile = useBreakpointValue({ base: true, md: false });
   const [eventsLoading, events] = useGitEvents();
+
+  const handleDrawerOpen = () => {
+    if (!isOpen) {
+      onOpen();
+    }
+  };
 
   return (
     <Box
@@ -59,16 +65,16 @@ export default function Nav() {
     >
       <Flex h={16} alignItems={"center"} justifyContent={"space-between"}>
         <Link to={user ? `/home` : "/"}>
-          <img src={logo} className='h-[80px] w-[120px] my-2' alt='logo' />
+          <img src={logo} className='h-[85px] w-[85px] mt-3' alt='logo' />
         </Link>
 
         <Flex alignItems={"center"}>
           <Stack direction={"row"} spacing={4}>
             <Button
               onClick={toggleColorMode}
-              className='my-2'
               variant='outline'
               leftIcon={colorMode === "light" ? <FaMoon /> : <FaSun />}
+              style={{ transition: "all 0.2s ease" }} // سريع
             >
               {colorMode === "light" ? " " : " "}
             </Button>
@@ -97,7 +103,10 @@ export default function Nav() {
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent width='300px'>
+                  <PopoverContent
+                    width='300px'
+                    style={{ transition: "all 0.3s ease" }}
+                  >
                     <PopoverArrow />
                     <PopoverCloseButton />
                     <PopoverHeader fontWeight='bold'>
@@ -117,6 +126,7 @@ export default function Nav() {
                               borderBottom='1px solid'
                               borderColor='gray.200'
                               _hover={{ bg: "gray.100" }}
+                              style={{ transition: "background 0.2s ease" }} // تأثير سريع
                             >
                               <Flex alignItems='center'>
                                 <Avatar
@@ -170,7 +180,11 @@ export default function Nav() {
                 </Popover>
 
                 {isMobile && (
-                  <Button onClick={onOpen} variant='outline'>
+                  <Button
+                    onClick={handleDrawerOpen} // التحقق من حالة الفتح
+                    variant='outline'
+                    style={{ transition: "all 0.3s ease" }} // سريع
+                  >
                     ☰
                   </Button>
                 )}
@@ -181,11 +195,12 @@ export default function Nav() {
                     <DrawerHeader className='flex'>
                       <DrawerCloseButton className='' dir='ltr' />
                       <h1 className='mt-5'>
-                        مرحباً: {user.name || user.fname + " " + user.lname}
+                        مرحباً: {user.name || `${user.fname} ${user.lname}`}
                       </h1>
                     </DrawerHeader>
                     <DrawerBody>
                       <Links onClose={onClose} />
+                      {/* إرسال onClose إلى Links */}
                     </DrawerBody>
                   </DrawerContent>
                 </Drawer>

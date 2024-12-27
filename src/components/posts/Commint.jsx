@@ -5,8 +5,6 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
-  Spinner,
-  useDisclosure,
   Input,
   Box,
   Skeleton,
@@ -15,10 +13,10 @@ import {
 import { useState } from "react";
 import { IoSend } from "react-icons/io5";
 import { MdMoreHoriz } from "react-icons/md";
-
+import logo from "../../img/new-logo.png";
 import useDeleateCommint from "../../Hooks/posts/useDeleateCommint";
 import useAddReply from "../../Hooks/posts/useAddReply";
-import EditeModale from "./EditeModale";
+
 const getFirstLetter = (name) => name.charAt(0).toUpperCase();
 const getColorForLetter = (letter) => {
   const colors = [
@@ -41,12 +39,6 @@ const Commint = ({
   fetchData,
   openEditModal,
 }) => {
-  const {
-    isOpen: isEditOpen,
-    onOpen: onEditOpen,
-    onClose: onEditClose,
-  } = useDisclosure();
-
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
   const [showReplies, setShowReplies] = useState({});
@@ -97,14 +89,25 @@ const Commint = ({
                 className=' p-2 my-2 border rounded-md shadow-md  flex justify-between items-start'
               >
                 <div>
-                  {commint.user.cover ? (
-                    <div className='flex '>
+                  {commint.admin_id ? (
+                    <div className='flex items-center'>
+                      <img
+                        src={logo} // Use the imported logo
+                        className='h-[40px] w-[40px] rounded-full mr-3 mx-2'
+                        alt='E-M Online Logo'
+                      />
+                      <div>
+                        <p className='font-bold m-2'>E-M Online</p>
+                      </div>
+                    </div>
+                  ) : commint.user.cover ? (
+                    <div className='flex'>
                       <img
                         src={commint.user.cover}
-                        className='h-[40px] w-[40px] rounded-full mr-3 mx-2 '
+                        className='h-[40px] w-[40px] rounded-full mr-3 mx-2'
                         alt='User avatar'
                       />
-                      <div className=' '>
+                      <div>
                         <p className='font-bold m-2'>{commint.user.username}</p>
                       </div>
                     </div>
@@ -116,11 +119,12 @@ const Commint = ({
                       >
                         {firstLetter}
                       </div>
-                      <div className=' '>
+                      <div>
                         <p className='font-bold m-2'>{commint.user.username}</p>
                       </div>
                     </div>
                   )}
+
                   <div className='px-5'>
                     <p className='text-sm m-3 font-bold'>{commint.content}</p>
                     {(user.role == null && user.id == commint.user_id) ||

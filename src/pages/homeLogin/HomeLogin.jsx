@@ -44,7 +44,6 @@ const HomeLogin = () => {
         mt={{ base: "80px", md: "80px" }}
         mr={{ md: "22%" }}
         width='full'
-        px={4}
         bg={useColorModeValue("gray.50", "gray.900")}
         color={useColorModeValue("gray.800", "white")}
       >

@@ -14,7 +14,7 @@ const useStartExam = ({ id }) => {
       setLoading(true);
       const response = await baseUrl.post(
         `api/exams/start`,
-        { exam_id: id },
+        { exam_id: 4 },
         {
           headers: {
             token: token,
@@ -27,6 +27,7 @@ const useStartExam = ({ id }) => {
     } catch (error) {
       setError(error); // Set the error in the state
       toast.error("Failed to start the exam"); // Optionally show an error toast
+      console.log(error);
     } finally {
       setLoading(false);
     }

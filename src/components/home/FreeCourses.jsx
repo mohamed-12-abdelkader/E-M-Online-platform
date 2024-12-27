@@ -44,7 +44,7 @@ const FreeCourses = () => {
   }
 
   return (
-    <div className='p-6'>
+    <div className='p-'>
       <div>
         <h1
           className='fonts font-bold text-3xl flex text-[#03a9f5] my-3'

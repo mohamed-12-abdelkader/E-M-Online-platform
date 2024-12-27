@@ -193,7 +193,7 @@ body {
     0 0.25em
   );
   background: radial-gradient(0.2em 50% at right, #000a, #0000) border-box,
-    #3b82f6 padding-box; /* the color  */
+    #3b82f6 padding-box;
   width: fit-content;
 }
 
@@ -271,15 +271,15 @@ body {
 
 .fixed-button {
   position: fixed;
-  bottom: 80px; /* يمكنك تعديل هذه القيمة حسب الرغبة */
-  right: -20px; /* يمكنك تعديل هذه القيمة حسب الرغبة */
+  bottom: 80px;
+  right: -20px;
 
-  color: #fff; /* لون النص داخل الزر */
-  padding: 10px 20px; /* هذه القيمة تحدد حجم الزر */
+  color: #fff;
+  padding: 10px 20px;
   border: none;
-  border-radius: 5px; /* لتحديد شكل حواف الزر */
+  border-radius: 5px;
   cursor: pointer;
-  z-index: 1000; /* لضمان ظهور الزر فوق العناصر الأخرى */
+  z-index: 1000;
 }
 
 .login {
@@ -326,23 +326,22 @@ body {
 
 .dotted-background {
   background-image: radial-gradient(white 15%, transparent 20%);
-  background-size: 20px 20px; /* حجم النقاط */
+  background-size: 20px 20px;
 }
 
 .section-one {
   background-image: url(../public/cb538a60-0865-4d86-8f2a-f7884951d90e.jpeg);
 }
 
-/* تخصيص شريط التمرير */
 div::-webkit-scrollbar {
   width: 8px;
 }
 
 div::-webkit-scrollbar-thumb {
-  background-color: #cbd5e0; /* لون الشريط */
-  border-radius: 4px; /* زوايا مستديرة */
+  background-color: #cbd5e0;
+  border-radius: 4px;
 }
 
 div::-webkit-scrollbar-thumb:hover {
-  background-color: #a0aec0; /* لون الشريط عند التمرير */
+  background-color: #a0aec0;
 }

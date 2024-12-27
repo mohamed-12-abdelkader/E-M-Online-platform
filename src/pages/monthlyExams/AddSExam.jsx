@@ -23,9 +23,12 @@ const AddSExam = () => {
     loading,
     settitle,
     title,
+    questions_num,
+    setquestions_num,
+    time_minutes,
+    settime_minutes,
     setCollection_id,
-    description,
-    setdescription,
+    selectedImages,
   } = useAddSubExams();
 
   // تحديث قائمة الامتحانات بناءً على الصف المختار
@@ -75,12 +78,21 @@ const AddSExam = () => {
 
           {/* وصف الامتحان */}
           <FormControl isRequired>
-            <FormLabel>وصف الامتحان</FormLabel>
+            <FormLabel>وقت الامتحان</FormLabel>
             <Input
               type='text'
-              placeholder='أدخل وصف الامتحان'
-              value={description}
-              onChange={(e) => setdescription(e.target.value)}
+              placeholder='أدخل وقت الامتحان'
+              value={time_minutes}
+              onChange={(e) => settime_minutes(e.target.value)}
+            />
+          </FormControl>
+          <FormControl isRequired>
+            <FormLabel> عدد الاسئلة </FormLabel>
+            <Input
+              type='text'
+              placeholder='أدخل عدد الاسئلة  '
+              value={questions_num}
+              onChange={(e) => setquestions_num(e.target.value)}
             />
           </FormControl>
 

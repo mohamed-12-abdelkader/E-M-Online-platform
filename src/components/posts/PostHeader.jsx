@@ -15,7 +15,7 @@ import {
   Textarea,
   Input,
 } from "@chakra-ui/react";
-import logo from "../../img/Red_and_Blue_Badminton_Team_Sport_Logo__6_-removebg-preview.png";
+import logo from "../../img/new-logo.png";
 import { MdMoreHoriz } from "react-icons/md";
 import { useState } from "react";
 import useDeletePost from "../../Hooks/posts/useDeletePost";
@@ -70,22 +70,22 @@ const PostHeader = ({ name, cover, admi_id, id, content, post }) => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className='flex justify-between items-center mb-4'>
         {admi_id ? (
-          <div className="flex items-center">
+          <div className='flex items-center'>
             <img
               src={logo}
-              className="h-[80px] w-[80px]"
+              className='h-[70px] w-[70px]'
               style={{ borderRadius: "50%" }}
             />
-            <h1 className="text-xl font-bold mx-2">E-M Online</h1>
+            <h1 className='text-xl font-bold mx-2'>E-M Online</h1>
           </div>
         ) : (
-          <div className="flex items-center">
+          <div className='flex items-center'>
             {cover ? (
               <img
                 src={cover}
-                className="h-[40px] w-[40px]"
+                className='h-[40px] w-[40px]'
                 style={{ borderRadius: "50%" }}
               />
             ) : (
@@ -95,7 +95,7 @@ const PostHeader = ({ name, cover, admi_id, id, content, post }) => {
                 {initial}
               </div>
             )}
-            <h1 className="text-xl font-bold mx-2">{name}</h1>
+            <h1 className='text-xl font-bold mx-2'>{name}</h1>
           </div>
         )}
         {(user.role == null && user.id == post.user_id) ||
@@ -106,8 +106,8 @@ const PostHeader = ({ name, cover, admi_id, id, content, post }) => {
               <MenuButton
                 as={IconButton}
                 icon={<MdMoreHoriz />}
-                variant="ghost"
-                aria-label="Options"
+                variant='ghost'
+                aria-label='Options'
               />
               <MenuList>
                 <MenuItem onClick={openEditModal}>تعديل</MenuItem>
@@ -134,18 +134,18 @@ const PostHeader = ({ name, cover, admi_id, id, content, post }) => {
           </ModalBody>
           <ModalFooter>
             <Button
-              variant="ghost"
+              variant='ghost'
               onClick={() => !deleteLoading && closeModal()}
             >
               إلغاء
             </Button>
             <Button
-              colorScheme="red"
+              colorScheme='red'
               onClick={handleDelete}
               isLoading={deleteLoading}
-              loadingText="جاري الحذف..."
+              loadingText='جاري الحذف...'
             >
-              {deleteLoading ? <Spinner size="sm" /> : "تأكيد الحذف"}
+              {deleteLoading ? <Spinner size='sm' /> : "تأكيد الحذف"}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -160,17 +160,17 @@ const PostHeader = ({ name, cover, admi_id, id, content, post }) => {
             <Textarea
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="أدخل الاسم الجديد"
-              resize="vertical"
-              minHeight="100px"
+              placeholder='أدخل الاسم الجديد'
+              resize='vertical'
+              minHeight='100px'
             />
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" onClick={closeEditModal}>
+            <Button variant='ghost' onClick={closeEditModal}>
               إلغاء
             </Button>
             <Button
-              colorScheme="blue"
+              colorScheme='blue'
               onClick={handleEdit}
               isLoading={editeLoading}
             >
@@ -186,32 +186,32 @@ const PostHeader = ({ name, cover, admi_id, id, content, post }) => {
         <ModalContent>
           <ModalHeader>تمويل المنشور</ModalHeader>
           <ModalBody>
-            <h1 className="font-bold my-1"> تاريخ البدء</h1>
+            <h1 className='font-bold my-1'> تاريخ البدء</h1>
             <Input
-              placeholder="تاريخ البدء"
+              placeholder='تاريخ البدء'
               value={start_date}
               onChange={handlestart_dateChange}
               mb={3}
             />
-            <h1 className="font-bold my-1"> تاريخ الانتهاء</h1>
+            <h1 className='font-bold my-1'> تاريخ الانتهاء</h1>
             <Input
-              placeholder="تاريخ الانتهاء"
+              placeholder='تاريخ الانتهاء'
               value={end_date}
               onChange={handleend_dateChange}
               mb={3}
             />
             <Input
-              placeholder="الأولوية"
+              placeholder='الأولوية'
               value={priority}
               onChange={handlepriorityChange}
               mb={3}
             />
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" onClick={closeFundingModal}>
+            <Button variant='ghost' onClick={closeFundingModal}>
               إلغاء
             </Button>
-            <Button colorScheme="green" onClick={handleAddsponser}>
+            <Button colorScheme='green' onClick={handleAddsponser}>
               تمويل
             </Button>
           </ModalFooter>

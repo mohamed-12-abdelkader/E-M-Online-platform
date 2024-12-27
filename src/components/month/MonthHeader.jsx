@@ -30,6 +30,7 @@ const MonthHeader = ({ image, description, noflecture }) => {
       maxW='7xl'
       mt={10}
       mb={10}
+      className='border shadow-lg'
     >
       <Flex
         direction={{ base: "column", md: "row" }}

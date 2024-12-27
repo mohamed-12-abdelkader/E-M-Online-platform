@@ -7,8 +7,10 @@ const useAddSubExams = () => {
 
   const [selectedImages, setSelectedImages] = useState([]);
   const [title, settitle] = useState("");
+  const [time_minutes, settime_minutes] = useState("");
+  const [questions_num, setquestions_num] = useState("");
   const [collection_id, setCollection_id] = useState("");
-  const [description, setdescription] = useState("");
+
   const [is_ready, setis_ready] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,8 @@ const useAddSubExams = () => {
 
     const formData = new FormData();
     formData.append("title", title);
-    formData.append("description", description);
+    formData.append("time_minutes", time_minutes);
+    formData.append("questions_num", questions_num);
 
     formData.append("collection_id", collection_id);
     formData.append("is_ready", false);
@@ -69,11 +72,11 @@ const useAddSubExams = () => {
     loading,
     settitle,
     title,
-
+    questions_num,
+    setquestions_num,
+    time_minutes,
+    settime_minutes,
     setCollection_id,
-    description,
-    setdescription,
-
     selectedImages,
   };
 };
