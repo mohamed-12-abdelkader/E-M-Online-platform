@@ -1,38 +1,48 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext } from "react";
 import baseUrl from "../../api/baseUrl";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 const PostsContext = createContext();
 
 export const usePosts = () => useContext(PostsContext);
 
+const fetchPosts = async ({ pageParam }) => {
+  console.info("PageParams", pageParam)
+  const token = localStorage.getItem("token"); // User token
+
+  const response = await baseUrl.get("api/posts", {
+    params: { cursor: pageParam, limit: 20 },
+    headers: { token },
+  });
+  return response.data;
+};
+
 export const PostsProvider = ({ children }) => {
-  const [posts, setPosts] = useState([]);
-  const [postsLoading, setPostsLoading] = useState(false);
-  const [limit, setLimit] = useState(20); // عدد البوستات الافتراضي
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isPending,
+  } = useInfiniteQuery({
+    queryKey: ["posts"], // Query key
+    queryFn: fetchPosts,
+    initialPageParam: null,
+    getNextPageParam: (lastPage, pages) => lastPage.nextCursor, // Pagination handling
+  });
 
-  const fetchPosts = async (currentLimit) => {
-    const token = localStorage.getItem("token");
-    try {
-      setPostsLoading(true);
-      const response = await baseUrl.get(`api/posts?limit=${currentLimit}`, {
-        headers: { token: token },
-      });
-      setPosts(response.data.posts); // عرض البيانات المحدثة
-    } catch (error) {
-      console.log("Error fetching posts:", error);
-    } finally {
-      setPostsLoading(false);
-    }
-  };
-
-  const loadMorePosts = () => setLimit((prevLimit) => prevLimit + 20);
-
-  useEffect(() => {
-    fetchPosts(limit);
-  }, [limit]);
+  // Flattening the paginated posts data
+  const flatPosts = data?.pages.flatMap((page) => page.posts) || [];
 
   return (
-    <PostsContext.Provider value={{ posts, postsLoading, loadMorePosts }}>
+    <PostsContext.Provider
+      value={{
+        posts: flatPosts,
+        postsLoading: isFetchingNextPage || isPending,
+        loadMorePosts: fetchNextPage,
+        hasMorePosts: hasNextPage,
+      }}
+    >
       {children}
     </PostsContext.Provider>
   );
