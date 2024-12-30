@@ -23,11 +23,11 @@ const SingUp = () => {
   ] = StudentSignUp();
   return (
     <div
-      className=' mt-[70px] mb-10 grid justify-center bg-[#03a9f5] p-3  md:flex justify-center items-center '
+      className=' mt-[70px] mb-10 grid justify-center bg-[#] p-3  md:flex justify-center items-center '
       style={{ direction: "ltr", minHeight: "90vh" }}
     >
       <div
-        className='md:w-[70%] bg-white p-3 mt-[50px]'
+        className='md:w-[70%] bg-white border shadow-md p-3 mt-[50px]'
         style={{ borderRadius: "20px" }}
       >
         <div>

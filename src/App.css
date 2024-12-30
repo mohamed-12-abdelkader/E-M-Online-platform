@@ -345,3 +345,65 @@ div::-webkit-scrollbar-thumb {
 div::-webkit-scrollbar-thumb:hover {
   background-color: #a0aec0;
 }
+
+.slider-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory; /* تفعيل خاصية scroll snapping */
+  scrollbar-width: none; /* إخفاء شريط التمرير */
+  -ms-overflow-style: none; /* إخفاء شريط التمرير في IE */
+}
+
+.slider-container::-webkit-scrollbar {
+  display: none; /* إخفاء شريط التمرير في Webkit */
+}
+
+.slider-container > * {
+  scroll-snap-align: center; /* محاذاة الكارد في المركز */
+  flex: 0 0 auto; /* منع الكارد من التمدد */
+  width: 90%; /* تعيين العرض المناسب */
+  margin: 0 auto; /* توسيط الكارد */
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+}
+
+.slider-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar in WebKit browsers */
+}
+
+.slider-container.active {
+  cursor: grabbing;
+}
+
+.slider {
+  position: relative;
+  padding: 0 0px; /* Add padding to the slider for button spacing */
+}
+
+.slide-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.prev {
+  left: 8px;
+}
+
+.next {
+  right: 8px;
+}
+a {
+  text-decoration: none !important;
+}

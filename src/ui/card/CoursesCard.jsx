@@ -19,7 +19,7 @@ export const CoursesCard = ({
   return (
     <Card
       key={lectre.id}
-      className='w-[90%] mx-auto my-3 md:w-[320px] md:mx-3 m-2'
+      className='w-[90%] mx-2 my-3 md:w-[320px] md:mx-3 m-2'
       style={{ border: "1px solid #ccc" }}
     >
       <CardBody>
@@ -30,11 +30,14 @@ export const CoursesCard = ({
             img ||
             "default-image-path.jpg"
           }
-          className='h-[220px] w-[100%]'
+          className='h-[220px] w-[300px]'
           alt='Course'
         />
         <div className='my-2'></div>
         <div className='flex justify-between flex-wrap my-4'>
+          {type == "teacher" ? (
+            <h1 className='font-bold'>{lectre.subject}</h1>
+          ) : null}
           <h1 className='font-bold'>
             {" "}
             {lectre.name || lectre.description || lectre.title}{" "}
@@ -52,7 +55,8 @@ export const CoursesCard = ({
           {type == "lecture" ||
           type == "subject_exam" ||
           type == "monthly_exam" ||
-          type === "comp" ? null : (
+          type === "comp" ||
+          type == "teacher" ? null : (
             <h1 className='font-bold'>عدد المحاضرات: {lectre.noflecture}</h1>
           )}
 
@@ -68,7 +72,8 @@ export const CoursesCard = ({
             type === "lecture" ||
             type === "comp" ||
             type === "monthly_exam" ||
-            type === "subject_exam"
+            type === "subject_exam" ||
+            type == "teacher"
           ) && (
             <div>
               {lectre.price || lectre.price === 0 ? (
@@ -122,101 +127,139 @@ export const CoursesCard = ({
           </div>
         )}
       </CardBody>
-      <hr />
-      <div className='my-3 text-center'>
-        {type === "subject_exam" && lectre.completed ? (
-          <Button
-            colorScheme='red'
-            variant='outline'
-            className='w-[90%] m-auto'
-            disabled
-          >
-            هذا الامتحان مكتمل
-          </Button>
-        ) : isAdmin ? (
-          <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
-            <Link to={href} className='w-[90%]'>
-              <Button colorScheme='blue' variant='outline' className='w-full'>
-                {type === "lecture"
-                  ? "دخول للمحاضرة"
-                  : type === "comp"
-                  ? "دخول للمسابقة"
-                  : type === "monthly_exam" || type === "subject_exam"
-                  ? "دخول للامتحان"
-                  : "دخول للكورس"}
-              </Button>
-            </Link>
+      {type == "teacher" ? (
+        <div>
+          <hr />
+          <div className='p-3' dir='rtl'>
+            <h1 className='font-bold'>
+              {" "}
+              مدرس ال{lectre.subject} للثانوية العامة{" "}
+            </h1>
           </div>
-        ) : type === "lecture" ? (
-          <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
-            <Link to={href} className='w-[90%]'>
-              <Button colorScheme='blue' variant='outline' className='w-full'>
-                دخول للمحاضرة
+        </div>
+      ) : (
+        <div>
+          <hr />
+          <div className='my-3 text-center'>
+            {type === "subject_exam" && lectre.completed ? (
+              <Button
+                colorScheme='red'
+                variant='outline'
+                className='w-[90%] m-auto'
+                disabled
+              >
+                هذا الامتحان مكتمل
               </Button>
-            </Link>
-          </div>
-        ) : type === "my_courses" ? (
-          <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
-            <Link to={href} className='w-[90%]'>
-              <Button colorScheme='blue' variant='outline' className='w-full'>
-                دخول للكورس
-              </Button>
-            </Link>
-          </div>
-        ) : lectre.purchased || type === "subject_exam" ? (
-          type === "subject_exam" && !lectre.is_ready ? (
-            <Button colorScheme='red' variant='outline' className='w-[90%]'>
-              الامتحان غير مفعل
-            </Button>
-          ) : (
-            <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
-              <Link to={href} className='w-[90%]'>
-                <Button colorScheme='blue' variant='outline' className='w-full'>
-                  {type === "monthly_exam" || type === "subject_exam"
-                    ? "دخول للامتحان"
-                    : "دخول للكورس"}
+            ) : isAdmin ? (
+              <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
+                <Link to={href} className='w-[90%]'>
+                  <Button
+                    colorScheme='blue'
+                    variant='outline'
+                    className='w-full'
+                  >
+                    {type === "lecture"
+                      ? "دخول للمحاضرة"
+                      : type === "comp"
+                      ? "دخول للمسابقة"
+                      : type === "monthly_exam" || type === "subject_exam"
+                      ? "دخول للامتحان"
+                      : "دخول للكورس"}
+                  </Button>
+                </Link>
+              </div>
+            ) : type === "lecture" ? (
+              <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
+                <Link to={href} className='w-[90%]'>
+                  <Button
+                    colorScheme='blue'
+                    variant='outline'
+                    className='w-full'
+                  >
+                    دخول للمحاضرة
+                  </Button>
+                </Link>
+              </div>
+            ) : type === "my_courses" ? (
+              <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
+                <Link to={href} className='w-[90%]'>
+                  <Button
+                    colorScheme='blue'
+                    variant='outline'
+                    className='w-full'
+                  >
+                    دخول للكورس
+                  </Button>
+                </Link>
+              </div>
+            ) : lectre.purchased || type === "subject_exam" ? (
+              type === "subject_exam" && !lectre.is_ready ? (
+                <Button colorScheme='red' variant='outline' className='w-[90%]'>
+                  الامتحان غير مفعل
                 </Button>
-              </Link>
-            </div>
-          )
-        ) : type === "teacher_courses" ? (
-          lectre.open ? (
-            <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
-              <Link to={href} className='w-[90%]'>
-                <Button colorScheme='blue' variant='outline' className='w-full'>
-                  دخول للكورس
+              ) : (
+                <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
+                  <Link to={href} className='w-[90%]'>
+                    <Button
+                      colorScheme='blue'
+                      variant='outline'
+                      className='w-full'
+                    >
+                      {type === "monthly_exam" || type === "subject_exam"
+                        ? "دخول للامتحان"
+                        : "دخول للكورس"}
+                    </Button>
+                  </Link>
+                </div>
+              )
+            ) : type === "teacher_courses" ? (
+              lectre.open ? (
+                <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
+                  <Link to={href} className='w-[90%]'>
+                    <Button
+                      colorScheme='blue'
+                      variant='outline'
+                      className='w-full'
+                    >
+                      دخول للكورس
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <Button
+                  colorScheme='blue'
+                  variant='solid'
+                  className='w-[90%] m-auto'
+                  onClick={onClick}
+                >
+                  شراء الكورس
                 </Button>
-              </Link>
-            </div>
-          ) : (
-            <Button
-              colorScheme='blue'
-              variant='solid'
-              className='w-[90%] m-auto'
-              onClick={onClick}
-            >
-              شراء الكورس
-            </Button>
-          )
-        ) : lectre.open || isTeacher ? (
-          <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
-            <Link to={href} className='w-[90%]'>
-              <Button colorScheme='blue' variant='outline' className='w-full'>
-                دخول للكورس
+              )
+            ) : lectre.open || isTeacher ? (
+              <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
+                <Link to={href} className='w-[90%]'>
+                  <Button
+                    colorScheme='blue'
+                    variant='outline'
+                    className='w-full'
+                  >
+                    دخول للكورس
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <Button
+                colorScheme='blue'
+                variant='solid'
+                className='w-[90%] m-auto'
+                onClick={onClick}
+              >
+                {type === "monthly_exam" ? "تفعيل الامتحان " : " تفعيل الكورس"}
               </Button>
-            </Link>
+            )}
           </div>
-        ) : (
-          <Button
-            colorScheme='blue'
-            variant='solid'
-            className='w-[90%] m-auto'
-            onClick={onClick}
-          >
-            {type === "monthly_exam" ? "تفعيل الامتحان " : " تفعيل الكورس"}
-          </Button>
-        )}
-      </div>
+        </div>
+      )}
     </Card>
   );
 };

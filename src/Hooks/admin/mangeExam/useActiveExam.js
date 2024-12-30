@@ -36,6 +36,7 @@ const useActiveExam = ({ api }) => {
       console.error(error);
     } finally {
       refetchExam();
+      setactivComp();
     }
   };
 

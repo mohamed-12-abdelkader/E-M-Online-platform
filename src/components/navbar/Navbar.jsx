@@ -75,6 +75,7 @@ export default function Nav() {
               variant='outline'
               leftIcon={colorMode === "light" ? <FaMoon /> : <FaSun />}
               style={{ transition: "all 0.2s ease" }} // سريع
+              className='my-2'
             >
               {colorMode === "light" ? " " : " "}
             </Button>

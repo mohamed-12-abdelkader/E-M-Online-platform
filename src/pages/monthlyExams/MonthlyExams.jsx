@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import useGitMonthlyExamSetailds from "../../Hooks/admin/mangeExam/useGitMonthlyExamSetailds";
 import {
@@ -33,34 +33,35 @@ const MonthlyExams = () => {
   const [deleteLoading, deleteExam] = useDeleateExam({ status: "exams" });
   const [activExam, activloading] = useActiveExam({ api: "exams" });
   const displayedExams = isAdmin ? exams : student ? studentExams : [];
-  // Modal State
-  console.log(displayedExams);
+
+  // تحديث البيانات عند فتح الصفحة
+  useEffect(() => {
+    if (isAdmin || student) {
+      refetchExam();
+    }
+  }, [isAdmin, student, refetchExam]);
+
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedExamId, setSelectedExamId] = useState(null);
   const [modalType, setModalType] = useState(""); // "delete" or "activate"
 
-  // Handle opening the delete modal
   const handleDeleteClick = (examId) => {
     setSelectedExamId(examId);
     setModalType("delete");
     onOpen(); // Open the modal
   };
 
-  // Handle opening the activate modal
   const handleActiveClick = (examId) => {
     setSelectedExamId(examId);
     setModalType("activate");
     onOpen(); // Open the modal
   };
 
-  // Confirm action (delete or activate)
-  // Confirm action (delete or activate)
   const confirmAction = async () => {
     try {
       if (modalType === "delete") {
         await deleteExam(selectedExamId);
       } else if (modalType === "activate") {
-        // قم بالعثور على الامتحان المحدد من قائمة الامتحانات
         const selectedExam = exams.find((exam) => exam.id === selectedExamId);
         if (selectedExam) {
           const newStatus = !selectedExam.is_ready;

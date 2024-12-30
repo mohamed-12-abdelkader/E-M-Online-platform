@@ -54,7 +54,7 @@ const ViewExams = () => {
       // يمكنك إضافة منطق الشراء هنا
       await buyExam(exam.id);
     }
-
+    refetchExams();
     onClose();
   };
 

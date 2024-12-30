@@ -6,70 +6,75 @@ import { Skeleton, Stack } from "@chakra-ui/react";
 const AllTeacher = () => {
   const [loading, teachers] = GitAllTeacher();
 
+  // Function to shuffle array elements
+  const shuffleArray = (array) => {
+    return array.sort(() => Math.random() - 0.5);
+  };
+
   if (loading) {
     return (
-      <Stack className="w-[90%] m-auto">
-        <div className="flex justify-center">
-          <div className="">
-            <h1 className="big-font m-4 text-xl text-center">
-              E-M online Teachers
+      <Stack className='w-[90%] m-auto'>
+        <div className='flex justify-center'>
+          <div className=''>
+            <h1 className='text-center text-2xl font-bold mb-8'>
+              مدرسين المنصة
             </h1>
           </div>
         </div>
-        <Skeleton height="20px" className="mt-5" />
-        <Skeleton height="20px" />
-        <Skeleton height="20px" />
-        <Skeleton height="20px" />
-        <Skeleton height="20px" />
+        <Skeleton height='20px' className='mt-5' />
+        <Skeleton height='20px' />
+        <Skeleton height='20px' />
+        <Skeleton height='20px' />
+        <Skeleton height='20px' />
       </Stack>
     );
   }
 
+  // Shuffle teachers array
+  const shuffledTeachers = shuffleArray([...teachers]);
+
   return (
-    <div className=" py-5 mb-5 w-full">
-      <div className="flex justify-center">
-        <div className="">
-          <h1 className="big-font m-2 text-xl text-center text-[#03a9f5] ">
-            E-M online Teachers
-          </h1>
+    <div className='py-5 mb-5 w-full'>
+      <div className='flex justify-center'>
+        <div className=''>
+          <h1 className='text-center text-2xl font-bold mb-8'>مدرسين المنصة</h1>
         </div>
       </div>
-      {teachers.length === 0 ? (
+      {shuffledTeachers.length === 0 ? (
         <div>
-          <div className="w-90 border shadow h-250 m-auto my-8 flex justify-center items-center">
-            <div className="ribbon">
-              <h1 className="font-bold text-xl m-2">لا يوجد مدرسين الان !!!</h1>
+          <div className='w-90 border shadow h-250 m-auto my-8 flex justify-center items-center'>
+            <div className='ribbon'>
+              <h1 className='font-bold text-xl m-2'>لا يوجد مدرسين الان !!!</h1>
             </div>
           </div>
         </div>
       ) : (
-        <div dir="ltr" className="w-[100%] my-5">
-          <Marquee>
-            <div className="flex justify-center flex-wrap">
-              {teachers.map((teacher) => (
-                <div key={teacher.id} className="m-2 w-[200px] text-center">
-                  <img
-                    src={teacher.image}
-                    className="w-[180px] h-[180px]"
-                    style={{ borderRadius: "50%" }}
-                  />
-                  <h1 className="my-2  font-bold">{teacher.name}</h1>
-                  <h1 className="my-2  font-bold">مدرس</h1>
+        <div className='w-[95%] m-auto flex justify-center my-5' dir='rtl'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl m-auto'>
+            {shuffledTeachers.map((teacher) => (
+              <div
+                key={teacher.id}
+                style={{ border: "2px solid white" }}
+                className='flex justify-center flex-col w-[320px] items-center justify-center p-5 shadow-lg rounded-lg  hover:shadow-2xl transition duration-300'
+              >
+                <div className=' w-[300px] text-center'>
+                  <div className='flex justify-center'>
+                    <img
+                      src={teacher.image}
+                      className='w-[60px] h-[60px] rounded-full border border-white'
+                      alt={teacher.name}
+                    />
+                  </div>
+                  <div className='ml-4 mx-3'>
+                    <h1 className='font-bold text-lg mx-2'>{teacher.name}</h1>
+                    <h1 className='font-bold text-lg mx-2'>
+                      {teacher.subject}
+                    </h1>
+                  </div>
                 </div>
-              ))}
-              {teachers.map((teacher) => (
-                <div key={teacher.id} className="m-2 w-[200px] text-center">
-                  <img
-                    src={teacher.image}
-                    className="w-[180px] h-[180px]"
-                    style={{ borderRadius: "50%" }}
-                  />
-                  <h1 className="my-2  font-bold">{teacher.name}</h1>
-                  <h1 className="my-2  font-bold">مدرس</h1>
-                </div>
-              ))}
-            </div>
-          </Marquee>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

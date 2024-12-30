@@ -1,96 +1,162 @@
+import { Box, Flex, Heading, Text, useColorModeValue } from "@chakra-ui/react";
 import { PiExamLight } from "react-icons/pi";
-import { GiTeacher } from "react-icons/gi";
-import { GiBookmarklet } from "react-icons/gi";
+import { GiTeacher, GiBookmarklet } from "react-icons/gi";
 import { Zoom } from "react-awesome-reveal";
+
 const SectionTwo = () => {
+  const cardBg = useColorModeValue("#f1f0fe", "#2c2c2c");
+  const cardBorder = useColorModeValue("gray.300", "gray.600");
+  const textColor = useColorModeValue("gray.700", "white");
+  const secondaryTextColor = useColorModeValue("gray.600", "gray.300");
+  const iconBg = useColorModeValue("#03a9f5", "#03a9f5");
+
   return (
-    <div className="my-[50px] mx-5 ">
-      <div className="my-5 text-center mb-[70px]">
-        <h1
-          className="fonts font-bold text-3xl  text-gray-700 my-3"
-          style={{ fontWeight: "bold", fontSize: "50px" }}
+    <Box my='50px' mx='5'>
+      <Flex justify='center' mb='70px'>
+        <Heading
+          as='h1'
+          fontSize={{ base: "3xl", md: "50px" }}
+          color={textColor}
+          fontWeight='bold'
+          textAlign='center'
         >
-          ماذا نقدم ؟{" "}
-        </h1>
-      </div>
-      <div className="w-[90%] m-auto flex  flex-wrap justify-between">
+          ماذا نقدم ؟
+        </Heading>
+      </Flex>
+      <Flex
+        w='90%'
+        m='auto'
+        flexWrap='wrap'
+        justify='space-between'
+        align='center'
+      >
         <Zoom>
-          <div
-            className="h-[320px] my-[40px] w-[270px] bg-[#f1f0fe] relative shadow border md:m-5 "
-            style={{ borderRadius: "20px" }}
+          <Box
+            h='320px'
+            w='270px'
+            bg={cardBg}
+            border='1px solid'
+            borderColor={cardBorder}
+            borderRadius='20px'
+            shadow='md'
+            position='relative'
+            my='40px'
           >
-            <div
-              className="bg-[#03a9f5] h-[120px] w-[120px] absolute top-[-15%] right-[-10%] flex justify-center items-center md:right-[-15%]"
-              style={{ borderRadius: "50%" }}
+            <Flex
+              bg={iconBg}
+              h='120px'
+              w='120px'
+              borderRadius='full'
+              position='absolute'
+              top='-15%'
+              right='-10%'
+              justify='center'
+              align='center'
             >
-              <PiExamLight className="text-white text-5xl" />
-            </div>
-            <div className="mt-[80px] p-2">
-              <h1 className="font-bold text-xl text-black">
-                {" "}
-                - امتحانات دورية ومستمرة{" "}
-              </h1>
-              <div className="mt-[30px]">
-                <h1 className="font-bold text-black">
-                  اختبر مستواك من خلال امتحانات دورية مستمرة على كل كورس او على
-                  كل محاضرة
-                </h1>
-              </div>
-            </div>
-          </div>
+              <PiExamLight className='text-white text-5xl' />
+            </Flex>
+            <Box mt='80px' p='2'>
+              <Heading
+                as='h2'
+                fontSize='xl'
+                color={textColor}
+                fontWeight='bold'
+              >
+                - امتحانات دورية ومستمرة
+              </Heading>
+              <Text mt='30px' color={secondaryTextColor} fontWeight='bold'>
+                اختبر مستواك من خلال امتحانات دورية مستمرة على كل كورس او على كل
+                محاضرة
+              </Text>
+            </Box>
+          </Box>
         </Zoom>
+
         <Zoom>
-          <div
-            className="h-[320px] my-[40px] w-[270px] bg-[#f1f0fe] relative shadow border md:m-5 "
-            style={{ borderRadius: "20px" }}
+          <Box
+            h='320px'
+            w='270px'
+            bg={cardBg}
+            border='1px solid'
+            borderColor={cardBorder}
+            borderRadius='20px'
+            shadow='md'
+            position='relative'
+            my='40px'
           >
-            <div
-              className="bg-[#03a9f5] h-[120px] w-[120px] absolute top-[-15%] right-[-10%] flex justify-center items-center md:right-[-15%]"
-              style={{ borderRadius: "50%" }}
+            <Flex
+              bg={iconBg}
+              h='120px'
+              w='120px'
+              borderRadius='full'
+              position='absolute'
+              top='-15%'
+              right='-10%'
+              justify='center'
+              align='center'
             >
-              <GiTeacher className="text-white text-5xl" />
-            </div>
-            <div className="mt-[80px] p-2">
-              <h1 className="font-bold text-xl text-black">
-                {" "}
-                - نخبة من اكفاء المدرسين{" "}
-              </h1>
-              <div className="mt-[30px]">
-                <h1 className="font-bold text-black">
-                  المنصة بتوفرلك مجموعة من اكفاء وافضل المدرسين على مستوى
-                  الجمهورية فى كل مواد الثانوية العامة
-                </h1>
-              </div>
-            </div>
-          </div>
+              <GiTeacher className='text-white text-5xl' />
+            </Flex>
+            <Box mt='80px' p='2'>
+              <Heading
+                as='h2'
+                fontSize='xl'
+                color={textColor}
+                fontWeight='bold'
+              >
+                - نخبة من اكفاء المدرسين
+              </Heading>
+              <Text mt='30px' color={secondaryTextColor} fontWeight='bold'>
+                المنصة بتوفرلك مجموعة من اكفاء وافضل المدرسين على مستوى
+                الجمهورية فى كل مواد الثانوية العامة
+              </Text>
+            </Box>
+          </Box>
         </Zoom>
+
         <Zoom>
-          <div
-            className="h-[320px] my-[40px] w-[270px] bg-[#f1f0fe] relative shadow border md:m-8 "
-            style={{ borderRadius: "20px" }}
+          <Box
+            h='320px'
+            w='270px'
+            bg={cardBg}
+            border='1px solid'
+            borderColor={cardBorder}
+            borderRadius='20px'
+            shadow='md'
+            position='relative'
+            my='40px'
           >
-            <div
-              className="bg-[#03a9f5] h-[120px] w-[120px] absolute top-[-15%] right-[-10%] flex justify-center items-center md:right-[-15%]"
-              style={{ borderRadius: "50%" }}
+            <Flex
+              bg={iconBg}
+              h='120px'
+              w='120px'
+              borderRadius='full'
+              position='absolute'
+              top='-15%'
+              right='-10%'
+              justify='center'
+              align='center'
             >
-              <GiBookmarklet className="text-white text-5xl" />
-            </div>
-            <div className="mt-[80px] p-2">
-              <h1 className="font-bold text-xl text-black">
-                {" "}
-                - كتب و pdf لكل المواد{" "}
-              </h1>
-              <div className="mt-[30px]">
-                <h1 className="font-bold text-black">
-                  متاح لكل محاضرة ال pdf الخاص بها او تقدر تطلب الكتاب الخاص
-                  بالمدرس وهيجيلك شحن لحد البيت{" "}
-                </h1>
-              </div>
-            </div>
-          </div>
+              <GiBookmarklet className='text-white text-5xl' />
+            </Flex>
+            <Box mt='80px' p='2'>
+              <Heading
+                as='h2'
+                fontSize='xl'
+                color={textColor}
+                fontWeight='bold'
+              >
+                - كتب و pdf لكل المواد
+              </Heading>
+              <Text mt='30px' color={secondaryTextColor} fontWeight='bold'>
+                متاح لكل محاضرة ال pdf الخاص بها او تقدر تطلب الكتاب الخاص
+                بالمدرس وهيجيلك شحن لحد البيت
+              </Text>
+            </Box>
+          </Box>
         </Zoom>
-      </div>
-    </div>
+      </Flex>
+    </Box>
   );
 };
 

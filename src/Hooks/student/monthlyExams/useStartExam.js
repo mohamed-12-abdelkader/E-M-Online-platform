@@ -14,7 +14,7 @@ const useStartExam = ({ id }) => {
       setLoading(true);
       const response = await baseUrl.post(
         `api/exams/start`,
-        { exam_id: 4 },
+        { exam_id: id },
         {
           headers: {
             token: token,
