@@ -6,7 +6,7 @@ import { usePosts } from "./PostsContext";
 const useEditePost = () => {
   const token = localStorage.getItem("token");
   const [editeLoading, setEditeLoading] = useState(false);
-  const { fetchPosts } = usePosts();
+  const { refetchPosts } = usePosts();
 
   const editePost = async (id, newContent) => {
     try {
@@ -23,7 +23,7 @@ const useEditePost = () => {
 
       if (response.status === 201) {
         toast.success("تم تعديل المنشور بنجاح");
-        fetchPosts(); // Update posts list after editing
+        refetchPosts(); // Update posts list after editing
       } else {
         toast.error("فشل تعديل المنشور");
       }

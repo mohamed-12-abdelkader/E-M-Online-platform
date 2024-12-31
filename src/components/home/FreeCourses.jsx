@@ -21,7 +21,7 @@ import { useState } from "react";
 import { CoursesCard } from "../../ui/card/CoursesCard";
 
 const FreeCourses = () => {
-  const [freeMonth, freeMonthLoading] = useGitFreeCourses();
+  const { freeMonth, freeMonthLoading, refetchData } = useGitFreeCourses();
   const [buyLoading, buyLecture, buyMonth] = BuyLecture();
   const { isOpen, onOpen, onClose } = useDisclosure(); // للتحكم في المودال
   const [selectedLectureId, setSelectedLectureId] = useState(null); // لتخزين الـ ID الخاص بالكورس المحدد
@@ -33,12 +33,19 @@ const FreeCourses = () => {
   };
 
   // دالة لتفعيل الشهر بعد التأكيد
-  const handleBuyMonth = () => {
+  const handleBuyMonth = async () => {
     if (selectedLectureId) {
-      buyMonth(selectedLectureId); // تنفيذ عملية الشراء بعد التأكيد
-      onClose(); // غلق المودال
+      try {
+        await buyMonth(selectedLectureId); // Execute the purchase
+        refetchData(); // Refresh the data after successful purchase
+      } catch (error) {
+        console.error("Error buying the course:", error);
+      } finally {
+        onClose(); // Close the modal
+      }
     }
   };
+
   {
     freeMonthLoading ? console.log("loading") : console.log("fre", freeMonth);
   }
@@ -54,7 +61,7 @@ const FreeCourses = () => {
           الكورسات المجانية
         </h1>
       </div>
-      <div className=' w-[90%] m-auto'>
+      <div className=' w-[%] m-auto'>
         {freeMonthLoading ? (
           <Stack className='w-[90%] m-auto my-5'>
             <Skeleton height='20px' className='mt-5' />

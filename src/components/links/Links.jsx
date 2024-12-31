@@ -90,6 +90,7 @@ const Links = ({ onClose }) => {
   ];
 
   const studentLinks = [
+    { to: "/profile", Icon: BiUserCircle, label: "الملف الشخصي" },
     { to: "/teachers", Icon: FaChalkboardTeacher, label: "المدرسين" },
     { to: "/view_exams", Icon: AiOutlineFileDone, label: "امتحانات المنصة" },
     { to: "/my_courses", Icon: FaBookReader, label: "كورساتي" },
@@ -99,7 +100,6 @@ const Links = ({ onClose }) => {
     { to: "/competitions", Icon: FaTrophy, label: "المسابقات" },
     { to: "/the_Firsts", Icon: FaMedal, label: "أوائل المسابقات" },
     { to: "/save_posts", Icon: MdBookmark, label: "المنشورات المحفوظة" },
-    { to: "/profile", Icon: BiUserCircle, label: "الملف الشخصي" },
     { to: "/wallet", Icon: FaWallet, label: "محفظة الطالب" },
   ];
 

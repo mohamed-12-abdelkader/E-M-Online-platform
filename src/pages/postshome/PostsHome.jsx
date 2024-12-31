@@ -11,33 +11,38 @@ import {
 import Post from "../../components/posts/Post";
 import AddPost from "../../components/posts/AddPost";
 import { usePosts } from "../../Hooks/posts/PostsContext";
-
+import UserType from "../../Hooks/auth/userType";
 
 function RenderLoadingSkeleton({ count = 3 }) {
-  return <VStack spacing='6' align='stretch'>
-    {[...Array(3)].map((_, i) => (
-      <Box
-        key={i}
-        p='4'
-        borderWidth='1px'
-        borderRadius='lg'
-        shadow='sm'
-        className='w-[100%] md:w-[80%] m-auto'
-      >
-        <HStack spacing='4' mb='4'>
-          <SkeletonCircle size='10' />
-          <Skeleton height='20px' width='40%' />
-        </HStack>
-        <SkeletonText mt='4' noOfLines={4} spacing='4' />
-        <Skeleton height='20px' mt='4' width='20%' />
-      </Box>
-    ))}
-  </VStack>
+  return (
+    <VStack spacing='6' align='stretch'>
+      {[...Array(3)].map((_, i) => (
+        <Box
+          key={i}
+          p='4'
+          borderWidth='1px'
+          borderRadius='lg'
+          shadow='sm'
+          className='w-[100%] md:w-[80%] m-auto'
+        >
+          <HStack spacing='4' mb='4'>
+            <SkeletonCircle size='10' />
+            <Skeleton height='20px' width='40%' />
+          </HStack>
+          <SkeletonText mt='4' noOfLines={4} spacing='4' />
+          <Skeleton height='20px' mt='4' width='20%' />
+        </Box>
+      ))}
+    </VStack>
+  );
 }
 
 const PostsHome = () => {
   const { posts, postsLoading, loadMorePosts, hasMorePosts } = usePosts();
-
+  const [userData, isAdmin, isTeacher, student] = UserType();
+  if (!userData) {
+    window.location("/");
+  }
   return (
     <div className='space-y-6 mb-[80px] post_page'>
       <AddPost />

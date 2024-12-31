@@ -19,7 +19,7 @@ export const CoursesCard = ({
   return (
     <Card
       key={lectre.id}
-      className='w-[90%] mx-2 my-3 md:w-[320px] md:mx-3 m-2'
+      className='w-[90%] mx-2 my-3 md:w-[300px] md:mx-3 m-2'
       style={{ border: "1px solid #ccc" }}
     >
       <CardBody>

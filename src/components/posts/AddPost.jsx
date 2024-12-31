@@ -74,6 +74,7 @@ const AddPost = () => {
   const [handleImagesChange, handleSubmit, loading, content, setContent] =
     useAddPost();
   const user = JSON.parse(localStorage.getItem("user"));
+  console.log(user);
   return (
     <div className='my-5 md:px-5'>
       <div className='flex md:w-[85%] m-auto'>

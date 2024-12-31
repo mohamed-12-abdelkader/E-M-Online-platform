@@ -6,7 +6,7 @@ import { usePosts } from "./PostsContext";
 const useDeletePost = () => {
   const token = localStorage.getItem("token");
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const { fetchPosts } = usePosts(); // جلب دالة fetchPosts من context
+  const { refetchPosts } = usePosts(); // جلب دالة fetchPosts من context
 
   const deletePost = async (id) => {
     try {
@@ -21,7 +21,7 @@ const useDeletePost = () => {
       // إذا كانت الاستجابة ناجحة، يتم تحديث القائمة
       if (response.status === 204) {
         toast.success("تم حذف المنشور بنجاح");
-        fetchPosts(); // استدعاء دالة تحديث البيانات بعد الحذف
+        refetchPosts(); // استدعاء دالة تحديث البيانات بعد الحذف
       } else {
         toast.error("فشل حذف المنشور");
       }

@@ -20,10 +20,6 @@ const BuyLecture = () => {
       );
 
       toast.success("تم  شراء المحاضرة  بنجاح ");
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (error) {
       console.error("Error deleting teacher:", error);
       if (error.response.data.msg == "Insufficient funds") {
@@ -48,10 +44,6 @@ const BuyLecture = () => {
       );
 
       toast.success("تم  شراء المحاضرة  بنجاح ");
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (error) {
       console.error("Error deleting teacher:", error);
       if (error.response.data.msg == "Insufficient funds") {

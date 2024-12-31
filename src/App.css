@@ -28,20 +28,22 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url(../public/Red_and_Blue_Badminton_Team_Sport_Logo__6_-removebg-preview.png);
+    background-image: url(../public/new-logo.png);
     background-position: center;
-    background-size: cover;
+    background-size: contain; /* لضمان تناسب الخلفية مع حجم العنصر */
     background-repeat: no-repeat;
-    opacity: 0.5; /* درجة الشفافية للصورة */
+    background-color: rgba(255, 255, 255, 0.3); /* زيادة الشفافية */
     z-index: 0;
   }
 
-  /* المحتوى */
+  /* منع التأثير على المحتوى داخل العنصر */
   & > * {
     position: relative;
-    z-index: 1;
+    z-index: 2; /* رفع النصوص والعناصر فوق الخلفية */
   }
 }
+
+/* المحتوى */
 
 .month-content {
   background-image: url(../public/start3.png);
@@ -406,4 +408,26 @@ div::-webkit-scrollbar-thumb:hover {
 }
 a {
   text-decoration: none !important;
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-container,
+  .print-container * {
+    visibility: visible;
+  }
+  .print-container {
+    margin: 0 auto;
+    width: 100%;
+  }
+  .print-item {
+    page-break-inside: avoid;
+  }
+}
+.print-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 150px;
+  gap: 1rem;
 }

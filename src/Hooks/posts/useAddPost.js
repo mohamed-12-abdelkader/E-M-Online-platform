@@ -5,7 +5,7 @@ import { usePosts } from "./PostsContext";
 
 const useAddPost = () => {
   const token = localStorage.getItem("token");
-  const { fetchPosts } = usePosts();
+  const { refetchPosts } = usePosts();
 
   const [selectedImages, setSelectedImages] = useState([]);
   const [content, setContent] = useState("");
@@ -38,7 +38,7 @@ const useAddPost = () => {
 
       if (response.status === 201) {
         toast.success("تم إضافة المنشور بنجاح");
-        fetchPosts(); // تحديث قائمة البوستات
+        refetchPosts(); // تحديث قائمة البوستات
       } else {
         toast.error("فشل في إضافة المنشور.");
       }
@@ -47,7 +47,7 @@ const useAddPost = () => {
       toast.error("حدث خطأ أثناء إضافة المنشور.");
     } finally {
       setContent("");
-      setSelectedImages("");
+      setSelectedImages([]);
       setLoading(false);
     }
   };
