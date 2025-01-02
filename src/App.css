@@ -200,6 +200,9 @@ body {
 }
 
 @media screen and (max-width: 450px) {
+  .card {
+    width: 90% !important;
+  }
   .teacher {
     width: 305px !important;
   }
@@ -266,9 +269,6 @@ body {
   .content-item {
     width: 90% !important;
   }
-  .cart {
-    width: 300px !important;
-  }
 }
 
 .fixed-button {
@@ -283,7 +283,9 @@ body {
   cursor: pointer;
   z-index: 1000;
 }
-
+.cart {
+  width: 350px !important;
+}
 .login {
   opacity: 1 !important;
 }
@@ -291,6 +293,9 @@ body {
 @media screen and (max-width: 740px) {
   .teacher-card {
     width: 45% !important;
+  }
+  .card {
+    width: 300px !important;
   }
   .manth-card {
     width: 45% !important;

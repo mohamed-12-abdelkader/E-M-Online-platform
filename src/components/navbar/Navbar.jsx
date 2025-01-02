@@ -28,7 +28,8 @@ import {
 import { FaHeart, FaMoon, FaRegComment, FaReply, FaSun } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { MdNotificationsActive } from "react-icons/md";
-import logo from "../../img/new-logo.png";
+import logo from "../../../public/2 (5).png";
+import logo2 from "../../../public/3 (5).png";
 import UserType from "../../Hooks/auth/userType";
 import MyWallet from "../../Hooks/student/MyWallet";
 import useGitNotification from "../../Hooks/posts/useGitNotification";
@@ -65,17 +66,28 @@ export default function Nav() {
     >
       <Flex h={16} alignItems={"center"} justifyContent={"space-between"}>
         <Link to={user ? `/home` : "/"}>
-          <img src={logo} className='h-[85px] w-[85px] mt-3' alt='logo' />
+          <img
+            src={colorMode === "light" ? logo : logo2}
+            className='h-[150px] w-[] mt-3'
+            alt='logo'
+          />
         </Link>
 
         <Flex alignItems={"center"}>
-          <Stack direction={"row"} spacing={4}>
+          <Stack direction={"row"} spacing={1}>
             <Button
+              width={"20px"}
               onClick={toggleColorMode}
               variant='outline'
-              leftIcon={colorMode === "light" ? <FaMoon /> : <FaSun />}
+              leftIcon={
+                colorMode === "light" ? (
+                  <FaMoon className='mx-2' />
+                ) : (
+                  <FaSun className='mx-2' />
+                )
+              }
               style={{ transition: "all 0.2s ease" }} // سريع
-              className='my-2'
+              className='my-2 flex justify-center p-2'
             >
               {colorMode === "light" ? " " : " "}
             </Button>
@@ -207,22 +219,22 @@ export default function Nav() {
                 </Drawer>
               </>
             ) : (
-              <Stack direction='row' spacing={2}>
+              <div className='flex' direction='row'>
                 <Link to='/login'>
                   <img
                     src='log in (1).png'
-                    className='h-[60px] w-[160px]'
+                    className='h-[60px] w-[150px]'
                     alt='login'
                   />
                 </Link>
                 <Link to='/signup'>
                   <img
                     src='signup2.png'
-                    className='h-[60px] w-[160px]'
+                    className='h-[60px] w-[150px]'
                     alt='signup'
                   />
                 </Link>
-              </Stack>
+              </div>
             )}
           </Stack>
         </Flex>

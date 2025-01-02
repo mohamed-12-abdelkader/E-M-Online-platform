@@ -47,7 +47,7 @@ const SectionOne = () => {
           {/* صورة الشعار */}
           <Zoom>
             <img
-              src={"Circle_Education_Badge_Logo__2_-removebg-preview.png"}
+              src={"تصميم بدون عنوان (18).png"}
               alt='Logo'
               className='h-[300px] w-[300px] md:h-[350px] md:w-[350px] '
             />
