@@ -34,7 +34,7 @@ export const CoursesCard = ({
           alt='Course'
         />
         <div className='my-2'></div>
-        <div className='flex justify-between flex-wrap my-4'>
+        <div className='flex w-[90%] justify-between flex-wrap my-4'>
           {type == "teacher" ? (
             <h1 className='font-bold'>{lectre.subject}</h1>
           ) : null}
