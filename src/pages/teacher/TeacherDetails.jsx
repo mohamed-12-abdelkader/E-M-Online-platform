@@ -57,7 +57,7 @@ const TeacherDetails = () => {
           <div>
             {teacher.months && teacher.months.length > 0 ? (
               <div
-                className='flex flex-wrap justify-center my-3  w-[95%] m-auto p-3 md:justify-start flex-wrap'
+                className='flex flex-wrap justify-center my-3  w-[90%] m-auto p-3 md:justify-start flex-wrap'
                 style={{ borderRadius: "20px" }}
               >
                 {teacher.months.map((lecture) => (

@@ -19,7 +19,7 @@ export const CoursesCard = ({
   return (
     <Card
       key={lectre.id}
-      className=' card mx-2 my-3 md:w-[300px] md:mx-3 m-2'
+      className=' card w-[%] mx-2 my-3 md:w-[300px] md:mx-3 m-2'
       style={{ border: "1px solid #ccc" }}
     >
       <CardBody>
@@ -113,7 +113,11 @@ export const CoursesCard = ({
             )}
           </div>
         ) : null}
-
+        {isTeacher && type == "teacher-course" ? (
+          <Button colorScheme='red' onClick={handleDeleate}>
+            حذف
+          </Button>
+        ) : null}
         {type === "comp" && (
           <div className='flex justify-between w-[100%] mt-2'>
             <h1>

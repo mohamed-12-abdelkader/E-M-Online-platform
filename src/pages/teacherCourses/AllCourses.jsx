@@ -69,7 +69,7 @@ const AllCourses = () => {
                     setSelectedLecture(lectre); // Pass the ID of the selected teacher
                     onOpen();
                   }}
-                  type={``}
+                  type={`teacher-course`}
                 />
               ))}
               <AlertDialog

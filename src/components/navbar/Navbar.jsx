@@ -63,17 +63,18 @@ export default function Nav() {
       height='80px'
       zIndex={1000}
       style={{ direction: "ltr" }}
+      borderBottom={"2px solid #ccc"}
     >
       <Flex h={16} alignItems={"center"} justifyContent={"space-between"}>
         <Link to={user ? `/home` : "/"}>
           <img
             src={colorMode === "light" ? logo : logo2}
-            className='h-[150px] w-[] mt-3'
+            className='h-[180px] w-[] mt-3'
             alt='logo'
           />
         </Link>
 
-        <Flex alignItems={"center"}>
+        <Flex alignItems={"center"} className='mt-4'>
           <Stack direction={"row"} spacing={1}>
             <Button
               width={"20px"}
@@ -96,7 +97,11 @@ export default function Nav() {
               <>
                 <Popover placement='bottom-end' isLazy>
                   <PopoverTrigger>
-                    <Button variant='ghost' position='relative'>
+                    <Button
+                      variant='ghost'
+                      position='relative'
+                      className='mt-2'
+                    >
                       <MdNotificationsActive className='text-3xl' />
                       {events?.totalEvents > 0 && (
                         <Text
@@ -196,6 +201,7 @@ export default function Nav() {
                   <Button
                     onClick={handleDrawerOpen} // التحقق من حالة الفتح
                     variant='outline'
+                    className='mt-2'
                     style={{ transition: "all 0.3s ease" }} // سريع
                   >
                     ☰
