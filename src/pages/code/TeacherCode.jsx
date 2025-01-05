@@ -13,7 +13,9 @@ const TeacherCode = () => {
             </div>
             <div className='text-center flex justify-between px-2'>
               <h1 className='text-xl font-bold my-3 '> كود التفعيل : </h1>
-              <h3 className='text-xl font-bold my-3 text-red-800'>{code}</h3>
+              <h3 className='text-xl font-bold my-3 text-red-800 mx-2'>
+                {code}
+              </h3>
             </div>
             <div className='px-2'>
               <h1 className='text- font-bold'>ارقام الدعم الفنى </h1>
