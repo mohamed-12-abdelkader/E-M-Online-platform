@@ -113,11 +113,7 @@ export const CoursesCard = ({
             )}
           </div>
         ) : null}
-        {isTeacher && type == "teacher-course" ? (
-          <Button colorScheme='red' onClick={handleDeleate}>
-            حذف
-          </Button>
-        ) : null}
+
         {type === "comp" && (
           <div className='flex justify-between w-[100%] mt-2'>
             <h1>
@@ -144,7 +140,7 @@ export const CoursesCard = ({
       ) : (
         <div>
           <hr />
-          <div className='my-3 text-center'>
+          <div className='my-3 flex px-2 text-center'>
             {type === "subject_exam" && lectre.completed ? (
               <Button
                 colorScheme='red'
@@ -261,6 +257,11 @@ export const CoursesCard = ({
                 {type === "monthly_exam" ? "تفعيل الامتحان " : " تفعيل الكورس"}
               </Button>
             )}
+            {(isTeacher && type == "teacher-course") || type == "lecture" ? (
+              <Button colorScheme='red' onClick={handleDeleate}>
+                حذف
+              </Button>
+            ) : null}
           </div>
         </div>
       )}
