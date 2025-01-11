@@ -257,7 +257,8 @@ export const CoursesCard = ({
                 {type === "monthly_exam" ? "تفعيل الامتحان " : " تفعيل الكورس"}
               </Button>
             )}
-            {(isTeacher && type == "teacher-course") || type == "lecture" ? (
+            {(isTeacher && type == "teacher-course") ||
+            (isTeacher && type == "lecture") ? (
               <Button colorScheme='red' onClick={handleDeleate}>
                 حذف
               </Button>
