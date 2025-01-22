@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
+import { Box, Container, useColorModeValue } from "@chakra-ui/react";
 import { useDisclosure } from "@chakra-ui/react";
 import GitLecturMonth from "../../Hooks/teacher/GitLecturMonth";
 import DeleateLecture from "../../Hooks/teacher/DeleateLecture";
@@ -19,6 +20,9 @@ const Month = () => {
   const [deleteOnlineLoading, deleteLecture] = DeleateLecture({ m_id: id });
   const [userData, isAdmin, isTeacher, student] = UserType();
 
+  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+
   const handleDelete = () => {
     if (selectedLecture) {
       deleteLecture({ l_id: selectedLecture.id });
@@ -35,30 +39,35 @@ const Month = () => {
   }
 
   return (
-    <div className='my-[120px]' style={{ minHeight: "80vh" }}>
-      {months.monthData.image && (
-        <MonthHeader
-          image={months.monthData.image}
-          description={months.monthData.description}
-          noflecture={months.monthData.noflecture}
-        />
-      )}
+    <Box bg={bgColor} minH='100vh' pt={{ base: 20, md: 28 }} pb={10}>
+      <Container maxW='7xl'>
+        {months.monthData.image && (
+          <MonthHeader
+            image={months.monthData.image}
+            description={months.monthData.description}
+            noflecture={months.monthData.noflecture}
+          />
+        )}
 
-      <div className='w-[90%] m-auto border shadow my-[50px] p-3'>
-        <div className='flex text-xl'>
-          <h1 className='font-bold'>
-            عدد المحاضرات: ({months.monthData.noflecture})
-          </h1>
-        </div>
-
-        <LectureList
-          lectures={months.monthcontent}
-          isTeacher={isTeacher}
-          onOpen={onOpen}
-          setSelectedLecture={setSelectedLecture}
-          monthLoading={monthLoading}
-        />
-      </div>
+        <Box
+          mt={8}
+          bg={useColorModeValue("white", "gray.800")}
+          borderRadius='xl'
+          borderWidth='1px'
+          borderColor={borderColor}
+          p={6}
+          shadow='sm'
+        >
+          <LectureList
+            lectures={months.monthcontent}
+            isTeacher={isTeacher}
+            onOpen={onOpen}
+            setSelectedLecture={setSelectedLecture}
+            monthLoading={monthLoading}
+            noflecture={months.monthData.noflecture}
+          />
+        </Box>
+      </Container>
 
       <LectureDialog
         isOpen={isOpen}
@@ -70,7 +79,7 @@ const Month = () => {
       />
 
       <ScrollToTop />
-    </div>
+    </Box>
   );
 };
 

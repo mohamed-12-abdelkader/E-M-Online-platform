@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Zoom } from "react-awesome-reveal";
 import { Link } from "react-router-dom";
 import UserType from "../../Hooks/auth/userType";
+import { useColorMode, Box, Text } from "@chakra-ui/react"; // إضافة Chakra UI
 import img from "../../img/Red and Blue Badminton Team Sport Logo (7).png";
 
 const SectionOne = () => {
@@ -9,6 +10,7 @@ const SectionOne = () => {
   const [displayedName, setDisplayedName] = useState("");
   const [nameIndex, setNameIndex] = useState(0);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const { colorMode } = useColorMode(); // الحصول على الوضع الحالي (Dark أو Light)
 
   const name =
     "منصة متخصصة في جميع مواد الاعدادية و الثانوية العامة وكورسات الجامعات ";
@@ -39,57 +41,83 @@ const SectionOne = () => {
   }, []);
 
   return (
-    <div className='bg-[#03a9f5] section_one  - relative overflow-hidden'>
+    <Box
+      bg={colorMode === "dark" ? "#1A202C" : "#03a9f5"} // تحديد الخلفية حسب الوضع
+      className='section_one relative overflow-hidden'
+    >
       {/* النقاط الخلفية */}
-      <div className='absolute inset-0 bg-dots-pattern bg-dots opacity-10'></div>
-      <div className='relative z-10 py-20'>
+      <Box
+        className='absolute inset-0 bg-dots-pattern bg-dots opacity-10'
+        bg={colorMode === "dark" ? "#2D3748" : "#03a9f5"} // تغيير اللون خلف النقاط
+      ></Box>
+      <Box className='relative z-10 py-20'>
         <div className='container mx-auto flex flex-col items-center'>
           {/* صورة الشعار */}
           <Zoom>
             <img
               src={"تصميم بدون عنوان (18).png"}
               alt='Logo'
-              className='h-[300px] w-[300px] md:h-[350px] md:w-[350px] '
+              className='h-[300px] w-[300px] md:h-[350px] md:w-[350px]'
             />
           </Zoom>
           {/* نص متحرك */}
-          <h1 className='text-2xl text-white w-[100%] m-auto md:text-3xl w-[65%] m-auto font-bold text-center mb-4'>
+          <Text
+            fontSize={["2xl", "3xl"]}
+            color={colorMode === "dark" ? "white" : "black"} // تغيير اللون بناءً على الوضع
+            fontWeight='bold'
+            textAlign='center'
+            mb={4}
+          >
             {displayedName}
-          </h1>
+          </Text>
           {/* خط فاصل */}
           <div className='h-1 w-[150px] bg-[#ff6600] mb-6'></div>
           {/* حالة المستخدم */}
           {isTeacher ? (
-            <div className='flex justify-center'>
-              <h1 className='text-lg md:text-xl font-medium text-gray-800'>
+            <Box display='flex' justifyContent='center'>
+              <Text
+                fontSize={["lg", "xl"]}
+                color={colorMode === "dark" ? "white" : "gray.800"} // تغيير النص حسب الوضع
+                fontWeight='medium'
+              >
                 {messages[currentMessageIndex]}
-              </h1>
-            </div>
+              </Text>
+            </Box>
           ) : student ? (
-            <div className='flex flex-col items-center my-4'>
-              <h1 className='text-2xl text-black md:text-3xl font-bold text-center mb-4'>
+            <Box className='flex flex-col items-center my-4'>
+              <Text
+                fontSize={["2xl", "3xl"]}
+                color={colorMode === "dark" ? "white" : "black"}
+                fontWeight='bold'
+                textAlign='center'
+                mb={4}
+              >
                 كود الطالب: {userData.id}
-              </h1>
-            </div>
+              </Text>
+            </Box>
           ) : isAdmin ? (
-            <div className='flex justify-center'>
-              <h1 className='text-lg md:text-xl font-medium text-gray-800'>
+            <Box display='flex' justifyContent='center'>
+              <Text
+                fontSize={["lg", "xl"]}
+                color={colorMode === "dark" ? "white" : "gray.800"}
+                fontWeight='medium'
+              >
                 مرحباً، يمكنك إدارة المنصة من هنا.
-              </h1>
-            </div>
+              </Text>
+            </Box>
           ) : (
-            <div className='flex space-x-4'>
+            <Box display='flex' spaceX={4}>
               <Link to='/login'>
                 <img src='log in (1).png' className='h-[60px] w-[160px]' />
               </Link>
               <Link to='/signup'>
                 <img src='signup2.png' className='h-[60px] w-[160px]' />
               </Link>
-            </div>
+            </Box>
           )}
         </div>
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };
 

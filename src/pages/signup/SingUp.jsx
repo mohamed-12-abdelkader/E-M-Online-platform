@@ -133,7 +133,7 @@ const SingUp = () => {
                 <option value={1}> الصف الاول الثانوى </option>
                 <option value={2}> الصف الثانى الثانوى </option>
                 <option value={3}> الصف الثالث الثانوى </option>
-                <option value={3}> كورسات اخرى </option>
+                <option value={7}> كورسات اخرى </option>
               </Select>
             </div>
           </div>

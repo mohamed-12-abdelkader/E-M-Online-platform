@@ -1,66 +1,104 @@
-import { Stack, Skeleton } from "@chakra-ui/react";
+import React from "react";
+import {
+  Box,
+  SimpleGrid,
+  Text,
+  Button,
+  Icon,
+  useColorModeValue,
+  Skeleton,
+  Stack,
+} from "@chakra-ui/react";
 import { GoArrowLeft } from "react-icons/go";
 import { Link } from "react-router-dom";
-
 import { Zoom } from "react-awesome-reveal";
 import { CoursesCard } from "../../ui/card/CoursesCard";
+
 const LectureList = ({
   lectures,
   isTeacher,
   onOpen,
   setSelectedLecture,
   monthLoading,
+  noflecture,
 }) => {
+  const textColor = useColorModeValue("gray.700", "gray.200");
+  const accentColor = useColorModeValue("blue.500", "blue.300");
+
   if (monthLoading) {
     return (
-      <Stack
-        className='w-[90%] m-auto my-5 mt-[150px]'
-        style={{ minHeight: "80vh" }}
-      >
-        <Skeleton height='20px' className='mt-5' />
-        <Skeleton height='20px' />
-        <Skeleton height='20px' />
-        <Skeleton height='20px' />
-        <Skeleton height='20px' />
-        <Skeleton height='20px' />
-        <Skeleton height='20px' />
+      <Stack spacing={4}>
+        {[...Array(3)].map((_, i) => (
+          <Skeleton key={i} height='200px' borderRadius='lg' />
+        ))}
       </Stack>
     );
   }
 
   if (!lectures || lectures.length === 0) {
     return (
-      <div className='flex items-center justify-center h-[200px]'>
+      <Box
+        textAlign='center'
+        py={10}
+        px={6}
+        borderRadius='lg'
+        bg={useColorModeValue("gray.50", "gray.700")}
+      >
         {isTeacher ? (
-          <h1 className='font-bold flex'>
-            لا يوجد محاضرات فى هذا الكورس
-            <GoArrowLeft className='text-red-500 m-2' />
-            <Link to={`/admin/add_lecture_month`}>
-              <span className='text-red-500'>اضف محاضراتك الان </span>
-            </Link>
-          </h1>
+          <Box>
+            <Text fontSize='xl' fontWeight='bold' mb={4} color={textColor}>
+              لا يوجد محاضرات في هذا الكورس
+            </Text>
+            <Button
+              as={Link}
+              to='/admin/add_lecture_month'
+              colorScheme='blue'
+              leftIcon={<GoArrowLeft />}
+              size='lg'
+            >
+              أضف محاضراتك الآن
+            </Button>
+          </Box>
         ) : (
-          <h1 className='font-bold'>سوف يتم إضافة المحتوى قريبًا</h1>
+          <Text fontSize='xl' fontWeight='bold' color={textColor}>
+            سوف يتم إضافة المحتوى قريباً
+          </Text>
         )}
-      </div>
+      </Box>
     );
   }
 
   return (
-    <div className='flex flex-wrap justify-center px-auto my-3 w-[98%] m-auto md:justify-start'>
-      {lectures.map((lecture) => (
-        <Zoom key={lecture.id}>
-          <CoursesCard
-            type={"lecture"}
-            handleDeleate={() => {
-              setSelectedLecture(lecture);
-              onOpen();
-            }}
-            lectre={lecture}
-            href={`/lecture/${lecture.id}`}
-          />
-        </Zoom>
-      ))}
+    <div>
+      <Text
+        fontSize='xl'
+        fontWeight='bold'
+        mb={6}
+        color={textColor}
+        display='flex'
+        alignItems='center'
+      >
+        عدد المحاضرات:{" "}
+        <Text as='span' color={accentColor} mr={2}>
+          ({noflecture})
+        </Text>
+      </Text>
+
+      <div className='flex flex-wrap justify-center px-auto my-3 w-[98%] m-auto md:justify-start'>
+        {lectures.map((lecture) => (
+          <Zoom key={lecture.id}>
+            <CoursesCard
+              type='lecture'
+              handleDeleate={() => {
+                setSelectedLecture(lecture);
+                onOpen();
+              }}
+              lectre={lecture}
+              href={`/lecture/${lecture.id}`}
+            />
+          </Zoom>
+        ))}
+      </div>
     </div>
   );
 };

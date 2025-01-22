@@ -94,8 +94,9 @@ const AddPost = () => {
             style={{
               borderRadius: "20px",
               resize: "none", // منع المستخدم من تغيير الحجم يدويًا
-              overflow: "hidden", // إخفاء أي جزء زائد
+              overflowY: "auto", // إضافة التمرير العمودي عند الحاجة
               height: "50px", // ارتفاع ابتدائي
+              maxHeight: "200px", // الحد الأقصى للارتفاع
             }}
           />
         </FormControl>

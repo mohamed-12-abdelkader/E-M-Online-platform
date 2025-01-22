@@ -9,98 +9,118 @@ import {
   Button,
   Icon,
   useColorModeValue,
+  Badge,
 } from "@chakra-ui/react";
-import { FaPlayCircle } from "react-icons/fa";
+import { FaPlayCircle, FaBookOpen } from "react-icons/fa";
+import { motion } from "framer-motion";
+
+const MotionBox = motion(Box);
 
 const MonthHeader = ({ image, description, noflecture }) => {
-  // Color Mode Values
-  const bgColor = useColorModeValue("gray.100", "gray.800");
+  const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
-  const cardBg = useColorModeValue("gray.300", "gray.700");
-  const highlightColor = useColorModeValue("teal.500", "yellow.400");
+  const accentColor = useColorModeValue("blue.500", "blue.300");
+  const statBg = useColorModeValue("blue.50", "blue.900");
 
   return (
     <Box
-      w='90%'
-      m='auto'
       bg={bgColor}
-      borderRadius='lg'
-      p={8}
+      borderRadius='xl'
+      overflow='hidden'
       shadow='lg'
-      maxW='7xl'
-      mt={10}
-      mb={10}
-      className='border shadow-lg'
+      borderWidth='1px'
+      borderColor={useColorModeValue("gray.200", "gray.700")}
     >
       <Flex
         direction={{ base: "column", md: "row" }}
-        align='center'
-        justify='space-between'
-        gap={8}
+        align='stretch'
+        h={{ md: "400px" }}
       >
         {/* Image Section */}
-        <Box
-          w={{ base: "100%", md: "45%" }}
+        <MotionBox
+          w={{ base: "100%", md: "50%" }}
+          h={{ base: "250px", md: "full" }}
+          position='relative'
           overflow='hidden'
-          borderRadius='md'
-          transform='scale(1)'
-          transition='transform 0.3s'
-          _hover={{ transform: "scale(1.05)" }}
-          shadow='lg'
+          whileHover={{ scale: 1.05 }}
+          transition={{ duration: 0.3 }}
         >
           <Image
             src={image}
-            alt='Course Image'
+            alt='Course Cover'
             objectFit='cover'
-            w='100%'
-            h={{ base: "200px", md: "300px" }}
+            w='full'
+            h='full'
           />
-        </Box>
+          <Box
+            position='absolute'
+            top='0'
+            left='0'
+            right='0'
+            bottom='0'
+            bg='blackAlpha.300'
+          />
+        </MotionBox>
 
-        {/* Info Section */}
-        <VStack
-          align={{ base: "center", md: "flex-start" }}
-          spacing={4}
+        {/* Content Section */}
+        <Flex
+          direction='column'
+          justify='center'
+          p={{ base: 6, md: 10 }}
           w={{ base: "100%", md: "50%" }}
         >
-          <Text fontSize='2xl' fontWeight='bold' color={textColor}>
+          <Badge
+            colorScheme='blue'
+            alignSelf='flex-start'
+            mb={4}
+            fontSize='sm'
+            px={3}
+            py={1}
+            borderRadius='full'
+          >
+            كورس تعليمي
+          </Badge>
+
+          <Text
+            fontSize={{ base: "2xl", md: "3xl" }}
+            fontWeight='bold'
+            color={textColor}
+            mb={4}
+          >
             {description}
           </Text>
 
-          <Text fontSize='lg' fontWeight='bold' color={textColor}>
-            اكتشف محتوى هذا الكورس واستفد من عدد المحاضرات المتميز. رحلة تعليمية
-            مشوقة بانتظارك!
+          <Text color={useColorModeValue("gray.600", "gray.300")} mb={6}>
+            اكتشف محتوى هذا الكورس المميز واستفد من المحاضرات القيمة. رحلة
+            تعليمية مشوقة تنتظرك!
           </Text>
 
-          <HStack
-            spacing={4}
-            w='full'
-            justify={{ base: "center", md: "flex-start" }}
-          >
+          <HStack spacing={4} mb={6}>
             <Button
-              size='lg'
-              colorScheme='teal'
-              variant='solid'
               leftIcon={<Icon as={FaPlayCircle} />}
+              colorScheme='blue'
+              size='lg'
+              _hover={{
+                transform: "translateY(-2px)",
+                boxShadow: "lg",
+              }}
             >
-              ابدأ الكورس
+              ابدأ التعلم
             </Button>
           </HStack>
 
-          <Box
-            bg={cardBg}
-            px={4}
-            py={2}
-            borderRadius='md'
-            shadow='md'
-            textAlign='center'
-            mt={4}
+          <Flex
+            bg={statBg}
+            p={4}
+            borderRadius='lg'
+            align='center'
+            justify='center'
+            color={accentColor}
           >
-            <Text fontSize='lg' fontWeight='bold' color={highlightColor}>
-              عدد المحاضرات: {noflecture}
-            </Text>
-          </Box>
-        </VStack>
+            <Icon as={FaBookOpen} mr={2} />
+            <Text fontWeight='bold'>عدد المحاضرات: {noflecture}</Text>
+          </Flex>
+        </Flex>
       </Flex>
     </Box>
   );

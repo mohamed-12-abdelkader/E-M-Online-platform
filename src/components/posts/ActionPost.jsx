@@ -1,4 +1,12 @@
 import React, { useState } from "react";
+import {
+  Button,
+  Icon,
+  Text,
+  Flex,
+  useColorModeValue,
+  Divider,
+} from "@chakra-ui/react";
 import { AiFillLike, AiOutlineLike, AiOutlineSave } from "react-icons/ai";
 import { FaComment } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -15,6 +23,13 @@ const ActionPost = ({
 }) => {
   const [likesnum, setLikesnum] = useState(likes);
   const [isLiked, setIsLiked] = useState(liked);
+  const [SavePostLoading, setLoading] = useState(false);
+
+  const buttonBg = useColorModeValue("gray.50", "gray.700");
+  const buttonHoverBg = useColorModeValue("gray.100", "gray.600");
+  const textColor = useColorModeValue("gray.600", "gray.300");
+  const iconColor = useColorModeValue("gray.500", "gray.400");
+  const dividerColor = useColorModeValue("gray.200", "gray.600");
 
   const handleAddLike = (event) => {
     event.preventDefault();
@@ -23,68 +38,98 @@ const ActionPost = ({
     setLikesnum((prevLikes) => (isLiked ? prevLikes - 1 : prevLikes + 1));
   };
 
-  const token = localStorage.getItem("token");
-  const [SavePostLoading, setLoading] = useState(false);
-
   const savePost = async () => {
     try {
       setLoading(true);
       await baseUrl.post(
-        `/api/posts/status/bookmarks/${postId}`, // Ensuring postId is in the URL
-        {}, // Empty body if not required
+        `/api/posts/status/bookmarks/${postId}`,
+        {},
         {
-          headers: {
-            token: token, // Ensure token is properly formatted
-          },
+          headers: { token: localStorage.getItem("token") },
         }
       );
       toast.success("تم حفظ المنشور بنجاح");
     } catch (error) {
       toast.error("فشل حفظ المنشور");
-      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      <div className="flex justify-around items-center">
-        <div className="flex">
-          <h1>({likesnum})</h1>
-          <button
-            className="flex items-center text-blue-500 hover:text-blue-700"
-            onClick={handleAddLike}
-          >
-            {isLiked ? (
-              <AiFillLike className="m-1" />
-            ) : (
-              <AiOutlineLike className="m-1" />
-            )}
-            {loading ? "أعجبني " : isLiked ? "أعجبني" : "أعجبني"}
-          </button>
-        </div>
-        <div className="flex">
-          <h1>({commint})</h1>
-          <button
-            className="flex items-center text-gray-500 hover:text-green-700"
-            onClick={onOpen}
-          >
-            <FaComment className="m-1" />
-            تعليق
-          </button>
-        </div>
+    <>
+      {/* Likes and Comments Count */}
+      <Flex justify='space-between' align='center' px={4} py={2}>
+        <Flex align='center' gap={1}>
+          <Icon
+            as={AiFillLike}
+            color='blue.500'
+            bg='blue.50'
+            p={1}
+            boxSize={5}
+            borderRadius='full'
+          />
+          <Text fontSize='sm' color={textColor}>
+            {likesnum}
+          </Text>
+        </Flex>
+        <Text fontSize='sm' color={textColor}>
+          {commint} تعليق
+        </Text>
+      </Flex>
 
-        <button
-          onClick={savePost}
-          className="flex items-center text-yellow-500 hover:text-yellow-700"
-          disabled={SavePostLoading} // Disable while loading
+      <Divider borderColor={dividerColor} />
+
+      {/* Action Buttons */}
+      <Flex justify='space-between' px={2} py={1}>
+        <Button
+          flex={1}
+          variant='ghost'
+          onClick={handleAddLike}
+          isLoading={loading}
+          leftIcon={
+            <Icon
+              as={isLiked ? AiFillLike : AiOutlineLike}
+              color={isLiked ? "blue.500" : iconColor}
+              boxSize={5}
+            />
+          }
+          color={isLiked ? "blue.500" : textColor}
+          fontWeight='normal'
+          _hover={{ bg: buttonHoverBg }}
+          size='md'
         >
-          <AiOutlineSave className="m-1" />
-          {SavePostLoading ? "جاري الحفظ..." : "حفظ"}
-        </button>
-      </div>
-    </div>
+          إعجاب
+        </Button>
+
+        <Button
+          flex={1}
+          variant='ghost'
+          onClick={onOpen}
+          leftIcon={<Icon as={FaComment} color={iconColor} boxSize={5} />}
+          color={textColor}
+          fontWeight='normal'
+          _hover={{ bg: buttonHoverBg }}
+          size='md'
+        >
+          تعليق
+        </Button>
+
+        <Button
+          flex={1}
+          variant='ghost'
+          onClick={savePost}
+          isLoading={SavePostLoading}
+          leftIcon={<Icon as={AiOutlineSave} color={iconColor} boxSize={5} />}
+          color={textColor}
+          fontWeight='normal'
+          _hover={{ bg: buttonHoverBg }}
+          size='md'
+        >
+          حفظ
+        </Button>
+      </Flex>
+    </>
   );
 };
 
