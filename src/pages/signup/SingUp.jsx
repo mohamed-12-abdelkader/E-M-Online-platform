@@ -122,36 +122,23 @@ const SingUp = () => {
               <Select
                 value={grad}
                 onChange={handleGradeChange}
-                placeholder='اختر الصف الدراسى '
+                placeholder='اختر الصف الدراسى'
                 className='text-black'
                 size='lg'
                 style={{ direction: "ltr", border: "solid 2px #ccc" }}
               >
-                <option value={4}> الصف الاول الاعدادى </option>
-                <option value={5}> الصف الثانى الاعدادى </option>
-                <option value={6}> الصف الثالث الاعدادى </option>
-                <option value={1}> الصف الاول الثانوى </option>
-                <option value={2}> الصف الثانى الثانوى </option>
-                <option value={3}> الصف الثالث الثانوى </option>
-                <option value={7}> كورسات اخرى </option>
+                <option value='4'>الصف الاول الاعدادى</option>
+                <option value='5'>الصف الثانى الاعدادى</option>
+                <option value='6'>الصف الثالث الاعدادى</option>
+                <option value='1'>الصف الاول الثانوى</option>
+                <option value='2'>الصف الثانى الثانوى</option>
+                <option value='3'>الصف الثالث الثانوى</option>
+                <option value='7'>كورسات اخرى</option>
               </Select>
             </div>
           </div>
           <div className='flex justify-center'>
-            <Button
-              colorScheme='blue'
-              onClick={handleLSignUp}
-              isDisabled={
-                !fName ||
-                !lName ||
-                !mail ||
-                !pass ||
-                !passCon ||
-                !phone ||
-                !grad ||
-                loading
-              }
-            >
+            <Button colorScheme='blue' onClick={handleLSignUp}>
               {" "}
               {loading ? <Spinner /> : "انشاء حساب "}{" "}
             </Button>
