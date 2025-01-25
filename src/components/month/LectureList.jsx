@@ -8,6 +8,7 @@ import {
   useColorModeValue,
   Skeleton,
   Stack,
+  Flex,
 } from "@chakra-ui/react";
 import { GoArrowLeft } from "react-icons/go";
 import { Link } from "react-router-dom";
@@ -84,7 +85,8 @@ const LectureList = ({
         </Text>
       </Text>
 
-      <div className='flex flex-wrap justify-center px-auto my-3 w-[98%] m-auto md:justify-start'>
+      {/* تعديل تنسيق عرض المحاضرات */}
+      <div className='flex flex-wrap justify-evenly px-auto my-3 w-[98%] m-auto'>
         {lectures.map((lecture) => (
           <Zoom key={lecture.id}>
             <CoursesCard

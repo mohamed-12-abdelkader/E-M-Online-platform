@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Flex,
@@ -10,17 +10,31 @@ import {
   Icon,
   useColorModeValue,
   Badge,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { FaPlayCircle, FaBookOpen } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
-const MonthHeader = ({ image, description, noflecture }) => {
+const MonthHeader = ({ image, description, noflecture, users, isTeacher }) => {
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
   const accentColor = useColorModeValue("blue.500", "blue.300");
   const statBg = useColorModeValue("blue.50", "blue.900");
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <Box
@@ -96,17 +110,32 @@ const MonthHeader = ({ image, description, noflecture }) => {
           </Text>
 
           <HStack spacing={4} mb={6}>
-            <Button
-              leftIcon={<Icon as={FaPlayCircle} />}
-              colorScheme='blue'
-              size='lg'
-              _hover={{
-                transform: "translateY(-2px)",
-                boxShadow: "lg",
-              }}
-            >
-              ابدأ التعلم
-            </Button>
+            {isTeacher ? (
+              <Button
+                leftIcon={<Icon as={FaPlayCircle} />}
+                colorScheme='blue'
+                size='lg'
+                _hover={{
+                  transform: "translateY(-2px)",
+                  boxShadow: "lg",
+                }}
+                onClick={onOpen}
+              >
+                عرض المشتركين
+              </Button>
+            ) : (
+              <Button
+                leftIcon={<Icon as={FaPlayCircle} />}
+                colorScheme='blue'
+                size='lg'
+                _hover={{
+                  transform: "translateY(-2px)",
+                  boxShadow: "lg",
+                }}
+              >
+                ابدأ التعلم
+              </Button>
+            )}
           </HStack>
 
           <Flex
@@ -122,6 +151,55 @@ const MonthHeader = ({ image, description, noflecture }) => {
           </Flex>
         </Flex>
       </Flex>
+
+      {/* Modal for Users List */}
+      <Modal isOpen={isOpen} onClose={onClose} size='6xl'>
+        <ModalOverlay />
+        <ModalContent>
+          <div className='flex justify-between'>
+            <div className='p-3'>
+              <h1 className='font-bold text-xl m-2'>قائمة المشتركين</h1>
+              <h1 className='font-bold text-xl m-2'>
+                عدد المشتركين : {users.length} طالب{" "}
+              </h1>
+            </div>
+            <div className='p-3'>
+              <Button colorScheme='red' onClick={onClose}>
+                x
+              </Button>
+            </div>
+          </div>
+
+          <ModalBody>
+            {users.length > 0 ? (
+              <Table variant='simple' colorScheme='blue'>
+                <Thead>
+                  <Tr>
+                    <Th>الرقم التعريفي</Th>
+                    <Th>اسم المستخدم</Th>
+                    <Th>البريد الإلكتروني</Th>
+                    <Th>تاريخ الانضمام</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {users.map((user) => (
+                    <Tr key={user.user_id}>
+                      <Td>{user.user_id}</Td>
+                      <Td>{user.user_name}</Td>
+                      <Td>{user.user_email}</Td>
+                      <Td>{new Date(user.join_date).toLocaleDateString()}</Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            ) : (
+              <Text color='gray.500' textAlign='center' mt={4}>
+                لا يوجد طلبة
+              </Text>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

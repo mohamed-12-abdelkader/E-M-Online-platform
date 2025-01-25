@@ -10,6 +10,7 @@ import MonthHeader from "../../components/month/MonthHeader";
 import LectureList from "../../components/month/LectureList";
 import LectureDialog from "../../components/month/LectureDialog";
 import Loading from "../../components/loading/Loading";
+import useGitStuSubs from "../../Hooks/teacher/useGitStuSubs";
 
 const Month = () => {
   const { id } = useParams();
@@ -19,10 +20,12 @@ const Month = () => {
   const [selectedLecture, setSelectedLecture] = useState(null);
   const [deleteOnlineLoading, deleteLecture] = DeleateLecture({ m_id: id });
   const [userData, isAdmin, isTeacher, student] = UserType();
-
+  const [usersLoading, users] = useGitStuSubs({ id: id });
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-
+  {
+    usersLoading ? console.log("loading") : console.log(users.users);
+  }
   const handleDelete = () => {
     if (selectedLecture) {
       deleteLecture({ l_id: selectedLecture.id });
@@ -46,6 +49,8 @@ const Month = () => {
             image={months.monthData.image}
             description={months.monthData.description}
             noflecture={months.monthData.noflecture}
+            users={users?.users || []}
+            isTeacher={isTeacher}
           />
         )}
 
