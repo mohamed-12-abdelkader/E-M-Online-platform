@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Zoom } from "react-awesome-reveal";
 import { Link } from "react-router-dom";
 import UserType from "../../Hooks/auth/userType";
-import { useColorMode, Box, Text } from "@chakra-ui/react"; // إضافة Chakra UI
+import { useColorMode, Box, Text, Button } from "@chakra-ui/react"; // إضافة Button
+import { FaDownload } from "react-icons/fa"; // إضافة أيقونة تحميل
 import img from "../../img/Red and Blue Badminton Team Sport Logo (7).png";
 
 const SectionOne = () => {
@@ -115,6 +116,25 @@ const SectionOne = () => {
               </Link>
             </Box>
           )}
+
+          {/* زر تحميل التطبيق */}
+          <Button
+            as='a'
+            href='https://www.mediafire.com/file/f3afz741f5hohts/E-M+Online.apk/file'
+            target='_blank'
+            bg='#ff6600'
+            color='white'
+            _hover={{ bg: "#e65c00" }}
+            fontSize='lg'
+            px={6}
+            py={8}
+            borderRadius='md'
+            mt={6}
+            boxShadow='lg'
+            rightIcon={<FaDownload />}
+          >
+            تحميل التطبيق
+          </Button>
         </div>
       </Box>
     </Box>

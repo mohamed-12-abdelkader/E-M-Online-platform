@@ -3,27 +3,26 @@ import baseUrl from "../../../api/baseUrl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // الدالة التي تجلب البيانات باستخدام id
-const fetchExamsData = async (token, id) => {
+const fetchExamsMarks = async (token, id) => {
   const response = await baseUrl.get(
-    `api/exams-manage/exams?collection_id=${id}`,
+    `api/exams-manage/marks/${id}?order=desc`,
     {
       headers: { token: token },
     }
   );
   return response.data;
 };
-
-const useGitMonthlyExamSetailds = (id) => {
+const useGitStudentMarks = (id) => {
   const queryClient = useQueryClient(); // للحصول على queryClient
   const token = localStorage.getItem("token");
 
   const {
-    data: exams,
-    isLoading: examsLoading,
+    data: marks,
+    isLoading: marksLoading,
     error,
   } = useQuery({
-    queryKey: ["exams", id], // Cache key يشمل id
-    queryFn: () => fetchExamsData(token, id), // Fetch function تأخذ id
+    queryKey: ["marks", id], // Cache key يشمل id
+    queryFn: () => fetchExamsMarks(token, id), // Fetch function تأخذ id
     enabled: !!id, // يتم التحقق من أن id موجود لتجنب الأخطاء
     staleTime: 1000 * 60 * 5, // Keep data cached for 5 minutes
     cacheTime: 1000 * 60 * 10, // Keep data in cache for 10 minutes
@@ -31,10 +30,10 @@ const useGitMonthlyExamSetailds = (id) => {
   });
 
   const refetchExam = () => {
-    queryClient.invalidateQueries(["exams", id]); // تحديث الكاش وجلب البيانات بناءً على id
+    queryClient.invalidateQueries(["marks", id]); // تحديث الكاش وجلب البيانات بناءً على id
   };
 
-  return [examsLoading, exams, refetchExam];
+  return [marksLoading, marks, refetchExam];
 };
 
-export default useGitMonthlyExamSetailds;
+export default useGitStudentMarks;

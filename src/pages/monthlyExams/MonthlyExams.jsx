@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import useGitMonthlyExamSetailds from "../../Hooks/admin/mangeExam/useGitMonthlyExamSetailds";
 import {
   Box,
@@ -27,7 +27,7 @@ import UserType from "../../Hooks/auth/userType";
 const MonthlyExams = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
   const { id } = useParams();
-  const [loading, exams, refetchExam] = useGitMonthlyExamSetailds({ id: id });
+  const [loading, exams, refetchExam] = useGitMonthlyExamSetailds(id);
   const [studentExamsLoading, studentExams, refetchStudenExam] =
     useGitSubjectExam({ id });
   const [deleteLoading, deleteExam] = useDeleateExam({ status: "exams" });
@@ -76,18 +76,23 @@ const MonthlyExams = () => {
   };
 
   return (
-    <div className='w-[95%] m-auto mb-[80px]'>
-      <Box p={5}>
-        <Heading size='lg' mb={5}>
-          الامتحانات المتاحة
-        </Heading>
+    <div className='w-[%] m-auto mb-[80px] mt-[30px]'>
+      <Box p={2}>
+        <Flex justify='space-between' align='center' mb={5}>
+          <Heading size='lg'>الامتحانات المتاحة</Heading>
+          {isAdmin && (
+            <Link to={`/monthly_exam/${id}/show_grades`}>
+              <Button colorScheme='blue'>عرض درجات الطلاب</Button>
+            </Link>
+          )}
+        </Flex>
         {isAdmin ? (
           loading ? (
             <Flex justify='center' align='center' height='200px'>
               <Spinner size='xl' />
             </Flex>
           ) : displayedExams?.length > 0 ? (
-            <Flex wrap='wrap' gap={5}>
+            <Flex wrap='wrap' gap={2}>
               {displayedExams.map((exam) => (
                 <CoursesCard
                   key={exam.id}
@@ -111,7 +116,7 @@ const MonthlyExams = () => {
               <Spinner size='xl' />
             </Flex>
           ) : displayedExams?.length > 0 ? (
-            <Flex wrap='wrap' gap={5}>
+            <div className='flex flex-wrap'>
               {displayedExams.map((exam) => (
                 <CoursesCard
                   key={exam.id}
@@ -121,7 +126,7 @@ const MonthlyExams = () => {
                   href={`/subject_exam/${exam.id}`}
                 />
               ))}
-            </Flex>
+            </div>
           ) : (
             <Text textAlign='center' color='gray.500'>
               لا توجد امتحانات متاحة حاليا.

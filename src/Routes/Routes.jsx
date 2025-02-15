@@ -64,7 +64,7 @@ import CreateComp from "../components/admin/CreateComp";
 import AllComps from "../components/admin/AllComps";
 import CompetitionDetails from "../pages/competitions/CompetitionDetails";
 import PlatformExams from "../pages/PlatformExams/PlatformExams";
-import Exams from "../pages/PlatformExams/Exams";
+
 import TeacherCode from "../pages/code/TeacherCode";
 import CreateExams from "../pages/monthlyExams/CreateExams";
 import ViewExams from "../pages/monthlyExams/ViewExams";
@@ -77,6 +77,9 @@ import MonthlyExams from "../pages/monthlyExams/MonthlyExams";
 import AddSubQuestions from "../pages/monthlyExams/AddSubQuestions";
 import SubjectExam from "../pages/monthlyExams/SubjectExam";
 import ExamQuestions from "../pages/monthlyExams/ExamQuestions";
+import StudentStats from "../pages/myStatistics/MyStatistics";
+import CourseStatistics from "../pages/courseStatistics/CourseStatistics";
+import ReviewResult from "../pages/monthlyExams/ReviewResult";
 
 const AppRouter = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
@@ -181,6 +184,7 @@ const AppRouter = () => {
           <Route path='allComps' element={<AllComps />} />
           <Route path='add_sub_exam' element={<AddSExam />} />
           <Route path='monthly_exam/:id' element={<MonthlyExams />} />
+          <Route path='monthly_exam/:id/show_grades' element={<ShowGrades />} />
 
           <Route path='question_bank' element={<QuestionBank />} />
           <Route path='supject/:id' element={<SupjectQuestion />} />
@@ -188,21 +192,22 @@ const AppRouter = () => {
           <Route path='post/:id' element={<PostDetails />} />
           <Route path='competition/:id' element={<CompetitionDetails />} />
           <Route path='Platform_exams' element={<PlatformExams />} />
-          <Route path='exams/:id' element={<Exams />} />
+
           <Route path='exam_content/:id' element={<ExamContent />} />
           <Route path='create_exam' element={<CreateExams />} />
           <Route path='add_sup_questions' element={<AddSubQuestions />} />
           <Route path='view_exams' element={<ViewExams />} />
           <Route path='all_exams' element={<AllExams />} />
-          <Route path='show_grades' element={<ShowGrades />} />
+
           <Route path='exam_details/:id' element={<ExamDetails />} />
           <Route path='subject_exam/:id' element={<SubjectExam />} />
+          <Route path='subject_exam/:id/review' element={<ReviewResult />} />
+
           <Route
             path='subject_exam/:id/questions'
             element={<ExamQuestions />}
           />
         </Route>
-        
 
         <Route
           path='/code'
@@ -214,7 +219,8 @@ const AppRouter = () => {
         />
         <Route element={<ProtectedRoute auth={student} />}>
           <Route path='/wallet' element={<Wallet />} />
-
+          <Route path='studentStats' element={<StudentStats />} />
+          <Route path='course_statistics' element={<CourseStatistics />} />
           <Route path='/profile' element={<Profile />} />
           <Route path='/my_lecture' element={<MyLecture />} />
           <Route path='/teacher/:id' element={<TeacherDetails />} />

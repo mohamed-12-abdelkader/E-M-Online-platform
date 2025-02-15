@@ -1,7 +1,8 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import { Box, Flex, useColorModeValue, Text } from "@chakra-ui/react";
+import { Box, Flex, useColorModeValue, Text, Button } from "@chakra-ui/react";
 import Links from "../../components/links/Links";
+import { FaDownload } from "react-icons/fa";
 
 const HomeLogin = () => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -28,6 +29,25 @@ const HomeLogin = () => {
         pt='80px'
         overflowY='auto'
       >
+        <Button
+          className='mt-[50px]'
+          as='a'
+          href='https://www.mediafire.com/file/f3afz741f5hohts/E-M+Online.apk/file'
+          target='_blank'
+          bg='#ff6600'
+          color='white'
+          _hover={{ bg: "#e65c00" }}
+          fontSize='lg'
+          px={6}
+          py={5}
+          borderRadius='md'
+          mt={6}
+          boxShadow='lg'
+          rightIcon={<FaDownload />}
+        >
+          تحميل التطبيق
+        </Button>
+
         <Text
           my={5}
           fontWeight='bold'

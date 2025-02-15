@@ -9,69 +9,84 @@ import {
   TableContainer,
   Box,
   Heading,
+  Spinner,
+  Flex,
 } from "@chakra-ui/react";
+import { useParams } from "react-router-dom";
+import useGitStudentMarks from "../../Hooks/admin/mangeExam/useGitStudentMarks";
 
 const ShowGrades = () => {
-  // بيانات الطلاب
-  const students = [
-    {
-      name: "أحمد محمد",
-      subjects: { math: 90, science: 85, english: 88, hes: 50, fh: 70 },
-      percentage: 87.67,
-      rank: 1,
-    },
-    {
-      name: "سارة علي",
-      subjects: { math: 90, science: 85, english: 88, hes: 50, fh: 70 },
-      percentage: 80.0,
-      rank: 2,
-    },
-    {
-      name: "محمد حسن",
-      subjects: { math: 90, science: 85, english: 88, hes: 50, fh: 70 },
-      percentage: 82.67,
-      rank: 3,
-    },
-  ];
+  const { id } = useParams();
+  const [marksLoading, marks] = useGitStudentMarks(id);
 
   return (
-    <div className='w-[90%] m-auto'>
-      <Box p={5}>
-        <Heading size='lg' mb={5}>
-          جدول نتائج الطلاب
-        </Heading>
+    <Box
+      w='95%'
+      m='auto'
+      p={5}
+      boxShadow='lg'
+      bg='white'
+      borderRadius='md'
+      mt={10}
+    >
+      <div className='my-5 text-center'>
+        <h1 className='font-bold text-xl'>جدول نتائج الطلاب 📊</h1>
+      </div>
+
+      {marksLoading ? (
+        <Flex justify='center' align='center' height='200px'>
+          <Spinner size='xl' color='teal.500' />
+        </Flex>
+      ) : marks?.length > 0 ? (
         <TableContainer>
-          <Table variant='striped' colorScheme='teal'>
-            <Thead>
+          <Table variant='simple' size='lg' bg='gray.50' borderRadius='md'>
+            <Thead bg='teal.500'>
               <Tr>
-                <Th>اسم الطالب</Th>
-                <Th>الرياضيات</Th>
-                <Th>العلوم</Th>
-                <Th>الإنجليزية</Th>
-                <Th>احصاء </Th>
-                <Th>عربى </Th>
-                <Th>النسبة المئوية</Th>
-                <Th>الترتيب</Th>
+                <Th color='white' textAlign='center'>
+                  #
+                </Th>
+                <Th color='white' textAlign='center'>
+                  اسم الطالب
+                </Th>
+                <Th color='white' textAlign='center'>
+                  إجمالي الدرجات
+                </Th>
+                <Th color='white' textAlign='center'>
+                  عدد الامتحانات
+                </Th>
+                <Th color='white' textAlign='center'>
+                  النسبة المئوية
+                </Th>
               </Tr>
             </Thead>
             <Tbody>
-              {students.map((student, index) => (
-                <Tr key={index}>
-                  <Td>{student.name}</Td>
-                  <Td>{student.subjects.math}</Td>
-                  <Td>{student.subjects.science}</Td>
-                  <Td>{student.subjects.english}</Td>
-                  <Td>{student.subjects.english}</Td>
-                  <Td>{student.subjects.english}</Td>
-                  <Td>{student.percentage}%</Td>
-                  <Td>{student.rank}</Td>
+              {marks.map((student, index) => (
+                <Tr
+                  key={student.student_id}
+                  _hover={{ bg: "gray.100", transition: "0.3s" }}
+                >
+                  <Td textAlign='center'>{index + 1}</Td>
+                  <Td textAlign='center' fontWeight='bold'>
+                    {student.full_name}
+                  </Td>
+                  <Td textAlign='center'>{student.total_mark}</Td>
+                  <Td textAlign='center'>{student.completed_exams}</Td>
+                  <Td textAlign='center' color='teal.600' fontWeight='bold'>
+                    {student.total_mark_percentage}%
+                  </Td>
                 </Tr>
               ))}
             </Tbody>
           </Table>
         </TableContainer>
-      </Box>
-    </div>
+      ) : (
+        <Flex justify='center' align='center' height='200px'>
+          <Heading size='md' color='gray.500'>
+            لا توجد نتائج متاحة حاليًا.
+          </Heading>
+        </Flex>
+      )}
+    </Box>
   );
 };
 

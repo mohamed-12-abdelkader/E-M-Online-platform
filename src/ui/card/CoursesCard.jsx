@@ -19,7 +19,7 @@ export const CoursesCard = ({
   return (
     <Card
       key={lectre.id}
-      className=' card w-[%] mx-2 my-3 md:w-[300px] md:mx-3 m-2'
+      className=' card w-[%] mx-2 my-3 md:w-[290px] md:mx-3 m-2'
       style={{ border: "1px solid #ccc" }}
     >
       <CardBody>
@@ -142,14 +142,14 @@ export const CoursesCard = ({
           <hr />
           <div className='my-3 flex px-2 text-center'>
             {type === "subject_exam" && lectre.completed ? (
-              <Button
-                colorScheme='red'
-                variant='outline'
-                className='w-[90%] m-auto'
-                disabled
+              <Link
+                className='mx-auto w-[90%]'
+                to={`/subject_exam/${lectre.id}/review`}
               >
-                هذا الامتحان مكتمل
-              </Button>
+                <Button colorScheme='blue' size='lg'>
+                  عرض تفاصيل الامتحان 📊
+                </Button>
+              </Link>
             ) : isAdmin ? (
               <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
                 <Link to={href} className='w-[90%]'>

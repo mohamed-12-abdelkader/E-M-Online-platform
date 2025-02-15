@@ -62,7 +62,7 @@ const ViewExams = () => {
   console.log(displayedExams);
 
   return (
-    <div className='w-[90%] m-auto'>
+    <div className='w-[%] m-auto'>
       <Box p={5}>
         <Heading size='lg' mb={5}>
           {isAdmin ? "إدارة الامتحانات" : "الامتحانات المتاحة"}
@@ -72,7 +72,7 @@ const ViewExams = () => {
             <Spinner size='xl' />
           </Flex>
         ) : displayedExams?.length > 0 ? (
-          <Flex wrap='wrap' gap={5}>
+          <div className='flex flex-wrap'>
             {displayedExams.map((exam) => (
               <CoursesCard
                 key={exam.id}
@@ -85,7 +85,7 @@ const ViewExams = () => {
                 href={`/monthly_exam/${exam.id}`}
               />
             ))}
-          </Flex>
+          </div>
         ) : (
           <Text textAlign='center' color='gray.500'>
             لا توجد امتحانات متاحة حاليا.

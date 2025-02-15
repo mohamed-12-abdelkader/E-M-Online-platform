@@ -69,7 +69,7 @@ export default function Nav() {
         <Link to={user ? `/home` : "/"}>
           <img
             src={colorMode === "light" ? logo : logo2}
-            className='h-[180px] w-[] mt-3'
+            className='h-[150px] w-[200px] mt-3'
             alt='logo'
           />
         </Link>

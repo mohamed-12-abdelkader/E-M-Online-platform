@@ -31,19 +31,12 @@ const Competitions = () => {
   const [compsLoading, comps, refetchComps] = useGitComps();
   console.log(comps);
   return (
-    <div className='w-[90%] m-auto'>
+    <div className='w-[%] m-auto'>
       <div className='text-center mt-[50px]'>
         <h1 className='text-xl font-bold'>المسابقات المتاحة </h1>
       </div>
-      <Box
-        display='flex'
-        justifyContent='center'
-        w='95%'
-        mx='auto'
-        my='50px'
-        mb='120px'
-      >
-        <Box display='flex' flexWrap='wrap' justifyContent='start'>
+      <Box display='flex' w='95%' mx='auto' my='50px' mb='120px'>
+        <Box display='flex' flexWrap='wrap'>
           {compsLoading ? (
             Array.from({ length: 6 }).map((_, index) => (
               <CompetitionSkeleton key={index} />
