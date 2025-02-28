@@ -75,17 +75,15 @@ const CompetitionDetails = () => {
   };
 
   return (
-    <Box
-      bgGradient='linear(to-r, teal.400, blue.500)'
-      color='white'
+    <Box    
       minH='100vh'
       p={5}
       textAlign='center'
     >
-      <Heading mb={4}>مسابقة اللغة العربية</Heading>
-      <Text fontSize='lg' mb={6}>
-        شارك في المسابقة واجمع نقاط للفوز بجوائز قيمة!
-      </Text>
+      <h1 className="text-3xl font-bold my-3">مسابقة اللغة العربية</h1>
+      <h1 >
+      {formatTime(timeLeft)}
+      </h1>
 
       <Flex justify='center' align='center' mb={6}>
         <CircularProgress
@@ -173,6 +171,7 @@ const CompetitionDetails = () => {
               التالي
             </Button>
           </HStack>
+          
         </>
       )}
     </Box>

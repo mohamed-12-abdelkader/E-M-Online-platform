@@ -1,7 +1,5 @@
-import { Box, Flex, Heading, Text, useColorModeValue } from "@chakra-ui/react";
-import { PiExamLight } from "react-icons/pi";
-import { GiTeacher, GiBookmarklet } from "react-icons/gi";
-import { Zoom } from "react-awesome-reveal";
+import { Box, Flex, Heading, Text, useColorModeValue, Image } from "@chakra-ui/react";
+import img from "../../img/طالب 2.png";
 
 const SectionTwo = () => {
   const cardBg = useColorModeValue("#f1f0fe", "#2c2c2c");
@@ -13,148 +11,59 @@ const SectionTwo = () => {
   return (
     <Box my='50px' mx='5'>
       <Flex justify='center' mb='70px'>
-        <Heading
-          as='h1'
-          fontSize={{ base: "3xl", md: "50px" }}
-          color={textColor}
-          fontWeight='bold'
-          textAlign='center'
-        >
-          ماذا نقدم ؟
-        </Heading>
+        {/* يمكنك إضافة عناصر إضافية هنا إذا لزم الأمر */}
       </Flex>
       <Flex
-        w='90%'
+        w='100%'
+        maxW='1200px'
         m='auto'
         flexWrap='wrap'
         justify='space-between'
         align='center'
+        direction={{ base: "column", md: "row" }}
       >
-        <Zoom>
-          <Box
-            h='320px'
-            w='270px'
-            bg={cardBg}
-            border='1px solid'
-            borderColor={cardBorder}
-            borderRadius='20px'
-            shadow='md'
-            position='relative'
-            my='40px'
+        <Box flex='1' maxW={{ base: "100%", md: "50%" }} p='4'>
+          <Heading
+            as='h1'
+            fontSize='3xl'
+            fontWeight='bold'
+            mb='5'
+            color={textColor}
           >
-            <Flex
-              bg={iconBg}
-              h='120px'
-              w='120px'
-              borderRadius='full'
-              position='absolute'
-              top='-15%'
-              right='-10%'
-              justify='center'
-              align='center'
-            >
-              <PiExamLight className='text-white text-5xl' />
-            </Flex>
-            <Box mt='80px' p='2'>
-              <Heading
-                as='h2'
-                fontSize='xl'
-                color={textColor}
-                fontWeight='bold'
-              >
-                - امتحانات دورية ومستمرة
-              </Heading>
-              <Text mt='30px' color={secondaryTextColor} fontWeight='bold'>
-                اختبر مستواك من خلال امتحانات دورية مستمرة على كل كورس او على كل
-                محاضرة
-              </Text>
-            </Box>
+            ابداء رحلتك التعليمية مع{" "}
+            <Text as='span' color='blue.500'>
+              EM Online
+            </Text>
+          </Heading>
+          <Box>
+            <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
+              🚀 <strong>أول منصة تعليمية تدعم الذكاء الاصطناعي (AI)</strong> لتوفير تجربة تعليمية ذكية ومخصصة لكل طالب.
+            </Text>
+            <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
+              🏆 <strong>مسابقات يومية دورية</strong> لاختبار مهارات الطلاب وتحفيزهم على التفوق.
+            </Text>
+            <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
+              🎖️ <strong>تكريم الأوائل</strong> بجوائز وشهادات تقدير لتحفيز روح التميز والتفوق.
+            </Text>
+            <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
+              📅 <strong>امتحانات شهرية على مستوى الجمهورية</strong> لتقييم المستوى ومتابعة التقدم الدراسي.
+            </Text>
+            <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
+              💡 <strong>دروس تفاعلية ومتابعة شخصية</strong> مع أفضل المعلمين لضمان استيعاب أفضل.
+            </Text>
           </Box>
-        </Zoom>
-
-        <Zoom>
-          <Box
-            h='320px'
-            w='270px'
-            bg={cardBg}
-            border='1px solid'
-            borderColor={cardBorder}
-            borderRadius='20px'
-            shadow='md'
-            position='relative'
-            my='40px'
-          >
-            <Flex
-              bg={iconBg}
-              h='120px'
-              w='120px'
-              borderRadius='full'
-              position='absolute'
-              top='-15%'
-              right='-10%'
-              justify='center'
-              align='center'
-            >
-              <GiTeacher className='text-white text-5xl' />
-            </Flex>
-            <Box mt='80px' p='2'>
-              <Heading
-                as='h2'
-                fontSize='xl'
-                color={textColor}
-                fontWeight='bold'
-              >
-                - نخبة من اكفاء المدرسين
-              </Heading>
-              <Text mt='30px' color={secondaryTextColor} fontWeight='bold'>
-                المنصة بتوفرلك مجموعة من اكفاء وافضل المدرسين على مستوى
-                الجمهورية فى كل مواد الثانوية العامة
-              </Text>
-            </Box>
-          </Box>
-        </Zoom>
-
-        <Zoom>
-          <Box
-            h='320px'
-            w='270px'
-            bg={cardBg}
-            border='1px solid'
-            borderColor={cardBorder}
-            borderRadius='20px'
-            shadow='md'
-            position='relative'
-            my='40px'
-          >
-            <Flex
-              bg={iconBg}
-              h='120px'
-              w='120px'
-              borderRadius='full'
-              position='absolute'
-              top='-15%'
-              right='-10%'
-              justify='center'
-              align='center'
-            >
-              <GiBookmarklet className='text-white text-5xl' />
-            </Flex>
-            <Box mt='80px' p='2'>
-              <Heading
-                as='h2'
-                fontSize='xl'
-                color={textColor}
-                fontWeight='bold'
-              >
-                - كتب و pdf لكل المواد
-              </Heading>
-              <Text mt='30px' color={secondaryTextColor} fontWeight='bold'>
-                متاح لكل محاضرة ال pdf الخاص بها او تقدر تطلب الكتاب الخاص
-                بالمدرس وهيجيلك شحن لحد البيت
-              </Text>
-            </Box>
-          </Box>
-        </Zoom>
+        </Box>
+        <div>
+          <Image
+            src={img}
+            alt='طالب'
+            borderRadius='lg'           
+            width='100%'
+            maxW='400px'
+            height='auto'
+            mx='auto'
+          />
+        </div>
       </Flex>
     </Box>
   );

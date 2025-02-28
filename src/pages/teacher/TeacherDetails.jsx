@@ -49,6 +49,7 @@ const TeacherDetails = () => {
         alignItems='center'
         justifyContent='center'
         bg={bgColor}
+       
       >
         <Box
           maxW='md'
@@ -67,7 +68,7 @@ const TeacherDetails = () => {
             mb={4}
           />
           <Text fontSize='xl' fontWeight='bold' color={textColor}>
-            هذا المدرس غير موجود على الموقع
+            هذا المحاضر غير موجود على الموقع
           </Text>
         </Box>
       </Box>
@@ -75,7 +76,7 @@ const TeacherDetails = () => {
   }
 
   return (
-    <Box bg={bgColor} minH='100vh'>
+    <Box bg={bgColor} minH='100vh'  className="mb-[100px]">
       <TeacherInfo
         teacher={teacher.teacher}
         number={teacher.months && teacher.months.length}

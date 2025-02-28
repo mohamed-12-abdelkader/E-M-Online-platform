@@ -133,7 +133,7 @@ export const CoursesCard = ({
           <div className='p-3' dir='rtl'>
             <h1 className='font-bold'>
               {" "}
-              مدرس ال{lectre.subject} للثانوية العامة{" "}
+              محاضر  ال{lectre.subject}  {" "}
             </h1>
           </div>
         </div>
@@ -180,7 +180,7 @@ export const CoursesCard = ({
                   </Button>
                 </Link>
               </div>
-            ) : type === "my_courses" ? (
+            ) : type === "my_courses" || type === "comp" ? (
               <div className='flex justify-center items-center gap-2 w-[95%] m-auto'>
                 <Link to={href} className='w-[90%]'>
                   <Button
@@ -188,7 +188,8 @@ export const CoursesCard = ({
                     variant='outline'
                     className='w-full'
                   >
-                    دخول للكورس
+                    {type === "comp" ? "عرضى المسابقة " :"   دخول للكورس"}
+                  
                   </Button>
                 </Link>
               </div>

@@ -89,7 +89,7 @@ const TeacherInfo = ({ teacher, number }) => {
                 backdropFilter='blur(10px)'
               >
                 <FaGraduationCap size={20} />
-                <Text>مدرس {teacher.subject} للثانوية العامة</Text>
+                <Text>محاضر {teacher.subject}  </Text>
               </Flex>
             </Flex>
 

@@ -17,7 +17,7 @@ const AllTeacher = () => {
         <div className='flex justify-center'>
           <div className=''>
             <h1 className='text-center text-2xl font-bold mb-8'>
-              مدرسين المنصة
+              محاضرين  المنصة
             </h1>
           </div>
         </div>
@@ -37,14 +37,14 @@ const AllTeacher = () => {
     <div className='py-5 mb-5 w-full'>
       <div className='flex justify-center'>
         <div className=''>
-          <h1 className='text-center text-2xl font-bold mb-8'>مدرسين المنصة</h1>
+          <h1 className='text-center text-2xl font-bold mb-8'>محاضرين المنصة</h1>
         </div>
       </div>
       {shuffledTeachers.length === 0 ? (
         <div>
           <div className='w-90 border shadow h-250 m-auto my-8 flex justify-center items-center'>
             <div className='ribbon'>
-              <h1 className='font-bold text-xl m-2'>لا يوجد مدرسين الان !!!</h1>
+              <h1 className='font-bold text-xl m-2'>لا يوجد محاضرين الان !!!</h1>
             </div>
           </div>
         </div>

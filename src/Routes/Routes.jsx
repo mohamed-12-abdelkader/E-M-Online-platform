@@ -80,6 +80,8 @@ import ExamQuestions from "../pages/monthlyExams/ExamQuestions";
 import StudentStats from "../pages/myStatistics/MyStatistics";
 import CourseStatistics from "../pages/courseStatistics/CourseStatistics";
 import ReviewResult from "../pages/monthlyExams/ReviewResult";
+import MyTeacher from "../pages/myTeacher/MyTeacher";
+import HomePage from "../pages/homePage/HomePage";
 
 const AppRouter = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
@@ -173,8 +175,10 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         >
-          <Route path='home' element={<PostsHome />} />
+          <Route path='home' element={<HomePage />} />
+          <Route path='social' element={<PostsHome />} />
           <Route path='teachers' element={<AllTeacherLogin />} />
+          <Route path='my-teachers' element={<MyTeacher />} />
           <Route path='my_courses' element={<MyLecture />} />
           <Route path='free_courses' element={<FreeCourses />} />
           <Route path='competitions' element={<Competitions />} />

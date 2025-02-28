@@ -42,7 +42,7 @@ const Month = () => {
   }
 
   return (
-    <Box bg={bgColor} minH='100vh' pt={{ base: 20, md: 28 }} pb={10}>
+    <Box bg={bgColor} minH='100vh' pt={{ base: 20, md: 28 }} pb={10} className="mb-[80px]">
       <Container maxW='7xl'>
         {months.monthData.image && (
           <MonthHeader

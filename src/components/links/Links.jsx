@@ -27,7 +27,7 @@ import {
   AiOutlineStar,
 } from "react-icons/ai";
 import { GiTeacher, GiArchiveRegister } from "react-icons/gi";
-
+import { FaSearch ,FaFacebook} from "react-icons/fa";
 import UserType from "../../Hooks/auth/userType";
 import { NavLink } from "react-router-dom";
 
@@ -91,10 +91,11 @@ const Links = ({ onClose }) => {
 
   const studentLinks = [
     { to: "/profile", Icon: BiUserCircle, label: "الملف الشخصي" },
-    { to: "/teachers", Icon: FaChalkboardTeacher, label: "المدرسين" },
+    { to: "/social", Icon: FaFacebook, label: " مجتمع  EM ONLINE " },
+    { to: "/teachers", Icon: FaSearch, label: "ابحث عن محاضرك " },
+    { to: "/my-teachers", Icon: FaChalkboardTeacher, label: " محاضرينى   " },
     { to: "/view_exams", Icon: AiOutlineFileDone, label: "امتحانات المنصة" },
     { to: "/my_courses", Icon: FaBookReader, label: "كورساتي" },
-    { to: "/free_courses", Icon: AiOutlineStar, label: "الكورسات المجانية" },
     { to: "/question_bank", Icon: GiArchiveRegister, label: "بنك الأسئلة" },
     { to: "/results", Icon: AiOutlineFileSearch, label: "نتائج الامتحانات" },
     { to: "/competitions", Icon: FaTrophy, label: "المسابقات" },

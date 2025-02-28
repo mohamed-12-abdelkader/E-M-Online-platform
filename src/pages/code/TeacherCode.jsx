@@ -41,7 +41,7 @@ const TeacherCode = () => {
     setIsExporting(true);
     const pdf = new jsPDF("l", "mm", "a4");
 
-    const codesPerPage = 12; // 3 أكواد × 4 صفوف
+    const codesPerPage = 15; // 3 أكواد × 4 صفوف
     const cardWidth = 385; // عرض الكود
     const pageWidth = 1200; // عرض الصفحة ليسع 3 أكواد
 
@@ -63,9 +63,7 @@ const TeacherCode = () => {
                 <h1 style="font-size: 16px; font-weight: bold; color: #3182ce; margin-bottom: 6px;">${
                   codes.name
                 }</h1>
-                <h3 style="font-size: 14px; font-weight: bold; color: #c53030;"> رقم الكود : ${
-                  i + index + 1
-                } </h3>
+               
               </div>
               <div style="display: flex; margin-top: 35px; justify-content: space-between; align-items: center; padding: 4px 0;">
                 <h3 style="font-size: 20px; font-weight: bold; color: #c53030;"> كود التفعيل :</h3>

@@ -3,7 +3,7 @@ import { MdOutlineVideoLibrary, MdCancelPresentation } from "react-icons/md";
 import { Link } from "react-router-dom";
 import GitMyMonthes from "../../Hooks/student/GitMyMonthes";
 import { CoursesCard } from "../../ui/card/CoursesCard";
-
+import img from "../../img/fd9e71b0-3334-4ffa-b290-0e63c1803cb5.jpg"
 const Lectures = () => {
   const [myMonth, myMonthLoading] = GitMyMonthes();
 
@@ -45,13 +45,16 @@ const Lectures = () => {
           </div>
         ) : (
           <div
-            className='text-center py-5 bg-white h-[200px] flex justify-center items-center'
+            className='text-center py-5 mt-[80px]  '
             style={{ borderRadius: "20px" }}
           >
-            <h1 className='font-bold flex justify-center text-black'>
-              <MdCancelPresentation className='m-1 text-red-500' />
-              انت لست مشترك فى كورسات الان
-            </h1>
+            <img
+                     src={img}
+                     alt="ابحث عن محاضرك"
+                     w="400px"
+                     borderRadius="20px"
+                     className="h-[400px]"
+                   />
           </div>
         )}
       </div>

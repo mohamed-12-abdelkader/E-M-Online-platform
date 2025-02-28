@@ -1,42 +1,74 @@
-import { ListItem, UnorderedList } from "@chakra-ui/react";
-import { Zoom, Fade } from "react-awesome-reveal";
+import { Box, Flex, Heading, Text, useColorModeValue, Image } from "@chakra-ui/react";
+import img from "../../img/teacher.png";
 const SectionThree = () => {
+  const cardBg = useColorModeValue("#f1f0fe", "#2c2c2c");
+  const cardBorder = useColorModeValue("gray.300", "gray.600");
+  const textColor = useColorModeValue("gray.700", "white");
+  const secondaryTextColor = useColorModeValue("gray.600", "gray.300");
+  const iconBg = useColorModeValue("#03a9f5", "#03a9f5");
   return (
-    <div className="my-[70px]">
-      <div className="w-[90%] m-auto md:flex justify-between">
-        <div className="">
-          <div className="flex justify-center">
-            <h1 className="fonts font-bold text-xl"> ماذا نقدم للمدرس ؟</h1>
-          </div>
-
-          <div className="mt-[50px]">
-            <UnorderedList>
-              <Zoom>
-                <ListItem className="font-bold m-1">
-                  التحكم الكامل فى المنصة وادارة المحاضرات
-                </ListItem>
-                <ListItem className="font-bold m-1">
-                  انشاء مجموعات دراسية لطلبة السنتر
-                </ListItem>
-                <ListItem className="font-bold m-1">
-                  توفر المنصة التدريب للمدرسين مما يطور من مهاراتهم للقيام
-                  بعملية التعليم عن بعد.
-                </ListItem>
-                <ListItem className="font-bold m-1">
-                  دعم فنى خلال ال 24 ساعة
-                </ListItem>
-              </Zoom>
-            </UnorderedList>
-          </div>
-        </div>
-
-        <div>
-          <Fade>
-            <img src="vector2-480x291.png" className="h-[250px]" />
-          </Fade>
-        </div>
+    <Box my='50px' mx='5'>
+    <Flex justify='center' mb='70px'>
+      {/* يمكنك إضافة عناصر إضافية هنا إذا لزم الأمر */}
+    </Flex>
+    <Flex
+      w='100%'
+      maxW='1200px'
+      m='auto'
+      flexWrap='wrap'
+      justify='space-between'
+      align='center'
+      direction={{ base: "column", md: "row" }}
+    >
+         <div>
+        <Image
+          src={img}
+          alt='طالب'
+          borderRadius='lg'           
+          width='100%'
+          maxW='400px'
+          height='auto'
+          mx='auto'
+        />
       </div>
-    </div>
+      <Box flex='1' maxW={{ base: "100%", md: "50%" }} p='4'>
+        <Heading
+          as='h1'
+          fontSize='3xl'
+          fontWeight='bold'
+          mb='5'
+          color={textColor}
+        >
+          ابداء رحلتك  فى عالم الاونلاين مع{" "}
+          <Text as='span' color='blue.500'>
+            EM Online
+          </Text>
+        </Heading>
+        <Box>
+ 
+
+  {/* مزايا للمدرس */}
+  <Box>
+    
+    <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
+      🔒 <strong>محتواك مؤمن</strong> نضمن حماية حقوقك الفكرية ونحمي محتواك من النسخ غير المصرح به.
+    </Text>
+    <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
+      📞 <strong>خدمة عملاء متخصصة</strong> لتلبية احتياجاتك وحل أي مشكلات تواجهك.
+    </Text>
+  
+    <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
+      📈 <strong>خطة مدروسة للنجاح</strong> نضع لك خطة استراتيجية لتحقيق النجاح في مجال التعليم الأونلاين.
+    </Text>
+    <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
+      💼 <strong>فرص للربح</strong> نقدم لك فرصًا لزيادة دخلك من خلال دوراتك وورش العمل.
+    </Text>
+  </Box>
+</Box>
+      </Box>
+   
+    </Flex>
+  </Box>
   );
 };
 
