@@ -155,7 +155,7 @@ const Exam = () => {
   }
 
   return (
-    <div className="mt-[150px]" style={{ minHeight: "60vh" }}>
+    <div className="my-[150px]" style={{ minHeight: "60vh" }}>
       {/* عرض نتيجة الامتحان */}
       <ExamResult
         isOpen={isOpen}

@@ -3,10 +3,12 @@ import { Outlet } from "react-router-dom";
 import { Box, Flex, useColorModeValue, Text, Button } from "@chakra-ui/react";
 import Links from "../../components/links/Links";
 import { FaDownload } from "react-icons/fa";
+import UserType from "../../Hooks/auth/userType";
 
 const HomeLogin = () => {
   const user = JSON.parse(localStorage.getItem("user"));
 
+  const [userData, isAdmin, isTeacher, student] = UserType();
   return (
     <Flex
       direction={{ base: "column", md: "row-reverse" }}
@@ -55,6 +57,14 @@ const HomeLogin = () => {
         >
           اهلا : {user?.name || `${user?.fname} - ${user?.lname}`}
         </Text>
+{student ?  <Text
+          my={5}
+          fontWeight='bold'
+          color={useColorModeValue("gray.800", "white")}
+        >
+          كود الطالب  : {user?.id}
+        </Text> : null}
+       
         <Links />
       </Box>
 

@@ -175,7 +175,7 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         >
-          <Route path='home' element={<HomePage />} />
+          <Route path='home' element={isTeacher|| isAdmin ?<PostsHome/>: <HomePage />} />
           <Route path='social' element={<PostsHome />} />
           <Route path='teachers' element={<AllTeacherLogin />} />
           <Route path='my-teachers' element={<MyTeacher />} />
