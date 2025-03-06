@@ -1,8 +1,9 @@
 import React from "react";
-import { Box, Grid, GridItem, Link, Heading, Icon } from "@chakra-ui/react";
+import { Box, Grid, GridItem, Heading, Icon } from "@chakra-ui/react";
 import { FaUsers, FaChalkboardTeacher, FaTrophy, FaBookOpen } from "react-icons/fa";
 import MyLecture from "../leacter/MyLecture";
 import MyTeacher from "../myTeacher/MyTeacher";
+import { Link } from "react-router-dom";
 
 const HomePage = () => {
   const links = [
@@ -20,6 +21,7 @@ const HomePage = () => {
         </Heading>
         <Grid templateColumns="repeat(auto-fit, minmax(150px, 1fr))" gap={4}>
           {links.map((link, index) => (
+            <Link to={link.href} >
             <GridItem
               key={index}
               bg="blue.100"
@@ -29,11 +31,16 @@ const HomePage = () => {
               _hover={{ bg: "blue.200", transform: "scale(1.05)" }}
               transition="0.3s"
             >
-              <Link href={link.href} display="flex" flexDirection="column" alignItems="center">
+              <div>
+
                 <Icon as={link.icon} boxSize={6} color="blue.600" mb={2} />
+                <h1>
+
                 {link.name}
-              </Link>
+                </h1>
+              </div>
             </GridItem>
+              </Link>
           ))}
         </Grid>
       </Box>
