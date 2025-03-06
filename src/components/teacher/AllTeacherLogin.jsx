@@ -25,24 +25,24 @@ const AllTeacherLogin = () => {
   const [loading, teachers] = GitTeacherByToken();
   const [searchQuery, setSearchQuery] = useState(""); 
   const [searchResults, setSearchResults] = useState([]);
-  const [searchClicked, setSearchClicked] = useState(false); // ✅ حالة تتبع البحث
+  const [searchClicked, setSearchClicked] = useState(false);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value.toLowerCase());
-    setSearchClicked(false); // ✅ إعادة تعيين عند تغيير الإدخال
+    setSearchClicked(false);
   };
 
   const handleSearchClick = () => {
-    setSearchClicked(true); // ✅ تم الضغط على زر البحث
+    setSearchClicked(true);
 
     if (!searchQuery.trim()) {
-      setSearchResults([]); 
+      setSearchResults([]);
       return;
     }
 
     const results = Array.isArray(teachers)
       ? teachers.filter((teacher) =>
-          teacher.name.toLowerCase().includes(searchQuery)
+          teacher.name.toLowerCase().includes(searchQuery) || teacher.id.toString() === searchQuery
         )
       : [];
 
@@ -54,13 +54,13 @@ const AllTeacherLogin = () => {
       <Box w="100%" my="5">
         <Heading as="h1" fontSize="30px" display="flex" alignItems="center" mb="2" className="text-[#03a9f5]">
           <PiChalkboardTeacherBold className="mx-2 text-red-500" />
-          ابحث عن مدرسك 
+          ابحث عن محاضرك 
         </Heading>
 
         <FormControl mb="4" mt="4" display="flex" gap="2">
           <Input
             type="text"
-            placeholder="ابحث عن مدرسك..."
+            placeholder="ابحث عن محاضرك بالاسم أو  كود المحاضر..."
             value={searchQuery}
             onChange={handleSearchChange}
             className="h-[80px]"
@@ -110,7 +110,7 @@ const AllTeacherLogin = () => {
               <Flex justify="center" alignItems="center" bg="white" h="200px" borderRadius="20px">
                 <Text fontWeight="bold" display="flex" alignItems="center" color="black">
                   <MdCancelPresentation className="m-1 text-red-500" />
-                  لا يوجد مدرس بهذا الاسم
+                  لا يوجد مدرس بهذا الاسم أو رقم الهوية
                 </Text>
               </Flex>
             )

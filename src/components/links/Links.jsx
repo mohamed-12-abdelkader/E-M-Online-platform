@@ -105,7 +105,7 @@ const Links = ({ onClose }) => {
   ];
 
   return (
-    <div>
+    <div className="mb-8">
       <ul className='space-y-4'>
         {commonLinks.map((link, idx) => (
           <NavLinkItem key={idx} {...link} onClick={onClose} />
