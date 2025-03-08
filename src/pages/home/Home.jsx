@@ -7,6 +7,7 @@ import HomeLogin from "../homeLogin/HomeLogin";
 import Footer from "../../components/home/Footer";
 import SectionTwo from "../../components/home/SectionTwo";
 import SectionThree from "../../components/home/SectionThree";
+import SectionFour from "../../components/home/SectionFour";
 
 const Home = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
@@ -25,10 +26,11 @@ const Home = () => {
           <HomeLogin />
         </div>
       ) : (
-        <div>
+        <div className="mt-[100px]">
           <SectionOne />
           <SectionTwo/>
           <SectionThree/>
+          <SectionFour/>
         </div>
       )}
    

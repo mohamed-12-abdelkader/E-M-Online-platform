@@ -65,7 +65,7 @@ const LectureDetails = () => {
   return (
     <div className='my-[120px] w-[90%] m-auto'>
       <div className='mt-[120px]' style={{ minHeight: "80vh" }}>
-        <div className='lecture_details max-w-7xl mx-auto px-4 mt-[80px] mb-[80px] h-auto  py-8 md:flex md:justify-between border shadow-md rounded-lg shadow-lg'>
+        <div className='lecture_details bg-gradient-to-r from-cyan-300 to-blue-700 max-w-7xl mx-auto px-4 mt-[80px] mb-[80px] h-auto  py-8 md:flex md:justify-between border shadow-md rounded-lg shadow-lg'>
           <div className='flex justify-center items-center w-full md:[300px] mb-6 md:mb-0'>
             <Box
               w={{ base: "100%", md: "80%" }}
@@ -75,6 +75,7 @@ const LectureDetails = () => {
               transition='transform 0.3s'
               _hover={{ transform: "scale(1.05)" }}
               shadow='lg'
+              className="bg-gradient-to-r from-cyan-300 to-blue-700"
             >
               <Image
                 src={lecturesT?.image || lectures?.image}

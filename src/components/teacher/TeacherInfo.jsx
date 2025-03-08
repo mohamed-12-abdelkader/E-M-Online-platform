@@ -21,7 +21,7 @@ const TeacherInfo = ({ teacher, number }) => {
   const statBg = useColorModeValue("blue.50", "blue.900");
 
   return (
-    <Box position='relative' className='mt-[80px]'>
+    <Box position='relative' className='mt-[80px] '>
       {/* Hero Section with Background Image and Gradient */}
       <Box position='relative' color='white' overflow='hidden'>
         {/* Background Image */}
@@ -54,7 +54,7 @@ const TeacherInfo = ({ teacher, number }) => {
           maxW='7xl'
           h='full'
           position='relative'
-          className='h-[00px] teacher-info-cntainer'
+          className='h-[00px] teacher-info-cntainer bg-gradient-to-r from-cyan-300 to-blue-700'
           style={{ height: "400px" }}
         >
           <Flex

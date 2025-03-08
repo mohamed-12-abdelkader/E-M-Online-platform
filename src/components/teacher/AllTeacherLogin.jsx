@@ -19,8 +19,8 @@ import { MdCancelPresentation } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { FaVideo } from "react-icons/fa";
 import GitTeacherByToken from "../../Hooks/student/GitTeacherByToken";
-import img from "../../img/910b0350-ffe8-451e-9a0f-06222d3e717a.jpg";
-
+import img from "../../img/Screenshot_2025-03-07_210502-removebg-preview.png";
+import { motion } from "framer-motion";
 const AllTeacherLogin = () => {
   const [loading, teachers] = GitTeacherByToken();
   const [searchQuery, setSearchQuery] = useState(""); 
@@ -115,9 +115,40 @@ const AllTeacherLogin = () => {
               </Flex>
             )
           ) : (
-            <Flex justify="center" alignItems="center" w="100%" mt="20">
-              <img src={img} alt="ابحث عن مدرسك" w="400px" borderRadius="20px" />
-            </Flex>
+            <section
+            dir="rtl"
+            className="flex mb-8 flex-col md:flex-row items-center justify-between px-6 md:px-12 py-12 relative"
+          >
+            {/* نص التوجيه */}
+            <div dir="rtl" className="max-w-lg text-right space-y-5">
+              <h1 className="text-2xl font-bold leading-snug ">
+                🚀ابحث عن محاضرك 
+              </h1>
+
+              <p className="text-lg font-medium  leading-relaxed">
+                يمكنك البحث عن محاضرك باستخدام{" "}
+                <span className="text-blue-600 font-semibold">كود المحاضر</span>{" "}
+                أو من خلال <span className="text-blue-600 font-semibold">اسمه</span>.
+              </p>
+
+             
+            </div>
+
+            {/* صورة توضيحية */}
+            <div className="relative mt-10 md:mt-0 flex items-center justify-center">
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                className="w-[300px] h-[300px] sm:w-[350px] sm:h-[350px] md:w-[420px] md:h-[420px] bg-blue-500 rounded-full flex items-center justify-center shadow-2xl"
+              >
+                <img
+                  src={img}
+                  alt="No Teacher Found"
+                  className="w-[260px] h-[260px] sm:w-[310px] sm:h-[310px] md:w-[360px] md:h-[360px] rounded-full border-4 border-gray-300 shadow-xl"
+                />
+              </motion.div>
+            </div>
+          </section>
           )}
         </Box>
       </Box>

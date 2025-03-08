@@ -43,7 +43,7 @@ const LectureList = ({
         py={10}
         px={6}
         borderRadius='lg'
-        bg={useColorModeValue("gray.50", "gray.700")}
+      
       >
         {isTeacher ? (
           <Box>
@@ -70,7 +70,7 @@ const LectureList = ({
   }
 
   return (
-    <div>
+    <div className="">
       <Text
         fontSize='xl'
         fontWeight='bold'

@@ -30,7 +30,7 @@ import { motion } from "framer-motion";
 const MotionBox = motion(Box);
 
 const MonthHeader = ({ image, description, noflecture, users, isTeacher }) => {
-  const bgColor = useColorModeValue("white", "gray.800");
+
   const textColor = useColorModeValue("gray.800", "white");
   const accentColor = useColorModeValue("blue.500", "blue.300");
   const statBg = useColorModeValue("blue.50", "blue.900");
@@ -38,12 +38,19 @@ const MonthHeader = ({ image, description, noflecture, users, isTeacher }) => {
 
   return (
     <Box
-      bg={bgColor}
-      borderRadius='xl'
+ 
+      borderRadius='2xl'
       overflow='hidden'
-      shadow='lg'
+      shadow='2xl'
       borderWidth='1px'
-      borderColor={useColorModeValue("gray.200", "gray.700")}
+    
+      sx={{
+        transition: 'box-shadow 0.3s',
+        _hover: {
+          boxShadow: '2xl',
+        },
+      }}
+      className="p-5 bg-gradient-to-r from-cyan-300 to-blue-700"
     >
       <Flex
         direction={{ base: "column", md: "row" }}
@@ -51,21 +58,18 @@ const MonthHeader = ({ image, description, noflecture, users, isTeacher }) => {
         h={{ md: "400px" }}
       >
         {/* Image Section */}
-        <MotionBox
-          w={{ base: "100%", md: "50%" }}
-          h={{ base: "250px", md: "full" }}
-          position='relative'
-          overflow='hidden'
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.3 }}
+        <div
         >
+          <div className="flex items-center h-[100%]">
+
           <Image
-            src={image}
-            alt='Course Cover'
-            objectFit='cover'
-            w='full'
-            h='full'
-          />
+                src={image}
+                alt='Course Image'
+                objectFit='cover'
+                w='100%'
+                h={{ base: "200px", md: "300px" }}
+                />
+                </div>
           <Box
             position='absolute'
             top='0'
@@ -74,7 +78,7 @@ const MonthHeader = ({ image, description, noflecture, users, isTeacher }) => {
             bottom='0'
             bg='blackAlpha.300'
           />
-        </MotionBox>
+        </div>
 
         {/* Content Section */}
         <Flex
@@ -91,6 +95,9 @@ const MonthHeader = ({ image, description, noflecture, users, isTeacher }) => {
             px={3}
             py={1}
             borderRadius='full'
+            sx={{
+              boxShadow: 'md',
+            }}
           >
             كورس تعليمي
           </Badge>
@@ -145,6 +152,9 @@ const MonthHeader = ({ image, description, noflecture, users, isTeacher }) => {
             align='center'
             justify='center'
             color={accentColor}
+            sx={{
+              boxShadow: 'md',
+            }}
           >
             <Icon as={FaBookOpen} mr={2} />
             <Text fontWeight='bold'>عدد المحاضرات: {noflecture}</Text>
@@ -156,15 +166,15 @@ const MonthHeader = ({ image, description, noflecture, users, isTeacher }) => {
       <Modal isOpen={isOpen} onClose={onClose} size='6xl'>
         <ModalOverlay />
         <ModalContent>
-          <div className='flex justify-between'>
-            <div className='p-3'>
-              <h1 className='font-bold text-xl m-2'>قائمة المشتركين</h1>
-              <h1 className='font-bold text-xl m-2'>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem' }}>
+            <div>
+              <h1 style={{ fontWeight: 'bold', fontSize: '1.5rem', margin: '0.5rem' }}>قائمة المشتركين</h1>
+              <h1 style={{ fontWeight: 'bold', fontSize: '1.5rem', margin: '0.5rem' }}>
                 عدد المشتركين : {users.length} طالب{" "}
               </h1>
             </div>
-            <div className='p-3'>
-              <Button colorScheme='red' onClick={onClose}>
+            <div>
+              <Button colorScheme='red' onClick={onClose} _hover={{ boxShadow: 'lg' }}>
                 x
               </Button>
             </div>
@@ -172,7 +182,7 @@ const MonthHeader = ({ image, description, noflecture, users, isTeacher }) => {
 
           <ModalBody>
             {users.length > 0 ? (
-              <Table variant='simple' colorScheme='blue'>
+              <Table variant='simple' colorScheme='blue' sx={{ boxShadow: 'md' }}>
                 <Thead>
                   <Tr>
                     <Th>الرقم التعريفي</Th>

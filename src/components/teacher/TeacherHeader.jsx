@@ -1,7 +1,7 @@
 import React from "react";
 
 const TeacherHeader = ({ subject, name }) => (
-  <div className='header  h-[200px] w-[100%] mb-5 bg-blue-500'>
+  <div className='header  h-[200px] w-[100%] mb-5 bg-gradient-to-r from-cyan-300 to-blue-700'>
     <div className='flex justify-center items-center h-[150px]'>
       <div className='text-center'>
         <h1 className='fonts font-bold text-xl text-white'>

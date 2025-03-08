@@ -1,74 +1,95 @@
-import { Box, Flex, Heading, Text, useColorModeValue, Image } from "@chakra-ui/react";
-import img from "../../img/teacher.png";
-const SectionThree = () => {
-  const cardBg = useColorModeValue("#f1f0fe", "#2c2c2c");
-  const cardBorder = useColorModeValue("gray.300", "gray.600");
-  const textColor = useColorModeValue("gray.700", "white");
-  const secondaryTextColor = useColorModeValue("gray.600", "gray.300");
-  const iconBg = useColorModeValue("#03a9f5", "#03a9f5");
-  return (
-    <Box my='50px' mx='5'>
-    <Flex justify='center' mb='70px'>
-      {/* يمكنك إضافة عناصر إضافية هنا إذا لزم الأمر */}
-    </Flex>
-    <Flex
-      w='100%'
-      maxW='1200px'
-      m='auto'
-      flexWrap='wrap'
-      justify='space-between'
-      align='center'
-      direction={{ base: "column", md: "row" }}
-    >
-         <div>
-        <Image
-          src={img}
-          alt='طالب'
-          borderRadius='lg'           
-          width='100%'
-          maxW='400px'
-          height='auto'
-          mx='auto'
-        />
-      </div>
-      <Box flex='1' maxW={{ base: "100%", md: "50%" }} p='4'>
-        <Heading
-          as='h1'
-          fontSize='3xl'
-          fontWeight='bold'
-          mb='5'
-          color={textColor}
-        >
-          ابداء رحلتك  فى عالم الاونلاين مع{" "}
-          <Text as='span' color='blue.500'>
-            EM Online
-          </Text>
-        </Heading>
-        <Box>
- 
+import { Box, Flex, Heading, Text, useColorModeValue, Icon, Button } from "@chakra-ui/react";
+import { FaQuestionCircle, FaVideo, FaUniversity, FaBookOpen } from "react-icons/fa";
 
-  {/* مزايا للمدرس */}
-  <Box>
-    
-    <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
-      🔒 <strong>محتواك مؤمن</strong> نضمن حماية حقوقك الفكرية ونحمي محتواك من النسخ غير المصرح به.
-    </Text>
-    <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
-      📞 <strong>خدمة عملاء متخصصة</strong> لتلبية احتياجاتك وحل أي مشكلات تواجهك.
-    </Text>
-  
-    <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
-      📈 <strong>خطة مدروسة للنجاح</strong> نضع لك خطة استراتيجية لتحقيق النجاح في مجال التعليم الأونلاين.
-    </Text>
-    <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
-      💼 <strong>فرص للربح</strong> نقدم لك فرصًا لزيادة دخلك من خلال دوراتك وورش العمل.
-    </Text>
-  </Box>
-</Box>
-      </Box>
-   
-    </Flex>
-  </Box>
+const SectionThree = () => {
+  const cardBg = useColorModeValue("gray.50", "gray.700");
+  const textColor = useColorModeValue("gray.900", "gray.100");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const btnBg = useColorModeValue("#592BEC", "purple.400");
+
+  const educationalServices = [
+    {
+      id: 1,
+      title: "مسابقات يومية",
+      description: "اختبر معلوماتك يوميًا عبر مسابقات تعليمية شيقة.",
+      rating: 4.8,
+      reviews: 250,
+      icon: FaQuestionCircle,
+      color: "blue.500",
+    },
+    {
+      id: 2,
+      title: "محاضرات مسجلة",
+      description: "استمتع بمحاضرات مسجلة متاحة في أي وقت من خبراء التعليم.",
+      rating: 4.6,
+      reviews: 180,
+      icon: FaVideo,
+      color: "green.500",
+    },
+    {
+      id: 3,
+      title: "دورات للجامعات",
+      description: "دورات متخصصة لمختلف التخصصات الجامعية يقدمها أكاديميون محترفون.",
+      rating: 4.9,
+      reviews: 220,
+      icon: FaUniversity,
+      color: "purple.500",
+    },
+    {
+      id: 4,
+      title: "مكتبة رقمية",
+      description: "أكبر مكتبة إلكترونية تحتوي على آلاف الكتب والمراجع التعليمية.",
+      rating: 4.7,
+      reviews: 190,
+      icon: FaBookOpen,
+      color: "orange.500",
+    },
+  ];
+
+  return (
+    <Box w="full" py={12} px={6} textAlign="center">
+      <Heading fontSize="2xl" fontWeight="bold" color={textColor} mb={2}>
+        خدماتنا التعليمية 📚
+      </Heading>
+      <Text color="gray.500" mb={6}>
+        اكتشف أفضل الدورات التعليمية والدروس الخاصة مع خبراء التعليم.
+      </Text>
+
+      <Flex wrap="wrap" justify="center" gap={4}>
+        {educationalServices.map((service) => (
+          <Box
+            key={service.id}
+            p={6}
+            bg={cardBg}
+            border="1px solid"
+            borderColor={borderColor}
+            borderRadius="lg"
+            boxShadow="md"
+            transition="transform 0.3s ease, box-shadow 0.3s ease"
+            _hover={{ transform: "scale(1.05)", boxShadow: "xl" }}
+            w={{ base: "100%", sm: "48%", md: "23%" }}
+          >
+            <Flex justify="center" align="center" mb={4}>
+              <Icon as={service.icon} boxSize={10} color={service.color} />
+            </Flex>
+            <Heading fontSize="lg" fontWeight="semibold" color={textColor} mb={2}>
+              {service.title}
+            </Heading>
+            <Text fontSize="sm" color="gray.500">
+              {service.description}
+            </Text>
+            <Flex justify="center" align="center" mt={3}>
+              <Text fontSize="sm" color="yellow.400">★ {service.rating}</Text>
+              <Text fontSize="xs" color="gray.400" ml={2}>
+                ({service.reviews} تقييم)
+              </Text>
+            </Flex>
+          </Box>
+        ))}
+      </Flex>
+
+      
+    </Box>
   );
 };
 

@@ -1,69 +1,77 @@
-import { Box, Flex, Heading, Text, useColorModeValue, Image } from "@chakra-ui/react";
-import img from "../../img/طالب 2.png";
+import { Box, Flex, Heading, Text, useColorModeValue, Icon } from "@chakra-ui/react";
+import { BiTrophy, BiBook } from "react-icons/bi";
+import { FaRobot, FaChalkboardTeacher } from "react-icons/fa";
 
 const SectionTwo = () => {
-  const cardBg = useColorModeValue("#f1f0fe", "#2c2c2c");
-  const cardBorder = useColorModeValue("gray.300", "gray.600");
-  const textColor = useColorModeValue("gray.700", "white");
-  const secondaryTextColor = useColorModeValue("gray.600", "gray.300");
-  const iconBg = useColorModeValue("#03a9f5", "#03a9f5");
+  const cardBg = useColorModeValue("gray.50", "gray.700");
+  const textColor = useColorModeValue("gray.900", "gray.100");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+
+  const features = [
+    {
+      id: 1,
+      name: "مسابقات يومية",
+      description: "اختبر مهاراتك يوميًا من خلال تحديات تعليمية ممتعة.",
+      icon: BiTrophy,
+      color: "purple.500",
+    },
+    {
+      id: 2,
+      name: "امتحانات شهرية",
+      description: "قم بتقييم مستواك عبر امتحانات شهرية متخصصة.",
+      icon: BiBook,
+      color: "blue.500",
+    },
+    {
+      id: 3,
+      name: "ذكاء اصطناعي",
+      description: "استفد من أحدث تقنيات الذكاء الاصطناعي في التعليم.",
+      icon: FaRobot,
+      color: "green.500",
+    },
+    {
+      id: 4,
+      name: "أقوى المحاضرين",
+      description: "تعلم من نخبة المحاضرين المتخصصين في مختلف المجالات.",
+      icon: FaChalkboardTeacher,
+      color: "orange.500",
+    },
+  ];
 
   return (
-    <Box my='50px' mx='5'>
-      <Flex justify='center' mb='70px'>
-        {/* يمكنك إضافة عناصر إضافية هنا إذا لزم الأمر */}
-      </Flex>
-      <Flex
-        w='100%'
-        maxW='1200px'
-        m='auto'
-        flexWrap='wrap'
-        justify='space-between'
-        align='center'
-        direction={{ base: "column", md: "row" }}
-      >
-        <Box flex='1' maxW={{ base: "100%", md: "50%" }} p='4'>
-          <Heading
-            as='h1'
-            fontSize='3xl'
-            fontWeight='bold'
-            mb='5'
-            color={textColor}
+    <Box w="full" py={12} px={6} textAlign="center">
+      <Heading fontSize="2xl" fontWeight="bold" color={textColor} mb={2}>
+        مميزات منصتنا التعليمية 🚀
+      </Heading>
+      <Text color="gray.500" mb={6}>
+        اكتشف كيف يمكن لمنصتنا تحسين تجربتك التعليمية.
+      </Text>
+
+      <Flex wrap="wrap" justify="center" gap={4}>
+        {features.map((feature) => (
+          <Box
+            key={feature.id}
+            p={6}
+            bg={cardBg}
+            border="1px solid"
+            borderColor={borderColor}
+            borderRadius="lg"
+            boxShadow="md"
+            transition="transform 0.3s ease, box-shadow 0.3s ease"
+            _hover={{ transform: "scale(1.05)", boxShadow: "xl" }}
+            w={{ base: "100%", sm: "48%", md: "23%" }}
           >
-            ابداء رحلتك التعليمية مع{" "}
-            <Text as='span' color='blue.500'>
-              EM Online
-            </Text>
-          </Heading>
-          <Box>
-            <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
-              🚀 <strong>أول منصة تعليمية تدعم الذكاء الاصطناعي (AI)</strong> لتوفير تجربة تعليمية ذكية ومخصصة لكل طالب.
-            </Text>
-            <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
-              🏆 <strong>مسابقات يومية دورية</strong> لاختبار مهارات الطلاب وتحفيزهم على التفوق.
-            </Text>
-            <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
-              🎖️ <strong>تكريم الأوائل</strong> بجوائز وشهادات تقدير لتحفيز روح التميز والتفوق.
-            </Text>
-            <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
-              📅 <strong>امتحانات شهرية على مستوى الجمهورية</strong> لتقييم المستوى ومتابعة التقدم الدراسي.
-            </Text>
-            <Text fontSize='lg' fontWeight='bold' mb='4' color={textColor}>
-              💡 <strong>دروس تفاعلية ومتابعة شخصية</strong> مع أفضل المعلمين لضمان استيعاب أفضل.
+            <Flex justify="center" align="center" mb={4}>
+              <Icon as={feature.icon} boxSize={10} color={feature.color} />
+            </Flex>
+            <Heading fontSize="lg" fontWeight="semibold" color={textColor} mb={2}>
+              {feature.name}
+            </Heading>
+            <Text fontSize="sm" color="gray.500">
+              {feature.description}
             </Text>
           </Box>
-        </Box>
-        <div>
-          <Image
-            src={img}
-            alt='طالب'
-            borderRadius='lg'           
-            width='100%'
-            maxW='400px'
-            height='auto'
-            mx='auto'
-          />
-        </div>
+        ))}
       </Flex>
     </Box>
   );

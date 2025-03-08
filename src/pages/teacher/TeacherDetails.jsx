@@ -48,14 +48,14 @@ const TeacherDetails = () => {
         display='flex'
         alignItems='center'
         justifyContent='center'
-        bg={bgColor}
+       className="bg-gradient-to-r from-cyan-300 to-blue-700"
        
       >
         <Box
           maxW='md'
           w='full'
           p={8}
-          bg={cardBg}
+         
           borderRadius='2xl'
           boxShadow='xl'
           textAlign='center'
@@ -81,62 +81,63 @@ const TeacherDetails = () => {
         teacher={teacher.teacher}
         number={teacher.months && teacher.months.length}
       />
+<div className="border w-[90%] m-auto my-5 p-5 rounded-lg shadow-lg">
+  <Box>
+    <Heading
+      size='lg'
+      mb={8}
+      display='flex'
+      alignItems='center'
+      gap={3}
+      color={headingColor}
+    >
+      <FaFileVideo className='text-blue-500' />
+      كل الكورسات المتاحة
+    </Heading>
 
-      <Container maxW='7xl' py={16}>
-        <Box>
-          <Heading
-            size='lg'
-            mb={8}
-            display='flex'
-            alignItems='center'
-            gap={3}
-            color={headingColor}
-          >
-            <FaFileVideo className='text-blue-500' />
-            كل الكورسات المتاحة
-          </Heading>
-
-          {teacher.months && teacher.months.length > 0 ? (
-            <SimpleGrid
-              columns={{ base: 1, md: 2, lg: 3 }}
-              spacing={8}
-              className='courses-grid'
-            >
-              {teacher.months.map((lecture) => (
-                <CoursesCard
-                  key={lecture.id}
-                  href={`/month/${lecture.id}`}
-                  lectre={lecture}
-                  onClick={() => {
-                    setSelectedLecture(lecture);
-                    onOpen();
-                  }}
-                  type='teacher_courses'
-                />
-              ))}
-            </SimpleGrid>
-          ) : (
-            <Box
-              p={12}
-              bg={cardBg}
-              borderRadius='2xl'
-              textAlign='center'
-              boxShadow='sm'
-            >
-              <Box
-                as={MdCancelPresentation}
-                size='48px'
-                color='red.500'
-                mx='auto'
-                mb={4}
-              />
-              <Text fontSize='xl' fontWeight='medium' color={textColor}>
-                لا يوجد كورسات الان سوف يتم اضافتها فى اقرب وقت ممكن
-              </Text>
-            </Box>
-          )}
-        </Box>
-      </Container>
+    {teacher.months && teacher.months.length > 0 ? (
+      <SimpleGrid
+        columns={{ base: 1, md: 2, lg: 3 }}
+        spacing={8}
+        className='courses-grid'
+      >
+        {teacher.months.map((lecture) => (
+          <CoursesCard
+            key={lecture.id}
+            href={`/month/${lecture.id}`}
+            lectre={lecture}
+            onClick={() => {
+              setSelectedLecture(lecture);
+              onOpen();
+            }}
+            type='teacher_courses'
+            className='hover:shadow-xl transition-shadow duration-300'
+          />
+        ))}
+      </SimpleGrid>
+    ) : (
+      <Box
+        p={12}
+        bg={cardBg}
+        borderRadius='2xl'
+        textAlign='center'
+        boxShadow='sm'
+        className='hover:shadow-md transition-shadow duration-300'
+      >
+        <Box
+          as={MdCancelPresentation}
+          size='48px'
+          color='red.500'
+          mx='auto'
+          mb={4}
+        />
+        <Text fontSize='xl' fontWeight='medium' color={textColor}>
+          لا يوجد كورسات الان سوف يتم اضافتها فى اقرب وقت ممكن
+        </Text>
+      </Box>
+    )}
+  </Box>
+</div>
 
       <PurchaseAlert
         isOpen={isOpen}
