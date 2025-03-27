@@ -2,10 +2,10 @@ import React from "react";
 import { FaFacebook, FaYoutube, FaTiktok } from "react-icons/fa";
 const Footer = () => {
   return (
-    <div className='h-[300px] w-[100%] bg-[#03a9f5] flex flex-col justify-center items-center text-white'>
+    <div className='h-[300px] w-[100%] bg-blue-500 flex flex-col justify-center items-center text-white'>
       {/* الجملة التعليمية */}
       <h1 className=' w-[90%] text-center mx-auto font-bold mb-4 md:text-2xl'>
-        مرحبًا بك في مجتمع <span className='text-[#ff5722]'>E-M Online</span>{" "}
+        مرحبًا بك في مجتمع <span className='text-black'>E-M Online</span>{" "}
         التعليمي، حيث يبدأ طريقك نحو النجاح!
       </h1>
 

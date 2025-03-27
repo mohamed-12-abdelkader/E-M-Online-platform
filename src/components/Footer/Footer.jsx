@@ -10,7 +10,7 @@ const Footer = () => {
   const user = JSON.parse(localStorage.getItem("user"));
 
   return (
-    <div className='fixed bottom-0 w-full hidden mt-[] footer bg-[#03a9f5] border-t shadow-lg flex justify-between items-center px-6 py-4 z-10'>
+    <div className='fixed bottom-0 w-full hidden mt-[] footer bg-blue-500 border-t shadow-lg flex justify-between items-center px-6 py-4 z-10'>
       {user ? (
         <div className='flex justify-around w-full'>
           {/* Show only Admin Links */}

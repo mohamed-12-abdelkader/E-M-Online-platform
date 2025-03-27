@@ -91,7 +91,7 @@ const Links = ({ onClose }) => {
 
   const studentLinks = [
     { to: "/profile", Icon: BiUserCircle, label: "الملف الشخصي" },
-    { to: "/social", Icon: FaFacebook, label: " مجتمع  EM ONLINE " },
+   
     { to: "/teachers", Icon: FaSearch, label: "ابحث عن محاضرك " },
     { to: "/my-teachers", Icon: FaChalkboardTeacher, label: " محاضرينى   " },
     { to: "/view_exams", Icon: AiOutlineFileDone, label: "امتحانات المنصة" },

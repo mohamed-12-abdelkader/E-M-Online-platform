@@ -1,13 +1,13 @@
 import React from "react";
 import { Box, Grid, GridItem, Heading, Icon, Text, Flex, useBreakpointValue } from "@chakra-ui/react";
-import { FaUsers, FaChalkboardTeacher, FaTrophy, FaBookOpen } from "react-icons/fa";
+import { FaUsers, FaChalkboardTeacher, FaTrophy, FaBookOpen, FaSearch } from "react-icons/fa";
 import MyLecture from "../leacter/MyLecture";
 import MyTeacher from "../myTeacher/MyTeacher";
 import { Link } from "react-router-dom";
 
 const HomePage = () => {
   const links = [
-    { name: "مجتمع EM Online", href: "/social", icon: FaUsers, color: "purple.500" },
+    { name: "ابحث عن محاضر ", href: "/teachers", icon: FaSearch, color: "purple.500" },
     { name: "محاضرينى", href: "/my-teachers", icon: FaChalkboardTeacher, color: "green.500" },
     { name: "المسابقات اليومية", href: "/competitions", icon: FaTrophy, color: "yellow.500" },
     { name: "كورساتي", href: "/my_courses", icon: FaBookOpen, color: "blue.500" },
@@ -18,6 +18,7 @@ const HomePage = () => {
 
   return (
     <div className="mb-[150px]">
+      
       <Box p={5} textAlign="center">
         <Heading fontSize="2xl" mb={6} color="blue.600">
           📌 تصفح المنصة  

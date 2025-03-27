@@ -8,7 +8,7 @@ import Footer from "../../components/home/Footer";
 import SectionTwo from "../../components/home/SectionTwo";
 import SectionThree from "../../components/home/SectionThree";
 import SectionFour from "../../components/home/SectionFour";
-
+import { motion } from "framer-motion";
 const Home = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
   const navigate = useNavigate(); // استخدام useNavigate للتوجيه
@@ -21,12 +21,16 @@ const Home = () => {
 
   return (
     <div>
+          
       {userData ? (
         <div>
+          
           <HomeLogin />
         </div>
       ) : (
         <div className="mt-[100px]">
+                {/* خلفية النقاط المتحركة */}
+  
           <SectionOne />
           <SectionTwo/>
           <SectionThree/>

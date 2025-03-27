@@ -40,6 +40,7 @@ const SectionTwo = () => {
 
   return (
     <Box w="full" py={12} px={6} textAlign="center">
+      
       <Heading fontSize="2xl" fontWeight="bold" color={textColor} mb={2}>
         مميزات منصتنا التعليمية 🚀
       </Heading>

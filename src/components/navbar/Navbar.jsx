@@ -30,15 +30,14 @@ import { Link } from "react-router-dom";
 import { MdNotificationsActive } from "react-icons/md";
 import logo from "../../../public/2 (5).png";
 import logo2 from "../../../public/3 (5).png";
-import UserType from "../../Hooks/auth/userType";
-import MyWallet from "../../Hooks/student/MyWallet";
+
 import useGitNotification from "../../Hooks/posts/useGitNotification";
 import Links from "../links/Links";
 import useGitEvents from "../../Hooks/posts/useGitEvents";
 
 export default function Nav() {
-  const [walletLoading, myWallet] = MyWallet();
-  const [userData, isAdmin, isTeacher, student] = UserType();
+
+
   const user = JSON.parse(localStorage.getItem("user"));
   const { colorMode, toggleColorMode } = useColorMode();
   const [notificationsLoading, notifications] = useGitNotification();

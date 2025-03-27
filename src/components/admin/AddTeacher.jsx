@@ -153,6 +153,7 @@ const AddTeacher = () => {
           <option value={" فلسفة ومنطق   "}>فلسفة </option>
           <option value={"علم نفس واجتماع  "}>علم نفس </option>
           <option value={"رياضيات  "}> رياضيات </option>
+          <option value={"  محاضر فى الحقوق "}> محاضر فى  الحقوق  </option>
         </Select>
       </div>
       <div>
@@ -206,6 +207,13 @@ const AddTeacher = () => {
             onChange={() => handleCheckboxChange(7)}
           >
             كورسات اخرى
+          </Checkbox>
+          <Checkbox
+            value={8}
+            className='m-3'
+            onChange={() => handleCheckboxChange(8)}
+          >
+            كلية الحقوق 
           </Checkbox>
         </div>
       </div>

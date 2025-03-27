@@ -1,6 +1,7 @@
-import { Select, Input, Button, Spinner } from "@chakra-ui/react";
+import { Select, Input, Button, Spinner, RadioGroup, Stack, Radio } from "@chakra-ui/react";
 import StudentSignUp from "../../Hooks/auth/StudentSignUp";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
+import { useState } from "react";
 
 const SingUp = () => {
   const [
@@ -21,6 +22,7 @@ const SingUp = () => {
     grad,
     handleGradeChange,
   ] = StudentSignUp();
+  const [isUniversityStudent, setIsUniversityStudent] = useState("no");
   return (
     <div
       className=' mt-[70px] mb-10 grid justify-center bg-[#] p-3  md:flex justify-center items-center '
@@ -117,25 +119,54 @@ const SingUp = () => {
                 style={{ border: "solid 2px #ccc" }}
               />
             </div>
+         
             <div className='m-2 w-[94%]'>
-              <h1 className='fonts font-bold m-2 text-black '> اختر الصف </h1>
-              <Select
-                value={grad}
-                onChange={handleGradeChange}
-                placeholder='اختر الصف الدراسى'
-                className='text-black'
-                size='lg'
-                style={{ direction: "ltr", border: "solid 2px #ccc" }}
-              >
-                <option value='4'>الصف الاول الاعدادى</option>
-                <option value='5'>الصف الثانى الاعدادى</option>
-                <option value='6'>الصف الثالث الاعدادى</option>
-                <option value='1'>الصف الاول الثانوى</option>
-                <option value='2'>الصف الثانى الثانوى</option>
-                <option value='3'>الصف الثالث الثانوى</option>
-                <option value='7'>كورسات اخرى</option>
-              </Select>
+              <h1 className='fonts font-bold m-2 text-black'>هل أنت طالب جامعي؟</h1>
+              <RadioGroup onChange={setIsUniversityStudent} value={isUniversityStudent}>
+                <Stack direction="row">
+                  <Radio className="text-black" value="yes">نعم</Radio>
+                  <Radio className="text-black" value="no">لا</Radio>
+                </Stack>
+              </RadioGroup>
             </div>
+
+            {isUniversityStudent === "yes" ? (
+              <div className='m-2 w-[94%]'>
+                <h1 className='fonts font-bold m-2 text-black'>اختر الكلية</h1>
+                <Select
+                  value={grad}
+                  onChange={handleGradeChange}
+                  placeholder='اختر الكلية'
+                  className='text-black'
+                  size='lg'
+                  style={{ direction: "ltr", border: "solid 2px #ccc" }}
+                >
+                  <option value='8'>كلية الحقوق</option>
+                </Select>
+              </div>
+            ) : (
+              <div className='m-2 w-[94%]'>
+                <h1 className='fonts font-bold m-2 text-black'>اختر الصف</h1>
+                <Select
+                  value={grad}
+                  onChange={handleGradeChange}
+                  placeholder='اختر الصف الدراسى'
+                  className='text-black'
+                  size='lg'
+                  style={{ direction: "ltr", border: "solid 2px #ccc" }}
+                >
+                  <option value='4'>الصف الاول الاعدادى</option>
+                  <option value='5'>الصف الثانى الاعدادى</option>
+                  <option value='6'>الصف الثالث الاعدادى</option>
+                  <option value='1'>الصف الاول الثانوى</option>
+                  <option value='2'>الصف الثانى الثانوى</option>
+                  <option value='3'>الصف الثالث الثانوى</option>
+                  <option value='7'>كورسات اخرى</option>
+                </Select>
+              </div>
+            )}
+     
+    
           </div>
           <div className='flex justify-center'>
             <Button colorScheme='blue' onClick={handleLSignUp}>

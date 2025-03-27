@@ -76,6 +76,7 @@ const useAddTeacher = () => {
       }
     } catch (error) {
       toast.error("حدث خطأ أثناء إضافة المدرس  ");
+      console.log(error)
     } finally {
       setLoading(false);
       setDescription("");

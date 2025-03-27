@@ -7,8 +7,7 @@ const studentLogin = () => {
   const [mail, setMail] = useState("");
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
-  const [userType, setUserType] = useState("user"); // افتراضياً نوع المستخدم عادي
-
+  
   function generateString() {
     var chars =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -86,8 +85,7 @@ const studentLogin = () => {
     mailChange,
     mail,
     pass,
-    userType,
-    setUserType,
+    
     loading,
   ];
 };
