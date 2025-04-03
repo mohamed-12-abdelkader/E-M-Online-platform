@@ -13,7 +13,6 @@ import GitQuistion from "../../Hooks/student/GitQuistion";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
 import { toast } from "react-toastify";
 import baseUrl from "../../api/baseUrl";
-
 import Question from "../../components/exam/Question";
 import Pagination from "../../components/exam/Pagination ";
 import ExamResult from "../../components/exam/ExamResult ";
@@ -153,6 +152,8 @@ const Exam = () => {
       </div>
     );
   }
+
+console.log(questions)
 
   return (
     <div className="my-[150px]" style={{ minHeight: "60vh" }}>
