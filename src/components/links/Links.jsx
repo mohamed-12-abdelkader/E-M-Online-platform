@@ -5,6 +5,7 @@ import {
   FaBookReader,
   FaEdit,
   FaMedal,
+  FaVideo
 } from "react-icons/fa";
 import {
   MdDashboard,
@@ -26,6 +27,7 @@ import {
   AiOutlineFileSearch,
   AiOutlineStar,
 } from "react-icons/ai";
+import { CiStreamOn } from "react-icons/ci";
 import { GiTeacher, GiArchiveRegister } from "react-icons/gi";
 import { FaSearch ,FaFacebook} from "react-icons/fa";
 import UserType from "../../Hooks/auth/userType";
@@ -63,6 +65,7 @@ const Links = ({ onClose }) => {
   ];
 
   const adminLinks = [
+    { to: "/stream-management", Icon: CiStreamOn, label: "إدارة البث المباشر" }, 
     { to: "/admin/management", Icon: MdDashboard, label: "لوحة التحكم" },
     { to: "/create_comp", Icon: AiOutlineForm, label: "إنشاء مسابقة" },
     { to: "/allComps", Icon: BiListCheck, label: "عرض المسابقات" },

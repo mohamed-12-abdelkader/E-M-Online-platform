@@ -82,6 +82,7 @@ import CourseStatistics from "../pages/courseStatistics/CourseStatistics";
 import ReviewResult from "../pages/monthlyExams/ReviewResult";
 import MyTeacher from "../pages/myTeacher/MyTeacher";
 import HomePage from "../pages/homePage/HomePage";
+import StreamingPage from "../components/admin/streams/StreamingPage";
 
 const AppRouter = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
@@ -134,6 +135,19 @@ const AppRouter = () => {
 
         <Route path='/verify_code' element={<VerifyCode />} />
         <Route path='/rest_pass' element={<ResetPassword />} />
+
+          
+        <Route
+          path='/stream-management'
+          element={
+            <ProtectedRoute auth={isAdmin}>
+              <HomeLogin />
+            </ProtectedRoute>
+          }
+        > 
+          <Route index element={<StreamingPage />} />
+        </Route>
+
 
         <Route
           path='/admin/*'
