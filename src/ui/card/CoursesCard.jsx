@@ -19,10 +19,10 @@ export const CoursesCard = ({
   return (
     <Card
       key={lectre.id}
-      className=' card w-[%] mx-2 my-3 md:w-[290px] md:mx-3 m-2'
+      className=' card w-[%] mx-2 my-3 md:w-[320px] md:mx-3 m-2'
       style={{ border: "1px solid #ccc" }}
     >
-      <CardBody>
+      <div>
         <img
           src={
             lectre.image ||
@@ -30,11 +30,14 @@ export const CoursesCard = ({
             img ||
             "default-image-path.jpg"
           }
-          className='h-[220px] w-[300px]'
+          className=' w-[100%]'
+          style={{maxHeight:"200px"}}
           alt='Course'
         />
+     
+
         <div className='my-2'></div>
-        <div className='flex w-[90%] justify-between flex-wrap my-4'>
+        <div className=' w-[90%] px-2 justify-between flex-wrap my-4'>
           {type == "teacher" ? (
             <h1 className='font-bold'>{lectre.subject}</h1>
           ) : null}
@@ -59,6 +62,7 @@ export const CoursesCard = ({
           type == "teacher" ? null : (
             <h1 className='font-bold'>عدد المحاضرات: {lectre.noflecture}</h1>
           )}
+<div className="flex justify-between">
 
           {lectre.price || lectre.price === 0 ? (
             <div>
@@ -83,7 +87,9 @@ export const CoursesCard = ({
               )}
             </div>
           )}
+          </div>
         </div>
+        
         {(isAdmin && type === "comp") ||
         type === "monthly_exam" ||
         type == "subject_exam" ? (
@@ -93,7 +99,7 @@ export const CoursesCard = ({
                 colorScheme={
                   lectre.is_ready || lectre.is_available ? "green" : "red"
                 }
-              >
+                >
                 {lectre.is_ready || lectre.is_available ? "جاهز" : "غير جاهز"}
               </Badge>
             </div>
@@ -103,7 +109,7 @@ export const CoursesCard = ({
                   className='mx-2'
                   colorScheme={lectre.is_ready ? "gray" : "green"}
                   onClick={() => handleactive(lectre)}
-                >
+                  >
                   {lectre.is_ready ? "تعطيل" : "تفعيل"}
                 </Button>
                 <Button colorScheme='red' onClick={handleDeleate}>
@@ -126,7 +132,8 @@ export const CoursesCard = ({
             </h1>
           </div>
         )}
-      </CardBody>
+      </div>
+   
       {type == "teacher" ? (
         <div>
           <hr />

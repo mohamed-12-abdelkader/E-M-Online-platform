@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { Box, Image, useDisclosure } from "@chakra-ui/react";
+import { Box, Image, useDisclosure, Flex, Text } from "@chakra-ui/react";
 import { Zoom } from "react-awesome-reveal";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
 
@@ -61,64 +61,45 @@ const LectureDetails = () => {
     return <Loading />;
   }
 
-  console.log(lectures);
   return (
-    <div className='my-[120px] w-[90%] m-auto'>
-      <div className='mt-[120px]' style={{ minHeight: "80vh" }}>
-        <div className='lecture_details bg-gradient-to-r from-cyan-300 to-blue-700 max-w-7xl mx-auto px-4 mt-[80px] mb-[80px] h-auto  py-8 md:flex md:justify-between border shadow-md rounded-lg shadow-lg'>
-          <div className='flex justify-center items-center w-full md:[300px] mb-6 md:mb-0'>
+    <Box my="120px" w="90%" mx="auto">
+      <Box mt="120px" minH="80vh">
+        {/* Improved Header with Full-Width Image */}
+        {(lecturesT?.image || lectures?.image) && (
+          <Box position="relative" w="100%" className="h-[200px] md:h-[500px]" overflow="hidden" borderRadius="xl" shadow="lg">
+            <Image
+              src={lecturesT?.image || lectures?.image}
+              alt="صورة المحاضرة"
+              objectFit="cover"
+              w="100%"
+              h="100%"
+            />
             <Box
-              w={{ base: "100%", md: "80%" }}
-              overflow='hidden'
-              borderRadius='md'
-              transform='scale(1)'
-              transition='transform 0.3s'
-              _hover={{ transform: "scale(1.05)" }}
-              shadow='lg'
-              className="bg-gradient-to-r from-cyan-300 to-blue-700"
+              position="absolute"
+              top={0}
+              left={0}
+              w="100%"
+              h="100%"
+              bgGradient="linear(to-b, blackAlpha.600, blackAlpha.200)"
+            />
+            <Flex
+              position="absolute"
+              top={0}
+              left={0}
+              w="100%"
+              h="100%"
+              align="center"
+              justify="center"
+              direction="column"
+              px={{ base: 4, md: 8 }}
+              gap={4}
             >
-              <Image
-                src={lecturesT?.image || lectures?.image}
-                alt='Course Image'
-                objectFit='cover'
-                w='100%'
-                h={{ base: "200px", md: "300px" }}
-              />
-            </Box>
-          </div>
-          <div className='lecture_content my-5 md:w-1/2 flex flex-col justify-center items-center space-y-4'>
-            <Zoom className='content-item'>
-              <div
-                style={{ minWidth: "300px" }}
-                className='flex items-center  bg-yellow-500 shadow-md rounded-lg p-4 w-[100%]  '
-              >
-                <h1 className='text-xl font-bold text-white text-center w-full'>
-                  {lecturesT?.description || lectures?.description}
-                </h1>
-              </div>
-            </Zoom>
-            <Zoom className='content-item'>
-              <div
-                style={{ minWidth: "300px" }}
-                className='flex items-center  bg-red-500 shadow-md rounded-lg p-4 w-[100%] '
-              >
-                <h1 className='text-xl font-bold text-white text-center w-full'>
-                  عدد الفيديوهات: {videosToMap.length}
-                </h1>
-              </div>
-            </Zoom>
-            <Zoom className='content-item'>
-              <div
-                style={{ minWidth: "300px" }}
-                className='flex items-center  bg-green-500 shadow-md rounded-lg p-4 w-[100%] '
-              >
-                <h1 className='text-xl font-bold text-white text-center w-full'>
-                  عدد الملفات : {pdfsToMap.length}
-                </h1>
-              </div>
-            </Zoom>
-          </div>
-        </div>
+              
+             
+             
+            </Flex>
+          </Box>
+        )}
 
         <LectureContent
           Loading={deleteGLoading}
@@ -136,7 +117,7 @@ const LectureDetails = () => {
         />
 
         <ScrollToTop />
-      </div>
+      </Box>
 
       <AlertDialogComponent
         Loading={deleteGLoading || deleteVedioCenterLoading || deletePdfLoading}
@@ -146,7 +127,7 @@ const LectureDetails = () => {
         selectedItem={selectedItem}
         cancelRef={cancelRef}
       />
-    </div>
+    </Box>
   );
 };
 

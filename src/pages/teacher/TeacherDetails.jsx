@@ -12,6 +12,7 @@ import {
   InputGroup,
   InputLeftElement,
   Icon,
+  Flex,
 } from "@chakra-ui/react";
 import { MdCancelPresentation } from "react-icons/md";
 import { FaFileVideo, FaSearch } from "react-icons/fa";
@@ -48,12 +49,7 @@ const TeacherDetails = () => {
 
   if (!teacher || teacher.teacher.length === 0) {
     return (
-      <Box
-        minH='100vh'
-        display='flex'
-        alignItems='center'
-        justifyContent='center'
-        className="bg-gradient-to-r from-cyan-300 to-blue-700"
+      <div
       >
         <Box
           maxW='md'
@@ -74,7 +70,7 @@ const TeacherDetails = () => {
             هذا المحاضر غير موجود على الموقع
           </Text>
         </Box>
-      </Box>
+      </div>
     );
   }
 
@@ -86,83 +82,74 @@ const TeacherDetails = () => {
     : teacher.months;
 
   return (
-    <Box bg={bgColor} minH='100vh' className="mb-[100px]">
+    <div bg={bgColor} minH='100vh' className="mb-[100px]">
       <TeacherInfo
         teacher={teacher.teacher}
         number={teacher.months && teacher.months.length}
       />
-      <div className="border w-[90%] m-auto my-5 p-5 rounded-lg shadow-lg">
-        <Box>
-          <Heading
-            size='lg'
-            mb={4}
-            display='flex'
-            alignItems='center'
-            gap={3}
-            color={headingColor}
-          >
-            <FaFileVideo className='text-blue-500' />
-            كل الكورسات المتاحة
-          </Heading>
+      <div className="border w-[90%] m-auto my-8 p-5 rounded-lg -lg">
+      <div>
+  {/* العنوان */}
+  <Flex align="center" gap={3} mb={4}>
+    <Icon as={FaFileVideo} w={6} h={6} color="blue.500" />
+    <Heading size="lg" color={headingColor}>
+      كل الكورسات المتاحة
+    </Heading>
+  </Flex>
 
-          <InputGroup maxW="400px" mb={6}>
-            <InputLeftElement pointerEvents="none">
-              <Icon as={FaSearch} color="gray.300" />
-            </InputLeftElement>
-            <Input
-              placeholder="ابحث عن كورس بالوصف"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              bg={cardBg}
-              borderRadius="md"
-              _focus={{ borderColor: "blue.500" }}
-            />
-          </InputGroup>
+  {/* مربع البحث */}
+  <InputGroup maxW="400px" mb={6}>
+    <InputLeftElement pointerEvents="none">
+      <Icon as={FaSearch} color="gray.400" />
+    </InputLeftElement>
+    <Input
+      placeholder="ابحث عن كورس بالوصف"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      bg={cardBg}
+      borderRadius="md"
+      _focus={{
+        borderColor: "blue.500",
+        boxShadow: "0 0 0 1px #3182ce",
+      }}
+    />
+  </InputGroup>
 
-          {filteredCourses && filteredCourses.length > 0 ? (
-            <SimpleGrid
-              columns={{ base: 1, md: 2, lg: 3 }}
-              spacing={8}
-              className='courses-grid'
-            >
-              {filteredCourses.map((lecture) => (
-                <CoursesCard
-                  key={lecture.id}
-                  href={`/month/${lecture.id}`}
-                  lectre={lecture}
-                  onClick={() => {
-                    setSelectedLecture(lecture);
-                    onOpen();
-                  }}
-                  type='teacher_courses'
-                  className='hover:shadow-xl transition-shadow duration-300'
-                />
-              ))}
-            </SimpleGrid>
-          ) : (
-            <Box
-              p={12}
-              bg={cardBg}
-              borderRadius='2xl'
-              textAlign='center'
-              boxShadow='sm'
-              className='hover:shadow-md transition-shadow duration-300'
-            >
-              <Box
-                as={MdCancelPresentation}
-                size='48px'
-                color='red.500'
-                mx='auto'
-                mb={4}
-              />
-              <Text fontSize='xl' fontWeight='medium' color={textColor}>
-                {searchTerm
-                  ? "لا يوجد كورسات مطابقة للبحث"
-                  : "لا يوجد كورسات الان سوف يتم اضافتها فى اقرب وقت ممكن"}
-              </Text>
-            </Box>
-          )}
-        </Box>
+  {/* عرض الكورسات أو رسالة لا يوجد */}
+  {filteredCourses && filteredCourses.length > 0 ? (
+    <div className='w-full m-auto flex justify-center md:justify-start flex-wrap' style={{ borderRadius: "20px" }}>
+      {filteredCourses.map((lecture) => (
+        <CoursesCard
+          key={lecture.id}
+          href={`/month/${lecture.id}`}
+          lectre={lecture}
+          onClick={() => {
+            setSelectedLecture(lecture);
+            onOpen();
+          }}
+          type="teacher_courses"
+          className="hover:shadow-xl transition-shadow duration-300"
+        />
+      ))}
+    </div>
+  ) : (
+    <Box
+      p={10}
+      bg={cardBg}
+      borderRadius="2xl"
+      textAlign="center"
+      boxShadow="md"
+    >
+      <Icon as={MdCancelPresentation} w={12} h={12} color="red.500" mb={4} />
+      <Text fontSize="lg" fontWeight="medium" color={textColor}>
+        {searchTerm
+          ? "لا يوجد كورسات مطابقة للبحث"
+          : "لا يوجد كورسات الآن، سوف يتم إضافتها في أقرب وقت ممكن"}
+      </Text>
+    </Box>
+  )}
+</div>
+
       </div>
 
       <PurchaseAlert
@@ -174,7 +161,7 @@ const TeacherDetails = () => {
         buyMonth={buyMonth}
       />
       <ScrollToTop />
-    </Box>
+    </div>
   );
 };
 

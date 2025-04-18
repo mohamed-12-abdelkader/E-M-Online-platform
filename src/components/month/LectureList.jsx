@@ -8,7 +8,6 @@ import {
   useColorModeValue,
   Skeleton,
   Stack,
-  Flex,
 } from "@chakra-ui/react";
 import { GoArrowLeft } from "react-icons/go";
 import { Link } from "react-router-dom";
@@ -43,7 +42,6 @@ const LectureList = ({
         py={10}
         px={6}
         borderRadius='lg'
-      
       >
         {isTeacher ? (
           <Box>
@@ -70,7 +68,7 @@ const LectureList = ({
   }
 
   return (
-    <div className="">
+    <Box>
       <Text
         fontSize='xl'
         fontWeight='bold'
@@ -85,8 +83,8 @@ const LectureList = ({
         </Text>
       </Text>
 
-      {/* تعديل تنسيق عرض المحاضرات */}
-      <div className='flex flex-wrap justify-evenly px-auto my-3 w-[98%] m-auto'>
+      {/* استخدام SimpleGrid لتوزيع الكروت */}
+      <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
         {lectures.map((lecture) => (
           <Zoom key={lecture.id}>
             <CoursesCard
@@ -100,8 +98,8 @@ const LectureList = ({
             />
           </Zoom>
         ))}
-      </div>
-    </div>
+      </SimpleGrid>
+    </Box>
   );
 };
 
