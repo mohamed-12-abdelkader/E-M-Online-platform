@@ -45,11 +45,7 @@ const Lectures = () => {
               </p>
              
             </div>
-            <div className='relative mt-10 md:mt-0 flex items-center justify-center'>
-              <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }} className='w-[300px] h-[300px] sm:w-[350px] sm:h-[350px] md:w-[420px] md:h-[420px] bg-blue-500 rounded-full flex items-center justify-center shadow-2xl'>
-                <img src={img} alt='Hero Section' className='w-[260px] h-[260px] sm:w-[310px] sm:h-[310px] md:w-[360px] md:h-[360px] rounded-full border-4 border-gray-300 shadow-xl' />
-              </motion.div>
-            </div>
+       
           </section>
         )}
       </div>

@@ -83,6 +83,11 @@ import ReviewResult from "../pages/monthlyExams/ReviewResult";
 import MyTeacher from "../pages/myTeacher/MyTeacher";
 import HomePage from "../pages/homePage/HomePage";
 import StreamingPage from "../components/admin/streams/StreamingPage";
+import ChatPage from "../pages/chat/ChatPage";
+import GroupsPage from "../pages/centerSystem/GroupsPage";
+import CenterGroupDetails from "../pages/centerSystem/CenterGroupDetails";
+import StudentDetails from "../components/centerSystem/StudentDetails";
+import AllUsers from "../pages/allUsers/AllUsers";
 
 const AppRouter = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
@@ -135,7 +140,7 @@ const AppRouter = () => {
 
         <Route path='/verify_code' element={<VerifyCode />} />
         <Route path='/rest_pass' element={<ResetPassword />} />
-
+   
           
         <Route
           path='/stream-management'
@@ -163,6 +168,7 @@ const AppRouter = () => {
             <Route path='create_code' element={<AdminCreateCode />} />
             <Route path='cridet' element={<AdminTeacherBalances />} />
             <Route path='open_phone' element={<OpenPhone />} />
+           
           </Route>
           <Route element={<ProtectedRoute auth={isTeacher} />}>
             <Route path='create_lecture' element={<CreateLecture />} />
@@ -194,7 +200,7 @@ const AppRouter = () => {
           <Route path='teachers' element={<AllTeacherLogin />} />
           <Route path='my-teachers' element={<MyTeacher />} />
           <Route path='my_courses' element={<MyLecture />} />
-          <Route path='free_courses' element={<FreeCourses />} />
+          <Route path='free_courses' element={<FreeCourses />} /> 
           <Route path='competitions' element={<Competitions />} />
           <Route path='the_Firsts' element={<TheFirsts />} />
           <Route path='save_posts' element={<SavePosts />} />
@@ -235,12 +241,21 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path='/all_users'
+          element={
+            <ProtectedRoute auth={isAdmin}>
+              <AllUsers />
+            </ProtectedRoute>
+          }
+        />
         <Route element={<ProtectedRoute auth={student} />}>
           <Route path='/wallet' element={<Wallet />} />
           <Route path='studentStats' element={<StudentStats />} />
           <Route path='course_statistics' element={<CourseStatistics />} />
           <Route path='/profile' element={<Profile />} />
           <Route path='/my_lecture' element={<MyLecture />} />
+          
           <Route path='/teacher/:id' element={<TeacherDetails />} />
           <Route path='/exam/:examId' element={<Exam />} />
         </Route>
@@ -264,6 +279,11 @@ const AppRouter = () => {
           <Route path='/video/:videoId' element={<Vedio />} />
         </Route>
         {""}
+        <Route path='/chats' element={<ChatPage />} />
+        <Route path='/center_groups' element={<GroupsPage />} />
+        <Route path='/group_details/:id' element={<CenterGroupDetails />} />
+        <Route path='/student/:id' element={<StudentDetails />} />
+
       </Routes>
     </div>
   );

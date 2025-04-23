@@ -59,11 +59,7 @@ const AllCourses = () => {
         </div>
         <div className='my-5 flex justify-center'>
           {mergedLectures && mergedLectures.length > 0 ? (
-            <SimpleGrid
-              columns={{ base: 1, sm: 2, md: 3 }} // تحديد عدد الأعمدة حسب حجم الشاشة
-              spacing={4} // المسافة بين الكروت
-              w='98%' // عرض الشبكة
-              m='auto' // توسيط الشبكة
+            <div className="flex flex-wrap justify-center"
             >
               {mergedLectures.map((lectre) => (
                 <CoursesCard
@@ -77,7 +73,7 @@ const AllCourses = () => {
                   type={`teacher-course`}
                 />
               ))}
-            </SimpleGrid>
+            </div>
           ) : (
             <div>
               <div className='m-auto border shadow'>

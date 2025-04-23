@@ -105,6 +105,7 @@ body {
 }
 
 .links-container {
+  
 }
 .links-container div {
   height: auto;
@@ -270,7 +271,7 @@ body {
 
 .fixed-button {
   position: fixed;
-  bottom: 80px;
+  bottom: 50px;
   right: -20px;
 
   color: #fff;

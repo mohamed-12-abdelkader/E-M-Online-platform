@@ -40,54 +40,75 @@ const TeacherCode = () => {
 
     setIsExporting(true);
     const pdf = new jsPDF("l", "mm", "a4");
-
-    const codesPerPage = 15; // 3 أكواد × 4 صفوف
-    const cardWidth = 385; // عرض الكود
-    const pageWidth = 1200; // عرض الصفحة ليسع 3 أكواد
+    const codesPerPage = 15; // Adjusted to 3 columns × 5 rows to fit more codes
+    const cardWidth = 385; // Width of each card
+    const cardHeight = 160; // Reduced height of each card to fit more rows
+    const pageWidth = 1200; // Width for rendering (3 cards + smaller gaps)
+    const pageHeight = 900; // Height for rendering (5 rows + smaller gaps)
 
     for (let i = 0; i < codes.codes.length; i += codesPerPage) {
       const tempDiv = document.createElement("div");
       tempDiv.style.position = "absolute";
       tempDiv.style.left = "-9999px";
-      tempDiv.style.width = `${pageWidth}px`; // جعل عرض الصفحة 1200px
+      tempDiv.style.width = `${pageWidth}px`;
+      tempDiv.style.height = `${pageHeight}px`; // Ensure enough height
+      tempDiv.style.background = "white"; // Match PDF background
       document.body.appendChild(tempDiv);
 
+      // Generate HTML for the current page's codes with reduced gaps and padding
       tempDiv.innerHTML = `
-        <div  style="display: flex; flex-wrap: wrap; padding-right: 25px; justify-content; gap: 5px; background: white;">
+        <div style="display: grid; grid-template-columns: repeat(3, ${cardWidth}px); gap: 5px; padding: 5px;">
           ${codes.codes
             .slice(i, i + codesPerPage)
             .map(
               (code, index) => `
-            <div class="code" style="padding: 10px; width: ${cardWidth}px; height: 200px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); text-align: center; position: relative; overflow: hidden;">
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
-                <h1 style="font-size: 16px; font-weight: bold; color: #3182ce; margin-bottom: 6px;">${
-                  codes.name
-                }</h1>
-               
-              </div>
-              <div style="display: flex; margin-top: 35px; justify-content: space-between; align-items: center; padding: 4px 0;">
-                <h3 style="font-size: 20px; font-weight: bold; color: #c53030;"> كود التفعيل :</h3>
-                <h3 style="font-size: 20px; font-weight: bold; color: #c53030;"> ${code}</h3>
-              </div>
-              <div style="margin-top: 35px;">
-                <p style="font-size: 15px; font-weight: bold; color: #4a5568; display: flex; justify-content: center; align-items: center; gap: 6px;">
-                  01286525940 | 01111272393
-                </p>
-              </div>
-            </div>`
+                <div class="code" style="padding: 5px; width: ${cardWidth}px; height: ${cardHeight}px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); text-align: center; position: relative; overflow: hidden;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
+                    <h1 style="font-size: 14px; font-weight: bold; color: #3182ce; margin-bottom: 4px;">${codes.name}</h1>
+                  </div>
+                  <div style="display: flex; margin-top: 20px; justify-content: space-between; align-items: center; padding: 2px 0;">
+                    <h3 style="font-size: 18px; font-weight: bold; color: #c53030;"> كود التفعيل :</h3>
+                    <h3 style="font-size: 18px; font-weight: bold; color: #c53030;"> ${code}</h3>
+                  </div>
+                  <div style="margin-top: 20px;">
+                    <p style="font-size: 13px; font-weight: bold; color: #4a5568; display: flex; justify-content: center; align-items: center; gap: 4px;">
+                      01286525940 | 01111272393
+                    </p>
+                  </div>
+                </div>`
             )
             .join("")}
         </div>
       `;
 
-      const canvas = await html2canvas(tempDiv, { scale: 2, useCORS: true });
+      // Wait for the content to render
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay to ensure rendering
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2, // Higher resolution for clarity
+        useCORS: true,
+        width: pageWidth,
+        height: pageHeight,
+      });
+
+      // Calculate scaling to fit A4 page (297mm × 210mm in landscape)
+      const pdfWidth = 297; // A4 width in mm (landscape)
+      const pdfHeight = 210; // A4 height in mm (landscape)
+      const canvasAspectRatio = canvas.width / canvas.height;
+      let imgWidth = pdfWidth - 10; // Reduced margin to 5mm on each side
+      let imgHeight = imgWidth / canvasAspectRatio;
+
+      if (imgHeight > pdfHeight - 10) {
+        imgHeight = pdfHeight - 10; // Reduced margin to 5mm on top/bottom
+        imgWidth = imgHeight * canvasAspectRatio;
+      }
+
       pdf.addImage(
         canvas.toDataURL("image/png"),
         "PNG",
-        10,
-        10,
-        290, // تعديل العرض ليناسب A4
-        (canvas.height * 290) / canvas.width
+        5, // X position (5mm margin)
+        5, // Y position (5mm margin)
+        imgWidth,
+        imgHeight
       );
 
       if (i + codesPerPage < codes.codes.length) pdf.addPage();

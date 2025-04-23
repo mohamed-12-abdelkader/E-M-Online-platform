@@ -84,21 +84,22 @@ const LectureList = ({
       </Text>
 
       {/* استخدام SimpleGrid لتوزيع الكروت */}
-      <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
-        {lectures.map((lecture) => (
-          <Zoom key={lecture.id}>
-            <CoursesCard
-              type='lecture'
-              handleDeleate={() => {
-                setSelectedLecture(lecture);
-                onOpen();
-              }}
-              lectre={lecture}
-              href={`/lecture/${lecture.id}`}
-            />
-          </Zoom>
-        ))}
-      </SimpleGrid>
+      <div className="flex flex-wrap justify-center">
+  {lectures.map((lecture) => (
+    <Zoom key={lecture.id}>
+      <CoursesCard
+        type="lecture"
+        handleDeleate={() => {
+          setSelectedLecture(lecture);
+          onOpen();
+        }}
+        lectre={lecture}
+        href={`/lecture/${lecture.id}`}
+      />
+    </Zoom>
+  ))}
+</div>
+
     </Box>
   );
 };

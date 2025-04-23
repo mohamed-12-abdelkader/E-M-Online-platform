@@ -41,7 +41,7 @@ export const CoursesCard = ({
           {type == "teacher" ? (
             <h1 className='font-bold'>{lectre.subject}</h1>
           ) : null}
-          <h1 className='font-bold'>
+          <h1 className='font-bold h-[50px]'>
             {" "}
             {lectre.name || lectre.description || lectre.title}{" "}
           </h1>

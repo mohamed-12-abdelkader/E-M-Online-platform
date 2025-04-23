@@ -59,14 +59,14 @@ const MyTeacher = () => {
           {teachers.teachers.map((teacher) => (
             <Card
               key={teacher.id}
-              className="w-[280px] teacher_card my-3 md:mx-3"
+              className="w-[290px] teacher_card my-3 md:mx-3"
               style={{ border: "1px solid #ccc" }}
             >
               <CardBody>
                 <Link to={`/teacher/${teacher.id}`}>
                   <Image
                     src={teacher.image || img} // استخدام صورة افتراضية عند غياب الصورة
-                    h="220px"
+                    h="250px"
                     w="100%"
                     borderRadius="10px"
                     alt={teacher.name || "Teacher"}
@@ -120,19 +120,7 @@ const MyTeacher = () => {
             </div>
 
             {/* صورة توضيحية */}
-            <div className="relative mt-10 md:mt-0 flex items-center justify-center">
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                className="w-[300px] h-[300px] sm:w-[350px] sm:h-[350px] md:w-[420px] md:h-[420px] bg-blue-500 rounded-full flex items-center justify-center shadow-2xl"
-              >
-                <img
-                  src={img}
-                  alt="No Teacher Found"
-                  className="w-[260px] h-[260px] sm:w-[310px] sm:h-[310px] md:w-[360px] md:h-[360px] rounded-full border-4 border-gray-300 shadow-xl"
-                />
-              </motion.div>
-            </div>
+          
           </section>
         </div>
       )}
