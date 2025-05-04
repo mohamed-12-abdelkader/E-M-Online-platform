@@ -88,6 +88,7 @@ import GroupsPage from "../pages/centerSystem/GroupsPage";
 import CenterGroupDetails from "../pages/centerSystem/CenterGroupDetails";
 import StudentDetails from "../components/centerSystem/StudentDetails";
 import AllUsers from "../pages/allUsers/AllUsers";
+import StreamPage from "../components/stream";
 
 const AppRouter = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
@@ -151,6 +152,17 @@ const AppRouter = () => {
           }
         > 
           <Route index element={<StreamingPage />} />
+        </Route>
+
+        <Route
+          path='/streams'
+          element={
+            <ProtectedRoute auth={isAdmin || isTeacher}>
+              <HomeLogin />
+            </ProtectedRoute>
+          }
+        > 
+          <Route index element={<StreamPage />} />
         </Route>
 
 

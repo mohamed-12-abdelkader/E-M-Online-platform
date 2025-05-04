@@ -5,7 +5,8 @@ import {
   FaBookReader,
   FaEdit,
   FaMedal,
-  FaVideo
+  FaBroadcastTower,
+  FaServer
 } from "react-icons/fa";
 import {
   MdDashboard,
@@ -65,7 +66,8 @@ const Links = ({ onClose }) => {
   ];
 
   const adminLinks = [
-    { to: "/stream-management", Icon: CiStreamOn, label: "إدارة البث المباشر" }, 
+    { to: "/streams", Icon: FaBroadcastTower, label: "البث المباشر" }, 
+    { to: "/stream-management", Icon: FaServer, label: "إدارة البث المباشر" }, 
     { to: "/admin/management", Icon: MdDashboard, label: "لوحة التحكم" },
     { to: "/create_comp", Icon: AiOutlineForm, label: "إنشاء مسابقة" },
     { to: "/allComps", Icon: BiListCheck, label: "عرض المسابقات" },
@@ -86,6 +88,7 @@ const Links = ({ onClose }) => {
   ];
 
   const teacherLinks = [
+    { to: "/streams", Icon: FaBroadcastTower, label: "البث المباشر" },
     { to: "/admin/add_month", Icon: MdEventNote, label: "لوحة التحكم" },
     { to: "/my_groups", Icon: GiTeacher, label: "مجموعاتي" },
     { to: "/teacher_courses", Icon: FaBookReader, label: "كورساتي" },
