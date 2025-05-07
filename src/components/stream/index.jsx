@@ -1,3 +1,4 @@
+import StreamList from "./list";
 import MyStreams from "./myStreams";
 import StreamState from "./streamState";
 
@@ -6,6 +7,7 @@ function StreamPage() {
     <>
       <StreamState />
       <MyStreams />
+      <StreamList />
     </>
   );
 }

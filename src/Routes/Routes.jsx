@@ -89,6 +89,7 @@ import CenterGroupDetails from "../pages/centerSystem/CenterGroupDetails";
 import StudentDetails from "../components/centerSystem/StudentDetails";
 import AllUsers from "../pages/allUsers/AllUsers";
 import StreamPage from "../components/stream";
+import StreamList from "../components/stream/list";
 
 const AppRouter = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
@@ -141,6 +142,7 @@ const AppRouter = () => {
 
         <Route path='/verify_code' element={<VerifyCode />} />
         <Route path='/rest_pass' element={<ResetPassword />} />
+        <Route path='/streams-list' element={<StreamList />} />
    
           
         <Route
