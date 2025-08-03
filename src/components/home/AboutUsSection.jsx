@@ -1,9 +1,9 @@
 import { Box, Flex, Text, Image } from "@chakra-ui/react";
 import { FaGraduationCap, FaUserTie, FaRocket } from "react-icons/fa";
 
-const AboutUsSection = () => {
+const  AboutUsSection = () => {
   return (
-    <Box as="section" py={16} >
+    <Box as="section"  py={16} >
       <Box maxW="7xl" mx="auto" px={4}>
         <Flex
           direction={{ base: "column", md: "row" }}

@@ -28,7 +28,7 @@ export const CoursesCard = ({
             lectre.image ||
             lectre.assets?.[0]?.path ||
             img ||
-            "default-image-path.jpg"
+            "YouTube thumbnail ازرق عن تعليم التسويق الالكتروني (1).png"
           }
           className=' w-[100%]'
           style={{maxHeight:"200px"}}
@@ -43,6 +43,10 @@ export const CoursesCard = ({
           ) : null}
           <h1 className='font-bold h-[50px]'>
             {" "}
+            {lectre.name || lectre.title || lectre.title}{" "}
+          </h1>
+            {" "}
+            <h1>
             {lectre.name || lectre.description || lectre.title}{" "}
           </h1>
           {type == "subject_exam" ? (
@@ -60,7 +64,7 @@ export const CoursesCard = ({
           type == "monthly_exam" ||
           type === "comp" ||
           type == "teacher" ? null : (
-            <h1 className='font-bold'>عدد المحاضرات: {lectre.noflecture}</h1>
+            <h1 className='font-bold'>عدد المحاضرات: 5 </h1>
           )}
 <div className="flex justify-between">
 
@@ -121,7 +125,7 @@ export const CoursesCard = ({
         ) : null}
 
         {type === "comp" && (
-          <div className='flex justify-between w-[100%] mt-2'>
+          <div className='flex justify-between w-[100%] mt-2 px-2'>
             <h1>
               <strong>من:</strong>{" "}
               {new Date(lectre.start_at).toLocaleDateString("ar-EG")}

@@ -1,185 +1,621 @@
-import { Select, Input, Button, Spinner, RadioGroup, Stack, Radio } from "@chakra-ui/react";
-import StudentSignUp from "../../Hooks/auth/StudentSignUp";
+import {
+  Select,
+  Input,
+  Button,
+  Spinner,
+  RadioGroup,
+  Stack,
+  Radio,
+  Box,
+  Flex,
+  FormControl,
+  FormLabel,
+  useToast,
+  Text,
+  VStack,
+  HStack,
+  Divider,
+  Progress,
+  Icon,
+} from "@chakra-ui/react";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import { FiUser, FiPhone, FiLock, FiBookOpen, FiCheck } from "react-icons/fi";
 
-const SingUp = () => {
-  const [
-    loading,
-    handleLSignUp,
-    fName,
-    handleFnameChange,
-    lName,
-    handleLnameChange,
-    pass,
-    handlePassChange,
-    passCon,
-    handlePassConChange,
-    mail,
-    handleMailChange,
-    phone,
-    handlePhoneChange,
-    grad,
-    handleGradeChange,
-  ] = StudentSignUp();
+import "react-toastify/dist/ReactToastify.css";
+import baseUrl from "../../api/baseUrl";
+
+const SignUp = () => {
+  const [currentStep, setCurrentStep] = useState(0);
   const [isUniversityStudent, setIsUniversityStudent] = useState("no");
+
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [gradeId, setGradeId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [grades, setGrades] = useState([]); // الصفوف من API
+
+  // Steps configuration
+  const steps = [
+    {
+      title: "المعلومات الشخصية",
+      icon: FiUser,
+      description: "أدخل اسمك الكامل"
+    },
+    {
+      title: "معلومات الاتصال",
+      icon: FiPhone,
+      description: "أدخل أرقام الهواتف"
+    },
+    {
+      title: "كلمة المرور",
+      icon: FiLock,
+      description: "أنشئ كلمة مرور قوية"
+    },
+    {
+      title: "المعلومات الدراسية",
+      icon: FiBookOpen,
+      description: "اختر صفك الدراسي"
+    }
+  ];
+
+  useEffect(() => {
+    const fetchGrades = async () => {
+      try {
+        const res = await baseUrl.get("/api/users/grades");
+        setGrades(res.data.grades || []);
+      } catch (err) {
+        setGrades([]);
+      }
+    };
+    fetchGrades();
+  }, []);
+
+  // تصفية الصفوف حسب هل هو جامعي أم لا
+  let filteredGrades = grades;
+  if (grades.length > 0) {
+    if (isUniversityStudent === "yes") {
+      filteredGrades = grades.slice(-4); // آخر 4 صفوف فقط
+    } else {
+      filteredGrades = grades.slice(0, grades.length - 4); // الكل ما عدا آخر 4
+    }
+  }
+
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const validateCurrentStep = () => {
+    switch (currentStep) {
+      case 0:
+        return name.trim().length > 0;
+      case 1:
+        // Egyptian phone numbers: must start with 01, 02, 05, 010, 011, 012, 015
+        const phoneRegex = /^(\+20)?(01|02|05|010|011|012|015)\d{8}$/;
+        return phoneRegex.test(phone) && phoneRegex.test(parentPhone);
+      case 2:
+        return password.length >= 6 && password === passwordConfirm;
+      case 3:
+        return gradeId !== "";
+      default:
+        return false;
+    }
+  };
+
+  const handleLSignUp = async () => {
+    // Final validation
+    if (!name || !phone || !parentPhone || !password || !passwordConfirm || !gradeId) {
+      toast.error("يرجى ملء جميع الحقول");
+      return;
+    }
+
+    if (password !== passwordConfirm) {
+      toast.error("كلمتا السر غير متطابقتين");
+      return;
+    }
+
+    // Phone number validation - Egyptian numbers
+    const phoneRegex = /^(\+20)?(01|02|05|010|011|012|015)\d{8}$/;
+    if (!phoneRegex.test(phone)) {
+      toast.error("يرجى إدخال رقم هاتف مصري صحيح (مثال: 01227145090)");
+      return;
+    }
+
+    if (!phoneRegex.test(parentPhone)) {
+      toast.error("يرجى إدخال رقم هاتف الوالد مصري صحيح (مثال: 01227145090)");
+      return;
+    }
+
+    // Check if phone numbers are different
+    const cleanPhone = phone.replace('+20', '');
+    const cleanParentPhone = parentPhone.replace('+20', '');
+    if (cleanPhone === cleanParentPhone) {
+      toast.error("رقم هاتفك ورقم هاتف الوالد يجب أن يكونا مختلفين");
+      return;
+    }
+
+    // Add +20 prefix if not present
+    const formattedPhone = phone.startsWith('+20') ? phone : `+20${phone}`;
+    const formattedParentPhone = parentPhone.startsWith('+20') ? parentPhone : `+20${parentPhone}`;
+
+    setLoading(true);
+    try {
+      const res = await baseUrl.post("/api/users/register", {
+        phone: formattedPhone,
+        password,
+        name,
+        parent_phone: formattedParentPhone,
+        grade_id: parseInt(gradeId),
+      });
+
+      const { token, user } = res.data;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      toast.success("تم إنشاء الحساب بنجاح!");
+      window.location = "/";
+    } catch (err) {
+      console.error(err);
+      toast.error("حدث خطأ أثناء إنشاء الحساب");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
   return (
-    <div
-      className=' mt-[70px] mb-10 grid justify-center bg-[#] p-3  md:flex justify-center items-center '
-      style={{ direction: "ltr", minHeight: "90vh" }}
-    >
-      <div
-        className='md:w-[70%] bg-white border shadow-md p-3 mt-[50px]'
-        style={{ borderRadius: "20px" }}
-      >
-        <div>
-          <div className='text-center'>
-            <h1 className='fonts font-bold text-xl text-black'>
-              {" "}
-              انشاء حساب جديد
-            </h1>
-          </div>
+          <VStack spacing={6} align="stretch">
+            <Box textAlign="center" mb={6}>
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
+                <FiUser className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">أدخل اسمك الكامل</h2>
+              <p className="text-gray-600">سنحتاج إلى معرفة اسمك للبدء</p>
+      </Box>
+            
+            <FormControl>
+              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
+              الاسم بالكامل
+            </FormLabel>
+            <Input
+                placeholder="مثال: أحمد محمد علي"
+              size="lg"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+                className="text-gray-800 transition-all duration-300"
+              focusBorderColor="blue.500"
+              _placeholder={{ color: "gray.400" }}
+                borderColor="gray.200"
+                borderRadius="xl"
+                px={6}
+                py={4}
+                _hover={{ borderColor: "gray.300" }}
+                _focus={{ 
+                  borderColor: "blue.500", 
+                  boxShadow: "0 0 0 1px #3B82F6",
+                  transform: "translateY(-1px)"
+                }}
+            />
+          </FormControl>
+          </VStack>
+        );
 
-          <div
-            className='flex p-5 flex-wrap w-[100%]  my-7 p-1'
-            style={{ direction: "rtl" }}
+      case 1:
+        return (
+          <VStack spacing={6} align="stretch">
+            <Box textAlign="center" mb={6}>
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-green-500 to-teal-600 rounded-full mb-4">
+                <FiPhone className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">معلومات الاتصال</h2>
+              <p className="text-gray-600">أدخل رقم هاتفك ورقم هاتف ولي الأمر</p>
+            </Box>
+            
+            <FormControl>
+              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
+              رقم الهاتف
+            </FormLabel>
+            <Input
+              type="tel"
+                placeholder="01227145090"
+              size="lg"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+                className="text-gray-800 transition-all duration-300"
+              focusBorderColor="blue.500"
+              _placeholder={{ color: "gray.400" }}
+                borderColor="gray.200"
+                borderRadius="xl"
+                px={6}
+                py={4}
+                _hover={{ borderColor: "gray.300" }}
+                _focus={{ 
+                  borderColor: "blue.500", 
+                  boxShadow: "0 0 0 1px #3B82F6",
+                  transform: "translateY(-1px)"
+                }}
+            />
+          </FormControl>
+
+            <FormControl>
+              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
+                رقم هاتف الوالد
+              </FormLabel>
+              <Input
+                type="tel"
+                placeholder="01227145091"
+                size="lg"
+                value={parentPhone}
+                onChange={(e) => setParentPhone(e.target.value)}
+                className="text-gray-800 transition-all duration-300"
+                focusBorderColor="blue.500"
+                _placeholder={{ color: "gray.400" }}
+                borderColor="gray.200"
+                borderRadius="xl"
+                px={6}
+                py={4}
+                _hover={{ borderColor: "gray.300" }}
+                _focus={{ 
+                  borderColor: "blue.500", 
+                  boxShadow: "0 0 0 1px #3B82F6",
+                  transform: "translateY(-1px)"
+                }}
+              />
+            </FormControl>
+          </VStack>
+        );
+
+      case 2:
+        return (
+          <VStack spacing={6} align="stretch">
+            <Box textAlign="center" mb={6}>
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-orange-500 to-red-600 rounded-full mb-4">
+                <FiLock className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">كلمة المرور</h2>
+              <p className="text-gray-600">أنشئ كلمة مرور قوية لحماية حسابك</p>
+            </Box>
+            
+            <FormControl>
+              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
+                كلمة المرور
+            </FormLabel>
+            <Input
+              type="password"
+                placeholder="أدخل كلمة مرور قوية"
+              size="lg"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+                className="text-gray-800 transition-all duration-300"
+              focusBorderColor="blue.500"
+              _placeholder={{ color: "gray.400" }}
+                borderColor="gray.200"
+                borderRadius="xl"
+                px={6}
+                py={4}
+                _hover={{ borderColor: "gray.300" }}
+                _focus={{ 
+                  borderColor: "blue.500", 
+                  boxShadow: "0 0 0 1px #3B82F6",
+                  transform: "translateY(-1px)"
+                }}
+              />
+              {password.length > 0 && (
+                <Text fontSize="sm" color={password.length >= 6 ? "green.500" : "red.500"} mt={2}>
+                  {password.length >= 6 ? "✓ كلمة المرور قوية" : "كلمة المرور يجب أن تكون 6 أحرف على الأقل"}
+                </Text>
+              )}
+          </FormControl>
+
+            <FormControl>
+              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
+                تأكيد كلمة المرور
+            </FormLabel>
+            <Input
+              type="password"
+                placeholder="أعد إدخال كلمة المرور"
+              size="lg"
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+                className="text-gray-800 transition-all duration-300"
+              focusBorderColor="blue.500"
+              _placeholder={{ color: "gray.400" }}
+                borderColor="gray.200"
+                borderRadius="xl"
+                px={6}
+                py={4}
+                _hover={{ borderColor: "gray.300" }}
+                _focus={{ 
+                  borderColor: "blue.500", 
+                  boxShadow: "0 0 0 1px #3B82F6",
+                  transform: "translateY(-1px)"
+                }}
+              />
+              {passwordConfirm.length > 0 && (
+                <Text fontSize="sm" color={password === passwordConfirm ? "green.500" : "red.500"} mt={2}>
+                  {password === passwordConfirm ? "✓ كلمات المرور متطابقة" : "كلمات المرور غير متطابقة"}
+                </Text>
+              )}
+          </FormControl>
+          </VStack>
+        );
+
+      case 3:
+        return (
+          <VStack spacing={6} align="stretch">
+            <Box textAlign="center" mb={6}>
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mb-4">
+                <FiBookOpen className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">المعلومات الدراسية</h2>
+              <p className="text-gray-600">اختر صفك الدراسي وحدد نوع الدراسة</p>
+            </Box>
+            
+            <FormControl>
+              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
+                هل أنت طالب جامعي؟
+              </FormLabel>
+          <RadioGroup
+            value={isUniversityStudent}
+            onChange={setIsUniversityStudent}
+            direction="row"
           >
-            <div className='m-2 w-[100%] md:w-[45%]'>
-              <h1 className='fonts font-bold m-2 text-black'> الاسم الاول </h1>
-              <Input
-                placeholder='الاسم الاول  '
-                size='lg'
-                className='m-2 w-[90%] mx-auto md:w-[48%] text-black'
-                value={fName}
-                onChange={handleFnameChange}
-                style={{ border: "solid 2px #ccc" }}
-              />
-            </div>
-            <div className='m-2 w-[100%] md:w-[45%]'>
-              <h1 className='fonts font-bold m-2 text-black'> الاسم الاخير </h1>
-              <Input
-                placeholder='الاسم الاخير '
-                size='lg'
-                className='m-2 w-[90%] mx-auto md:w-[48%] text-black'
-                value={lName}
-                onChange={handleLnameChange}
-                style={{ border: "solid 2px #ccc" }}
-              />
-            </div>
-            <div className='m-2 w-[100%] md:w-[45%]'>
-              <h1 className='fonts font-bold m-2 text-black'> رقم الهاتف </h1>
-              <Input
-                type='number'
-                placeholder='رقم الهاتف '
-                size='lg'
-                className='m-2 w-[90%] mx-auto md:w-[48%] border text-black '
-                style={{ border: "solid 2px #ccc" }}
-                value={phone}
-                onChange={handlePhoneChange}
-              />
-            </div>
-            <div className='m-2 w-[100%] md:w-[45%]'>
-              <h1 className='fonts font-bold m-2 text-black'>
-                {" "}
-                رقم ولى الامر{" "}
-              </h1>
-              <Input
-                placeholder=' ادخل رقم ولى الامر   '
-                size='lg'
-                className='m-2 w-[90%] mx-auto md:w-[48%] text-black'
-                value={mail}
-                onChange={handleMailChange}
-                style={{ border: "solid 2px #ccc" }}
-              />
-            </div>
-            <div className='m-2 w-[100%] md:w-[45%]'>
-              <h1 className='fonts font-bold m-2 text-black'> كلمة السر </h1>
-              <Input
-                type='password'
-                placeholder='كلمة السر '
-                size='lg'
-                className='m-2 w-[90%] mx-auto md:w-[48%] text-black'
-                value={pass}
-                onChange={handlePassChange}
-                style={{ border: "solid 2px #ccc" }}
-              />
-            </div>
-            <div className='m-2 w-[100%] md:w-[45%]'>
-              <h1 className='fonts font-bold m-2 text-black'>
-                {" "}
-                تاكيد كلمة السر{" "}
-              </h1>
-              <Input
-                type='password'
-                placeholder='تاكيد كلمة السر '
-                size='lg'
-                className='m-2 w-[90%] mx-auto md:w-[48%] text-black'
-                value={passCon}
-                onChange={handlePassConChange}
-                style={{ border: "solid 2px #ccc" }}
-              />
-            </div>
-         
-            <div className='m-2 w-[94%]'>
-              <h1 className='fonts font-bold m-2 text-black'>هل أنت طالب جامعي؟</h1>
-              <RadioGroup onChange={setIsUniversityStudent} value={isUniversityStudent}>
-                <Stack direction="row">
-                  <Radio className="text-black" value="yes">نعم</Radio>
-                  <Radio className="text-black" value="no">لا</Radio>
-                </Stack>
-              </RadioGroup>
-            </div>
+                <HStack spacing={6}>
+                  <Radio 
+                    value="no" 
+                    colorScheme="blue"
+                    size="lg"
+                    _hover={{ transform: "scale(1.05)" }}
+                    transition="all 0.2s"
+                  >
+                    لا
+                  </Radio>
+                  <Radio 
+                    value="yes" 
+                    colorScheme="blue"
+                    size="lg"
+                    _hover={{ transform: "scale(1.05)" }}
+                    transition="all 0.2s"
+                  >
+                    نعم
+                  </Radio>
+                </HStack>
+          </RadioGroup>
+        </FormControl>
 
-            {isUniversityStudent === "yes" ? (
-              <div className='m-2 w-[94%]'>
-                <h1 className='fonts font-bold m-2 text-black'>اختر الكلية</h1>
-                <Select
-                  value={grad}
-                  onChange={handleGradeChange}
-                  placeholder='اختر الكلية'
-                  className='text-black'
-                  size='lg'
-                  style={{ direction: "ltr", border: "solid 2px #ccc" }}
-                >
-                  <option value='8'>كلية الحقوق</option>
-                </Select>
-              </div>
-            ) : (
-              <div className='m-2 w-[94%]'>
-                <h1 className='fonts font-bold m-2 text-black'>اختر الصف</h1>
-                <Select
-                  value={grad}
-                  onChange={handleGradeChange}
-                  placeholder='اختر الصف الدراسى'
-                  className='text-black'
-                  size='lg'
-                  style={{ direction: "ltr", border: "solid 2px #ccc" }}
-                >
-                  <option value='4'>الصف الاول الاعدادى</option>
-                  <option value='5'>الصف الثانى الاعدادى</option>
-                  <option value='6'>الصف الثالث الاعدادى</option>
-                  <option value='1'>الصف الاول الثانوى</option>
-                  <option value='2'>الصف الثانى الثانوى</option>
-                  <option value='3'>الصف الثالث الثانوى</option>
-                  <option value='7'>كورسات اخرى</option>
-                </Select>
-              </div>
+            <FormControl>
+              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
+            الصف الدراسي
+          </FormLabel>
+          <Select
+            dir="ltr"
+            placeholder={"اختر الصف الدراسي"}
+                value={gradeId}
+                onChange={(e) => setGradeId(e.target.value)}
+            size="lg"
+            focusBorderColor="blue.500"
+            _placeholder={{ color: "gray.400" }}
+                borderColor="gray.200"
+                borderRadius="xl"
+                py={4}
+                px={6}
+                className="text-gray-800 transition-all duration-300"
+            bg="white"
+                _hover={{ borderColor: "gray.300" }}
+                _focus={{ 
+                  borderColor: "blue.500", 
+                  boxShadow: "0 0 0 1px #3B82F6",
+                  transform: "translateY(-1px)"
+                }}
+          >
+            {filteredGrades.map((grade) => (
+              <option key={grade.id} value={grade.id}>{grade.name}</option>
+            ))}
+          </Select>
+        </FormControl>
+          </VStack>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen mt-[80px] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl flex flex-col lg:flex-row bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+        {/* Left side - Form */}
+        <div className="w-full lg:w-1/2 p-8 sm:p-10 lg:p-12" style={{ direction: "rtl" }}>
+          {/* Progress Bar */}
+          <Box mb={8}>
+            <Progress 
+              value={(currentStep / (steps.length - 1)) * 100} 
+              colorScheme="blue" 
+              borderRadius="full" 
+              height="8px"
+              bg="gray.100"
+            />
+            <Text fontSize="sm" color="gray.600" mt={2} textAlign="center">
+              الخطوة {currentStep + 1} من {steps.length}
+            </Text>
+          </Box>
+
+          {/* Step Indicators */}
+          <HStack spacing={4} mb={8} justify="center">
+            {steps.map((step, index) => (
+              <Box
+                key={index}
+                className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
+                  index <= currentStep 
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' 
+                    : 'bg-gray-200 text-gray-500'
+                }`}
+              >
+                {index < currentStep ? (
+                  <FiCheck className="w-5 h-5" />
+                ) : (
+                  <Icon as={step.icon} className="w-5 h-5" />
+                )}
+              </Box>
+            ))}
+          </HStack>
+
+          {/* Step Content */}
+          <Box className="transition-all duration-500 ease-in-out">
+            {renderStepContent()}
+          </Box>
+
+          {/* Navigation Buttons */}
+          <HStack spacing={4} mt={8}>
+            {currentStep > 0 && (
+              <Button
+                onClick={prevStep}
+                variant="outline"
+                size="lg"
+                flex={1}
+                borderRadius="xl"
+                borderColor="gray.300"
+                _hover={{ borderColor: "gray.400", bg: "gray.50" }}
+                transition="all 0.3s"
+              >
+                السابق
+              </Button>
             )}
-     
-    
+            
+            {currentStep < steps.length - 1 ? (
+              <Button
+                onClick={nextStep}
+                colorScheme="blue"
+                size="lg"
+                flex={1}
+                borderRadius="xl"
+                isDisabled={!validateCurrentStep()}
+                bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                _hover={{ 
+                  bg: "linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)",
+                  transform: "translateY(-1px)",
+                  boxShadow: "0 5px 15px rgba(102, 126, 234, 0.4)"
+                }}
+                _disabled={{
+                  bg: "gray.300",
+                  cursor: "not-allowed",
+                  transform: "none",
+                  boxShadow: "none"
+                }}
+                transition="all 0.3s ease"
+              >
+                التالي
+              </Button>
+            ) : (
+          <Button
+            onClick={handleLSignUp}
+                colorScheme="blue"
+            size="lg"
+                flex={1}
+                borderRadius="xl"
+                isDisabled={!validateCurrentStep() || loading}
+                bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                _hover={{ 
+                  bg: "linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 10px 25px rgba(102, 126, 234, 0.4)"
+                }}
+                _active={{ 
+                  bg: "linear-gradient(135deg, #4f5fc7 0%, #5f387f 100%)",
+                  transform: "translateY(0px)"
+                }}
+                _disabled={{
+                  bg: "gray.300",
+                  cursor: "not-allowed",
+                  transform: "none",
+                  boxShadow: "none"
+                }}
+                leftIcon={loading ? <Spinner size="sm" color="white" /> : undefined}
+                transition="all 0.3s ease"
+              >
+                إنشاء الحساب
+          </Button>
+            )}
+          </HStack>
+
+        {/* Login link */}
+          <Box mt={6} textAlign="center">
+            <Text color="gray.600" fontSize="md">
+          هل لديك حساب بالفعل؟{" "}
+              <a 
+                href="#" 
+                className="text-blue-600 hover:text-blue-700 font-semibold transition-colors duration-200 underline decoration-2 underline-offset-2"
+              >
+            تسجيل الدخول
+          </a>
+            </Text>
+          </Box>
+        </div>
+
+        {/* Right side - Image */}
+        <div className="w-full lg:w-1/2 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 flex items-center justify-center p-8 relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
+            <div className="absolute top-1/4 right-0 w-24 h-24 bg-white rounded-full translate-x-12"></div>
+            <div className="absolute bottom-0 left-1/3 w-20 h-20 bg-white rounded-full translate-y-10"></div>
           </div>
-          <div className='flex justify-center'>
-            <Button colorScheme='blue' onClick={handleLSignUp}>
-              {" "}
-              {loading ? <Spinner /> : "انشاء حساب "}{" "}
-            </Button>
+          
+          <div className="text-center relative z-10">
+            <div className="mb-8">
+              <img
+                src="/fc65e2d7-5777-4a66-bc27-7fea10bc89a7-removebg-preview.png"
+                alt="Signup Illustration"
+                className="max-w-full h-auto max-h-80 mx-auto drop-shadow-2xl animate-pulse"
+                style={{ animationDuration: '3s' }}
+              />
+            </div>
+            <h2 className="text-white text-3xl font-bold mb-4 drop-shadow-lg">
+              {steps[currentStep]?.title}
+            </h2>
+            <p className="text-blue-100 text-xl leading-relaxed max-w-md mx-auto">
+              {steps[currentStep]?.description}
+            </p>
+            
+            {/* Features */}
+            <div className="mt-8 space-y-3">
+              <div className="flex items-center justify-center space-x-3 text-blue-100">
+                <div className="w-2 h-2 bg-blue-200 rounded-full"></div>
+                <span>دروس تفاعلية</span>
+              </div>
+              <div className="flex items-center justify-center space-x-3 text-blue-100">
+                <div className="w-2 h-2 bg-blue-200 rounded-full"></div>
+                <span>معلمون خبراء</span>
+              </div>
+              <div className="flex items-center justify-center space-x-3 text-blue-100">
+                <div className="w-2 h-2 bg-blue-200 rounded-full"></div>
+                <span>متابعة مستمرة</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <ScrollToTop />
+      <ToastContainer position="top-center" />
     </div>
   );
 };
 
-export default SingUp;
+export default SignUp;

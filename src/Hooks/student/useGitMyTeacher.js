@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import baseUrl from "../../api/baseUrl";
 
-const useGitMyTeacher = () => {
+const  useGitMyTeacher = () => {
   const [teachers, setTeachers] = useState(null);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
@@ -10,8 +10,8 @@ const useGitMyTeacher = () => {
     if (!token) return;
     try {
       setLoading(true);
-      const response = await baseUrl.get("api/students/teachers", {
-        headers: { token: token },
+      const response = await baseUrl.get("api/student/my-teachers", {
+        headers: { Authorization:`bearer ${token}`  },
       });
       setTeachers(response.data);
     } catch (error) {

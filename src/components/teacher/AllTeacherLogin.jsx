@@ -14,16 +14,19 @@ import {
   Stack,
   Card,
   CardBody,
+  VStack,
+  HStack,
 } from "@chakra-ui/react";
 import { MdCancelPresentation } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { FaVideo } from "react-icons/fa";
-import GitTeacherByToken from "../../Hooks/student/GitTeacherByToken";
+import useGitTeacherByToken from "../../Hooks/student/GitTeacherByToken";
+import { FaUserCircle } from "react-icons/fa";
 import img from "../../img/Screenshot_2025-03-07_210502-removebg-preview.png";
 import { motion } from "framer-motion";
 
 const AllTeacherLogin = () => {
-  const [loading, teachers] = GitTeacherByToken();
+  const [loading, teachers] = useGitTeacherByToken();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchClicked, setSearchClicked] = useState(false);
@@ -84,8 +87,8 @@ const AllTeacherLogin = () => {
               teacher.id.toString() === searchQuery.trim() ? 100 : 0
             ),
           }))
-          .filter((item) => item.score > 20) // Threshold for relevance
-          .sort((a, b) => b.score - a.score) // Sort by score descending
+          .filter((item) => item.score > 20)
+          .sort((a, b) => b.score - a.score)
           .map((item) => item.teacher)
       : [];
 
@@ -124,29 +127,135 @@ const AllTeacherLogin = () => {
             </Stack>
           ) : searchClicked ? (
             searchResults.length > 0 ? (
-              <div className="m-auto card-content flex justify-center md:justify-center flex-wrap" style={{ borderRadius: "20px" }}>
+              <div className="m-auto card-content flex justify-center md:justify-start flex-wrap gap-6">
                 {searchResults.map((teacher) => (
-                  <Card key={teacher.id} className="w-[280px] teacher_card my-3 md:mx-3" style={{ border: "1px solid #ccc" }}>
-                    <CardBody>
-                      <Link to={`/teacher/${teacher.id}`}>
-                        <Image src={teacher.image} h="220px" w="100%" borderRadius="10px" alt="Teacher" />
-                        <p className="w-[100%] h-[2px] bg-[#ccc] mt-4 m-auto"></p>
-                        <Flex justify="space-between" py="2">
-                          <Text fontWeight="bold" mt="2">
-                            {teacher.name}
-                          </Text>
-                          <Text fontWeight="bold" mt="2">
-                            {teacher.subject}
-                          </Text>
-                        </Flex>
-                        <div className="h-auto">
-                          <h1 fontWeight="bold" className="flex font-bold my-2">
-                            <FaVideo className="m-1 text-red-500" /> محاضر ال{teacher.subject}
-                          </h1>
-                        </div>
-                      </Link>
-                    </CardBody>
-                  </Card>
+                  <Link key={teacher.id} to={`/teacher/${teacher.id}`}>
+                    <Card
+                      className="w-[320px]"
+                      style={{
+                        borderRadius: "20px",
+                        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+                        background: "#fff",
+                        overflow: "hidden",
+                        border: "1px solid #f0f0f0",
+                        transition: "all 0.3s ease",
+                        cursor: "pointer"
+                      }}
+                      _hover={{
+                        transform: "translateY(-8px)",
+                        boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)"
+                      }}
+                    >
+                      {/* صورة المدرس مع تأثيرات */}
+                      <Box
+                        position="relative"
+                        w="100%"
+                        h="300px"
+                        overflow="hidden"
+                      >
+                        <Image
+                          src={teacher.avatar || "https://via.placeholder.com/320x200/4fd1c5/ffffff?text=صورة+المدرس"}
+                          alt={teacher.name}
+                          w="100%"
+                          h="100%"
+                          objectFit="cover"
+                          transition="transform 0.3s ease"
+                          _hover={{ transform: "scale(1.05)" }}
+                        />
+                        {/* Badge للمادة */}
+                        <Box
+                          position="absolute"
+                          top={3}
+                          right={3}
+                          bg="rgba(0, 0, 0, 0.7)"
+                          color="white"
+                          px={3}
+                          py={1}
+                          borderRadius="full"
+                          fontSize="xs"
+                          fontWeight="bold"
+                          backdropFilter="blur(10px)"
+                        >
+                          {teacher.subject}
+                        </Box>
+                        {/* Badge للمدرس */}
+                        <Box
+                          position="absolute"
+                          top={3}
+                          left={3}
+                          bg="rgba(59, 130, 246, 0.9)"
+                          color="white"
+                          px={3}
+                          py={1}
+                          borderRadius="full"
+                          fontSize="xs"
+                          fontWeight="bold"
+                          backdropFilter="blur(10px)"
+                        >
+                          مدرس
+                        </Box>
+                      </Box>
+
+                      <CardBody p={6}>
+                        <VStack align="flex-start" spacing={4}>
+                          {/* اسم المدرس */}
+                          <Box w="full">
+                            <Text 
+                              fontWeight="bold" 
+                              fontSize="xl" 
+                              color="#2d3748" 
+                              textAlign="right"
+                              mb={1}
+                            >
+                               {teacher.name}
+                            </Text>
+                          </Box>
+
+                          {/* وصف المدرس */}
+                          {teacher.description && (
+                            <Text 
+                              fontSize="sm" 
+                              color="#718096" 
+                              textAlign="right"
+                              noOfLines={3}
+                              lineHeight="1.5"
+                            >
+                              {teacher.description}
+                            </Text>
+                          )}
+
+                          {/* معلومات إضافية */}
+                          <Flex justify="space-between" align="center" w="full" pt={2}>
+                            <HStack spacing={2}>
+                              <FaVideo color="#3b82f6" />
+                              <Text fontSize="xs" color="#718096" fontWeight="medium">
+                                {teacher.subject}
+                              </Text>
+                            </HStack>
+                           
+                          </Flex>
+
+                          {/* زر عرض التفاصيل */}
+                          <Button 
+                            colorScheme="blue" 
+                            w="full" 
+                            borderRadius="xl" 
+                            fontWeight="bold" 
+                            fontSize="md"
+                            h="48px"
+                            mt={2}
+                            _hover={{
+                              transform: "translateY(-2px)",
+                              boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)"
+                            }}
+                            transition="all 0.2s ease"
+                          >
+                            عرض الكورسات
+                          </Button>
+                        </VStack>
+                      </CardBody>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             ) : (
@@ -172,7 +281,6 @@ const AllTeacherLogin = () => {
                   أو من خلال <span className="text-blue-600 font-semibold">اسمه</span>.
                 </p>
               </div>
-            
             </section>
           )}
         </Box>

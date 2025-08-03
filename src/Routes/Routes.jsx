@@ -19,14 +19,12 @@ import CreateGroup from "../components/admin/teacher/CreateGroup";
 import AddStudent from "../components/admin/teacher/AddStudent";
 import AddExam from "../components/admin/teacher/AddExam";
 import AddQuestion from "../components/admin/teacher/AddQuestion";
-
 import TeacherWallet from "../pages/wallet/TeacherWallet";
 import MyGroups from "../pages/groups/MyGroups";
 import Groups from "../pages/groups/Groups";
 import GroupDetails from "../pages/groups/GroupDetails";
 import AddTeacher from "../components/admin/AddTeacher";
 import LecturDetails from "../pages/leacter/LecturDetails";
-
 import Vedio from "../pages/leacter/Vedio";
 import Exam from "../pages/exam/Exam";
 import AllResult from "../components/admin/teacher/AllResult";
@@ -39,7 +37,6 @@ import OpenPhone from "../components/admin/OpenPhone";
 import LoginPage from "../pages/login/LoginPage";
 import TeacherLogin from "../pages/login/TeacerLogin";
 import AdminLogin from "../pages/login/AdminLogin";
-
 import AddPdf from "../components/admin/teacher/AddPdf";
 import AddMonth from "../components/admin/teacher/AddMonth";
 import AddLectureToMonth from "../components/admin/teacher/AddLectureToMonth";
@@ -49,22 +46,19 @@ import AllCourses from "../pages/teacherCourses/AllCourses";
 import NotFound from "../components/not found/NotFound";
 import CreateCode from "../components/admin/teacher/CreateCode";
 import HomeLogin from "../pages/homeLogin/HomeLogin";
-import LoginTeacher from "../Hooks/teacher/login";
 import AllTeacherLogin from "../components/teacher/AllTeacherLogin";
 import FreeCourses from "../components/home/FreeCourses";
-import PostsHome from "../pages/postshome/PostsHome";
+
 import Competitions from "../pages/competitions/Competitions";
 import TheFirsts from "../pages/theFirsts/TheFirsts";
 import QuestionBank from "../pages/Question Bank/QuestionBank";
-import SupjectQuestion from "../pages/Question Bank/SupjectQuestion";
 import ChapterQuestion from "../pages/Question Bank/ChapterQuestion";
-import PostDetails from "../pages/post/PostDetails";
-import SavePosts from "../pages/post/SavePosts";
+
+
 import CreateComp from "../components/admin/CreateComp";
 import AllComps from "../components/admin/AllComps";
 import CompetitionDetails from "../pages/competitions/CompetitionDetails";
 import PlatformExams from "../pages/PlatformExams/PlatformExams";
-
 import TeacherCode from "../pages/code/TeacherCode";
 import CreateExams from "../pages/monthlyExams/CreateExams";
 import ViewExams from "../pages/monthlyExams/ViewExams";
@@ -88,6 +82,29 @@ import GroupsPage from "../pages/centerSystem/GroupsPage";
 import CenterGroupDetails from "../pages/centerSystem/CenterGroupDetails";
 import StudentDetails from "../components/centerSystem/StudentDetails";
 import AllUsers from "../pages/allUsers/AllUsers";
+import LandingPage from "../pages/landingPage/LandingPage";
+import SubjectPage from "../pages/Question Bank/SubjectPage";
+import ChatbotPage from "../pages/chatbot/ChatbotPage";
+import QuestionsPage from "../pages/Question Bank/QuestionsPage";
+import TasksPage from "../pages/tasks/TasksPage";
+import TeamChat from "../pages/teamChatPage/TeamChat";
+import QuestionBankDashboard from "../pages/Question Bank/QuestionBankDashboard";
+import AdminDashboardHome from "../pages/home/AdminDashboardHome";
+import TeacherDashboardHome from "../pages/home/TeacherDashboardHome";
+import CourseDetailsPage from "../pages/course/CourseDetailsPage";
+import PlatformAccounts from "../pages/financial-accounts/FinancialAccounts";
+import LecturesSchedule from "../pages/lecturesSchedule/LecturesSchedule";
+import CourseStatisticsPage from "../pages/course/CourseStatisticsPage";
+import QuestionLibraryPage from "../pages/Question Bank/QuestionLibraryPage";
+import TeacherChat from "../pages/chat/TeacherChatPage";
+import ComprehensiveExam from "../pages/exam/ComprehensiveExam";
+import ExamGrades from "../pages/exam/ExamGrades";
+import AddEmployees from "../components/admin/AddEmployees";
+import { MangeEmployees } from "../components/admin/MangeEmployees";
+import SuggestedTeachers from "../pages/suggested-teachers/SuggestedTeachers";
+import StudentDetailsPage from "../pages/centerSystem/StudentDetailsPage";
+
+
 
 const AppRouter = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
@@ -164,6 +181,8 @@ const AppRouter = () => {
         >
           <Route element={<ProtectedRoute auth={isAdmin} />}>
             <Route path='management' element={<AdminMange />} />
+            <Route path='add_employees' element={<AddEmployees />} />
+            <Route path='mange_employees' element={<MangeEmployees />} />
             <Route path='addteacher' element={<AddTeacher />} />
             <Route path='create_code' element={<AdminCreateCode />} />
             <Route path='cridet' element={<AdminTeacherBalances />} />
@@ -177,7 +196,7 @@ const AppRouter = () => {
             <Route path='add_lecture_month' element={<AddLectureToMonth />} />
             <Route path='create_group' element={<CreateGroup />} />
             <Route path='add_student' element={<AddStudent />} />
-            <Route path='addexam' element={<AddExam />} />
+           
             <Route path='add_pdf' element={<AddPdf />} />
             <Route path='create_codee' element={<CreateCode />} />
             <Route path='add_question' element={<AddQuestion />} />
@@ -186,7 +205,7 @@ const AppRouter = () => {
             </Route>
           </Route>
         </Route>
-
+        <Route path='addexam' element={<AddExam />} />
         <Route
           path='/*'
           element={
@@ -195,15 +214,31 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         >
-          <Route path='home' element={isTeacher|| isAdmin ?<PostsHome/>: <HomePage />} />
-          <Route path='social' element={<PostsHome />} />
+            <Route path='chatbot-page' element={<ChatbotPage />} />
+           <Route path='profile' element={<Profile />} />
+            <Route path='wallet' element={<Wallet />} />
+       <Route
+          path="home"
+          element={
+           isAdmin ? (
+            <AdminDashboardHome />
+              ) : isTeacher ? (
+             <TeacherDashboardHome />
+              ) : (
+             <HomePage />
+                )
+                 }
+              />
+
+       
           <Route path='teachers' element={<AllTeacherLogin />} />
+          <Route path='suggested-teachers' element={<SuggestedTeachers />} />
           <Route path='my-teachers' element={<MyTeacher />} />
           <Route path='my_courses' element={<MyLecture />} />
           <Route path='free_courses' element={<FreeCourses />} /> 
           <Route path='competitions' element={<Competitions />} />
           <Route path='the_Firsts' element={<TheFirsts />} />
-          <Route path='save_posts' element={<SavePosts />} />
+         
           <Route path='create_comp' element={<CreateComp />} />
           <Route path='allComps' element={<AllComps />} />
           <Route path='add_sub_exam' element={<AddSExam />} />
@@ -211,9 +246,10 @@ const AppRouter = () => {
           <Route path='monthly_exam/:id/show_grades' element={<ShowGrades />} />
 
           <Route path='question_bank' element={<QuestionBank />} />
-          <Route path='supject/:id' element={<SupjectQuestion />} />
+          <Route path='supject/:id' element={<SubjectPage />} />
+          <Route path='QuestionsPage/:id' element={<QuestionsPage />} />
           <Route path='chapter/:id' element={<ChapterQuestion />} />
-          <Route path='post/:id' element={<PostDetails />} />
+       
           <Route path='competition/:id' element={<CompetitionDetails />} />
           <Route path='Platform_exams' element={<PlatformExams />} />
 
@@ -250,14 +286,14 @@ const AppRouter = () => {
           }
         />
         <Route element={<ProtectedRoute auth={student} />}>
-          <Route path='/wallet' element={<Wallet />} />
+         
           <Route path='studentStats' element={<StudentStats />} />
           <Route path='course_statistics' element={<CourseStatistics />} />
-          <Route path='/profile' element={<Profile />} />
+         
           <Route path='/my_lecture' element={<MyLecture />} />
           
           <Route path='/teacher/:id' element={<TeacherDetails />} />
-          <Route path='/exam/:examId' element={<Exam />} />
+        
         </Route>
         <Route element={<ProtectedRoute auth={isTeacher} />}>
           <Route path='/teacher_wallet' element={<TeacherWallet />} />
@@ -283,6 +319,21 @@ const AppRouter = () => {
         <Route path='/center_groups' element={<GroupsPage />} />
         <Route path='/group_details/:id' element={<CenterGroupDetails />} />
         <Route path='/student/:id' element={<StudentDetails />} />
+        <Route path='/group/:groupId/student/:studentId' element={<StudentDetailsPage />} />
+        <Route path='/landing' element={<LandingPage />} />
+        <Route path='/tasks' element={<TasksPage />} />
+        <Route path='/teamChat' element={<TeamChat />} />
+        <Route path='/dashboard' element={<QuestionBankDashboard />} />
+        <Route path='/CourseDetailsPage/:id' element={<CourseDetailsPage />} />
+        <Route path='/PlatformAccounts' element={<PlatformAccounts />} />
+        <Route path='/LecturesSchedule' element={<LecturesSchedule />} />
+        <Route path='/CourseStatisticsPage/:id' element={<CourseStatisticsPage />} />
+        <Route path='/QuestionLibraryPage' element={<QuestionLibraryPage />} />
+        <Route path='/TeacherChat' element={<TeacherChat />} />
+        <Route path='/ComprehensiveExam/:id' element={<ComprehensiveExam />} />
+        <Route path='/exam/:examId' element={<Exam />} />
+        <Route path='/exam_grades' element={<ExamGrades />} />
+      
 
       </Routes>
     </div>

@@ -1,56 +1,52 @@
 import {
-  FaChalkboardTeacher,
-  FaWallet,
-  FaTrophy,
-  FaBookReader,
-  FaEdit,
-  FaMedal,
-  FaVideo
-} from "react-icons/fa";
-import {
   MdDashboard,
-  MdEventNote,
-  MdLogout,
-  MdOutlineCategory,
-  MdLibraryAdd,
+  MdLiveTv,
+  MdGroups,
+  MdMenuBook,
+  MdAccountBalanceWallet,
+  MdLibraryBooks,
+  MdBusinessCenter,
+  MdForum,
+  MdAssignment,
+  MdEmojiEvents,
+  MdLeaderboard,
+  MdDateRange,
   MdVideoLibrary,
-  MdQuestionAnswer,
+  MdQuiz,
   MdEventAvailable,
-  MdGrade,
+  MdGrading,
+  MdPerson,
+  MdSearch,
+  MdPeople,
+  MdQuestionAnswer,
+  MdAssessment,
+  MdStars,
+  MdMilitaryTech,
   MdBookmark,
+  MdLogout
 } from "react-icons/md";
-import { BiListCheck, BiUserCircle } from "react-icons/bi";
-import {
-  AiOutlineForm,
-  AiFillRead,
-  AiOutlineFileDone,
-  AiOutlineFileSearch,
-  AiOutlineStar,
-} from "react-icons/ai";
-import { CiStreamOn } from "react-icons/ci";
-import { GiTeacher, GiArchiveRegister } from "react-icons/gi";
-import { FaSearch ,FaFacebook} from "react-icons/fa";
+
 import UserType from "../../Hooks/auth/userType";
 import { NavLink } from "react-router-dom";
 
-const NavLinkItem = ({ to, Icon, label, onClick }) => (
+const NavLinkItem = ({ to, Icon, label, onClick, isSidebarOpen }) => (
   <li>
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `font-semibold flex items-center ${
-          isActive ? "text-blue-500" : "hover:text-blue-500"
+        `font-semibold flex items-center p-2 rounded-md ${
+          isActive ? "text-blue-500 bg-blue-100" : "hover:text-blue-500 hover:bg-blue-50"
         }`
       }
       onClick={onClick}
     >
-      <Icon className='m-1 text-xl text-blue-500' />
-      {label}
+      <Icon className="w-5 h-5 text-blue-500" />
+      <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"} mx-2`}>{label}</span>
     </NavLink>
   </li>
 );
 
-const Links = ({ onClose }) => {
+const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
   const [userData, isAdmin, isTeacher, isStudent] = UserType();
 
   const handleLogout = () => {
@@ -65,80 +61,112 @@ const Links = ({ onClose }) => {
   ];
 
   const adminLinks = [
-    { to: "/stream-management", Icon: CiStreamOn, label: "إدارة البث المباشر" }, 
+    { to: "/stream-management", Icon: MdLiveTv, label: "إدارة البث المباشر" },
     { to: "/admin/management", Icon: MdDashboard, label: "لوحة التحكم" },
-    { to: "/create_comp", Icon: AiOutlineForm, label: "إنشاء مسابقة" },
-    { to: "/allComps", Icon: BiListCheck, label: "عرض المسابقات" },
-    { to: "/create_exam", Icon: FaEdit, label: "إنشاء امتحان شهري" },
-    { to: "/add_sub_exam", Icon: MdLibraryAdd, label: "إنشاء امتحان المادة" },
-    {
-      to: "/add_video_exam",
-      Icon: MdVideoLibrary,
-      label: "إضافة فيديو للامتحان",
-    },
-    {
-      to: "/add_sup_questions",
-      Icon: MdQuestionAnswer,
-      label: "إضافة أسئلة للامتحان",
-    },
+    { to: "/teamChat", Icon: MdForum, label: "دردشة الفريق" },
+    { to: "/tasks", Icon: MdAssignment, label: "المهام" },
+    { to: "/tasks", Icon: MdLibraryBooks, label: "لوحة تحكم بنك الأسئلة" },
+    { to: "/create_comp", Icon: MdEmojiEvents, label: "إنشاء مسابقة" },
+    { to: "/allComps", Icon: MdLeaderboard, label: "عرض المسابقات" },
+    { to: "/create_exam", Icon: MdDateRange, label: "إنشاء امتحان شهري" },
+    { to: "/add_sub_exam", Icon: MdLibraryBooks, label: "إنشاء امتحان المادة" },
+    { to: "/add_video_exam", Icon: MdVideoLibrary, label: "إضافة فيديو للامتحان" },
+    { to: "/add_sup_questions", Icon: MdQuiz, label: "إضافة أسئلة للامتحان" },
     { to: "/view_exams", Icon: MdEventAvailable, label: "عرض الامتحانات" },
-    { to: "/show_grades", Icon: MdGrade, label: "عرض درجات الامتحان" },
+    { to: "/show_grades", Icon: MdGrading, label: "عرض درجات الامتحان" },
   ];
 
   const teacherLinks = [
-    { to: "/admin/add_month", Icon: MdEventNote, label: "لوحة التحكم" },
-    { to: "/my_groups", Icon: GiTeacher, label: "مجموعاتي" },
-    { to: "/teacher_courses", Icon: FaBookReader, label: "كورساتي" },
-    { to: "/teacher_wallet", Icon: FaWallet, label: "محفظتي" },
+    { to: "/admin/add_month", Icon: MdDateRange, label: "لوحة التحكم" },
+    { to: "/suggested-teachers", Icon: MdGroups, label: "المدرسين المقترحة "},
+    { to: "/teacher_courses", Icon: MdMenuBook, label: "كورساتي" },
+    { to: "/teacher_wallet", Icon: MdAccountBalanceWallet, label: "محفظتي" },
+    { to: "/QuestionLibraryPage", Icon: MdLibraryBooks, label: "مكتبة الأسئلة" },
+    { to: "/center_groups", Icon: MdBusinessCenter, label: "سيستم إدارة السنتر" },
+    { to: "/TeacherChat", Icon: MdBusinessCenter, label: " الرسائل " },
   ];
 
   const studentLinks = [
-    { to: "/profile", Icon: BiUserCircle, label: "الملف الشخصي" },
-   
-    { to: "/teachers", Icon: FaSearch, label: "ابحث عن محاضرك " },
-    { to: "/my-teachers", Icon: FaChalkboardTeacher, label: " محاضرينى   " },
-    { to: "/view_exams", Icon: AiOutlineFileDone, label: "امتحانات المنصة" },
-    { to: "/my_courses", Icon: FaBookReader, label: "كورساتي" },
-    { to: "/question_bank", Icon: GiArchiveRegister, label: "بنك الأسئلة" },
-    { to: "/results", Icon: AiOutlineFileSearch, label: "نتائج الامتحانات" },
-    { to: "/competitions", Icon: FaTrophy, label: "المسابقات" },
-    { to: "/the_Firsts", Icon: FaMedal, label: "أوائل المسابقات" },
+    { to: "/profile", Icon: MdPerson, label: "الملف الشخصي" },
+    { to: "/exam_grades", Icon: MdPerson, label: "درجات الامتحانات" },
+    { to: "/teachers", Icon: MdSearch, label: "ابحث عن محاضرك" },
+    { to: "/my-teachers", Icon: MdPeople, label: "محاضرينى" },
+    { to: "/view_exams", Icon: MdAssessment, label: "امتحانات المنصة" },
+    { to: "/my_courses", Icon: MdMenuBook, label: "كورساتي" },
+    { to: "/question_bank", Icon: MdQuestionAnswer, label: "بنك الأسئلة" },
+    { to: "/results", Icon: MdAssessment, label: "نتائج الامتحانات" },
+    { to: "/competitions", Icon: MdStars, label: "المسابقات" },
+    { to: "/the_Firsts", Icon: MdMilitaryTech, label: "أوائل المسابقات" },
     { to: "/save_posts", Icon: MdBookmark, label: "المنشورات المحفوظة" },
-    { to: "/wallet", Icon: FaWallet, label: "محفظة الطالب" },
+    { to: "/wallet", Icon: MdAccountBalanceWallet, label: "محفظة الطالب" },
   ];
 
   return (
     <div className="mb-8">
-      <ul className='space-y-4'>
+      <ul className="space-y-2">
         {commonLinks.map((link, idx) => (
-          <NavLinkItem key={idx} {...link} onClick={onClose} />
+          <NavLinkItem
+            key={idx}
+            {...link}
+            isSidebarOpen={isSidebarOpen}
+            onClick={() => {
+              setIsSidebarOpen(true);
+              onClose && onClose();
+            }}
+          />
         ))}
 
         {isAdmin &&
           adminLinks.map((link, idx) => (
-            <NavLinkItem key={idx} {...link} onClick={onClose} />
+            <NavLinkItem
+              key={idx}
+              {...link}
+              isSidebarOpen={isSidebarOpen}
+              onClick={() => {
+                setIsSidebarOpen(true);
+                onClose && onClose();
+              }}
+            />
           ))}
 
         {isTeacher &&
           teacherLinks.map((link, idx) => (
-            <NavLinkItem key={idx} {...link} onClick={onClose} />
+            <NavLinkItem
+              key={idx}
+              {...link}
+              isSidebarOpen={isSidebarOpen}
+              onClick={() => {
+                setIsSidebarOpen(true);
+                onClose && onClose();
+              }}
+            />
           ))}
 
         {isStudent &&
           studentLinks.map((link, idx) => (
-            <NavLinkItem key={idx} {...link} onClick={onClose} />
+            <NavLinkItem
+              key={idx}
+              {...link}
+              isSidebarOpen={isSidebarOpen}
+              onClick={() => {
+                setIsSidebarOpen(true);
+                onClose && onClose();
+              }}
+            />
           ))}
 
-        <li className='my-3'>
+        <li className="my-3">
           <div
             onClick={() => {
               handleLogout();
-              onClose();
+              onClose && onClose();
             }}
-            className='font-semibold flex items-center hover:text-blue-500 cursor-pointer'
+            className="font-semibold flex items-center p-2 rounded-md hover:text-red-500 hover:bg-red-50 cursor-pointer"
           >
-            <MdLogout className='m-1 text-xl text-red-500' />
-            تسجيل الخروج
+            <MdLogout className="w-5 h-5 text-red-500" />
+            <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
+              تسجيل الخروج
+            </span>
           </div>
         </li>
       </ul>

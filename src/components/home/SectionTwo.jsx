@@ -1,25 +1,36 @@
+import React from "react";
+import { motion, useInView } from "framer-motion";
 import { Box, Flex, Heading, Text, useColorModeValue, Icon } from "@chakra-ui/react";
-import { BiTrophy, BiBook } from "react-icons/bi";
-import { FaRobot, FaChalkboardTeacher } from "react-icons/fa";
+import { FaRobot, FaChalkboardTeacher, FaTrophy, FaBook, FaRocket, FaStar } from "react-icons/fa";
+import { BsFillBookFill, BsFillTrophyFill } from "react-icons/bs";
 
 const SectionTwo = () => {
-  const cardBg = useColorModeValue("gray.50", "gray.700");
-  const textColor = useColorModeValue("gray.900", "gray.100");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+
+  const bgGradient = useColorModeValue(
+    "linear(to-br, #f0f4ff, #e5e8ff)",
+    "linear(to-br, #1a202c, #2d3748)"
+  );
+  const cardBg = useColorModeValue("rgba(255, 255, 255, 0.9)", "rgba(45, 55, 72, 0.8)");
+  const textColor = useColorModeValue("gray.900", "white");
+  const descriptionColor = useColorModeValue("gray.600", "gray.400");
 
   const features = [
     {
       id: 1,
       name: "مسابقات يومية",
       description: "اختبر مهاراتك يوميًا من خلال تحديات تعليمية ممتعة.",
-      icon: BiTrophy,
+      icon: BsFillTrophyFill,
       color: "purple.500",
     },
     {
       id: 2,
       name: "امتحانات شهرية",
       description: "قم بتقييم مستواك عبر امتحانات شهرية متخصصة.",
-      icon: BiBook,
+      icon: BsFillBookFill,
       color: "blue.500",
     },
     {
@@ -39,37 +50,51 @@ const SectionTwo = () => {
   ];
 
   return (
-    <Box w="full" py={12} px={6} textAlign="center">
-      
-      <Heading fontSize="2xl" fontWeight="bold" color={textColor} mb={2}>
-        مميزات منصتنا التعليمية 🚀
+    <Box w="full" py={20} px={6} className="" textAlign="center">
+      <Heading fontSize={{ base: "3xl", md: "4xl" }} fontWeight="bold" color={textColor} mb={4}>
+        خدماتنا التعليمية 📚
       </Heading>
-      <Text color="gray.500" mb={6}>
-        اكتشف كيف يمكن لمنصتنا تحسين تجربتك التعليمية.
+      <Text fontSize="lg" color={descriptionColor} mb={10}>
+        اكتشف أفضل الدورات التعليمية والدروس الخاصة مع خبراء التعليم.
       </Text>
 
-      <Flex wrap="wrap" justify="center" gap={4}>
-        {features.map((feature) => (
+      <Flex wrap="wrap" justify="center" gap={8}>
+        {features.map((service) => (
           <Box
-            key={feature.id}
-            p={6}
+            key={service.id}
+            p={8}
             bg={cardBg}
-            border="1px solid"
-            borderColor={borderColor}
-            borderRadius="lg"
-            boxShadow="md"
-            transition="transform 0.3s ease, box-shadow 0.3s ease"
-            _hover={{ transform: "scale(1.05)", boxShadow: "xl" }}
-            w={{ base: "100%", sm: "48%", md: "23%" }}
+            backdropFilter="blur(10px)"
+            border="1px solid rgba(255, 255, 255, 0.18)"
+            borderRadius="2xl"
+            boxShadow="0 8px 30px rgba(0, 0, 0, 0.1)"
+            transition="transform 0.4s ease, box-shadow 0.4s ease"
+            _hover={{
+              transform: "translateY(-10px)",
+              boxShadow: "0 12px 50px rgba(0, 0, 0, 0.2)",
+            }}
+            w={{ base: "100%", sm: "45%", md: "22%" }}
           >
-            <Flex justify="center" align="center" mb={4}>
-              <Icon as={feature.icon} boxSize={10} color={feature.color} />
+            <Flex justify="center" align="center" mb={6}>
+              <Box
+                bg={service.color}
+                p={5}
+                borderRadius="full"
+                boxShadow="inset 0 0 10px rgba(0,0,0,0.1)"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                transition="all 0.4s"
+                _hover={{ transform: "scale(1.1) rotate(10deg)" }}
+              >
+                <Icon as={service.icon} boxSize={10} color="white" />
+              </Box>
             </Flex>
-            <Heading fontSize="lg" fontWeight="semibold" color={textColor} mb={2}>
-              {feature.name}
+            <Heading fontSize="xl" fontWeight="bold" color={textColor} mb={3}>
+              {service.name}
             </Heading>
-            <Text fontSize="sm" color="gray.500">
-              {feature.description}
+            <Text fontSize="md" color={descriptionColor}>
+              {service.description}
             </Text>
           </Box>
         ))}

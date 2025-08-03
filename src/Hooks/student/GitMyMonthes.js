@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import baseUrl from "../../api/baseUrl";
 
 const fetchmyMonthData = async (token) => {
-  const response = await baseUrl.get("api/month/mymonthuser", {
-    headers: { token: token },
+  const response = await baseUrl.get("api/course/my-enrollments", {
+    headers: { Authorization: `bearer ${token}` },
   });
   return response.data;
 };

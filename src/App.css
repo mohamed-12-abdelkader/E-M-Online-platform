@@ -1,7 +1,13 @@
 body {
   direction: rtl;
 }
-
+/* optional: تحسين شكل ظل الكتاب */
+.book-shadow canvas {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+.cardddd{
+  width: 100 !important;
+}
 .header2 {
   background-image: url(../public/hero-bg.png);
   background-position: center;

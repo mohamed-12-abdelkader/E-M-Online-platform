@@ -39,10 +39,11 @@ const Month = () => {
   }
 
   return (
-    <Box minH="100vh" pt={{ base: 20, md: 28 }} pb={10} mb="80px">
-      <Container maxW="7xl">
+    <Box minH="100vh" className="mt-[80px]" pb={10} mb="80px">
+      <div >
         {months.monthData.image && (
           <MonthHeader
+          id={id}
             image={months.monthData.image}
             description={months.monthData.description}
             noflecture={months.monthData.noflecture}
@@ -135,7 +136,7 @@ const Month = () => {
         />
 
         <ScrollToTop />
-      </Container>
+      </div>
     </Box>
   );
 };

@@ -41,18 +41,23 @@ const studentLogin = () => {
         localStorage.setItem("ip", generatedString); // استخدم generatedString بدلاً من generateString
       }
 
-      const response = await baseUrl.post(`api/user/login`, {
-        mail,
-        pass,
-        ip: localStorage.getItem("ip"),
+      const response = await baseUrl.post(`api/login`, {
+        email: mail,
+        password:pass,
+      
       });
 
       // هنا يمكنك إضافة المنطق الخاص بعملية تسجيل الدخول
 
       localStorage.setItem("token", response.data.token);
+     // localStorage.setItem("employee_data", response.data.employee_data);
       localStorage.setItem(
         "user",
-        JSON.stringify(response.data.Data || response.data.data)
+        JSON.stringify( response.data.user)
+      );
+      localStorage.setItem(
+        "employee_data",
+        JSON.stringify( response.data.employee_data)
       );
 
       // يمكنك إظهار رسالة نجاح باستخدام toast

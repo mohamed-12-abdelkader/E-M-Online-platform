@@ -7,6 +7,9 @@ import {
   Container,
   useColorModeValue,
   SlideFade,
+  Icon,
+  Heading,
+  HStack,
 } from "@chakra-ui/react";
 import { FaGraduationCap, FaBookOpen, FaUserGraduate } from "react-icons/fa";
 
@@ -21,118 +24,113 @@ const TeacherInfo = ({ teacher, number }) => {
   const statBg = useColorModeValue("blue.100", "gray.700");
 
   return (
-    <Box position="relative" className="mt-[80px]">
-      {/* Hero Section */}
-      <Box position="relative" color="white" overflow="hidden">
-        <Box
-          position="absolute"
-          inset="0"
-          bgImage="url('/2(5).png')"
-          bgSize="cover"
-          bgPosition="center"
-          filter="brightness(0.5)"
-        />
+    <Box position="relative" mt="80px">
 
-        <Box position="absolute" inset="0" bg={bgGradient} opacity={0.9} />
+ <div
+  className="bg-blue-500 px-5" // هذا الـ div الخارجي قد لا يكون ضرورياً إذا كانت الـ section تغطي المساحة
+>
+  <section
+    dir="rtl"
+    className="relative flex flex-col h-[350px] md:flex-row items-center justify-between md: py-16 md:py-24 bg-gradient-to-br from-white via-blue-50 to-blue-400 "
+    style={{
+      fontFamily: "'Cairo', sans-serif",
+  position:"relative",
+      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f97316' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30v4h-4v2h4v4h2v-4h4v-2h-4v-4h-2zM6 34v4h4v2h-4v4h-2v-4h-4v-2h4v-4h2zM6 4v4h-4v2h4v4h2v-4h4v-2h-4v-4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+      backgroundAttachment: "fixed", // لجعل النمط يظهر ثابتًا
+      backgroundRepeat: "repeat",
+      backgroundSize: "auto", // أو يمكنك استخدام 'cover' حسب تأثير الـ SVG
+    }}
+  >
+    {/* Contained content to keep things aligned */}
+    <div
+      className="container mx-auto flex flex-col md:flex-row items-center justify-between z-10"
+      style={{ minHeight: "inherit" }}
+    >
+      {/* Course Info (Right Side in RTL) */}
+      <div className="flex-1 text-center md:text-right mb-10 md:mb-0 md:ml-12 p-4">
+        <Heading
+                      fontSize={{ base: "3xl", md: "4xl" }}
+                      fontWeight="bold"
+                      textAlign={{ base: "center", md: "start" }}
+                      mb={3}
+                      color={"white"} // استخدام لون العنوان من Chakra UI
+                    >
+                      {teacher.name}
+                    </Heading>
+                    <h4  className="my-3 text-white font-bold">
+                      {teacher.description}
+                    </h4>
+        <Flex
+                    align="center"
+                    gap={2}
+                    bg="orange.500"
+                    p={3}
+                    px={5}
+                    width={300}
+                    borderRadius="full"
+                    backdropFilter="(10px)"
+                    mb={4} // إضافة مسافة أسفل اسم المحاضر
+                  >
+                    <Icon as={FaGraduationCap} size={18} color={headingColor} /> {/* استخدام لون العنوان للأيقونة */}
+                    <Text fontSize="md" color={"white"}>
+                      محاضر {teacher.subject}
+                    </Text>
+                  </Flex>
+             
+                  <Flex
+                   width={300}
+                    align="center"
+                    gap={2}
+                    bg="orange.500"
+                    p={3}
+                    px={5}
+                    borderRadius="full"
+                    backdropFilter="(10px)"
+                    mb={4} // إضافة مسافة أسفل اسم المحاضر
+                  >
+                    <Icon as={FaBookOpen} size={18} color={headingColor} /> {/* استخدام لون العنوان للأيقونة */}
+                    <Text fontSize="md" color={"white"}>
+                      عدد الكورسات:  {number || 0}
+                    </Text>
+                  </Flex>
+            
+        
+      </div>
 
-        <Container maxW="7xl" position="relative" style={{ height: "400px" }}>
-          <Flex
-            direction={{ base: "column", md: "row" }}
-            align="center"
-            justify="space-between"
-            h="full"
-            py={10}
-            px={5}
-            gap={10}
-          >
-            {/* Teacher Info */}
-            <SlideFade in offsetY={40}>
-              <Flex direction="column" align={{ base: "center", md: "start" }} flex="1">
-                <Text
-                  fontSize={{ base: "3xl", md: "4xl" }}
-                  fontWeight="bold"
-                  textAlign={{ base: "center", md: "start" }}
-                  mb={3}
-                >
-                  {teacher.name}
-                </Text>
-                <Flex
-                  align="center"
-                  gap={2}
-                  bg="whiteAlpha.200"
-                  p={3}
-                  px={5}
-                  borderRadius="full"
-                  backdropFilter="blur(10px)"
-                >
-                  <FaGraduationCap size={18} />
-                  <Text fontSize="md">محاضر {teacher.subject}</Text>
-                </Flex>
-              </Flex>
-            </SlideFade>
+      {/* Image Container (Left Side in RTL) */}
+      
+    </div>
+    <div className=" flex-1 px-3 flex justify-center md:justify-start mt-10 md:mt-0 p-4">
+        {/* الصورة الأساسية */}
+       <img
+    src={teacher.avatar}
+  alt="Course Instructor"
+  className="rounded-3xl shadow-2xl w-[350px] max-h-[300px] md:left-0 max-w-[400px] max-h-[400px]"
+  style={{
+    border: "6px solid white",
+    outline: "6px solid #60A5FA",
+    objectFit: "cover",
+    objectPosition: "center",
+    
+    background: "#fff",
+    position:"absolute"
+  }}
+/>
 
-            {/* Teacher Image */}
-            <SlideFade in offsetY={40} delay={0.2}>
-              <Box position="relative" w={{ base: "200px", md: "280px" }} h={{ base: "200px", md: "280px" }}>
-                <Box
-                  borderRadius="full"
-                  overflow="hidden"
-                  boxShadow="2xl"
-                  border="5px solid white"
-                  transition="0.3s"
-                  _hover={{ transform: "scale(1.05)" }}
-                >
-                  <Image
-                    src={teacher.image}
-                    alt={teacher.name}
-                    objectFit="cover"
-                    w="full"
-                    h="full"
-                  />
-                </Box>
-              </Box>
-            </SlideFade>
-          </Flex>
-        </Container>
+        {/* عنصر زخرفي إضافي خلف الصورة لإضافة عمق */}
+     
+      </div>
+  </section>
 
-        {/* Wave Effect */}
-        <Box
-          position="absolute"
-          bottom="-2px"
-          left="0"
-          right="0"
-          height="120px"
-          bgImage={`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='${encodeURIComponent(
-            useColorModeValue("#f7fafc", "#1a202c")
-          )}' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")`}
-          bgSize="cover"
-          bgRepeat="no-repeat"
-        />
-      </Box>
+    </div>
 
-      {/* Stats Section */}
-      <Container maxW="7xl" mt={10}>
-        <Flex justify="center" gap={8} flexWrap="wrap">
-          <StatCard
-            icon={<FaUserGraduate size={24} />}
-            label="المادة"
-            value={teacher.subject}
-            bg={cardBg}
-            textColor={textColor}
-            headingColor={headingColor}
-            statBg={statBg}
-          />
-          <StatCard
-            icon={<FaBookOpen size={24} />}
-            label="عدد الكورسات"
-            value={number || 0}
-            bg={cardBg}
-            textColor={textColor}
-            headingColor={headingColor}
-            statBg={statBg}
-          />
-        </Flex>
-      </Container>
+<div className="h-[200px] px-8">
+  
+</div>
+
+    
+
+    
     </Box>
   );
 };

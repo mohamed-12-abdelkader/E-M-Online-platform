@@ -1,4 +1,4 @@
-import { Button, Input, Spinner } from "@chakra-ui/react";
+import { Box, Button, FormControl, Input, Spinner } from "@chakra-ui/react";
 import useLogin from "../../Hooks/auth/useLogin";
 import { Link } from "react-router-dom";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
@@ -17,39 +17,69 @@ const Login = () => {
   ] = studentLogin();
   return (
     <div
-      style={{ minHeight: "90vh" }}
-      className=' flex justify-center items-center mt-[70px] '
+      className="w-full h-screen relative mt-[80px]" style={{ direction: "ltr" }}
     >
-      <div
-        className='login w-[90%]  shadow border bg-white p-5 md:w-[60%]'
-        style={{ borderRadius: "20px" }}
+
+         <div className="flex items-center justify-center h-screen">
+        <Box
+          className="absolute right-0 px-10 flex items-center justify-center pointer-events-none"
+          display={{ base: "none", md: "block" }}
+        >
+          <img
+            src="/fc65e2d7-5777-4a66-bc27-7fea10bc89a7-removebg-preview.png"
+            alt="Login Illustration"
+            className="h-[400px] object-contain"
+            style={{ transform: "scale(1.2)" }}
+          />
+        </Box>
+      </div>
+      <Box
+               className="absolute left-0 top-0 h-full w-full md:w-1/2 lg:w-[45%] xl:w-[40%] flex flex-col justify-center py-8 px-6 sm:px-10 md:px-12 lg:px-16"
+        style={{ direction: "rtl", borderRadius: "0 50px 50px 0" }}
+
       >
         <div>
-          <div className='text-center'>
-            <h1 className='font-bold text-xl text-black'> تسجيل الدخول </h1>
+          <div >
+            <h1 className="text-right font-extrabold text-3xl mb-4"> تسجيل الدخول </h1>
           </div>
-          <div className='w-[100%] my-7'>
-            <h1 className='font-bold my-2 text-black'>
-              ادخل رقم الهاتف او (الايميل ){" "}
-            </h1>
+          <div >
+            <FormControl className="w-full mb-4">
+
             <Input
-              style={{ border: "solid 2px #ccc" }}
-              className='text-black'
-              placeholder='ادخل الايميل '
-              size='lg'
-              value={mail}
-              onChange={mailChange}
+            nput
+            placeholder="ادخل رقم الهاتف أو البريد الإلكتروني"
+            size="lg"
+            
+            className="text-gray-800"
+            focusBorderColor="blue.500"
+            _placeholder={{ color: "gray.400" }}
+            borderColor="gray.300"
+            borderRadius="full"
+            px={5}
+            py={3}
+            value={mail}
+            onChange={mailChange}
             />
-            <h1 className='font-bold mt-5 mb-2 text-black'>ادخل كلمة السر </h1>
-            <Input
-              style={{ border: "solid 2px #ccc" }}
-              className='text-black'
-              type='password'
-              placeholder='ادخل كلمة السر  '
-              size='lg'
-              value={pass}
+            </FormControl>
+            
+      <FormControl className="w-full mb-4">
+          <Input
+            type="password"
+            placeholder="ادخل كلمة السر"
+            size="lg"
+          value={pass}
               onChange={passChange}
-            />
+            className="text-gray-800"
+            focusBorderColor="blue.500"
+            _placeholder={{ color: "gray.400" }}
+            borderColor="gray.300"
+            borderRadius="full"
+            px={5}
+            py={3}
+          />
+        </FormControl>
+
+        
           </div>
         </div>
         <div className='my-5'>
@@ -60,7 +90,17 @@ const Login = () => {
 
         <div className='text-center my-3'>
           <Button
-            colorScheme='blue'
+           colorScheme="teal"
+            
+            size="lg"
+            width="80%"
+            maxWidth="300px"
+            borderRadius="full"
+            fontSize="xl"
+            fontWeight="bold"
+            _hover={{ bg: "teal.600", shadow: "md" }}
+            _active={{ bg: "teal.700" }}
+            leftIcon={loading ? <Spinner size="sm" /> : undefined}
             onClick={handleLogin}
             isDisabled={loading || !mail || !pass}
           >
@@ -76,7 +116,7 @@ const Login = () => {
             انشئ حسابك الان!{" "}
           </Link>
         </h1>
-      </div>
+      </Box>
       <ScrollToTop />
     </div>
   );

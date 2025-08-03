@@ -2,15 +2,17 @@ import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
-import Nav from "./components/navbar/Navbar.jsx";
 import { ChakraProvider } from "@chakra-ui/react";
-import { BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter as Router, useLocation } from "react-router-dom";
 import Footer from "./components/Footer/Footer.jsx";
 import "react-toastify/dist/ReactToastify.css";
 import WhatsButton from "./components/whatsButton/WhatsButton.jsx";
 import SidebarWithHeader from "./components/navbar/Navbar.jsx";
 
-const Root = () => {
+const RootContent = () => {
+  // Get the current location to determine the current path
+  const location = useLocation();
+
   useEffect(() => {
     const overlay = document.getElementById("overlay");
 
@@ -29,19 +31,28 @@ const Root = () => {
     };
   }, []);
 
+  // Only display the SidebarWithHeader if the current path is not '/landing'
+  const showSidebar = location.pathname !== "/landing";
+
   return (
-    <React.StrictMode>
+    <>
       <div id="overlay" className="overlay"></div>
-      <ChakraProvider>
-        <Router>
-          <SidebarWithHeader />
-          <App />
-          <WhatsButton />
-          <Footer />
-        </Router>
-      </ChakraProvider>
-    </React.StrictMode>
+      {showSidebar && <SidebarWithHeader />}
+      <App />
+      <WhatsButton />
+  
+    </>
   );
 };
+
+const Root = () => (
+  <React.StrictMode>
+    <ChakraProvider>
+      <Router>
+        <RootContent />
+      </Router>
+    </ChakraProvider>
+  </React.StrictMode>
+);
 
 ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
