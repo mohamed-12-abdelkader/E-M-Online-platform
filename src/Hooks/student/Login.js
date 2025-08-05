@@ -1,16 +1,14 @@
 import { useState } from "react";
-
 import baseUrl from "../../api/baseUrl";
 import { toast } from "react-toastify";
 
 const studentLogin = () => {
-  const [mail, setMail] = useState("");
+  const [identifier, setIdentifier] = useState(""); // تغيير من mail إلى identifier
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
   
   function generateString() {
-    var chars =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     var string = "";
     for (var i = 0; i < 30; i++) {
       var randomIndex = Math.floor(Math.random() * chars.length);
@@ -19,8 +17,8 @@ const studentLogin = () => {
     return string;
   }
 
-  const mailChange = (e) => {
-    setMail(e.target.value);
+  const identifierChange = (e) => {
+    setIdentifier(e.target.value);
   };
 
   const passChange = (e) => {
@@ -28,8 +26,9 @@ const studentLogin = () => {
   };
 
   const handleLogin = async (e) => {
-    if (!mail || !pass) {
-      toast.warn("يجب ادخال جميع البيانات ");
+    if (!identifier || !pass) {
+      toast.warn("يجب ادخال جميع البيانات");
+      return;
     }
     e.preventDefault();
 
@@ -37,49 +36,41 @@ const studentLogin = () => {
       setLoading(true);
 
       if (!localStorage.getItem("ip")) {
-        var generatedString = generateString(); // تأكد من تعريف الدالة generateString()
-        localStorage.setItem("ip", generatedString); // استخدم generatedString بدلاً من generateString
+        var generatedString = generateString();
+        localStorage.setItem("ip", generatedString);
       }
 
-      const response = await baseUrl.post(`api/login`, {
-        email: mail,
-        password:pass,
-      
-      });
+      // تحديد ما إذا كان المدخل بريدًا إلكترونيًا أو رقم هاتف
+      const isEmail = identifier.includes('@');
+      const requestData = isEmail 
+        ? { email: identifier, password: pass }
+        : { phone: identifier.replace(/[^0-9]/g, ''), password: pass };
 
-      // هنا يمكنك إضافة المنطق الخاص بعملية تسجيل الدخول
+      const response = await baseUrl.post(`api/login`, requestData);
 
       localStorage.setItem("token", response.data.token);
-     // localStorage.setItem("employee_data", response.data.employee_data);
-      localStorage.setItem(
-        "user",
-        JSON.stringify( response.data.user)
-      );
-      localStorage.setItem(
-        "employee_data",
-        JSON.stringify( response.data.employee_data)
-      );
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("employee_data", JSON.stringify(response.data.employee_data));
 
-      // يمكنك إظهار رسالة نجاح باستخدام toast
-      console.log(response);
       toast.success("تم تسجيل الدخول بنجاح");
       setTimeout(() => {
         window.location.href = "/";
       }, 500);
     } catch (error) {
-      // يمكنك إظهار رسالة خطأ باستخدام toast
-      toast.error("بيانات المستخدم غير صحيحة ");
-
-      if (error.response.data.msg == "You must login from the same device") {
-        toast.error("لقد تجاوزت الحد المسموح لك من الاجهزة ");
-        return;
-      } else if (error.response.data.msg == " Invalid username or password") {
-        toast.error("بيانات المستخدم غير صحيحة ");
-        return;
+      if (error.response) {
+        if (error.response.data.msg == "You must login from the same device") {
+          toast.error("لقد تجاوزت الحد المسموح لك من الاجهزة");
+        } else if (error.response.data.msg == "Invalid username or password") {
+          toast.error("بيانات المستخدم غير صحيحة");
+        } else {
+          toast.error("حدث خطأ أثناء تسجيل الدخول");
+        }
+      } else {
+        toast.error("حدث خطأ في الاتصال بالخادم");
       }
     } finally {
       setLoading(false);
-      setMail("");
+      setIdentifier("");
       setPass("");
     }
   };
@@ -87,10 +78,9 @@ const studentLogin = () => {
   return [
     handleLogin,
     passChange,
-    mailChange,
-    mail,
+    identifierChange, // تغيير من mailChange إلى identifierChange
+    identifier,     // تغيير من mail إلى identifier
     pass,
-    
     loading,
   ];
 };

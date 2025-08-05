@@ -120,13 +120,13 @@ const SignUp = () => {
       toast.error("يرجى ملء جميع الحقول");
       return;
     }
-
+  
     if (password !== passwordConfirm) {
       toast.error("كلمتا السر غير متطابقتين");
       return;
     }
-
-    // Basic phone number validation - just check if they're different and have reasonable length
+  
+    // Basic phone number validation
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const cleanParentPhone = parentPhone.replace(/[^0-9]/g, '');
     
@@ -134,53 +134,33 @@ const SignUp = () => {
       toast.error("رقم هاتفك قصير جداً، يرجى إدخال رقم صحيح");
       return;
     }
-
+  
     if (cleanParentPhone.length < 8) {
       toast.error("رقم هاتف الوالد قصير جداً، يرجى إدخال رقم صحيح");
       return;
     }
-
+  
     if (cleanPhone === cleanParentPhone) {
       toast.error("رقم هاتفك ورقم هاتف الوالد يجب أن يكونا مختلفين");
       return;
     }
-
-    // Format phone numbers - add +20 prefix if not present and looks like Egyptian number
-    let formattedPhone = phone;
-    let formattedParentPhone = parentPhone;
-
-    // If it looks like an Egyptian number (starts with 01, 02, 05, 010, 011, 012, 015), add +20
-    const egyptianPrefixes = ['01', '02', '05', '010', '011', '012', '015'];
-    const phoneStartsWith = cleanPhone.substring(0, 3);
-    const parentPhoneStartsWith = cleanParentPhone.substring(0, 3);
-
-    if (!phone.startsWith('+20') && egyptianPrefixes.some(prefix => cleanPhone.startsWith(prefix))) {
-      formattedPhone = `+20${cleanPhone}`;
-    } else if (!phone.startsWith('+')) {
-      formattedPhone = `+${cleanPhone}`;
-    }
-
-    if (!parentPhone.startsWith('+20') && egyptianPrefixes.some(prefix => cleanParentPhone.startsWith(prefix))) {
-      formattedParentPhone = `+20${cleanParentPhone}`;
-    } else if (!parentPhone.startsWith('+')) {
-      formattedParentPhone = `+${cleanParentPhone}`;
-    }
-
+  
+    // إرسال الأرقام كما أدخلها المستخدم دون إضافة +20
     setLoading(true);
     try {
       const res = await baseUrl.post("/api/users/register", {
-        phone: formattedPhone,
+        phone: cleanPhone, // إرسال الرقم كما هو
         password,
         name,
-        parent_phone: formattedParentPhone,
+        parent_phone: cleanParentPhone, // إرسال الرقم كما هو
         grade_id: parseInt(gradeId),
       });
-
+  
       const { token, user } = res.data;
-
+  
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-
+  
       toast.success("تم إنشاء الحساب بنجاح!");
       window.location = "/";
     } catch (err) {

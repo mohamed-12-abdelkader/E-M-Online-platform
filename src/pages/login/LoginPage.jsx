@@ -20,21 +20,9 @@ const LoginPage = () => {
       className="w-full h-screen relative mt-[80px]" style={{ direction: "ltr" }}
     >
 
-         <div className="flex items-center justify-center h-screen">
-        <Box
-          className="absolute right-0 px-10 flex items-center justify-center pointer-events-none"
-          display={{ base: "none", md: "block" }}
-        >
-          <img
-            src="/fc65e2d7-5777-4a66-bc27-7fea10bc89a7-removebg-preview.png"
-            alt="Login Illustration"
-            className="h-[400px] object-contain"
-            style={{ transform: "scale(1.2)" }}
-          />
-        </Box>
-      </div>
+         
       <Box
-               className="absolute left-0 top-0 h-full w-full md:w-1/2 lg:w-[45%] xl:w-[40%] flex flex-col justify-center py-8 px-6 sm:px-10 md:px-12 lg:px-16"
+               className="absolute left-0 top-0 h-full w-full  flex flex-col justify-center py-8 px-6 sm:px-10 md:px-12 lg:px-16"
         style={{ direction: "rtl", borderRadius: "0 50px 50px 0" }}
 
       >
