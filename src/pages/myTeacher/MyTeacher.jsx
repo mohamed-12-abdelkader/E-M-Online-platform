@@ -18,6 +18,7 @@ import {
   Badge,
   Icon,
   Center,
+  Button,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import { FaVideo, FaSearch } from "react-icons/fa";
@@ -27,8 +28,7 @@ import { motion } from "framer-motion";
 
 const MyTeacher = () => {
   const [loading, teachers] = useGitMyTeacher();
-  
-  // Colors for light and dark mode
+
   const cardBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.700", "gray.300");
   const subTextColor = useColorModeValue("gray.500", "gray.400");
@@ -36,7 +36,7 @@ const MyTeacher = () => {
 
   if (loading) {
     return (
-      <VStack spacing={4} p={{ base: 4, sm: 6 }} maxW="95%" mx="auto">
+      <VStack spacing={4} p={{ base: 4, sm: 6 }} w="100%">
         <Skeleton height="20px" w="full" />
         <Skeleton height="20px" w="full" />
         <Skeleton height="20px" w="full" />
@@ -44,14 +44,13 @@ const MyTeacher = () => {
       </VStack>
     );
   }
-console.log(teachers)
+
   return (
-    <Box>
-      {/* عنوان الصفحة */}
-      <VStack spacing={{ base: 4, sm: 5, md: 6 }}  mb={{ base: 6, sm: 8 }}>
+    <Box w="100%">
+      <VStack spacing={{ base: 4, sm: 5, md: 6 }} mb={{ base: 6, sm: 8 }}>
         {!teachers?.teachers && (
-          <Heading 
-            size={{ base: "lg", sm: "xl", md: "2xl" }} 
+          <Heading
+            size={{ base: "lg", sm: "xl", md: "2xl" }}
             color={textColor}
             textAlign="center"
           >
@@ -60,91 +59,140 @@ console.log(teachers)
         )}
       </VStack>
 
-      {/* عرض المحاضرين */}
       {teachers?.teachers?.length > 0 ? (
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"
-        >
+        <div className="flex  flex-wrap gap-4 sm:gap-6">
           {teachers.teachers.map((teacher) => (
-            <Card
-              key={teacher.id}
-              className="w-full"
-              bg={cardBg}
-              border="1px solid"
-              borderColor={borderColor}
-              borderRadius="xl"
-              overflow="hidden"
-              shadow="lg"
-              _hover={{ transform: "translateY(-4px)", shadow: "xl" }}
-              transition="all 0.3s ease"
-            >
-              <CardBody p={{ base: 3, sm: 4, md: 5 }}>
-                <Link to={`/teacher/${teacher.id}`}>
-                  <VStack spacing={{ base: 2, sm: 3, md: 4 }} align="stretch">
-                    <Image
-                      src={teacher.avatar}
-                      h={{ base: "180px", sm: "200px", md: "220px", lg: "240px" }}
-                      w="100%"
-                      borderRadius="lg"
-                      alt={teacher.name || "Teacher"}
-                      objectFit="cover"
-                    />
-                    <Box h="2px" bg={borderColor} w="full" />
-                    <VStack spacing={{ base: 1, sm: 2 }} align="stretch">
-                      <HStack justify="space-between" align="center" flexWrap="wrap" gap={1}>
-                        <Text 
-                          fontWeight="bold" 
-                          fontSize={{ base: "sm", sm: "md", md: "lg" }}
-                          color={textColor}
-                          textAlign="right"
-                          noOfLines={1}
-                          flex={1}
-                          minW="0"
-                        >
-                          {teacher.name}
-                        </Text>
-                        <Badge 
-                          colorScheme="blue" 
-                          variant="subtle" 
-                          borderRadius="full"
-                          px={{ base: 2, sm: 3 }}
-                          py={{ base: 0.5, sm: 1 }}
-                          fontSize={{ base: "xs", sm: "sm" }}
-                          flexShrink={0}
-                        >
+            <Link className="w-[350px] " key={teacher.id} to={`/teacher/${teacher.id}`}>
+              <Card
+                w="350px" // تعديل العرض هنا
+                style={{
+                  borderRadius: "20px",
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+                  background: "#fff",
+                  overflow: "hidden",
+                  border: "1px solid #f0f0f0",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                }}
+                className="mx-auto"
+                _hover={{
+                  transform: "translateY(-8px)",
+                  boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)",
+                }}
+              >
+                <Box
+                  position="relative"
+                  w="100%"
+                  h={{ base: "200px", sm: "250px", md: "280px", lg: "250px", xl: "280px" }}
+                  overflow="hidden"
+                >
+                  <Image
+                    src={teacher.avatar || "https://via.placeholder.com/320x200/4fd1c5/ffffff?text=صورة+المدرس"}
+                    alt={teacher.name}
+                    w="100%"
+                    h="100%"
+                    objectFit="cover"
+                    transition="transform 0.3s ease"
+                    _hover={{ transform: "scale(1.05)" }}
+                  />
+
+                  <Box
+                    position="absolute"
+                    top={2}
+                    right={2}
+                    bg="rgba(0, 0, 0, 0.7)"
+                    color="white"
+                    px={{ base: 2, sm: 3 }}
+                    py={{ base: 0.5, sm: 1 }}
+                    borderRadius="full"
+                    fontSize={{ base: "2xs", sm: "xs" }}
+                    fontWeight="bold"
+                    backdropFilter="blur(10px)"
+                  >
+                    {teacher.subject}
+                  </Box>
+
+                  <Box
+                    position="absolute"
+                    top={2}
+                    left={2}
+                    bg="rgba(59, 130, 246, 0.9)"
+                    color="white"
+                    px={{ base: 2, sm: 3 }}
+                    py={{ base: 0.5, sm: 1 }}
+                    borderRadius="full"
+                    fontSize={{ base: "2xs", sm: "xs" }}
+                    fontWeight="bold"
+                    backdropFilter="blur(10px)"
+                  >
+                    مدرس
+                  </Box>
+                </Box>
+
+                <CardBody p={{ base: 4, sm: 5, md: 6 }}>
+                  <VStack align="flex-start" spacing={{ base: 3, sm: 4 }}>
+                    <Box w="full">
+                      <Text
+                        fontWeight="bold"
+                        fontSize={{ base: "lg", sm: "xl", md: "xl" }}
+                        color="#2d3748"
+                        textAlign="right"
+                        mb={1}
+                        noOfLines={1}
+                      >
+                        {teacher.name}
+                      </Text>
+                    </Box>
+
+                    {teacher.description && (
+                      <Text
+                        fontSize={{ base: "xs", sm: "sm", md: "sm" }}
+                        color="#718096"
+                        textAlign="right"
+                        noOfLines={{ base: 2, sm: 3 }}
+                        lineHeight="1.5"
+                      >
+                        {teacher.description}
+                      </Text>
+                    )}
+
+                    <Flex justify="space-between" align="center" w="full" pt={2}>
+                      <HStack spacing={2}>
+                        <FaVideo color="#3b82f6" size={14} />
+                        <Text fontSize={{ base: "2xs", sm: "xs" }} color="#718096" fontWeight="medium">
                           {teacher.subject}
-                        </Badge>
-                      </HStack>
-                      <HStack spacing={{ base: 1, sm: 2 }} align="center" flexWrap="wrap">
-                        <Icon as={FaVideo} color="red.500" boxSize={{ base: 3, sm: 4, md: 5 }} />
-                        <Text 
-                          fontWeight="bold" 
-                          fontSize={{ base: "xs", sm: "sm", md: "md" }}
-                          color={subTextColor}
-                          noOfLines={1}
-                        >
-                          محاضر ال {teacher.subject}
                         </Text>
                       </HStack>
-                    </VStack>
+                    </Flex>
+
+                    <Button
+                      colorScheme="blue"
+                      w="full"
+                      borderRadius="xl"
+                      fontWeight="bold"
+                      fontSize={{ base: "sm", sm: "md" }}
+                      h={{ base: "40px", sm: "44px", md: "48px" }}
+                      mt={2}
+                      _hover={{
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
+                      }}
+                      transition="all 0.2s ease"
+                    >
+                      عرض الكورسات
+                    </Button>
                   </VStack>
-                </Link>
-              </CardBody>
-            </Card>
+                </CardBody>
+              </Card>
+            </Link>
           ))}
         </div>
       ) : (
-        // في حالة عدم وجود محاضرين
         <Center py={{ base: 8, sm: 12, md: 16 }}>
-          <VStack 
-            spacing={{ base: 6, sm: 8 }} 
-            align="center" 
-            maxW={{ base: "95%", sm: "600px" }}
-            mx="auto"
-            textAlign="center"
-          >
-            <VStack spacing={{ base: 4, sm: 6 }} align="center">
-              <Heading 
-                size={{ base: "lg", sm: "xl", md: "2xl" }}
+          <VStack spacing={{ base: 6, sm: 8 }} align="center" w="100%" textAlign="center">
+            <VStack spacing={{ base: 4, sm: 6 }} align="center" w="100%">
+              <Heading
+                size={{ base: "lg", sm: "xl", md: "xl" }}
                 color={textColor}
                 textAlign="center"
                 lineHeight={{ base: "1.3", md: "1.2" }}
@@ -152,7 +200,7 @@ console.log(teachers)
                 🚀 لم تقم بالاشتراك مع أي محاضرين بعد!
               </Heading>
 
-              <Text 
+              <Text
                 fontSize={{ base: "md", sm: "lg", md: "xl" }}
                 color={subTextColor}
                 textAlign="center"
@@ -170,7 +218,7 @@ console.log(teachers)
               </Text>
 
               <Link to="/teachers">
-                <HStack 
+                <HStack
                   spacing={3}
                   bg="blue.500"
                   color="white"
@@ -178,10 +226,10 @@ console.log(teachers)
                   py={{ base: 3, sm: 4 }}
                   borderRadius="xl"
                   shadow="lg"
-                  _hover={{ 
-                    bg: "blue.600", 
+                  _hover={{
+                    bg: "blue.600",
                     transform: "translateY(-2px)",
-                    shadow: "xl"
+                    shadow: "xl",
                   }}
                   transition="all 0.3s ease"
                   fontWeight="bold"

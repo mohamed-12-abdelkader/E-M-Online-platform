@@ -105,28 +105,7 @@ const SectionOne = () => {
         </motion.div>
 
         {/* الإحصائيات */}
-        {[
-          { icon: FaUsers, value: "+10000", label: "طالب مشترك معنا", position: "top-0 left-0" },
-          { icon: FaChalkboardTeacher, value: "+200", label: "محاضر محترف", position: "top-10 right-0" },
-          { icon: FaBookOpen, value: "+20000", label: "درس في كل المواد", position: "bottom-10 left-0" },
-          { icon: FaGraduationCap, value: "+480", label: "كورس تدريبي", position: "bottom-0 right-0" },
-        ].map((stat, index) => (
-          <motion.div
-            key={index}
-            variants={fadeInUp}
-            className={`absolute ${stat.position} p-2`}
-            initial="hidden"
-            animate="visible" // ضمان بقاء الإحصائية مرئية
-          >
-            <div className="bg-white p-4 rounded-lg shadow-lg flex items-center gap-3 hover:shadow-xl transition-shadow duration-300">
-              <stat.icon className="text-orange-500 text-xl" />
-              <div style={{ fontFamily: "'Cairo', sans-serif" }}>
-                <p className="text-gray-700 font-bold">{stat.value}</p>
-                <p className="text-sm text-gray-500">{stat.label}</p>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+        
       </motion.div>
     </section>
           </div>

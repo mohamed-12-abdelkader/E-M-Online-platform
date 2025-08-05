@@ -148,12 +148,12 @@ const CourseExamsTab = ({
     React.useEffect(() => {
       if (exam) {
         setFormData({
-          title: exam.title || '',
-          image: exam.image || '',
-          questions_count: exam.questions_count || 0,
-          duration: exam.duration || 0,
-          total_grade: exam.total_grade || 0,
-        });
+        title: exam.title || '',
+        image: exam.image || '',
+        questions_count: exam.questions_count || 0,
+        duration: exam.duration || 0,
+        total_grade: exam.total_grade || 0,
+      });
         setImagePreview(exam.image || '');
         setSelectedFile(null);
       }
@@ -187,7 +187,7 @@ const CourseExamsTab = ({
         onSubmit(exam.id, formDataToSend);
       } else {
         // إرسال البيانات كـ JSON إذا لم يكن هناك ملف
-        onSubmit(exam.id, formData);
+      onSubmit(exam.id, formData);
       }
     };
 

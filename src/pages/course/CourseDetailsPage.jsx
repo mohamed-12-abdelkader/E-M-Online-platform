@@ -57,6 +57,11 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import {
@@ -358,6 +363,7 @@ const CourseDetailsPage = () => {
   const [showFullDescription, setShowFullDescription] = React.useState(false);
   const [expandedLecture, setExpandedLecture] = React.useState(null);
   const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [courseData, setCourseData] = useState(null);
   const [courseLoading, setCourseLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -407,6 +413,8 @@ const CourseDetailsPage = () => {
   const [activationCodes, setActivationCodes] = useState([]);
   const [codesError, setCodesError] = useState(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [exportStartIndex, setExportStartIndex] = useState(1);
+  const [exportEndIndex, setExportEndIndex] = useState(50);
 
   // State للفيديو
   const [videoPlayer, setVideoPlayer] = useState({
@@ -415,6 +423,13 @@ const CourseDetailsPage = () => {
     videoTitle: '',
     isVisible: false
   });
+
+  // تحديث نطاق التصدير عند تغيير عدد الأكواد
+  useEffect(() => {
+    if (activationCodes.length > 0) {
+      setExportEndIndex(Math.min(50, activationCodes.length));
+    }
+  }, [activationCodes.length]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1187,13 +1202,41 @@ D) has made`}
       });
       return;
     }
+
+    // التحقق من صحة النطاق المحدد
+    if (exportStartIndex > exportEndIndex) {
+      toast({
+        title: "خطأ في تحديد النطاق!",
+        description: "يجب أن يكون رقم البداية أقل من أو يساوي رقم النهاية",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // تحديد الأكواد المراد تصديرها
+    const startIndex = Math.max(0, exportStartIndex - 1); // تحويل إلى index
+    const endIndex = Math.min(activationCodes.length, exportEndIndex);
+    const codesToExport = activationCodes.slice(startIndex, endIndex);
+
+    if (codesToExport.length === 0) {
+      toast({
+        title: "لا توجد أكواد في النطاق المحدد!",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsExportingPdf(true);
     try {
       const codesPerPage = 12; // 3 columns × 4 rows
       const pageWidth = 297; // mm
       const pageHeight = 210; // mm
       const pdf = new jsPDF('l', 'mm', 'a4');
-      for (let i = 0; i < activationCodes.length; i += codesPerPage) {
+      for (let i = 0; i < codesToExport.length; i += codesPerPage) {
         const tempDiv = document.createElement("div");
         tempDiv.style.display = "block";
         tempDiv.style.width = `${pageWidth}mm`;
@@ -1202,22 +1245,28 @@ D) has made`}
         document.body.appendChild(tempDiv);
         tempDiv.innerHTML = `
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 5mm; width: 100%; height: 100%; align-content: start;">
-            ${activationCodes
+            ${codesToExport
               .slice(i, i + codesPerPage)
               .map(
                 (code, index) => `
-                  <div class="code" style="padding: 2mm; width: 100%; height: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); text-align: center; position: relative; overflow: hidden; background: #fff; display: flex; flex-direction: column; justify-content: center;">
-                    <div style='display: flex; margin-top: 20px; justify-content: space-between; align-items: center; padding: 2px 0;'>
-                      <span style='font-size: 14px; font-weight: bold; color: #3182ce; margin-bottom: 4px;'>${course?.title || 'اسم الكورس'}</span>
-                      <span style='font-size: 14px; font-weight: bold; color: #3182ce; margin-bottom: 4px;'>${code.grade_name || ''}</span>
+                  <div class="code" style="padding: 3mm; width: 100%; height: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); text-align: center; position: relative; overflow: hidden; background: #fff; display: flex; flex-direction: column; justify-content: space-between; min-height: 45mm;">
+                  <div style='margin-bottom: 8px; padding: 6px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                    <h2 style='font-size: 14px; font-weight: bold; color: #ffffff; margin: 0; text-align: center; text-shadow: 0 1px 2px rgba(0,0,0,0.3);'>
+                      ${user.name || 'اسم المستخدم'}
+                    </h2>
                     </div>
-                    <div style='display: flex; margin-top: 20px; justify-content: space-between; align-items: center; padding: 2px 0;'>
-                      <span style='font-size: 18px; font-weight: bold; color: #c53030;'>كود التفعيل :</span>
-                      <span style='font-size: 18px; font-weight: bold; color: #c53030;'>${code.code}</span>
+                    <div style='display: flex; margin-top: 8px; justify-content: space-between; align-items: center; padding: 2px 0;'>
+                      <span style='font-size: 12px; font-weight: bold; color: #3182ce; margin-bottom: 2px;'>${course?.title || 'اسم الكورس'}</span>
+                      <span style='font-size: 12px; font-weight: bold; color: #3182ce; margin-bottom: 2px;'>${code.grade_name || ''}</span>
                     </div>
-                    <div style='margin-top: 20px;'>
-                      <p style='font-size: 13px; font-weight: bold; color: #4a5568; display: flex; justify-content: center; align-items: center; gap: 4px;'>
-                        01286525940 | 01111272393
+                    <div style='display: flex; margin-top: 8px; justify-content: space-between; align-items: center; padding: 2px 0; flex-wrap: wrap;'>
+                      <span style='font-size: 14px; font-weight: bold; color: #c53030;'>كود التفعيل :</span>
+                      <span style='font-size: 14px; font-weight: bold; color: #c53030; word-break: break-all; max-width: 60%;'>${code.code}</span>
+                    </div>
+                    
+                    <div style='margin-top: 8px;'>
+                      <p style='font-size: 11px; font-weight: bold; color: #4a5568; display: flex; justify-content: center; align-items: center; gap: 4px; margin: 0;'>
+                        01210726096 | 01274620654
                       </p>
                     </div>
                   </div>`
@@ -1251,10 +1300,17 @@ D) has made`}
             isClosable: true,
           });
         }
-        if (i + codesPerPage < activationCodes.length) pdf.addPage();
+        if (i + codesPerPage < codesToExport.length) pdf.addPage();
         document.body.removeChild(tempDiv);
       }
       pdf.save("activation-codes.pdf");
+      toast({
+        title: "تم التصدير بنجاح!",
+        description: `تم تصدير ${codesToExport.length} كود من ${exportStartIndex} إلى ${exportEndIndex}`,
+        status: "success",
+        duration: 4000,
+        isClosable: true,
+      });
     } catch (err) {
       console.error("PDF Export Error:", err);
       toast({
@@ -1385,17 +1441,17 @@ D) has made`}
        
             
             {/* Main Loading Container */}
-            <Box
+          <Box
               p={{ base: 8, md: 12 }}
               borderRadius="3xl"
-              boxShadow="2xl"
+            boxShadow="2xl"
               bgGradient="linear(to-br, blue.50, white, purple.50)"
               border="3px solid"
               borderColor="blue.200"
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
               minW={{ base: '90vw', md: '500px' }}
               position="relative"
               overflow="hidden"
@@ -1428,8 +1484,8 @@ D) has made`}
                     fontWeight="bold"
                     textAlign="center"
                   >
-                    جاري تحميل تفاصيل الكورس...
-                  </Text>
+              جاري تحميل تفاصيل الكورس...
+            </Text>
                   <Text 
                     fontSize="sm" 
                     color="blue.600" 
@@ -1456,7 +1512,7 @@ D) has made`}
                       animation="progress 2s ease-in-out infinite"
                       transformOrigin="left"
                     />
-                  </Box>
+          </Box>
                 </Box>
               </VStack>
             </Box>
@@ -1529,7 +1585,7 @@ D) has made`}
               textAlign="center"
               maxW={{ base: '90vw', md: '500px' }}
             >
-              <VStack spacing={6}>
+          <VStack spacing={6}>
                 <Text 
                   fontSize={{ base: "lg", md: "xl" }} 
                   color="red.600" 
@@ -1542,8 +1598,8 @@ D) has made`}
                   color="red.500" 
                   opacity="0.9"
                 >
-                  {error}
-                </Text>
+              {error}
+            </Text>
                 <Button 
                   colorScheme="blue" 
                   onClick={() => window.location.reload()}
@@ -1553,9 +1609,9 @@ D) has made`}
                   _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
                   transition="all 0.2s"
                 >
-                  إعادة المحاولة
-                </Button>
-              </VStack>
+              إعادة المحاولة
+            </Button>
+          </VStack>
             </Box>
           </VStack>
           
@@ -1751,9 +1807,67 @@ D) has made`}
           <ModalCloseButton />
           <ModalBody>
             {activationCodes.length > 0 && (
-              <Button colorScheme="teal" mb={4} onClick={handleExportCodesPdf} disabled={isExportingPdf}>
-                {isExportingPdf ? <Spinner size="sm" mr={2} /> : null} تصدير كـ PDF
+              <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="gray.50">
+                <Text fontWeight="bold" mb={3}>تحديد نطاق التصدير:</Text>
+                <Flex gap={4} alignItems="center" flexWrap="wrap">
+                  <Box>
+                    <Text fontSize="sm" mb={1}>من الكود رقم:</Text>
+                    <NumberInput 
+                      min={1} 
+                      max={activationCodes.length} 
+                      value={exportStartIndex} 
+                      onChange={(valueString, valueNumber) => setExportStartIndex(valueNumber)}
+                      size="sm"
+                      w="100px"
+                    >
+                      <NumberInputField />
+                      <NumberInputStepper>
+                        <NumberIncrementStepper />
+                        <NumberDecrementStepper />
+                      </NumberInputStepper>
+                    </NumberInput>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" mb={1}>إلى الكود رقم:</Text>
+                    <NumberInput 
+                      min={1} 
+                      max={activationCodes.length} 
+                      value={exportEndIndex} 
+                      onChange={(valueString, valueNumber) => setExportEndIndex(valueNumber)}
+                      size="sm"
+                      w="100px"
+                    >
+                      <NumberInputField />
+                      <NumberInputStepper>
+                        <NumberIncrementStepper />
+                        <NumberDecrementStepper />
+                      </NumberInputStepper>
+                    </NumberInput>
+                  </Box>
+                  <Button 
+                    size="sm" 
+                    colorScheme="blue" 
+                    onClick={() => {
+                      setExportStartIndex(1);
+                      setExportEndIndex(activationCodes.length);
+                    }}
+                  >
+                    تحديد الكل
               </Button>
+                  <Text fontSize="sm" color="gray.600">
+                    (إجمالي {activationCodes.length} كود)
+                  </Text>
+                </Flex>
+                <Button 
+                  colorScheme="teal" 
+                  mt={3} 
+                  onClick={handleExportCodesPdf} 
+                  disabled={isExportingPdf || exportStartIndex > exportEndIndex}
+                >
+                  {isExportingPdf ? <Spinner size="sm" mr={2} /> : null} 
+                  تصدير الأكواد من {exportStartIndex} إلى {exportEndIndex}
+                </Button>
+              </Box>
             )}
             {codesLoading ? (
               <Center py={8}><Spinner size="lg" color="blue.500" /></Center>
@@ -1804,14 +1918,14 @@ D) has made`}
                     height: '100%',
                     alignContent: 'start'
                   }}>
-                    {activationCodes.map((code, index) => (
+                    {activationCodes.slice(exportStartIndex - 1, exportEndIndex).map((code, index) => (
                       <div
                         key={code.id}
                         style={{
                           margin: '5px',
-                          padding: '2mm',
-                          width: '10px',
-                          height: '10px',
+                          padding: '3mm',
+                          width: '100%',
+                          height: '100%',
                           border: '1px solid #e2e8f0',
                           borderRadius: '8px',
                           boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
@@ -1821,20 +1935,26 @@ D) has made`}
                           background: '#fff',
                           display: 'flex',
                           flexDirection: 'column',
-                          justifyContent: 'center',
+                          justifyContent: 'space-between',
+                          minHeight: '45mm',
                         }}
                       >
+                        <div style={{ marginBottom: '8px', padding: '6px 10px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '6px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                          <h2 style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff', margin: '0', textAlign: 'center', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+                            {user.name || 'اسم المستخدم'}
+                          </h2>
+                        </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0' }}>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#3182ce', marginBottom: '4px' }}>{course?.title || 'اسم الكورس'}</span>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#3182ce', marginBottom: '4px' }}>{code.grade_name || ''}</span>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#3182ce', marginBottom: '2px' }}>{course?.title || 'اسم الكورس'}</span>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#3182ce', marginBottom: '2px' }}>{code.grade_name || ''}</span>
                         </div>
-                        <div style={{ display: 'flex', marginTop: '20px', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0' }}>
-                          <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#c53030' }}>كود التفعيل :</span>
-                          <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#c53030' }}>{code.code}</span>
+                        <div style={{ display: 'flex', marginTop: '8px', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#c53030' }}>كود التفعيل :</span>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#c53030', wordBreak: 'break-all', maxWidth: '60%' }}>{code.code}</span>
                         </div>
-                        <div style={{ marginTop: '20px' }}>
-                          <p style={{ fontSize: '13px', fontWeight: 'bold', color: '#4a5568', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
-                            01286525940 | 01111272393
+                        <div style={{ marginTop: '8px' }}>
+                          <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#4a5568', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px', margin: '0' }}>
+                            01210726096 | 01274620654
                           </p>
                         </div>
                       </div>

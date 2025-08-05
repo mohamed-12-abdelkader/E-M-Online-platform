@@ -858,27 +858,27 @@ const TeacherDashboardHome = () => {
                   bgGradient={stat.gradient}
                 />
                                   <VStack spacing={{ base: 3, sm: 4, md: 5 }}>
-                    <Box
+                  <Box
                       p={{ base: 3, sm: 4, md: 5 }}
-                      borderRadius="full"
-                      bgGradient={stat.gradient}
-                      color="white"
-                      shadow="lg"
-                    >
+                    borderRadius="full"
+                    bgGradient={stat.gradient}
+                    color="white"
+                    shadow="lg"
+                  >
                       <Icon as={stat.icon} boxSize={{ base: 6, sm: 7, md: 8, lg: 9 }} />
-                    </Box>
+                  </Box>
                     <VStack spacing={2}>
                       <Text fontSize={{ base: "2xl", sm: "3xl", md: "4xl" }} fontWeight="extrabold" color={headingColor}>
-                        {stat.value}
-                      </Text>
+                      {stat.value}
+                    </Text>
                       <Text fontSize={{ base: "sm", sm: "md", md: "lg" }} color={subTextColor} fontWeight="medium">
-                        {stat.label}
-                      </Text>
+                      {stat.label}
+                    </Text>
                       <Badge colorScheme={stat.colorScheme} fontSize="sm" px={3} py={1} borderRadius="full">
-                        {stat.change}
-                      </Badge>
-                    </VStack>
+                      {stat.change}
+                    </Badge>
                   </VStack>
+                </VStack>
               </MotionCard>
             ))
             )}
@@ -900,35 +900,35 @@ const TeacherDashboardHome = () => {
                 color={headingColor}
                 textAlign="center"
               >
-                كورساتي
-              </Heading>
+              كورساتي
+            </Heading>
               <VStack spacing={{ base: 3, sm: 4 }} w={{ base: "full", sm: "auto" }} maxW={{ base: "320px", sm: "100%" }} mx="auto">
-                <Select
-                  placeholder="كل الصفوف"
-                  value={selectedGrade}
-                  onChange={e => setSelectedGrade(e.target.value)}
+              <Select
+                placeholder="كل الصفوف"
+                value={selectedGrade}
+                onChange={e => setSelectedGrade(e.target.value)}
                   w={{ base: "full", sm: "200px", md: "220px" }}
-                  borderRadius="xl"
-                  bg={cardBg}
-                  borderColor={borderColor}
+                borderRadius="xl"
+                bg={cardBg}
+                borderColor={borderColor}
                   size={{ base: "md", md: "lg" }}
-                >
-                  {grades.map(grade => (
-                    <option key={grade.id} value={grade.id}>{grade.name}</option>
-                  ))}
-                </Select>
+              >
+                {grades.map(grade => (
+                  <option key={grade.id} value={grade.id}>{grade.name}</option>
+                ))}
+              </Select>
                 <VStack spacing={{ base: 2, sm: 3 }} w={{ base: "full", sm: "auto" }}>
-                  <Button 
-                    colorScheme="green" 
-                    leftIcon={<FaBookOpen />} 
-                    onClick={onOpen}
-                    borderRadius="full"
+              <Button 
+                colorScheme="green" 
+                leftIcon={<FaBookOpen />} 
+                onClick={onOpen}
+                borderRadius="full"
                     size={{ base: "md", md: "lg" }}
                     w={{ base: "full", sm: "auto" }}
                     px={{ base: 8, sm: 6 }}
-                  >
-                    إنشاء كورس جديد
-                  </Button>
+              >
+                إنشاء كورس جديد
+              </Button>
                   <Button 
                     colorScheme="blue" 
                     variant="outline" 
@@ -938,8 +938,8 @@ const TeacherDashboardHome = () => {
                     w={{ base: "full", sm: "auto" }}
                     px={{ base: 8, sm: 6 }}
                   >
-                    عرض جميع الكورسات
-                  </Button>
+                عرض جميع الكورسات
+              </Button>
                 </VStack>
               </VStack>
             </VStack>
@@ -1156,7 +1156,7 @@ const TeacherDashboardHome = () => {
                     borderRadius={{ base: "md", sm: "lg", md: "xl" }}
                     bg={useColorModeValue("gray.50", "gray.700")}
                     borderLeft="4px solid"
-                    borderColor="blue.500"
+                      borderColor="blue.500"
                     shadow="sm"
                     whileHover={{ x: 5 }}
                     transition={{ duration: 0.2 }}

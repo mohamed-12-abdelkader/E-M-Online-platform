@@ -633,75 +633,75 @@ const Exam = () => {
                          ) : (
                <>
                  {/* السؤال الحالي */}
-                 {questions.length > 0 && (
-                   <Box
-                     key={questions[current].id}
-                     p={7}
-                     borderRadius="2xl"
-                     boxShadow="2xl"
+            {questions.length > 0 && (
+              <Box
+                key={questions[current].id}
+                p={7}
+                borderRadius="2xl"
+                boxShadow="2xl"
                      bgGradient="linear(to-br, blue.50, white)"
-                     border="2px solid #90cdf4"
-                     position="relative"
-                     mb={2}
-                   >
-                     <HStack justify="space-between" mb={4} align="center">
-                       <HStack spacing={3} align="center">
-                         <Box bg="blue.400" color="white" w="38px" h="38px" display="flex" alignItems="center" justifyContent="center" borderRadius="full" fontWeight="bold" fontSize="xl" boxShadow="md">
-                           {current + 1}
-                         </Box>
-                         <FaBookOpen color="#3182ce" size={22} />
-                         <Text fontWeight="bold" fontSize="lg" color="blue.800">{questions[current].text}</Text>
-                       </HStack>
-                       <Badge colorScheme="purple" fontSize="md" px={3} py={1} borderRadius="md">
-                         درجة السؤال: {questions[current].grade || 0}
-                       </Badge>
-                     </HStack>
-                     <Divider mb={4} />
-                     {questions[current].choices && questions[current].choices.length > 0 ? (
+                border="2px solid #90cdf4"
+                position="relative"
+                mb={2}
+              >
+                <HStack justify="space-between" mb={4} align="center">
+                  <HStack spacing={3} align="center">
+                    <Box bg="blue.400" color="white" w="38px" h="38px" display="flex" alignItems="center" justifyContent="center" borderRadius="full" fontWeight="bold" fontSize="xl" boxShadow="md">
+                      {current + 1}
+                    </Box>
+                    <FaBookOpen color="#3182ce" size={22} />
+                    <Text fontWeight="bold" fontSize="lg" color="blue.800">{questions[current].text}</Text>
+                  </HStack>
+                  <Badge colorScheme="purple" fontSize="md" px={3} py={1} borderRadius="md">
+                    درجة السؤال: {questions[current].grade || 0}
+                  </Badge>
+                </HStack>
+                <Divider mb={4} />
+                {questions[current].choices && questions[current].choices.length > 0 ? (
                        <RadioGroup 
                          value={studentAnswers[questions[current].id] ? String(studentAnswers[questions[current].id]) : ""}
                          onChange={(value) => handleStudentChoice(questions[current].id, parseInt(value))}
                        >
-                         <Stack direction="column" spacing={4}>
-                           {questions[current].choices.map((choice, cidx) => {
-                             const isSelected = studentAnswers[questions[current].id] === choice.id;
-                             return (
-                               <Tooltip key={choice.id} label="اختر هذه الإجابة" placement="left" hasArrow>
-                                 <Box
-                                   as="label"
-                                   p={3}
-                                   borderRadius="lg"
-                                   border={isSelected ? '2px solid #3182ce' : '1px solid #e2e8f0'}
-                                   boxShadow={isSelected ? 'md' : 'sm'}
-                                   bg={isSelected ? 'blue.50' : 'white'}
-                                   color={isSelected ? 'blue.800' : 'gray.800'}
-                                   display="flex"
-                                   alignItems="center"
+                    <Stack direction="column" spacing={4}>
+                      {questions[current].choices.map((choice, cidx) => {
+                        const isSelected = studentAnswers[questions[current].id] === choice.id;
+                        return (
+                          <Tooltip key={choice.id} label="اختر هذه الإجابة" placement="left" hasArrow>
+                            <Box
+                              as="label"
+                              p={3}
+                              borderRadius="lg"
+                              border={isSelected ? '2px solid #3182ce' : '1px solid #e2e8f0'}
+                              boxShadow={isSelected ? 'md' : 'sm'}
+                              bg={isSelected ? 'blue.50' : 'white'}
+                              color={isSelected ? 'blue.800' : 'gray.800'}
+                              display="flex"
+                              alignItems="center"
                                    cursor="pointer"
-                                   transition="all 0.2s"
-                                 >
-                                   <Radio
-                                     value={String(choice.id)}
-                                     colorScheme="blue"
-                                     mr={3}
-                                   />
-                                   <Text fontWeight="bold" fontSize="md">
-                                     {String.fromCharCode(65 + cidx)}. {choice.text}
-                                   </Text>
-                                 </Box>
-                               </Tooltip>
-                             );
-                           })}
-                         </Stack>
-                       </RadioGroup>
-                     ) : (
-                       <Alert status="info" borderRadius="md" mt={2}>
-                         <AlertIcon />
-                         لا توجد اختيارات متاحة لهذا السؤال.
-                       </Alert>
-                     )}
-                   </Box>
-                 )}
+                              transition="all 0.2s"
+                            >
+                              <Radio
+                                value={String(choice.id)}
+                                colorScheme="blue"
+                                mr={3}
+                              />
+                              <Text fontWeight="bold" fontSize="md">
+                                {String.fromCharCode(65 + cidx)}. {choice.text}
+                              </Text>
+                            </Box>
+                          </Tooltip>
+                        );
+                      })}
+                    </Stack>
+                  </RadioGroup>
+                ) : (
+                  <Alert status="info" borderRadius="md" mt={2}>
+                    <AlertIcon />
+                    لا توجد اختيارات متاحة لهذا السؤال.
+                  </Alert>
+                )}
+              </Box>
+            )}
 
                  {/* شريط التقدم */}
                  <Box 
@@ -766,8 +766,8 @@ const Exam = () => {
                          {questions.map((question, index) => {
                            const isAnswered = studentAnswers[question.id];
                            const isCurrent = current === index;
-                           return (
-                             <Button
+                  return (
+                      <Button
                                key={index}
                                size={{ base: 'xs', sm: 'sm' }}
                                variant={isCurrent ? "solid" : isAnswered ? "outline" : "ghost"}
@@ -777,7 +777,7 @@ const Exam = () => {
                                h={{ base: '32px', sm: '40px' }}
                                borderRadius="full"
                                fontSize={{ base: 'xs', sm: 'sm' }}
-                               fontWeight="bold"
+                        fontWeight="bold"
                                position="relative"
                              >
                                {index + 1}
@@ -793,41 +793,41 @@ const Exam = () => {
                                    border="2px solid white"
                                  />
                                )}
-                             </Button>
-                           );
-                         })}
-                       </HStack>
+                      </Button>
+                  );
+                })}
+              </HStack>
                      </Box>
 
                      {/* أزرار السابق والتالي */}
                      <HStack spacing={4} justify="center">
-                       <Button
+                <Button
                          colorScheme="blue"
                          variant="outline"
-                         onClick={() => setCurrent((prev) => Math.max(0, prev - 1))}
-                         isDisabled={current === 0}
+                  onClick={() => setCurrent((prev) => Math.max(0, prev - 1))}
+                  isDisabled={current === 0}
                          size={{ base: 'sm', sm: 'md' }}
                          px={{ base: 4, sm: 6 }}
                          py={{ base: 2, sm: 3 }}
                          minW={{ base: '80px', sm: '100px' }}
                          leftIcon={<FaChevronRight boxSize={{ base: 3, sm: 4 }} />}
-                       >
-                         السابق
-                       </Button>
-                       <Button
+                >
+                  السابق
+                </Button>
+                <Button
                          colorScheme="blue"
-                         onClick={() => setCurrent((prev) => Math.min(questions.length - 1, prev + 1))}
-                         isDisabled={current === questions.length - 1}
+                  onClick={() => setCurrent((prev) => Math.min(questions.length - 1, prev + 1))}
+                  isDisabled={current === questions.length - 1}
                          size={{ base: 'sm', sm: 'md' }}
                          px={{ base: 4, sm: 6 }}
                          py={{ base: 2, sm: 3 }}
                          minW={{ base: '80px', sm: '100px' }}
                          rightIcon={<FaChevronLeft boxSize={{ base: 3, sm: 4 }} />}
-                       >
-                         التالي
-                       </Button>
-                     </HStack>
-                   </VStack>
+                >
+                  التالي
+                </Button>
+              </HStack>
+            </VStack>
                  </Box>
 
                  {/* زر تسليم الامتحان */}
@@ -848,12 +848,12 @@ const Exam = () => {
                            ? "تم الإجابة على جميع الأسئلة" 
                            : `أجب على ${questions.length - Object.keys(studentAnswers).length} سؤال متبقي`}
                        </Text>
-                       <Button
+              <Button
                          colorScheme="green"
                          size={{ base: 'md', sm: 'lg', md: 'xl' }}
-                         isLoading={submitLoading}
-                         onClick={handleSubmitExam}
-                         isDisabled={Object.keys(studentAnswers).length !== questions.length}
+                isLoading={submitLoading}
+                onClick={handleSubmitExam}
+                isDisabled={Object.keys(studentAnswers).length !== questions.length}
                          borderRadius="full"
                          px={{ base: 6, sm: 8, md: 10 }}
                          py={{ base: 3, sm: 4, md: 5 }}
@@ -872,12 +872,12 @@ const Exam = () => {
                          {Object.keys(studentAnswers).length === questions.length 
                            ? "تسليم الامتحان" 
                            : "أكمل الإجابات أولاً"}
-                       </Button>
+              </Button>
                      </VStack>
                    </Box>
                  )}
                </>
-             )}
+            )}
           </>
         ) : (
           // للمدرس: عرض جميع الأسئلة

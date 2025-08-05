@@ -97,7 +97,7 @@ const AllTeacherLogin = () => {
 
   return (
     <div className="p-7 mb-[120px]">
-      <Box w="100%" my="5">
+      <Box w="100%" my="5" style={{ width: '100% !important' }}>
         <Heading as="h1" fontSize="30px" display="flex" alignItems="center" mb="2" className="text-[#03a9f5]">
           <PiChalkboardTeacherBold className="mx-2 text-red-500" />
           ابحث عن محاضرك
@@ -119,7 +119,7 @@ const AllTeacherLogin = () => {
 
         <Box>
           {loading ? (
-            <Stack className="w-[90%] m-auto my-5">
+            <Stack className="w-full my-5" style={{ width: '100% !important' }}>
               <Skeleton height="20px" className="mt-5" />
               <Skeleton height="20px" />
               <Skeleton height="20px" />
@@ -127,11 +127,11 @@ const AllTeacherLogin = () => {
             </Stack>
           ) : searchClicked ? (
             searchResults.length > 0 ? (
-              <div className="m-auto card-content flex justify-center md:justify-start flex-wrap gap-6">
+              <div className="flex justify-start flex-wrap gap-6" style={{ width: 'fit-content' }}>
                 {searchResults.map((teacher) => (
                   <Link key={teacher.id} to={`/teacher/${teacher.id}`}>
                     <Card
-                      className="w-[320px]"
+                      className="w-[350px]"
                       style={{
                         borderRadius: "20px",
                         boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",

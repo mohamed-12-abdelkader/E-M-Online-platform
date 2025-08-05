@@ -383,9 +383,9 @@ console.log(lecture)
                   <Link to={`/ComprehensiveExam/${lecture.exam.id}`} style={{ textDecoration: 'none', width: '100%', minWidth: { base: '120px', sm: '140px' } }}>
                     <Button
                       size={{ base: 'xs', sm: 'sm', md: 'md' }}
-                      colorScheme="blue"
+                        colorScheme="blue"
                       variant="solid"
-                      borderRadius="full"
+                        borderRadius="full"
                       leftIcon={<Icon as={FaEye} boxSize={{ base: 3, sm: 4, md: 4 }} />}
                       _hover={{
                         transform: 'translateY(-2px)',
@@ -403,7 +403,7 @@ console.log(lecture)
                     >
                       {isTeacher || isAdmin ? "عرض الامتحان" : "ابدأ الامتحان"}
                     </Button>
-                  </Link>
+                    </Link>
                   {isTeacher && (
                     <>
                       <Tooltip label={lecture.exam.is_visible ? "إخفاء الامتحان" : "إظهار الامتحان"} hasArrow>

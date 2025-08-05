@@ -82,9 +82,9 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
-        dir="rtl"
-        style={{
-          fontFamily: "'Cairo', sans-serif",
+      dir="rtl"
+      style={{
+        fontFamily: "'Cairo', sans-serif",
           background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #93c5fd 100%)",
           minHeight: "400px",
           position: "relative",
@@ -114,7 +114,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
               lineHeight="tight"
               textShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
             >
-              {course.title}
+            {course.title}
             </Heading>
 
             <Text
@@ -126,7 +126,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
               lineHeight="relaxed"
               textShadow="0 2px 4px rgba(0, 0, 0, 0.2)"
             >
-              {course.description}
+            {course.description}
             </Text>
 
             {/* Action Buttons */}
@@ -145,7 +145,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                 borderColor="whiteAlpha.200"
                 _hover={{ bg: "blue.50", borderColor: "blue.200" }}
               >
-                ابدأ الكورس
+              ابدأ الكورس
               </MotionButton>
 
               <Link to={`/CourseStatisticsPage/${course.id}`}>
@@ -163,9 +163,9 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                   shadow="lg"
                   _hover={{ bg: "whiteAlpha.100", borderColor: "white" }}
                 >
-                  تفاصيل الكورس
+               تفاصيل الكورس 
                 </MotionButton>
-              </Link>
+            </Link>
             </HStack>
 
             {/* Teacher/Admin Buttons */}
@@ -174,7 +174,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                 <MotionButton
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={handleViewEnrollments}
+                onClick={handleViewEnrollments}
                   bg="whiteAlpha.200"
                   color="white"
                   border="1px solid"
@@ -213,9 +213,9 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                 </MotionButton>
               </HStack>
             )}
-          </div>
-
-          {/* Course Image */}
+        </div>
+        
+        {/* Course Image */}
           <MotionBox
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -228,7 +228,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                   src={course.avatar || "https://via.placeholder.com/400x320/1e3a8a/ffffff?text=صورة+الكورس"}
                   alt="Course Image"
                   className="w-[500px] sm:w-[550px] md:w-[600px] lg:w-[650px] h-[200px] sm:h-[220px] md:h-[250px] lg:h-[280px] object-cover rounded-2xl shadow-2xl border-4 border-white/20 transition-all duration-500 group-hover:scale-105 group-hover:shadow-3xl"
-                  style={{
+              style={{
                     filter: "drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3))"
                   }}
                 />
@@ -244,9 +244,9 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                   >
                     <Icon as={FaPlay} boxSize={6} />
                   </MotionButton>
-                </div>
-              </div>
-            </div>
+          </div>
+        </div>
+      </div>
           </MotionBox>
         </section>
       </MotionBox>
@@ -305,4 +305,4 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
   );
 };
 
-export default CourseHeroSection;
+export default CourseHeroSection; 

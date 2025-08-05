@@ -103,9 +103,8 @@ const SignUp = () => {
       case 0:
         return name.trim().length > 0;
       case 1:
-        // Egyptian phone numbers: must start with 01, 02, 05, 010, 011, 012, 015
-        const phoneRegex = /^(\+20)?(01|02|05|010|011|012|015)\d{8}$/;
-        return phoneRegex.test(phone) && phoneRegex.test(parentPhone);
+        // Allow any phone number format for navigation, validation will be done on final submit
+        return phone.trim().length > 0 && parentPhone.trim().length > 0;
       case 2:
         return password.length >= 6 && password === passwordConfirm;
       case 3:
@@ -127,29 +126,45 @@ const SignUp = () => {
       return;
     }
 
-    // Phone number validation - Egyptian numbers
-    const phoneRegex = /^(\+20)?(01|02|05|010|011|012|015)\d{8}$/;
-    if (!phoneRegex.test(phone)) {
-      toast.error("يرجى إدخال رقم هاتف مصري صحيح (مثال: 01227145090)");
+    // Basic phone number validation - just check if they're different and have reasonable length
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const cleanParentPhone = parentPhone.replace(/[^0-9]/g, '');
+    
+    if (cleanPhone.length < 8) {
+      toast.error("رقم هاتفك قصير جداً، يرجى إدخال رقم صحيح");
       return;
     }
 
-    if (!phoneRegex.test(parentPhone)) {
-      toast.error("يرجى إدخال رقم هاتف الوالد مصري صحيح (مثال: 01227145090)");
+    if (cleanParentPhone.length < 8) {
+      toast.error("رقم هاتف الوالد قصير جداً، يرجى إدخال رقم صحيح");
       return;
     }
 
-    // Check if phone numbers are different
-    const cleanPhone = phone.replace('+20', '');
-    const cleanParentPhone = parentPhone.replace('+20', '');
     if (cleanPhone === cleanParentPhone) {
       toast.error("رقم هاتفك ورقم هاتف الوالد يجب أن يكونا مختلفين");
       return;
     }
 
-    // Add +20 prefix if not present
-    const formattedPhone = phone.startsWith('+20') ? phone : `+20${phone}`;
-    const formattedParentPhone = parentPhone.startsWith('+20') ? parentPhone : `+20${parentPhone}`;
+    // Format phone numbers - add +20 prefix if not present and looks like Egyptian number
+    let formattedPhone = phone;
+    let formattedParentPhone = parentPhone;
+
+    // If it looks like an Egyptian number (starts with 01, 02, 05, 010, 011, 012, 015), add +20
+    const egyptianPrefixes = ['01', '02', '05', '010', '011', '012', '015'];
+    const phoneStartsWith = cleanPhone.substring(0, 3);
+    const parentPhoneStartsWith = cleanParentPhone.substring(0, 3);
+
+    if (!phone.startsWith('+20') && egyptianPrefixes.some(prefix => cleanPhone.startsWith(prefix))) {
+      formattedPhone = `+20${cleanPhone}`;
+    } else if (!phone.startsWith('+')) {
+      formattedPhone = `+${cleanPhone}`;
+    }
+
+    if (!parentPhone.startsWith('+20') && egyptianPrefixes.some(prefix => cleanParentPhone.startsWith(prefix))) {
+      formattedParentPhone = `+20${cleanParentPhone}`;
+    } else if (!parentPhone.startsWith('+')) {
+      formattedParentPhone = `+${cleanParentPhone}`;
+    }
 
     setLoading(true);
     try {

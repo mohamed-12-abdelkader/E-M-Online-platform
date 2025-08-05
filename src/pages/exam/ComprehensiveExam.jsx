@@ -411,8 +411,8 @@ const ComprehensiveExam = () => {
           </Text>
         )}
       </VStack>
-              {/* زر عرض درجات الطلاب للمدرس فقط */}
-        {isTeacher && (
+      {/* زر عرض درجات الطلاب للمدرس فقط */}
+      {isTeacher && (
           <Button 
             mb={{ base: 6, sm: 7, md: 8 }} 
             colorScheme="green" 
@@ -425,9 +425,9 @@ const ComprehensiveExam = () => {
             h={{ base: '40px', sm: '44px', md: '48px' }}
             borderRadius="full"
           >
-            عرض درجات الطلاب
-          </Button>
-        )}
+          عرض درجات الطلاب
+        </Button>
+      )}
               <VStack spacing={{ base: 6, sm: 7, md: 8 }} align="stretch">
         {/* إذا الطالب سلّم الامتحان، اعرض النتيجة والأخطاء */}
         {submitResult && !isTeacher && !isAdmin && student ? (
@@ -486,8 +486,8 @@ const ComprehensiveExam = () => {
                         color="green.700"
                       >
                         {submitResult.totalGrade}
-                      </CircularProgressLabel>
-                    </CircularProgress>
+                </CircularProgressLabel>
+              </CircularProgress>
                     
                     {/* النسبة المئوية */}
                     <Text 
@@ -497,7 +497,7 @@ const ComprehensiveExam = () => {
                       mt={2}
                     >
                       من {submitResult.maxGrade} ({Math.round((submitResult.totalGrade / submitResult.maxGrade) * 100)}%)
-                    </Text>
+              </Text>
                   </Box>
                   <Text 
                           color="orange.600" 
@@ -505,7 +505,7 @@ const ComprehensiveExam = () => {
                           textAlign="center"
                         >
                           عدد الأسئلة الخاطئة: {submitResult.wrongQuestions ? submitResult.wrongQuestions.length : 0}
-                        </Text>
+              </Text>
                   {/* رسالة النتيجة */}
              
                 </VStack>
@@ -538,7 +538,7 @@ const ComprehensiveExam = () => {
                     <Heading size="lg" color="orange.700">
                       الأسئلة الخاطئة
                     </Heading>
-                  </HStack>
+                    </HStack>
                   
                   <VStack spacing={4} align="stretch">
                     {submitResult.wrongQuestions.map((wq, idx) => (
@@ -595,7 +595,7 @@ const ComprehensiveExam = () => {
                               <HStack spacing={2} mb={1}>
                                 <AiOutlineCloseCircle color="#DC2626" size={16} />
                                 <Text fontWeight="bold" color="red.700" fontSize="sm">
-                                  إجابتك:
+                      إجابتك:
                                 </Text>
                               </HStack>
                               <Text 
@@ -606,8 +606,8 @@ const ComprehensiveExam = () => {
                                 p={2}
                                 borderRadius="md"
                               >
-                                {wq.yourChoice?.text || "لم تجب"}
-                              </Text>
+                        {wq.yourChoice?.text || "لم تجب"}
+                    </Text>
                             </Box>
 
                             {/* الإجابة الصحيحة */}
@@ -621,7 +621,7 @@ const ComprehensiveExam = () => {
                               <HStack spacing={2} mb={1}>
                                 <AiOutlineCheckCircle color="#16A34A" size={16} />
                                 <Text fontWeight="bold" color="green.700" fontSize="sm">
-                                  الإجابة الصحيحة:
+                      الإجابة الصحيحة:
                                 </Text>
                               </HStack>
                               <Text 
@@ -632,14 +632,14 @@ const ComprehensiveExam = () => {
                                 p={2}
                                 borderRadius="md"
                               >
-                                {wq.correctChoice?.text}
-                              </Text>
+                        {wq.correctChoice?.text}
+                    </Text>
                             </Box>
                           </VStack>
                         </VStack>
-                      </Box>
-                    ))}
-                  </VStack>
+                  </Box>
+                ))}
+              </VStack>
                 </VStack>
               </Box>
             )}
@@ -650,20 +650,20 @@ const ComprehensiveExam = () => {
             {/* للمدرسين: عرض جميع الأسئلة */}
             {isTeacher || isAdmin ? (
               questions.map((q, idx) => (
-                <Box
-                  key={q.id}
+              <Box
+                key={q.id}
                   p={{ base: 4, sm: 5, md: 6 }}
-                  borderRadius="xl"
-                  boxShadow="lg"
-                  bgGradient="linear(to-r, blue.50, white)"
-                  border="1px solid #e2e8f0"
-                  position="relative"
-                >
+                borderRadius="xl"
+                boxShadow="lg"
+                bgGradient="linear(to-r, blue.50, white)"
+                border="1px solid #e2e8f0"
+                position="relative"
+              >
                   <HStack justify="space-between" mb={2} align="start">
                     <VStack align="start" flex={1} spacing={{ base: 2, sm: 3 }}>
                       <Text fontWeight="bold" fontSize={{ base: 'md', sm: 'lg', md: 'xl' }} color="blue.700" lineHeight="1.4">
-                        {idx + 1}. {q.text}
-                      </Text>
+              {idx + 1}. {q.text}
+            </Text>
                       {/* عرض صورة السؤال إذا كانت موجودة */}
                       {q.image && (
                         <Box mt={2} w="full">
@@ -702,12 +702,12 @@ const ComprehensiveExam = () => {
                         icon={<AiFillDelete boxSize={{ base: 3, sm: 4 }} />}
                       />
                     </HStack>
-                  </HStack>
-                  <Divider mb={3} />
-                  {q.choices && q.choices.length > 0 ? (
-                    <RadioGroup>
-                      <Stack direction="column" spacing={3}>
-                        {q.choices.map((choice, cidx) => (
+                </HStack>
+                <Divider mb={3} />
+                {q.choices && q.choices.length > 0 ? (
+            <RadioGroup>
+              <Stack direction="column" spacing={3}>
+                {q.choices.map((choice, cidx) => (
                           <HStack key={choice.id} align="center">
                             <Radio
                               value={String(choice.id)}
@@ -722,38 +722,38 @@ const ComprehensiveExam = () => {
                                 fontWeight={choice.is_correct ? "bold" : "normal"}
                                 color={choice.is_correct ? "green.700" : "gray.800"}
                               >
-                                {String.fromCharCode(65 + cidx)}. {choice.text}
+                    {String.fromCharCode(65 + cidx)}. {choice.text}
                               </Box>
-                            </Radio>
-                            <IconButton
-                              aria-label="تعيين كإجابة صحيحة"
-                              size="sm"
-                              colorScheme={
-                                (pendingCorrect[q.id] === choice.id) || choice.is_correct
-                                  ? "green"
-                                  : "gray"
-                              }
-                              variant={
-                                (pendingCorrect[q.id] === choice.id) || choice.is_correct
-                                  ? "solid"
-                                  : "outline"
-                              }
-                              ml={2}
-                              onClick={() => handleSetCorrect(q.id, choice.id)}
-                              isDisabled={pendingCorrect[q.id] || choice.is_correct}
+                  </Radio>
+                              <IconButton
+                                aria-label="تعيين كإجابة صحيحة"
+                                size="sm"
+                                colorScheme={
+                                  (pendingCorrect[q.id] === choice.id) || choice.is_correct
+                                    ? "green"
+                                    : "gray"
+                                }
+                                variant={
+                                  (pendingCorrect[q.id] === choice.id) || choice.is_correct
+                                    ? "solid"
+                                    : "outline"
+                                }
+                                ml={2}
+                                onClick={() => handleSetCorrect(q.id, choice.id)}
+                                isDisabled={pendingCorrect[q.id] || choice.is_correct}
                               icon={<AiFillCheckCircle boxSize={{ base: 3, sm: 4 }} />}
-                            />
+                              />
                           </HStack>
-                        ))}
-                      </Stack>
-                    </RadioGroup>
-                  ) : (
-                    <Alert status="info" borderRadius="md" mt={2}>
-                      <AlertIcon />
-                      هذا السؤال يتطلب إجابة كتابية أو لا توجد اختيارات متاحة.
-                    </Alert>
-                  )}
-                </Box>
+                ))}
+              </Stack>
+            </RadioGroup>
+                ) : (
+                  <Alert status="info" borderRadius="md" mt={2}>
+                    <AlertIcon />
+                    هذا السؤال يتطلب إجابة كتابية أو لا توجد اختيارات متاحة.
+                  </Alert>
+                )}
+          </Box>
               ))
             ) : (
               // للطلاب: عرض سؤال واحد مع التنقل
@@ -973,12 +973,12 @@ const ComprehensiveExam = () => {
                 ? "تم الإجابة على جميع الأسئلة" 
                 : `أجب على ${questions.length - Object.keys(studentAnswers).length} سؤال متبقي`}
             </Text>
-            <Button
+        <Button
               colorScheme="green"
               size={{ base: 'md', sm: 'lg', md: 'xl' }}
-              isLoading={submitLoading}
-              onClick={handleSubmitExam}
-              isDisabled={Object.keys(studentAnswers).length !== questions.length}
+          isLoading={submitLoading}
+          onClick={handleSubmitExam}
+          isDisabled={Object.keys(studentAnswers).length !== questions.length}
               borderRadius="full"
               px={{ base: 6, sm: 8, md: 10 }}
               py={{ base: 3, sm: 4, md: 5 }}
@@ -997,7 +997,7 @@ const ComprehensiveExam = () => {
               {Object.keys(studentAnswers).length === questions.length 
                 ? "تسليم الامتحان" 
                 : "أكمل الإجابات أولاً"}
-            </Button>
+        </Button>
           </VStack>
         </Box>
       )}
@@ -1036,9 +1036,9 @@ const ComprehensiveExam = () => {
             <VStack spacing={{ base: 3, sm: 4 }} align="stretch">
               <FormControl>
                 <FormLabel>نص السؤال:</FormLabel>
-                <Input
-                  value={editForm.text}
-                  onChange={(e) => handleEditChange("text", e.target.value)}
+            <Input
+              value={editForm.text}
+              onChange={(e) => handleEditChange("text", e.target.value)}
                 />
               </FormControl>
 
@@ -1090,15 +1090,15 @@ const ComprehensiveExam = () => {
 
               <FormControl>
                 <FormLabel>الاختيارات:</FormLabel>
-                <VStack spacing={2}>
-                  {editForm.choices.map((choice, idx) => (
-                    <Input
-                      key={choice.id}
-                      value={choice.text}
-                      onChange={(e) => handleChoiceChange(idx, e.target.value)}
-                      placeholder={`اختيار ${String.fromCharCode(65 + idx)}`}
-                    />
-                  ))}
+            <VStack spacing={2}>
+              {editForm.choices.map((choice, idx) => (
+                <Input
+                  key={choice.id}
+                  value={choice.text}
+                  onChange={(e) => handleChoiceChange(idx, e.target.value)}
+                  placeholder={`اختيار ${String.fromCharCode(65 + idx)}`}
+                />
+              ))}
                 </VStack>
               </FormControl>
             </VStack>

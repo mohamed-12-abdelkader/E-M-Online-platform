@@ -12,6 +12,7 @@ const HomeLogin = () => {
 console.log(user)
   return (
     <Flex
+    
       direction={{ base: "column", md: "row-reverse" }}
       minHeight="100vh"
       bg={useColorModeValue("gray.100", "gray.900")}
