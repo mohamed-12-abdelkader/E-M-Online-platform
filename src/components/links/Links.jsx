@@ -77,16 +77,14 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
   ];
 
   const teacherLinks = [
-    { to: "/admin/add_month", Icon: MdDateRange, label: "لوحة التحكم" },
+   
     { to: "/suggested-teachers", Icon: MdGroups, label: "المدرسين المقترحة "},
-    { to: "/teacher_courses", Icon: MdMenuBook, label: "كورساتي" },
-    { to: "/teacher_wallet", Icon: MdAccountBalanceWallet, label: "محفظتي" },
     { to: "/QuestionLibraryPage", Icon: MdLibraryBooks, label: "مكتبة الأسئلة" },
     { to: "/center_groups", Icon: MdBusinessCenter, label: "سيستم إدارة السنتر" },
     { to: "/TeacherChat", Icon: MdBusinessCenter, label: " الرسائل " },
   ];
 
-  const studentLinks = [
+     const studentLinks = [
     { to: "/profile", Icon: MdPerson, label: "الملف الشخصي" },
     { to: "/exam_grades", Icon: MdPerson, label: "درجات الامتحانات" },
     { to: "/teachers", Icon: MdSearch, label: "ابحث عن محاضرك" },

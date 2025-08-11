@@ -492,15 +492,17 @@ console.log(lecture)
                     <Flex key={video.id} align="center" p={2} bg={useColorModeValue('gray.50','gray.600')} borderRadius="md" w="full" _hover={{ bg: useColorModeValue('gray.100','gray.500'), boxShadow: 'sm' }}>
                       <Icon as={FaPlayCircle} color="red.400" boxSize={4} mr={2} />
                       <Text fontSize="sm" flex={1} fontWeight="medium">{video.title}</Text>
+                      <Link to={`/video/${video.id}`}>
                       <Button 
                         size="xs" 
                         variant="ghost" 
                         colorScheme="red" 
-                        onClick={() => handleOpenVideo && handleOpenVideo(video.video_url, video.title)} 
+                        
                         _hover={{ bg: 'red.50' }}
-                      >
+                        >
                         شاهد
                       </Button>
+                        </Link>
                       {isTeacher && (
                         <>
                           <Tooltip label="تعديل الفيديو"><IconButton size="xs" icon={<Icon as={FaEdit} />} colorScheme="blue" variant="ghost" onClick={() => handleEditVideo(video, lecture.id)} /></Tooltip>
