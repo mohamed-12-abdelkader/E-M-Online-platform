@@ -271,26 +271,16 @@ const AddTeacher = () => {
                         <Text>المادة الدراسية</Text>
                       </HStack>
                     </FormLabel>
-                    <Select
-                      placeholder="اختر المادة الدراسية"
+                    <Input
+                      type="text"
+                      placeholder="أدخل المادة الدراسية"
                       value={formData.subject}
                       onChange={(e) => handleInputChange("subject", e.target.value)}
                       size="lg"
                       borderRadius="xl"
                       borderColor={borderColor}
                       _focus={{ borderColor: "purple.500", boxShadow: "0 0 0 1px purple.500" }}
-                    >
-                      <option value="رياضيات">رياضيات</option>
-                      <option value="فيزياء">فيزياء</option>
-                      <option value="كيمياء">كيمياء</option>
-                      <option value="أحياء">أحياء</option>
-                      <option value="تاريخ">تاريخ</option>
-                      <option value="جغرافيا">جغرافيا</option>
-                      <option value="لغة عربية">لغة عربية</option>
-                      <option value="لغة إنجليزية">لغة إنجليزية</option>
-                      <option value="فلسفة">فلسفة</option>
-                      <option value="اقتصاد">اقتصاد</option>
-                    </Select>
+                    />
                   </FormControl>
                 </SimpleGrid>
 
