@@ -92,7 +92,7 @@ const Vedio = () => {
           
           {/* مشغل الفيديو */}
           <div className="p-6">
-            {isYoutubeLink ? (
+      {isYoutubeLink ? (
               <div className="flex justify-center">
                 <div className="w-full max-w-4xl">
                   <iframe
@@ -119,20 +119,20 @@ const Vedio = () => {
                     متصفحك لا يدعم تشغيل الفيديو
                   </video>
                 </div>
-              </div>
-            ) : (
+        </div>
+      ) : (
               <div className="flex justify-center">
                 <div className="w-full max-w-4xl">
-                  <iframe
+        <iframe
                     src={videoUrl}
                     loading="lazy"
                     className="w-full h-[400px] rounded-lg shadow-lg border-0"
                     allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                    allowFullScreen
+          allowFullScreen
                   />
                 </div>
               </div>
-            )}
+      )}
           </div>
         </div>
       </div>

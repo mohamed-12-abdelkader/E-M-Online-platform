@@ -39,6 +39,7 @@ const SignUp = () => {
   const [gradeId, setGradeId] = useState("");
   const [loading, setLoading] = useState(false);
   const [grades, setGrades] = useState([]); // الصفوف من API
+  const [selectedCategory, setSelectedCategory] = useState(""); // الفئة الدراسية
 
   // Steps configuration
   const steps = [
@@ -58,7 +59,12 @@ const SignUp = () => {
       description: "أنشئ كلمة مرور قوية"
     },
     {
-      title: "المعلومات الدراسية",
+      title: "الفئة الدراسية",
+      icon: FiBookOpen,
+      description: "اختر فئتك الدراسية"
+    },
+    {
+      title: "الصف الدراسي",
       icon: FiBookOpen,
       description: "اختر صفك الدراسي"
     }
@@ -76,15 +82,51 @@ const SignUp = () => {
     fetchGrades();
   }, []);
 
-  // تصفية الصفوف حسب هل هو جامعي أم لا
-  let filteredGrades = grades;
-  if (grades.length > 0) {
-    if (isUniversityStudent === "yes") {
-      filteredGrades = grades.slice(-4); // آخر 4 صفوف فقط
-    } else {
-      filteredGrades = grades.slice(0, grades.length - 4); // الكل ما عدا آخر 4
+  // تصفية الصفوف حسب الفئة المختارة
+  const getFilteredGradesByCategory = (category) => {
+    switch (category) {
+      case "ابتدائي":
+        return [
+          { id: 19, name: "الصف الأول الابتدائي" },
+          { id: 20, name: "الصف الثاني الابتدائي" },
+          { id: 21, name: "الصف الثالث الابتدائي" },
+          { id: 11, name: "الصف الرابع الابتدائي" },
+          { id: 12, name: "الصف الخامس الابتدائي" },
+          { id: 15, name: "الصف السادس الابتدائي" }
+        ];
+      case "إعدادي":
+        return [
+          { id: 1, name: "الصف الأول الإعدادي" },
+          { id: 2, name: "الصف الثاني الإعدادي" },
+          { id: 3, name: "الصف الثالث الإعدادي" }
+        ];
+      case "ثانوي":
+        return [
+          { id: 4, name: "الصف الأول الثانوي" },
+          { id: 5, name: "الصف الثاني الثانوي" },
+          { id: 6, name: "الصف الثالث الثانوي" }
+        ];
+      case "جامعة":
+        return [
+          { id: 7, name: "الفرقة الأولى" },
+          { id: 8, name: "الفرقة الثانية" },
+          { id: 9, name: "الفرقة الثالثة" },
+          { id: 10, name: "الفرقة الرابعة" }
+        ];
+      default:
+        return [];
     }
-  }
+  };
+
+  // تصفية الصفوف حسب هل هو جامعي أم لا - تم إزالتها لأننا نستخدم الفئات الجديدة
+  // let filteredGrades = grades;
+  // if (grades.length > 0) {
+  //   if (isUniversityStudent === "yes") {
+  //     filteredGrades = grades.slice(-4); // آخر 4 صفوف فقط
+  //   } else {
+  //     filteredGrades = grades.slice(0, grades.length - 4); // الكل ما عدا آخر 4
+  //   }
+  // }
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -108,6 +150,8 @@ const SignUp = () => {
       case 2:
         return password.length >= 6 && password === passwordConfirm;
       case 3:
+        return selectedCategory !== "";
+      case 4:
         return gradeId !== "";
       default:
         return false;
@@ -116,7 +160,7 @@ const SignUp = () => {
 
   const handleLSignUp = async () => {
     // Final validation
-    if (!name || !phone || !parentPhone || !password || !passwordConfirm || !gradeId) {
+    if (!name || !phone || !parentPhone || !password || !passwordConfirm || !gradeId || !selectedCategory) {
       toast.error("يرجى ملء جميع الحقول");
       return;
     }
@@ -154,6 +198,7 @@ const SignUp = () => {
         name,
         parent_phone: cleanParentPhone, // إرسال الرقم كما هو
         grade_id: parseInt(gradeId),
+        category: selectedCategory, // إضافة الفئة الدراسية
       });
   
       const { token, user } = res.data;
@@ -358,72 +403,191 @@ const SignUp = () => {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mb-4">
                 <FiBookOpen className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">المعلومات الدراسية</h2>
-              <p className="text-gray-600">اختر صفك الدراسي وحدد نوع الدراسة</p>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">اختر فئتك الدراسية</h2>
+              <p className="text-gray-600">حدد المرحلة الدراسية التي تنتمي إليها</p>
+            </Box>
+            
+            <div className="grid grid-cols-2 gap-4">
+              {/* الفئة الابتدائية */}
+              <div
+                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                  selectedCategory === "ابتدائي"
+                    ? "border-blue-500 bg-blue-50 shadow-lg"
+                    : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-md"
+                }`}
+                onClick={() => {
+                  setSelectedCategory("ابتدائي");
+                  setGradeId("");
+                }}
+              >
+                <div className="text-center">
+                  <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
+                    selectedCategory === "ابتدائي"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-100 text-gray-600"
+                  }`}>
+                    <span className="text-2xl font-bold">١</span>
+                  </div>
+                  <h3 className={`font-bold text-lg mb-2 ${
+                    selectedCategory === "ابتدائي" ? "text-blue-700" : "text-gray-700"
+                  }`}>
+                    ابتدائي
+                  </h3>
+                  <p className="text-sm text-gray-500">6 صفوف دراسية</p>
+                </div>
+              </div>
+
+              {/* الفئة الإعدادية */}
+              <div
+                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                  selectedCategory === "إعدادي"
+                    ? "border-green-500 bg-green-50 shadow-lg"
+                    : "border-gray-200 bg-white hover:border-green-300 hover:shadow-md"
+                }`}
+                onClick={() => {
+                  setSelectedCategory("إعدادي");
+                  setGradeId("");
+                }}
+              >
+                <div className="text-center">
+                  <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
+                    selectedCategory === "إعدادي"
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-100 text-gray-600"
+                  }`}>
+                    <span className="text-2xl font-bold">٢</span>
+                  </div>
+                  <h3 className={`font-bold text-lg mb-2 ${
+                    selectedCategory === "إعدادي" ? "text-green-700" : "text-gray-700"
+                  }`}>
+                    إعدادي
+                  </h3>
+                  <p className="text-sm text-gray-500">3 صفوف دراسية</p>
+                </div>
+              </div>
+
+              {/* الفئة الثانوية */}
+              <div
+                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                  selectedCategory === "ثانوي"
+                    ? "border-purple-500 bg-purple-50 shadow-lg"
+                    : "border-gray-200 bg-white hover:border-purple-300 hover:shadow-md"
+                }`}
+                onClick={() => {
+                  setSelectedCategory("ثانوي");
+                  setGradeId("");
+                }}
+              >
+                <div className="text-center">
+                  <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
+                    selectedCategory === "ثانوي"
+                      ? "bg-purple-500 text-white"
+                      : "bg-gray-100 text-gray-600"
+                  }`}>
+                    <span className="text-2xl font-bold">٣</span>
+                  </div>
+                  <h3 className={`font-bold text-lg mb-2 ${
+                    selectedCategory === "ثانوي" ? "text-purple-700" : "text-gray-700"
+                  }`}>
+                    ثانوي
+                  </h3>
+                  <p className="text-sm text-gray-500">3 صفوف دراسية</p>
+                </div>
+              </div>
+
+              {/* الفئة الجامعية */}
+              <div
+                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                  selectedCategory === "جامعة"
+                    ? "border-orange-500 bg-orange-50 shadow-lg"
+                    : "border-gray-200 bg-white hover:border-orange-300 hover:shadow-md"
+                }`}
+                onClick={() => {
+                  setSelectedCategory("جامعة");
+                  setGradeId("");
+                }}
+              >
+                <div className="text-center">
+                  <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
+                    selectedCategory === "جامعة"
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-100 text-gray-600"
+                  }`}>
+                    <span className="text-2xl font-bold">٤</span>
+                  </div>
+                  <h3 className={`font-bold text-lg mb-2 ${
+                    selectedCategory === "جامعة" ? "text-orange-700" : "text-gray-700"
+                  }`}>
+                    جامعة
+                  </h3>
+                  <p className="text-sm text-gray-500">4 فرق دراسية</p>
+                </div>
+              </div>
+            </div>
+
+            {/* رسالة تأكيد */}
+            {selectedCategory && (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl text-center">
+                <div className="flex items-center justify-center space-x-2 text-green-700">
+                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                  <span className="font-medium">
+                    تم اختيار: {selectedCategory}
+                  </span>
+                </div>
+              </div>
+            )}
+          </VStack>
+        );
+
+      case 4:
+        return (
+          <VStack spacing={6} align="stretch">
+            <Box textAlign="center" mb={6}>
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-full mb-4">
+                <FiBookOpen className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">اختر صفك الدراسي</h2>
+              <p className="text-gray-600">حدد الصف الدراسي المحدد</p>
             </Box>
             
             <FormControl>
               <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
-                هل أنت طالب جامعي؟
+                الصف الدراسي
               </FormLabel>
-          <RadioGroup
-            value={isUniversityStudent}
-            onChange={setIsUniversityStudent}
-            direction="row"
-          >
-                <HStack spacing={6}>
-                  <Radio 
-                    value="no" 
-                    colorScheme="blue"
-                    size="lg"
-                    _hover={{ transform: "scale(1.05)" }}
-                    transition="all 0.2s"
-                  >
-                    لا
-                  </Radio>
-                  <Radio 
-                    value="yes" 
-                    colorScheme="blue"
-                    size="lg"
-                    _hover={{ transform: "scale(1.05)" }}
-                    transition="all 0.2s"
-                  >
-                    نعم
-                  </Radio>
-                </HStack>
-          </RadioGroup>
-        </FormControl>
-
-            <FormControl>
-              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
-            الصف الدراسي
-          </FormLabel>
-          <Select
-            dir="ltr"
-            placeholder={"اختر الصف الدراسي"}
+              <Select
+                dir="ltr"
+                placeholder={selectedCategory ? "اختر الصف الدراسي" : "اختر الفئة الدراسية أولاً"}
                 value={gradeId}
                 onChange={(e) => setGradeId(e.target.value)}
-            size="lg"
-            focusBorderColor="blue.500"
-            _placeholder={{ color: "gray.400" }}
+                size="lg"
+                focusBorderColor="blue.500"
+                _placeholder={{ color: "gray.400" }}
                 borderColor="gray.200"
                 borderRadius="xl"
                 py={4}
                 px={6}
                 className="text-gray-800 transition-all duration-300"
-            bg="white"
-                _hover={{ borderColor: "gray.300" }}
+                bg="white"
+                isDisabled={!selectedCategory}
+                _hover={{ borderColor: selectedCategory ? "gray.300" : "gray.200" }}
                 _focus={{ 
-                  borderColor: "blue.500", 
-                  boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)"
+                  borderColor: selectedCategory ? "blue.500" : "gray.200", 
+                  boxShadow: selectedCategory ? "0 0 0 1px #3B82F6" : "none",
+                  transform: selectedCategory ? "translateY(-1px)" : "none"
                 }}
-          >
-            {filteredGrades.map((grade) => (
-              <option key={grade.id} value={grade.id}>{grade.name}</option>
-            ))}
-          </Select>
-        </FormControl>
+              >
+                {getFilteredGradesByCategory(selectedCategory).map((grade) => (
+                  <option key={grade.id} value={grade.id}>{grade.name}</option>
+                ))}
+              </Select>
+              {!selectedCategory && (
+                <Text fontSize="sm" color="orange.500" mt={2}>
+                  ⚠️ يجب اختيار الفئة الدراسية أولاً
+                </Text>
+              )}
+            </FormControl>
           </VStack>
         );
 
