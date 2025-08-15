@@ -28,7 +28,6 @@ import {
   Center,
   Skeleton,
   SkeletonText,
-  keyframes,
   Tooltip,
   Modal,
   ModalOverlay,
@@ -346,10 +345,10 @@ const courseHeroImage = "/lE7lWBexvOTPM2MPEKyTRRBo1TQtNGMoL1pxWCxD.jpg";
 const instructorImage = "/lE7lWBexvOTPM2MPEKyTRRBo1TQtNGMoL1pxWCxD.jpg";
 
 // Custom keyframes for shimmer effect
-const shimmer = keyframes`
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-`;
+// const shimmer = keyframes`
+//   0% { transform: translateX(-100%); }
+//   100% { transform: translateX(100%); }
+// `;
 
 const MotionBox = motion(Box);
 const MotionFlex = motion(Flex);
