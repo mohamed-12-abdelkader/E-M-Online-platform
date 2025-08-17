@@ -28,6 +28,7 @@ import {
 
 import UserType from "../../Hooks/auth/userType";
 import { NavLink } from "react-router-dom";
+import { FaBroadcastTower } from "react-icons/fa";
 
 const NavLinkItem = ({ to, Icon, label, onClick, isSidebarOpen }) => (
   <li>
@@ -61,7 +62,7 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
   ];
 
   const adminLinks = [
-    { to: "/stream-management", Icon: MdLiveTv, label: "إدارة البث المباشر" },
+    { to: "/streams", Icon: FaBroadcastTower, label: "البث المباشر" }, 
     { to: "/admin/management", Icon: MdDashboard, label: "لوحة التحكم" },
     { to: "/teamChat", Icon: MdForum, label: "دردشة الفريق" },
     { to: "/tasks", Icon: MdAssignment, label: "المهام" },

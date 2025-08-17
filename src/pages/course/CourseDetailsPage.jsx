@@ -106,6 +106,8 @@ import dayjs from "dayjs";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
+import CourseStreams from "../../components/stream/courseStreams";
+import StudentStreamsList from "../../components/stream/studentStreamsList";
 
 // Modal Components
 const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
@@ -357,7 +359,6 @@ const MotionHStack = motion(HStack);
 
 const CourseDetailsPage = () => {
   const {id}=useParams()
-  console.log(id)
   const [userData, isAdmin, isTeacher, student] = UserType();
   const [showFullDescription, setShowFullDescription] = React.useState(false);
   const [expandedLecture, setExpandedLecture] = React.useState(null);
@@ -1704,9 +1705,6 @@ D) has made`}
   }
 
   const { course, lectures } = courseData;
-  console.log(lectures)
-  console.log('Current bulkQuestionsModal state:', bulkQuestionsModal);
-  console.log('Current tabIndex:', tabIndex);
   return (
     <Box minH={{ base: '100vh', md: '100vh' }} bg={pageBg} dir="rtl" className="mt-[80px]">
       {/* Hero Section - Full Width Image with Overlay */}
@@ -2056,16 +2054,8 @@ D) has made`}
               </TabPanel>
 
               {/* Tab Panel للجلسات المباشرة */}
-              <TabPanel>
-                <VStack spacing={4} align="stretch">
-                  <Heading size="md" color={headingColor} mb={4}>
-                    الجلسات المباشرة
-                  </Heading>
-                  <Text color={subTextColor} textAlign="center" py={8}>
-                    لا توجد جلسات مباشرة متاحة حالياً
-                  </Text>
-                </VStack>
-              </TabPanel>
+              {(isAdmin || isTeacher) ? <CourseStreams courseId={id} /> : <StudentStreamsList courseId={id}/>}
+              
 
               {/* Tab Panel للامتحانات */}
               <TabPanel>
