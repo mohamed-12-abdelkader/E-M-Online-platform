@@ -4,11 +4,12 @@ import { useParams } from "react-router-dom";
 import baseUrl from "../../api/baseUrl";
 
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
-import ReactPlayer from "react-player";
+import Plyr from "plyr";
+import "plyr/dist/plyr.css";
 
-const Vedio = () => {
+const Video = () => {
   const { videoId } = useParams();
-  
+
   const [videoUrl, setVideoUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,21 +38,26 @@ const Vedio = () => {
     }
   }, [videoId]);
 
-  // تحديد نوع الفيديو
-  const isYoutubeLink = videoUrl && (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be"));
-  const isBunnyLink = videoUrl && videoUrl.includes("bunny.net");
-
-  // تحويل رابط YouTube إلى embed
-  const getYoutubeEmbedUrl = (url) => {
+  // استخراج YouTube ID
+  const getYoutubeId = (url) => {
     if (url.includes("youtube.com/watch?v=")) {
-      const videoId = url.split("v=")[1].split("&")[0];
-      return `https://www.youtube.com/embed/${videoId}?rel=0&showinfo=0&modestbranding=1&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&playsinline=1`;
+      return url.split("v=")[1].split("&")[0];
     } else if (url.includes("youtu.be/")) {
-      const videoId = url.split("youtu.be/")[1].split("?")[0];
-      return `https://www.youtube.com/embed/${videoId}?rel=0&showinfo=0&modestbranding=1&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&playsinline=1`;
+      return url.split("youtu.be/")[1].split("?")[0];
     }
-    return url;
+    return null;
   };
+
+  // تهيئة Plyr بعد تحميل الفيديو
+  useEffect(() => {
+    if (videoUrl) {
+      const player = new Plyr("#player");
+
+      return () => {
+        player.destroy(); // تنظيف عند إلغاء المكون
+      };
+    }
+  }, [videoUrl]);
 
   if (loading) {
     return (
@@ -79,6 +85,9 @@ const Vedio = () => {
     );
   }
 
+  const youtubeId = getYoutubeId(videoUrl);
+  console.log(youtubeId);
+
   return (
     <div className="min-h-screen mt-[100px] bg-gray-50 pt-20 px-4">
       <div className="max-w-6xl mx-auto">
@@ -89,51 +98,19 @@ const Vedio = () => {
               مشاهدة الفيديو
             </h1>
           </div>
-          
+
           {/* مشغل الفيديو */}
-          <div className="p-6">
-      {isYoutubeLink ? (
-              <div className="flex justify-center">
-                <div className="w-full max-w-4xl">
-                  <iframe
-                    src={getYoutubeEmbedUrl(videoUrl)}
-                    width="100%"
-                    height="400px"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen={false}
-                    className="rounded-lg shadow-lg"
-                    style={{ borderRadius: "12px" }}
-                  />
-                </div>
+          {youtubeId && (
+            <div className="flex justify-center mt-2 rounded-lg">
+              <div className="w-full max-w-4xl">
+                <div
+                  id="player"
+                  data-plyr-provider="youtube"
+                  data-plyr-embed-id={youtubeId}
+                ></div>
               </div>
-            ) : isBunnyLink ? (
-              <div className="flex justify-center">
-                <div className="w-full max-w-4xl">
-                  <video
-                    src={videoUrl}
-                    controls
-                    className="w-full h-[400px] rounded-lg shadow-lg"
-                    style={{ objectFit: "cover" }}
-                  >
-                    متصفحك لا يدعم تشغيل الفيديو
-                  </video>
-                </div>
-        </div>
-      ) : (
-              <div className="flex justify-center">
-                <div className="w-full max-w-4xl">
-        <iframe
-                    src={videoUrl}
-                    loading="lazy"
-                    className="w-full h-[400px] rounded-lg shadow-lg border-0"
-                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-          allowFullScreen
-                  />
-                </div>
-              </div>
-      )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
       <ScrollToTop />
@@ -141,4 +118,4 @@ const Vedio = () => {
   );
 };
 
-export default Vedio;
+export default Video;
