@@ -60,11 +60,11 @@ const MyTeacher = () => {
       </VStack>
 
       {teachers?.teachers?.length > 0 ? (
-        <div className="flex  flex-wrap gap-4 sm:gap-6">
+        <div className="flex  flex-wrap ">
           {teachers.teachers.map((teacher) => (
-            <Link className="w-[350px] " key={teacher.id} to={`/teacher/${teacher.id}`}>
+            <Link className="w-[95%] mx-auto md:w-[350px] " key={teacher.id} to={`/teacher/${teacher.id}`}>
               <Card
-                w="350px" // تعديل العرض هنا
+                // تعديل العرض هنا
                 style={{
                   borderRadius: "20px",
                   boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
@@ -74,7 +74,7 @@ const MyTeacher = () => {
                   transition: "all 0.3s ease",
                   cursor: "pointer",
                 }}
-                className="mx-auto"
+                className="mx-auto my-3 w-[100%] md:w-[330px]"
                 _hover={{
                   transform: "translateY(-8px)",
                   boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)",

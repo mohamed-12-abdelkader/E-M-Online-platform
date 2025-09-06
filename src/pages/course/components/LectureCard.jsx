@@ -5,7 +5,7 @@ import {
 } from "@chakra-ui/react";
 import {
   FaPlayCircle, FaLock, FaEdit, FaTrash, FaPlus, FaGraduationCap, FaRegPaperPlane, FaVideo, FaFilePdf, FaLightbulb, FaClock, FaBookOpen, FaStar,
-  FaAngleDown, FaAngleUp, FaEye, FaEyeSlash, FaCalendar, FaTag
+  FaAngleDown, FaAngleUp, FaEye, FaEyeSlash, FaCalendar, FaTag, FaComments
 } from "react-icons/fa";
 import baseUrl from "../../../api/baseUrl";
 import { Link } from "react-router-dom";
@@ -175,6 +175,7 @@ console.log(lecture)
 console.log(lecture)
   return (
     <Box
+    className="w-[100%]"
       bg={lecture.locked && !canExpand ? useColorModeValue('gray.100','gray.800') : useColorModeValue('white', 'gray.800')}
       p={0}
       borderRadius={{ base: 'xl', md: '2xl' }}
@@ -338,6 +339,19 @@ console.log(lecture)
               )}
             </>
           )}
+          {/* زر التعليقات - واضح للجميع */}
+          <Link to={`/lectur_commints/${lecture.id}`} style={{ textDecoration: 'none' }}>
+            <IconButton
+              size={{ base: 'sm', md: 'md' }}
+              colorScheme="orange"
+              variant="solid"
+              icon={<Icon as={FaComments} />}
+              aria-label="تعليقات المحاضرة"
+              borderRadius="full"
+              transition="all 0.2s"
+              _hover={{ transform: 'scale(1.15)' }}
+            />
+          </Link>
           {canExpand && (
             <IconButton
               size={{ base: 'sm', md: 'md' }}

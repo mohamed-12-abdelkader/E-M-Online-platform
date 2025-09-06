@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   SimpleGrid,
@@ -23,6 +23,9 @@ import {
   useBreakpointValue,
   IconButton,
   Tooltip,
+  Spinner,
+  Alert,
+  AlertIcon,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import {
@@ -48,8 +51,16 @@ import {
   FaPlay,
   FaPause,
   FaStop,
+  FaUserTie,
+  FaKey,
+  FaCalendar,
+  FaCheckDouble,
+  FaHourglassHalf,
+  FaTimes,
+  FaPaperclip,
 } from "react-icons/fa";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
+import baseUrl from "../../api/baseUrl";
 
 // Motion Components for animations
 const MotionBox = motion(Box);
@@ -205,6 +216,12 @@ const messages = [
 
 const AdminDashboardHome = () => {
   const user = JSON.parse(localStorage.getItem("user")) || {};
+  const employeeData = JSON.parse(localStorage.getItem("employee_data")) || null;
+  
+  // State for tasks
+  const [apiTasks, setApiTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [tasksError, setTasksError] = useState(null);
   
   // Colors for light and dark mode
   const pageBg = useColorModeValue("gray.50", "gray.900");
@@ -218,6 +235,98 @@ const AdminDashboardHome = () => {
   // Responsive values
   const statsCols = useBreakpointValue({ base: 1, sm: 2, lg: 4 });
   const contentCols = useBreakpointValue({ base: 1, lg: 3 });
+
+  // Fetch tasks from API
+  const fetchTasks = async () => {
+    try {
+      setTasksLoading(true);
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        setTasksError('Token غير متوفر');
+        return;
+      }
+      
+      const response = await baseUrl.get('/api/tasks/my-tasks', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      setApiTasks(response.data.tasks);
+      setTasksError(null);
+    } catch (err) {
+      setTasksError('حدث خطأ في تحميل المهام');
+      console.error('Error fetching tasks:', err);
+    } finally {
+      setTasksLoading(false);
+    }
+  };
+
+  // Load tasks on component mount
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  // Helper functions for task display
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "urgent": return "red";
+      case "high": return "orange";
+      case "medium": return "yellow";
+      case "low": return "green";
+      default: return "gray";
+    }
+  };
+
+  const getPriorityText = (priority) => {
+    switch (priority) {
+      case "urgent": return "عاجلة";
+      case "high": return "عالية";
+      case "medium": return "متوسطة";
+      case "low": return "منخفضة";
+      default: return priority;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "completed": return "green";
+      case "in_progress": return "blue";
+      case "pending": return "yellow";
+      case "cancelled": return "red";
+      default: return "gray";
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case "completed": return "مكتملة";
+      case "in_progress": return "قيد التنفيذ";
+      case "pending": return "في الانتظار";
+      case "cancelled": return "ملغية";
+      default: return status;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "completed": return FaCheckDouble;
+      case "in_progress": return FaHourglassHalf;
+      case "pending": return FaClock;
+      case "cancelled": return FaTimes;
+      default: return FaClock;
+    }
+  };
 
   // Variants for card animations
   const cardVariants = {
@@ -238,25 +347,6 @@ const AdminDashboardHome = () => {
       scale: 1.02, 
       boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
       transition: { duration: 0.2 }
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "عاجلة": return "red";
-      case "عالية": return "orange";
-      case "متوسطة": return "yellow";
-      case "منخفضة": return "green";
-      default: return "gray";
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "مكتملة": return "green";
-      case "قيد التنفيذ": return "blue";
-      case "لم تبدأ": return "gray";
-      default: return "gray";
     }
   };
 
@@ -300,18 +390,27 @@ const AdminDashboardHome = () => {
             </VStack>
             <HStack spacing={4} mt={{ base: 6, md: 0 }}>
               <Avatar 
-                name={`${user.fname} ${user.lname}`}
-                src="https://bit.ly/dan-abramov"
+                name={employeeData ? employeeData.name : `${user.fname} ${user.lname}`}
+                src={employeeData?.avatar || "https://bit.ly/dan-abramov"}
                 size="lg"
                 border="4px solid"
                 borderColor="whiteAlpha.300"
                 shadow="xl"
               />
               <VStack align="flex-start" spacing={1}>
-                <Text fontWeight="bold" fontSize="lg">{user.fname} {user.lname}</Text>
-                <Text fontSize="sm" opacity={0.8}>مدير النظام</Text>
-                <Badge colorScheme="green" variant="solid" borderRadius="full" px={2}>
-                  نشط
+                <Text fontWeight="bold" fontSize="lg">
+                  {employeeData ? employeeData.name : `${user.fname} ${user.lname}`}
+                </Text>
+                <Text fontSize="sm" opacity={0.8}>
+                  {employeeData ? employeeData.email : 'مدير النظام'}
+                </Text>
+                <Badge 
+                  colorScheme={employeeData?.is_active ? "green" : "red"} 
+                  variant="solid" 
+                  borderRadius="full" 
+                  px={2}
+                >
+                  {employeeData?.is_active ? 'نشط' : 'غير نشط'}
                 </Badge>
               </VStack>
             </HStack>
@@ -380,6 +479,83 @@ const AdminDashboardHome = () => {
           </SimpleGrid>
         </MotionBox>
 
+        {/* Employee Permissions Section */}
+        {employeeData && (
+          <MotionCard
+            bg={cardBg}
+            borderRadius="2xl"
+            shadow="xl"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.2, duration: 0.5 }}
+            whileHover="hover"
+            variants={hoverVariants}
+          >
+            <CardHeader bgGradient="linear(to-r, green.50, blue.50)" pb={4}>
+              <HStack justifyContent="space-between" alignItems="center">
+                <Heading size="md" color={headingColor}>صلاحيات الموظف</Heading>
+                <Icon as={FaUserTie} boxSize={6} color="green.500" />
+              </HStack>
+            </CardHeader>
+            <CardBody p={6}>
+              <VStack spacing={4} align="stretch">
+                <HStack justify="space-between" p={4} bg={useColorModeValue("gray.50", "gray.700")} borderRadius="xl">
+                  <VStack align="flex-start" spacing={1}>
+                    <Text fontWeight="bold" color={headingColor}>الاسم</Text>
+                    <Text color={subTextColor}>{employeeData.name}</Text>
+                  </VStack>
+                  <VStack align="flex-end" spacing={1}>
+                    <Text fontWeight="bold" color={headingColor}>البريد الإلكتروني</Text>
+                    <Text color={subTextColor}>{employeeData.email}</Text>
+                  </VStack>
+                </HStack>
+                
+                <HStack justify="space-between" p={4} bg={useColorModeValue("gray.50", "gray.700")} borderRadius="xl">
+                  <VStack align="flex-start" spacing={1}>
+                    <Text fontWeight="bold" color={headingColor}>رقم الهاتف</Text>
+                    <Text color={subTextColor}>{employeeData.phone}</Text>
+                  </VStack>
+                  <VStack align="flex-end" spacing={1}>
+                    <Text fontWeight="bold" color={headingColor}>الحالة</Text>
+                    <Badge 
+                      colorScheme={employeeData.is_active ? "green" : "red"} 
+                      variant="solid" 
+                      borderRadius="full"
+                    >
+                      {employeeData.is_active ? 'نشط' : 'غير نشط'}
+                    </Badge>
+                  </VStack>
+                </HStack>
+
+                <Box p={4} bg={useColorModeValue("gray.50", "gray.700")} borderRadius="xl">
+                  <Text fontWeight="bold" color={headingColor} mb={3}>الصلاحيات الممنوحة</Text>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2}>
+                    {employeeData.permissions.map((permission, index) => (
+                      <HStack key={index} spacing={2} p={2} bg="white" borderRadius="md" shadow="sm">
+                        <Icon as={FaKey} color="blue.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>
+                          {permission === "can_add_teachers" && "إضافة المدرسين"}
+                          {permission === "can_edit_teachers" && "تعديل المدرسين"}
+                          {permission === "can_delete_teachers" && "حذف المدرسين"}
+                          {permission === "can_manage_accounting" && "إدارة المحاسبة"}
+                          {permission === "can_manage_courses" && "إدارة الدورات"}
+                          {permission === "can_manage_students" && "إدارة الطلاب"}
+                          {permission === "can_manage_tasks" && "إدارة المهام"}
+                          {permission === "can_manage_study_groups" && "إدارة المجموعات الدراسية"}
+                          {permission === "can_view_reports" && "عرض التقارير"}
+                          {permission === "can_manage_employees" && "إدارة الموظفين"}
+                          {!permission.startsWith("can_") && permission}
+                        </Text>
+                      </HStack>
+                    ))}
+                  </SimpleGrid>
+                </Box>
+              </VStack>
+            </CardBody>
+          </MotionCard>
+        )}
+
         {/* Tasks, Notifications, Messages Section */}
         <SimpleGrid columns={contentCols} spacing={8}>
           {/* Tasks Card */}
@@ -401,70 +577,109 @@ const AdminDashboardHome = () => {
               </HStack>
             </CardHeader>
             <CardBody p={6}>
-              <VStack spacing={4} align="stretch">
-                {tasks.map((task) => (
-                  <Box 
-                    key={task.id} 
-                    p={4} 
-                    borderRadius="xl" 
-                    bg={useColorModeValue("gray.50", "gray.700")} 
-                    border="1px solid" 
-                    borderColor={borderColor}
-                    shadow="sm"
-                    whileHover={{ x: 5, boxShadow: "md" }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <HStack justifyContent="space-between" alignItems="flex-start" mb={3}>
-                      <VStack align="flex-start" spacing={1} flex={1}>
-                        <Text fontWeight="bold" color={headingColor} fontSize="md">
-                          {task.title}
+              {tasksLoading ? (
+                <VStack spacing={4} py={8}>
+                  <Spinner size="lg" color="blue.500" />
+                  <Text color={subTextColor}>جاري تحميل المهام...</Text>
+                </VStack>
+              ) : tasksError ? (
+                <Alert status="error" borderRadius="lg">
+                  <AlertIcon />
+                  {tasksError}
+                </Alert>
+              ) : apiTasks.length === 0 ? (
+                <VStack spacing={4} py={8}>
+                  <Icon as={FaTasks} boxSize={12} color={subTextColor} />
+                  <Text color={subTextColor} textAlign="center">
+                    لا توجد مهام حالياً
+                  </Text>
+                </VStack>
+              ) : (
+                <VStack spacing={4} align="stretch">
+                  {apiTasks.slice(0, 4).map((task) => (
+                    <Box 
+                      key={task.id} 
+                      p={4} 
+                      borderRadius="xl" 
+                      bg={useColorModeValue("gray.50", "gray.700")} 
+                      border="1px solid" 
+                      borderColor={borderColor}
+                      shadow="sm"
+                      whileHover={{ x: 5, boxShadow: "md" }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <HStack justifyContent="space-between" alignItems="flex-start" mb={3}>
+                        <VStack align="flex-start" spacing={1} flex={1}>
+                          <Text fontWeight="bold" color={headingColor} fontSize="md">
+                            {task.title}
+                          </Text>
+                          <HStack spacing={2}>
+                            <Badge colorScheme={getPriorityColor(task.priority)} variant="solid" borderRadius="full" fontSize="xs">
+                              {getPriorityText(task.priority)}
+                            </Badge>
+                            <Badge colorScheme={getStatusColor(task.status)} variant="subtle" borderRadius="full" fontSize="xs">
+                              {getStatusText(task.status)}
+                            </Badge>
+                          </HStack>
+                        </VStack>
+                        <Icon as={getStatusIcon(task.status)} color={`${getStatusColor(task.status)}.500`} boxSize={5} />
+                      </HStack>
+                      
+                      {task.description && (
+                        <Text fontSize="sm" color={subTextColor} mb={3} noOfLines={2}>
+                          {task.description}
                         </Text>
+                      )}
+                      
+                      <HStack justify="space-between" mb={3}>
                         <HStack spacing={2}>
-                          <Badge colorScheme={getPriorityColor(task.priority)} variant="solid" borderRadius="full" fontSize="xs">
-                            {task.priority}
-                          </Badge>
-                          <Badge colorScheme={getStatusColor(task.status)} variant="subtle" borderRadius="full" fontSize="xs">
-                            {task.status}
-                          </Badge>
+                          <Icon as={FaCalendarAlt} color="purple.500" boxSize={4} />
+                          <Text fontSize="sm" color={subTextColor}>
+                            {formatDate(task.due_date)}
+                          </Text>
                         </HStack>
-                      </VStack>
-                      <IconButton
-                        icon={<FaEye />}
-                        aria-label="عرض المهمة"
-                        size="sm"
-                        colorScheme="blue"
-                        variant="ghost"
-                        borderRadius="full"
-                      />
-                    </HStack>
-                    
-                    <HStack justify="space-between" mb={3}>
-                      <HStack spacing={2}>
-                        <Icon as={FaCalendarAlt} color="purple.500" boxSize={4} />
-                        <Text fontSize="sm" color={subTextColor}>{task.dueDate}</Text>
+                        <Text fontSize="sm" color={subTextColor} fontWeight="medium">
+                          {task.employee_name}
+                        </Text>
                       </HStack>
-                      <Text fontSize="sm" color={subTextColor} fontWeight="medium">
-                        {task.assignee}
-                      </Text>
-                    </HStack>
-                    
-                    <VStack align="flex-start" spacing={2}>
+                      
+                      {task.status === "completed" && task.completed_at && (
+                        <HStack spacing={2} mb={3}>
+                          <Icon as={FaCheckDouble} color="green.500" boxSize={4} />
+                          <Text fontSize="sm" color="green.600" fontWeight="medium">
+                            مكتملة في: {formatDate(task.completed_at)}
+                          </Text>
+                        </HStack>
+                      )}
+                      
                       <HStack justify="space-between" w="full">
-                        <Text fontSize="sm" color={subTextColor}>التقدم</Text>
-                        <Text fontSize="sm" fontWeight="bold" color={headingColor}>{task.progress}%</Text>
+                        <HStack spacing={4}>
+                          {task.comments_count > 0 && (
+                            <HStack spacing={1}>
+                              <Icon as={FaEnvelope} color="blue.500" boxSize={3} />
+                              <Text fontSize="xs" color={subTextColor}>{task.comments_count}</Text>
+                            </HStack>
+                          )}
+                          {task.attachments_count > 0 && (
+                            <HStack spacing={1}>
+                              <Icon as={FaPaperclip} color="purple.500" boxSize={3} />
+                              <Text fontSize="xs" color={subTextColor}>{task.attachments_count}</Text>
+                            </HStack>
+                          )}
+                        </HStack>
+                        <IconButton
+                          icon={<FaEye />}
+                          aria-label="عرض المهمة"
+                          size="sm"
+                          colorScheme="blue"
+                          variant="ghost"
+                          borderRadius="full"
+                        />
                       </HStack>
-                      <Progress 
-                        value={task.progress} 
-                        size="sm" 
-                        colorScheme={getStatusColor(task.status)} 
-                        borderRadius="full"
-                        hasStripe
-                        isAnimated
-                      />
-                    </VStack>
-                  </Box>
-                ))}
-              </VStack>
+                    </Box>
+                  ))}
+                </VStack>
+              )}
             </CardBody>
             <CardFooter justifyContent="flex-end" p={6} pt={0}>
               <Button colorScheme="blue" variant="outline" rightIcon={<FaArrowRight />} borderRadius="xl">

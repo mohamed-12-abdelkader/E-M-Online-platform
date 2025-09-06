@@ -10,8 +10,8 @@ const MyLecture = () => {
 
   return (
     <Box 
-      minH="100vh" 
-      bgGradient={bgGradient}
+     
+      
       pt={{ base: "60px", sm: "70px", md: "80px" }}
       pb={{ base: "80px", sm: "90px", md: "100px" }}
       position="relative"
@@ -64,12 +64,7 @@ const MyLecture = () => {
       
       <ScrollToTop />
 
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-        }
-      `}</style>
+ 
     </Box>
   );
 };

@@ -11,7 +11,9 @@ const CreateCode = () => {
     setN(e.target.value);
   };
   const handleValueChange = (e) => {
-    setValue(e.target.value);
+    
+    
+        setValue(e.target.value);
   };
 
   const handleCreateCode = async (e) => {

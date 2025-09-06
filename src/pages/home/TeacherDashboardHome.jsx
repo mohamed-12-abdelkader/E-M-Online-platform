@@ -501,13 +501,13 @@ const TeacherDashboardHome = () => {
   // Handle delete confirmation
   const handleDeleteConfirm = async () => {
     if (!courseToDelete) return;
-    
+
     try {
       setDeleteLoading(courseToDelete.id);
       await baseUrl.delete(`/api/course/${courseToDelete.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       toast({
         title: "تم الحذف بنجاح",
         description: "تم حذف الكورس بنجاح",
@@ -515,7 +515,7 @@ const TeacherDashboardHome = () => {
         duration: 3000,
         isClosable: true,
       });
-      
+
       // Refresh courses
       const updatedResponse = await baseUrl.get('api/course/my-courses', {
         headers: { Authorization: `Bearer ${token}` },
@@ -786,42 +786,42 @@ const TeacherDashboardHome = () => {
         </MotionCard>
 
         {/* Quick Stats Section */}
-       <MotionBox
-  initial="hidden"
-  animate="visible"
-  variants={staggerVariants}
-  w="full"
->
-  <Heading
-    as="h2"
-    size={{ base: "md", sm: "lg", md: "xl" }}
+        <MotionBox
+          initial="hidden"
+          animate="visible"
+          variants={staggerVariants}
+          w="full"
+        >
+          <Heading 
+            as="h2" 
+            size={{ base: "md", sm: "lg", md: "xl" }} 
     mb={{ base: 6, md: 8 }}
-    color={headingColor}
-    textAlign="center"
-  >
-    إحصائيات سريعة
-  </Heading>
+            color={headingColor} 
+            textAlign="center"
+          >
+            إحصائيات سريعة
+          </Heading>
 
-  <SimpleGrid
+          <SimpleGrid 
     columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
     spacing={{ base: 4, md: 6 }}
-    justifyItems="center"
+            justifyItems="center"
     justifyContent="center"
-    mx="auto"
+            mx="auto"
     w="full"
-  >
-    {statsLoading ? (
+          >
+            {statsLoading ? (
       Array.from({ length: 4 }).map((_, index) => (
-        <MotionCard
-          key={`skeleton-${index}`}
-          bg={cardBg}
+                <MotionCard
+                  key={`skeleton-${index}`}
+                  bg={cardBg}
           borderRadius="2xl"
           shadow="md"
           p={5}
-          textAlign="center"
-          variants={cardVariants}
-          border="1px solid"
-          borderColor={borderColor}
+                  textAlign="center"
+                  variants={cardVariants}
+                  border="1px solid"
+                  borderColor={borderColor}
           w="full"
           maxW={{ base: "280px", sm: "300px", md: "320px" }} // زيادة عرض الكارد
           transition="all 0.3s ease"
@@ -833,11 +833,11 @@ const TeacherDashboardHome = () => {
             borderTopRadius="xl"
             mb={3}
           />
-          <VStack spacing={4}>
-            <Box
-              p={4}
-              borderRadius="full"
-              bg={useColorModeValue("gray.200", "gray.600")}
+                  <VStack spacing={4}>
+                    <Box
+                      p={4}
+                      borderRadius="full"
+                      bg={useColorModeValue("gray.200", "gray.600")}
             >
               <Icon
                 as={quickStats[index]?.icon || FaBookOpen}
@@ -847,25 +847,25 @@ const TeacherDashboardHome = () => {
             </Box>
             <Box w="60%" h="8" bg={useColorModeValue("gray.200", "gray.600")} borderRadius="md" />
             <Box w="80%" h="4" bg={useColorModeValue("gray.200", "gray.600")} borderRadius="md" />
-          </VStack>
-        </MotionCard>
-      ))
-    ) : (
-      updatedStats.map((stat) => (
-        <MotionCard
-          key={stat.id}
-          bg={cardBg}
+                  </VStack>
+                </MotionCard>
+              ))
+            ) : (
+              updatedStats.map((stat) => (
+              <MotionCard
+                key={stat.id}
+                bg={cardBg}
           borderRadius="2xl"
           shadow="lg"
           p={5}
-          textAlign="center"
-          variants={cardVariants}
+                textAlign="center"
+                variants={cardVariants}
           whileHover={{
             scale: 1.03,
             boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
           }}
-          border="1px solid"
-          borderColor={borderColor}
+                border="1px solid"
+                borderColor={borderColor}
           maxW={{ base: "280px", sm: "300px", md: "320px" }} // زيادة عرض الكارد
           w="full"
           transition="all 0.3s ease"
@@ -878,19 +878,19 @@ const TeacherDashboardHome = () => {
           <VStack spacing={3}>
             <Box
               p={4}
-              borderRadius="full"
-              bgGradient={stat.gradient}
-              color="white"
+                    borderRadius="full"
+                    bgGradient={stat.gradient}
+                    color="white"
               shadow="md"
-            >
+                  >
               <Icon as={stat.icon} boxSize={9} />
-            </Box>
+                  </Box>
             <Text fontSize="3xl" fontWeight="bold" color={headingColor}>
-              {stat.value}
-            </Text>
+                      {stat.value}
+                    </Text>
             <Text fontSize="sm" color={subTextColor} fontWeight="medium" noOfLines={2}>
-              {stat.label}
-            </Text>
+                      {stat.label}
+                    </Text>
             <Badge
               colorScheme={stat.colorScheme}
               fontSize="xs"
@@ -899,172 +899,172 @@ const TeacherDashboardHome = () => {
               borderRadius="full"
               bg={useColorModeValue(`${stat.colorScheme}.50`, `${stat.colorScheme}.900`)}
             >
-              {stat.change}
-            </Badge>
-          </VStack>
-        </MotionCard>
-      ))
-    )}
-  </SimpleGrid>
-</MotionBox>
+                      {stat.change}
+                    </Badge>
+                </VStack>
+              </MotionCard>
+            ))
+            )}
+          </SimpleGrid>
+        </MotionBox>
 
 
         {/* My Courses Section */}
-       <MotionBox
-  initial="hidden"
-  animate="visible"
-  variants={staggerVariants}
-  w="full"
->
-  <VStack className="my-5" spacing={{ base: 4, md: 6 }} align="stretch">
-    <VStack spacing={{ base: 4, sm: 5, md: 6 }} align="center" w="full">
-      <Heading
-        as="h2"
-        size={{ base: "lg", sm: "xl", md: "xl" }}
-        color={headingColor}
-        textAlign="center"
-      >
-        كورساتي
-      </Heading>
-
-      <HStack
-        spacing={{ base: 3, sm: 4 }}
-        w="full"
-        justify="center"
-        flexWrap="wrap"
-      >
-        <Select
-          placeholder="كل الصفوف"
-          value={selectedGrade}
-          onChange={e => setSelectedGrade(e.target.value)}
-          w={{ base: "full", sm: "200px", md: "220px" }}
-          borderRadius="xl"
-          dir="ltr"
-          bg={cardBg}
-          borderColor={borderColor}
-          size={{ base: "md", md: "lg" }}
-        >
-          {grades.map(grade => (
-            <option key={grade.id} value={grade.id}>{grade.name}</option>
-          ))}
-        </Select>
-
-        <Button
-          colorScheme="green"
-          leftIcon={<FaBookOpen />}
-          onClick={onOpen}
-          borderRadius="full"
-          size={{ base: "md", md: "lg" }}
-          px={{ base: 8, sm: 6 }}
-        >
-          إنشاء كورس جديد
-        </Button>
-
-        <Button
-          colorScheme="blue"
-          variant="outline"
-          rightIcon={<FaArrowRight />}
-          borderRadius="full"
-          size={{ base: "md", md: "lg" }}
-          px={{ base: 8, sm: 6 }}
-        >
-          عرض جميع الكورسات
-        </Button>
-      </HStack>
-    </VStack>
-  </VStack>
-
-  {loading ? (
-    <Center py={10}>
-      <VStack spacing={4}>
-        <Spinner size="xl" color="blue.500" />
-        <Text color={textColor}>جاري تحميل الكورسات...</Text>
-      </VStack>
-    </Center>
-  ) : error ? (
-    <Center py={10}>
-      <VStack spacing={2}>
-        <Icon as={FaBookOpen} boxSize={12} color="red.500" />
-        <Text color="red.500" fontSize="lg">{error}</Text>
-        <Button colorScheme="blue" onClick={() => window.location.reload()}>
-          إعادة المحاولة
-        </Button>
-      </VStack>
-    </Center>
-  ) : filteredCourses.length === 0 ? (
-    <Center py={10}>
-      <VStack spacing={4}>
-        <Icon as={FaBookOpen} boxSize={12} color="gray.400" />
-        <Text color="gray.500" fontSize="lg">لا توجد كورسات متاحة</Text>
-      </VStack>
-    </Center>
-  ) : (
-    <SimpleGrid 
-      columns={{ base: 1, sm: 1, md: 2, lg: 3, xl: 3 }} 
-      spacing={{ base: 4, sm: 5, md: 5, lg: 6 }}
-      maxW="100%"
-      justifyItems="center"
-    >
-      {filteredCourses.map((course) => (
-        <MotionCard
-          key={course.id}
-          bg={cardBg}
-          borderRadius={{ base: "lg", sm: "xl", md: "2xl" }}
-          shadow="xl"
-          overflow="hidden"
-          variants={cardVariants}
-          whileHover="hover"
-          border="1px solid"
-          borderColor={borderColor}
-          maxW={{ base: "100%", sm: "350px", md: "360px" }}
-          mx="auto"
+        <MotionBox
+          initial="hidden"
+          animate="visible"
+          variants={staggerVariants}
           w="full"
         >
-          <Box position="relative">
-            <Image
-              src={course.avatar}
-              alt={course.title}
-              w="full"
-              h={{ base: "180px", sm: "220px", md: "200px", lg: "200px" }}
-              objectFit="cover"
-            />
-            <Badge
-              position="absolute"
-              top={3}
-              right={3}
-              colorScheme="blue"
-              borderRadius="full"
-              px={3}
-              py={1}
-            >
-              كورس تعليمي
-            </Badge>
+         <VStack className="my-5" spacing={{ base: 4, md: 6 }} align="stretch">
+  <VStack spacing={{ base: 4, sm: 5, md: 6 }} align="center" w="full">
+    <Heading
+      as="h2"
+      size={{ base: "lg", sm: "xl", md: "xl" }}
+      color={headingColor}
+      textAlign="center"
+    >
+      كورساتي
+    </Heading>
+
+    <HStack
+      spacing={{ base: 3, sm: 4 }}
+      w="full"
+      justify="center"
+      flexWrap="wrap"
+    >
+      <Select
+        placeholder="كل الصفوف"
+        value={selectedGrade}
+        onChange={e => setSelectedGrade(e.target.value)}
+        w={{ base: "full", sm: "200px", md: "220px" }}
+        borderRadius="xl"
+        dir="ltr"
+        bg={cardBg}
+        borderColor={borderColor}
+        size={{ base: "md", md: "lg" }}
+      >
+        {grades.map(grade => (
+          <option key={grade.id} value={grade.id}>{grade.name}</option>
+        ))}
+      </Select>
+
+      <Button
+        colorScheme="green"
+        leftIcon={<FaBookOpen />}
+        onClick={onOpen}
+        borderRadius="full"
+        size={{ base: "md", md: "lg" }}
+        px={{ base: 8, sm: 6 }}
+      >
+        إنشاء كورس جديد
+      </Button>
+
+      <Button
+        colorScheme="blue"
+        variant="outline"
+        rightIcon={<FaArrowRight />}
+        borderRadius="full"
+        size={{ base: "md", md: "lg" }}
+        px={{ base: 8, sm: 6 }}
+      >
+        عرض جميع الكورسات
+      </Button>
+    </HStack>
+  </VStack>
+</VStack>
           
-            <HStack
-              position="absolute"
-              top={3}
-              left={3}
-              spacing={2}
+          {loading ? (
+            <Center py={10}>
+              <VStack spacing={4}>
+                <Spinner size="xl" color="blue.500" />
+                <Text color={textColor}>جاري تحميل الكورسات...</Text>
+              </VStack>
+            </Center>
+          ) : error ? (
+            <Center py={10}>
+              <VStack spacing={2}>
+                <Icon as={FaBookOpen} boxSize={12} color="red.500" />
+                <Text color="red.500" fontSize="lg">{error}</Text>
+                <Button colorScheme="blue" onClick={() => window.location.reload()}>
+                  إعادة المحاولة
+                </Button>
+              </VStack>
+            </Center>
+          ) : filteredCourses.length === 0 ? (
+            <Center py={10}>
+              <VStack spacing={4}>
+                <Icon as={FaBookOpen} boxSize={12} color="gray.400" />
+                <Text color="gray.500" fontSize="lg">لا توجد كورسات متاحة</Text>
+              </VStack>
+            </Center>
+          ) : (
+            <SimpleGrid 
+      columns={{ base: 1, sm: 1, md: 2, lg: 3, xl: 3 }} 
+      spacing={{ base: 4, sm: 5, md: 5, lg: 6 }}
+              maxW="100%"
+              justifyItems="center"
             >
-              <IconButton
-                icon={<FaTrash />}
-                aria-label="حذف الكورس"
-                size="sm"
-                colorScheme="red"
-                variant="solid"
-                borderRadius="full"
-                onClick={() => handleDeleteCourse(course.id)}
-                isLoading={deleteLoading === course.id}
-              />
-              <IconButton
-                icon={<FaEdit />}
-                aria-label="تعديل الكورس"
-                size="sm"
-                colorScheme="whiteAlpha"
-                variant="solid"
-                borderRadius="full"
-                onClick={() => handleEditCourse(course)}
-              />
+              {filteredCourses.map((course) => (
+                <MotionCard
+                  key={course.id}
+                  bg={cardBg}
+                  borderRadius={{ base: "lg", sm: "xl", md: "2xl" }}
+                  shadow="xl"
+                  overflow="hidden"
+                  variants={cardVariants}
+                  whileHover="hover"
+                  border="1px solid"
+                  borderColor={borderColor}
+          maxW={{ base: "100%", sm: "350px", md: "360px" }}
+                  mx="auto"
+                  w="full"
+                >
+                  <Box position="relative">
+                    <Image
+                      src={course.avatar}
+                      alt={course.title}
+                      w="full"
+              h={{ base: "180px", sm: "220px", md: "200px", lg: "200px" }}
+                      objectFit="cover"
+                    />
+                    <Badge
+                      position="absolute"
+                      top={3}
+                      right={3}
+                      colorScheme="blue"
+                      borderRadius="full"
+                      px={3}
+                      py={1}
+                    >
+                      كورس تعليمي
+                    </Badge>
+          
+                    <HStack
+                      position="absolute"
+                      top={3}
+                      left={3}
+                      spacing={2}
+                    >
+                      <IconButton
+                        icon={<FaTrash />}
+                        aria-label="حذف الكورس"
+                        size="sm"
+                        colorScheme="red"
+                        variant="solid"
+                        borderRadius="full"
+                        onClick={() => handleDeleteCourse(course.id)}
+                        isLoading={deleteLoading === course.id}
+                      />
+                      <IconButton
+                        icon={<FaEdit />}
+                        aria-label="تعديل الكورس"
+                        size="sm"
+                        colorScheme="whiteAlpha"
+                        variant="solid"
+                        borderRadius="full"
+                        onClick={() => handleEditCourse(course)}
+                      />
               <IconButton
                 icon={course.is_visible ? <FaEye /> : <FaEyeSlash />}
                 aria-label={course.is_visible ? "إخفاء الكورس" : "إظهار الكورس"}
@@ -1075,61 +1075,61 @@ const TeacherDashboardHome = () => {
                 onClick={() => toggleCourseVisibility(course.id, course.is_visible)}
                 isLoading={visibilityLoading[course.id]}
               />
-            </HStack>
-          </Box>
-          
-          <CardBody p={{ base: 3, sm: 4, md: 5, lg: 6 }}>
-            <VStack align="flex-start" spacing={{ base: 2, sm: 3, md: 4 }}>
-              <VStack align="flex-start" spacing={{ base: 1, sm: 2 }} w="full">
-                <Heading size={{ base: "xs", sm: "sm", md: "md" }} color={headingColor} noOfLines={2}>
-                  {course.title}
-                </Heading>
-                <Text color={subTextColor} fontSize={{ base: "2xs", sm: "xs", md: "sm" }} noOfLines={2}>
-                  {course.description}
-                </Text>
-              </VStack>
-              
-              <HStack justify="space-between" w="full">
-                <HStack spacing={{ base: 1, sm: 2 }}>
-                  <Icon as={FaCalendarAlt} color="blue.500" boxSize={{ base: 3, sm: 4 }} />
-                  <Text fontSize={{ base: "2xs", sm: "xs", md: "sm" }} color={textColor}>
-                    {new Date(course.created_at).toLocaleDateString('ar-EG')}
-                  </Text>
-                </HStack>
-                <HStack spacing={{ base: 1, sm: 2 }}>
-                  <Icon as={FaStar} color="yellow.500" boxSize={{ base: 3, sm: 4 }} />
-                  <Text fontSize={{ base: "2xs", sm: "xs", md: "sm" }} color={textColor}>4.5</Text>
-                </HStack>
-              </HStack>
-              
-              <VStack align="flex-start" spacing={{ base: 1, sm: 2 }} w="full">
-                <HStack justify="space-between" w="full">
-                  <Text fontSize={{ base: "2xs", sm: "xs", md: "sm" }} color={subTextColor}>السعر</Text>
-                  <Text fontSize={{ base: "2xs", sm: "xs", md: "sm" }} fontWeight="bold" color={headingColor}>{course.price} </Text>
-                </HStack>
-              </VStack>
-            </VStack>
-          </CardBody>
-          
-          <CardFooter p={{ base: 3, sm: 4, md: 5, lg: 6 }} pt={0}>
-            <Link to={`/CourseDetailsPage/${course.id}`} className="w-[100%]">
-              <Button
-                colorScheme="blue"
-                variant="solid"
-                rightIcon={<FaPlay />}
-                w="full"
-                size={{ base: "sm", sm: "md", md: "lg" }}
-                borderRadius="xl"
-              >
-                إدارة الكورس
-              </Button>
-            </Link>
-          </CardFooter>
-        </MotionCard>
-      ))}
-    </SimpleGrid>
-  )}
-</MotionBox>
+                    </HStack>
+                  </Box>
+                  
+                  <CardBody p={{ base: 3, sm: 4, md: 5, lg: 6 }}>
+                    <VStack align="flex-start" spacing={{ base: 2, sm: 3, md: 4 }}>
+                      <VStack align="flex-start" spacing={{ base: 1, sm: 2 }} w="full">
+                        <Heading size={{ base: "xs", sm: "sm", md: "md" }} color={headingColor} noOfLines={2}>
+                          {course.title}
+                        </Heading>
+                        <Text color={subTextColor} fontSize={{ base: "2xs", sm: "xs", md: "sm" }} noOfLines={2}>
+                          {course.description}
+                        </Text>
+                      </VStack>
+                      
+                      <HStack justify="space-between" w="full">
+                        <HStack spacing={{ base: 1, sm: 2 }}>
+                          <Icon as={FaCalendarAlt} color="blue.500" boxSize={{ base: 3, sm: 4 }} />
+                          <Text fontSize={{ base: "2xs", sm: "xs", md: "sm" }} color={textColor}>
+                            {new Date(course.created_at).toLocaleDateString('ar-EG')}
+                          </Text>
+                        </HStack>
+                        <HStack spacing={{ base: 1, sm: 2 }}>
+                          <Icon as={FaStar} color="yellow.500" boxSize={{ base: 3, sm: 4 }} />
+                          <Text fontSize={{ base: "2xs", sm: "xs", md: "sm" }} color={textColor}>4.5</Text>
+                        </HStack>
+                      </HStack>
+                      
+                      <VStack align="flex-start" spacing={{ base: 1, sm: 2 }} w="full">
+                        <HStack justify="space-between" w="full">
+                          <Text fontSize={{ base: "2xs", sm: "xs", md: "sm" }} color={subTextColor}>السعر</Text>
+                          <Text fontSize={{ base: "2xs", sm: "xs", md: "sm" }} fontWeight="bold" color={headingColor}>{course.price} </Text>
+                        </HStack>
+                      </VStack>
+                    </VStack>
+                  </CardBody>
+                  
+                  <CardFooter p={{ base: 3, sm: 4, md: 5, lg: 6 }} pt={0}>
+                    <Link to={`/CourseDetailsPage/${course.id}`} className="w-[100%]">
+                    <Button
+                      colorScheme="blue"
+                      variant="solid"
+                      rightIcon={<FaPlay />}
+                      w="full"
+                      size={{ base: "sm", sm: "md", md: "lg" }}
+                      borderRadius="xl"
+                      >
+                      إدارة الكورس
+                    </Button>
+                      </Link>
+                  </CardFooter>
+                </MotionCard>
+              ))}
+            </SimpleGrid>
+          )}
+        </MotionBox>
 
 
         {/* Recent Activities Section */}

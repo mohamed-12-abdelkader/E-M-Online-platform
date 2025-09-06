@@ -181,6 +181,8 @@ const AdminMange = () => {
       description: teacher.description || "",
       subject: teacher.subject,
       grade_ids: teacher.grades ? teacher.grades.map(g => g.id.toString()) : [],
+      avatar: teacher.avatar || "",
+      avatarPreview: teacher.avatar ? (teacher.avatar.startsWith('http') ? teacher.avatar : `http://localhost:8000/${teacher.avatar}`) : "",
     });
     onEditOpen();
   };
@@ -200,21 +202,38 @@ const AdminMange = () => {
     try {
       setEditLoading(true);
       const token = localStorage.getItem("token");
-      
-      const updateData = {
-        name: editFormData.name,
-        email: editFormData.email,
-        phone: editFormData.phone,
-        description: editFormData.description,
-        subject: editFormData.subject,
-        grade_ids: editFormData.grade_ids.join(","),
+
+      let updateData;
+      let headers = {
+        Authorization: `Bearer ${token}`,
       };
 
+      if (editFormData.avatarFile) {
+        // رفع صورة جديدة
+        updateData = new FormData();
+        updateData.append("name", editFormData.name);
+        updateData.append("email", editFormData.email);
+        updateData.append("phone", editFormData.phone);
+        updateData.append("description", editFormData.description);
+        updateData.append("subject", editFormData.subject);
+        updateData.append("grade_ids", editFormData.grade_ids.join(","));
+        updateData.append("avatar", editFormData.avatarFile);
+        headers["Content-Type"] = "multipart/form-data";
+      } else {
+        // بدون صورة جديدة
+        updateData = {
+          name: editFormData.name,
+          email: editFormData.email,
+          phone: editFormData.phone,
+          description: editFormData.description,
+          subject: editFormData.subject,
+          grade_ids: editFormData.grade_ids.join(","),
+        };
+        headers["Content-Type"] = "application/json";
+      }
+
       await baseUrl.put(`/api/teacher/${selectedTeacher.id}`, updateData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers,
       });
 
       toast({
@@ -226,17 +245,22 @@ const AdminMange = () => {
       });
 
       // تحديث البيانات في القائمة
-      setTeachers(prev => prev.map(teacher => 
-        teacher.id === selectedTeacher.id 
-          ? { 
-              ...teacher, 
-              ...editFormData,
-              grades: editFormData.grade_ids.map(id => 
-                grades.find(g => g.id.toString() === id)
-              ).filter(Boolean)
-            }
-          : teacher
-      ));
+      setTeachers((prev) =>
+        prev.map((teacher) =>
+          teacher.id === selectedTeacher.id
+            ? {
+                ...teacher,
+                ...editFormData,
+                avatar: editFormData.avatarPreview
+                  ? editFormData.avatarPreview
+                  : teacher.avatar,
+                grades: editFormData.grade_ids
+                  .map((id) => grades.find((g) => g.id.toString() === id))
+                  .filter(Boolean),
+              }
+            : teacher
+        )
+      );
 
       onEditClose();
     } catch (error) {
@@ -540,6 +564,70 @@ const AdminMange = () => {
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4}>
+              {/* حقل صورة المدرس */}
+              <FormControl>
+                <FormLabel fontWeight="bold">صورة المدرس</FormLabel>
+                <VStack spacing={2} align="start">
+                  {editFormData.avatarPreview || editFormData.avatar ? (
+                    <Box position="relative">
+                      <Avatar
+                        size="xl"
+                        src={
+                          editFormData.avatarPreview
+                            ? editFormData.avatarPreview
+                            : editFormData.avatar?.startsWith("http")
+                              ? editFormData.avatar
+                              : editFormData.avatar
+                              ? `http://localhost:8000/${editFormData.avatar.replace(/^\/+/, "")}`
+                              : undefined
+                        }
+                        name={editFormData.name}
+                        mb={2}
+                      />
+                      <Button
+                        size="xs"
+                        colorScheme="red"
+                        onClick={() =>
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            avatar: "",
+                            avatarPreview: "",
+                            avatarFile: null,
+                          }))
+                        }
+                        mt={1}
+                      >
+                        حذف الصورة
+                      </Button>
+                    </Box>
+                  ) : null}
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            avatar: "",
+                            avatarPreview: reader.result,
+                            avatarFile: file,
+                          }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    size="sm"
+                    p={1}
+                  />
+                  <Text fontSize="xs" color="gray.500">
+                    يمكنك رفع صورة جديدة (PNG, JPG, JPEG)
+                  </Text>
+                </VStack>
+              </FormControl>
+
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="full">
                 <FormControl isRequired>
                   <FormLabel fontWeight="bold">اسم المدرس</FormLabel>

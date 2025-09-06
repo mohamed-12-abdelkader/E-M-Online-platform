@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import {
   Box,
-  Grid,
-  GridItem,
   Heading,
   Icon,
   Text,
@@ -10,50 +8,33 @@ import {
   useBreakpointValue,
   useColorModeValue,
   SimpleGrid,
-  Stack,
   Badge,
   Avatar,
   Button,
-  Divider,
-  Image,
   useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalCloseButton,
   ModalBody,
   ModalFooter,
   VStack,
   HStack,
-  IconButton,
-  Tooltip,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow,
+  Card,
 } from "@chakra-ui/react";
 import {
-  FaUsers,
   FaChalkboardTeacher,
   FaTrophy,
   FaBookOpen,
   FaSearch,
   FaBell,
-  FaCalendarAlt,
-  FaChartLine,
   FaGraduationCap,
-  FaStar,
-  FaPlay,
-  FaEye,
   FaArrowRight,
-  FaCrown,
-  FaMedal,
   FaFire,
   FaRocket,
   FaLightbulb,
-  FaAward,
+  FaGift,
+  FaClock,
 } from "react-icons/fa";
 import { FiExternalLink } from "react-icons/fi";
 import MyLecture from "../leacter/MyLecture";
@@ -63,7 +44,7 @@ import { motion } from "framer-motion";
 import UserType from "../../Hooks/auth/userType";
 
 const MotionBox = motion(Box);
-const MotionGridItem = motion(GridItem);
+const MotionCard = motion(Card);
 
 const HomePage = () => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -73,31 +54,79 @@ const HomePage = () => {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [userData, isAdmin, isTeacher, student] = UserType();
 
+  // بيانات المسابقات والإشعارات
+  const competitionNotifications = [
+    {
+      id: 1,
+      title: "مسابقة الرياضيات",
+      message: "مسابقة جديدة في الرياضيات! شارك واربح 100 نقطة",
+      time: "منذ 2 ساعة",
+      type: "competition",
+      urgent: true
+    },
+    {
+      id: 2,
+      title: "مسابقة اللغة الإنجليزية",
+      message: "مسابقة في قواعد اللغة الإنجليزية تنتهي غداً",
+      time: "منذ 5 ساعات",
+      type: "competition",
+      urgent: false
+    },
+    {
+      id: 3,
+      title: "مسابقة العلوم",
+      message: "مسابقة في العلوم للصف الثالث الثانوي",
+      time: "منذ يوم",
+      type: "competition",
+      urgent: false
+    },
+    {
+      id: 4,
+      title: "مسابقة التاريخ",
+      message: "مسابقة في التاريخ الإسلامي للصف الثاني الثانوي",
+      time: "منذ يومين",
+      type: "competition",
+      urgent: false
+    },
+    {
+      id: 5,
+      title: "مسابقة الجغرافيا",
+      message: "مسابقة في الجغرافيا الطبيعية",
+      time: "منذ 3 أيام",
+      type: "competition",
+      urgent: false
+    }
+  ];
+
+  // عدد الإشعارات المعروضة في البداية
+  const [visibleNotifications, setVisibleNotifications] = useState(2);
+  const [showAllNotifications, setShowAllNotifications] = useState(false);
+
   // روابط التنقل الرئيسية
   const mainLinks = [
     {
       name: "ابحث عن محاضر",
       href: "/teachers",
       icon: FaSearch,
-      color: "purple.500",
+      color: "blue.500",
       desc: "ابحث عن أفضل المحاضرين في تخصصك",
-      gradient: "linear(to-br, purple.400, purple.600)"
+      gradient: "linear(135deg, blue.400, blue.600)"
     },
     {
       name: "محاضرينى",
       href: "/my-teachers",
       icon: FaChalkboardTeacher,
-      color: "green.500",
+      color: "orange.500",
       desc: "المحاضرين الذين تدرس معهم حالياً",
-      gradient: "linear(to-br, green.400, green.600)"
+      gradient: "linear(135deg, orange.400, orange.600)"
     },
     {
       name: "المسابقات",
       href: "/competitions",
       icon: FaTrophy,
-      color: "yellow.500",
+      color: "blue.300",
       desc: "شارك واربح جوائز قيمة",
-      gradient: "linear(to-br, yellow.400, orange.500)"
+      gradient: "linear(135deg, blue.300, blue.500)"
     },
     {
       name: "كورساتي",
@@ -105,49 +134,11 @@ const HomePage = () => {
       icon: FaBookOpen,
       color: "blue.500",
       desc: "الكورسات المشترك بها",
-      gradient: "linear(to-br, blue.400, blue.600)"
+      gradient: "linear(135deg, blue.500, blue.700)"
     },
   ];
 
-  // إحصائيات سريعة
-  const stats = [
-    {
-      icon: FaGraduationCap,
-      label: "الكورسات المكتملة",
-      value: "3",
-      color: "blue.500",
-      gradient: "linear(to-br, blue.400, blue.600)",
-      change: "+1 هذا الشهر",
-      bg: "blue.50"
-    },
-    {
-      icon: FaChartLine,
-      label: "النقاط المجمعة",
-      value: "1,245",
-      color: "green.500",
-      gradient: "linear(to-br, green.400, green.600)",
-      change: "+150 هذا الأسبوع",
-      bg: "green.50"
-    },
-    {
-      icon: FaUsers,
-      label: "المحاضرين",
-      value: "5",
-      color: "purple.500",
-      gradient: "linear(to-br, purple.400, purple.600)",
-      change: "+2 هذا الشهر",
-      bg: "purple.50"
-    },
-    {
-      icon: FaCalendarAlt,
-      label: "الأيام المتتالية",
-      value: "12",
-      color: "orange.500",
-      gradient: "linear(to-br, orange.400, orange.600)",
-      change: "+3 أيام",
-      bg: "orange.50"
-    },
-  ];
+
 
   const studentData = {
     name: "أحمد محمد",
@@ -162,10 +153,6 @@ const HomePage = () => {
   const textColor = useColorModeValue("gray.700", "gray.200");
   const headingColor = useColorModeValue("gray.800", "gray.100");
   const borderColor = useColorModeValue("gray.200", "gray.600");
-  const headerGradient = useColorModeValue(
-    "linear(to-r, blue.500, blue.600)",
-    "linear(to-r, blue.600, blue.700)"
-  );
 
   const handleAnnouncementClick = (announcement) => {
     setSelectedAnnouncement(announcement);
@@ -193,10 +180,6 @@ const HomePage = () => {
     visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
     hover: {
       scale: 1.02,
-      boxShadow: useColorModeValue(
-        "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-        "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)"
-      ),
       transition: { duration: 0.2 }
     }
   };
@@ -209,220 +192,316 @@ const HomePage = () => {
 
   return (
     <Box 
-      width="95%" 
-      mx="auto" 
+      width="100%" 
       minHeight="100vh" 
       bg={bgColor}
       py={{ base: 4, md: 6, lg: 8 }}
+      px={{ base: 4, md: 6, lg: 8 }}
     >
+             {/* Header Section & Competition Notifications - الترحيب وإشعارات المسابقات */}
+       <MotionBox
+         initial="hidden"
+         animate="visible"
+         variants={containerVariants}
+         mb={{ base: 6, md: 8 }}
+       >
+         <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
       {/* Header Section - الترحيب */}
-      <Box width="100%" my={{ base: 3, md: 5 }}>
-        <Flex
-          direction="column"
-          bgGradient={headerGradient}
-          p={{ base: 4, sm: 5, md: 6, lg: 8 }}
-          borderRadius="xl"
-          width="100%"
-          minHeight={{ base: "180px", md: "200px" }}
-          mt={{ base: 4, md: 8 }}
+             <Box
+               bgGradient="linear(135deg, blue.500, blue.600)"
+               borderRadius="3xl"
+               p={{ base: 4, md: 6, lg: 8 }}
           position="relative"
           overflow="hidden"
+               boxShadow="0 20px 40px rgba(59, 130, 246, 0.3)"
+               height="100%"
+               display="flex"
+               flexDirection="column"
         >
           {/* Background Elements */}
-          <Box position="absolute" top={-10} right={-10} opacity={0.1}>
-            <Icon as={FaGraduationCap} w={{ base: 20, sm: 24, md: 32 }} h={{ base: 20, sm: 24, md: 32 }} />
+             <Box position="absolute" top={-20} right={-20} opacity={0.1}>
+               <Icon as={FaGraduationCap} w={32} h={32} color="white" />
           </Box>
-          <Box position="absolute" bottom={-10} left={-10} opacity={0.1}>
-            <Icon as={FaRocket} w={{ base: 16, sm: 20, md: 24 }} h={{ base: 16, sm: 20, md: 24 }} />
+             <Box position="absolute" bottom={-20} left={-20} opacity={0.1}>
+               <Icon as={FaRocket} w={24} h={24} color="white" />
           </Box>
 
-          <Flex 
-            direction={{ base: "column", md: "row" }} 
-            align="center" 
+                           <VStack 
+                align={{ base: "center", lg: "flex-start" }} 
+                spacing={{ base: 3, md: 4 }} 
+                color="white"
+                height="100%"
             justify="space-between"
-            zIndex={1}
-          >
-            <VStack 
-              align={{ base: "center", md: "flex-start" }} 
-              spacing={{ base: 2, sm: 3, md: 4 }} 
-              flex={1}
-              width="100%"
-            >
+              >
+                <VStack spacing={{ base: 3, md: 4 }} align={{ base: "center", lg: "flex-start" }}>
               <Badge
                 bg="whiteAlpha.20"
                 color="white"
-                px={{ base: 2, sm: 3, md: 4 }}
-                py={{ base: 1, sm: 1.5, md: 2 }}
+                    px={4}
+                    py={2}
                 borderRadius="full"
-                fontSize={{ base: "xs", sm: "sm" }}
+                    fontSize="sm"
                 fontWeight="semibold"
                 backdropFilter="blur(10px)"
+                    border="1px solid"
+                    borderColor="whiteAlpha.30"
               >
                 🎓 منصة التعلم الذكية
               </Badge>
               
               <Heading
-                color="white"
-                as="h1"
                 size={headingSize}
                 fontWeight="extrabold"
-                letterSpacing="tight"
-                textAlign={{ base: "center", md: "right" }}
+                    textAlign={{ base: "center", lg: "right" }}
                 textShadow="0 4px 8px rgba(0,0,0,0.3)"
-                lineHeight={{ base: 1.3, md: 1.1 }}
+                    lineHeight={1.2}
               >
-                مرحباً بك في منصتك التعليمية! 🚀
+                    مرحباً {user.name} ! 🚀
               </Heading>
               
               <Text
-                color="whiteAlpha.900"
                 fontSize={subHeadingSize}
                 fontWeight="medium"
-                textAlign={{ base: "center", md: "right" }}
-                maxW={{ base: "280px", sm: "400px", md: "500px", lg: "600px" }}
-                lineHeight={{ base: 1.5, md: 1.3 }}
+                    textAlign={{ base: "center", lg: "right" }}
+                    maxW="500px"
+                    lineHeight={1.6}
+                    opacity={0.9}
               >
                 استكشف عالم التعلم الرقمي مع أفضل المحاضرين واحصل على تجربة تعليمية فريدة
               </Text>
             </VStack>
 
-            <HStack 
-              spacing={{ base: 3, sm: 4, md: 6 }} 
-              mt={{ base: 3, sm: 4, md: 6, lg: 0 }}
-            >
-              <Avatar
-                name={`${user.fname} ${user.lname}`}
-                src={studentData.avatar}
-                size={avatarSize}
-                border="4px solid"
-                borderColor="whiteAlpha.400"
-                shadow="2xl"
-              />
-              
-              <VStack 
-                align={{ base: "center", md: "flex-start" }} 
-                spacing={{ base: 1, sm: 1.5, md: 2 }}
-              >
+                <VStack spacing={2} align="center">
                 <Text 
                   fontWeight="bold" 
-                  fontSize={{ base: "sm", sm: "md", md: "lg", lg: "xl" }} 
-                  color="white"
+                    fontSize={{ base: "md", md: "lg" }} 
                   textShadow="0 2px 4px rgba(0,0,0,0.3)" 
-                  textAlign={{ base: "center", md: "left" }}
                 >
                   {user.fname} {user.lname}
                 </Text>
                 
-                <Text 
-                  fontSize={{ base: "xs", sm: "sm" }} 
-                  color="whiteAlpha.800" 
-                  textAlign={{ base: "center", md: "left" }}
-                >
+                  <Text fontSize="sm" opacity={0.8}>
                   كود الطالب: {user?.id}
                 </Text>
                 
                 <Badge
-                  colorScheme="blue"
+                    colorScheme="orange"
                   variant="solid"
                   borderRadius="full"
-                  px={{ base: 1.5, sm: 2, md: 3 }}
-                  py={{ base: 0.5, sm: 0.5, md: 1 }}
-                  bg="whiteAlpha.20"
-                  backdropFilter="blur(10px)"
-                  fontSize={{ base: "xs", sm: "sm" }}
+                    px={3}
+                    py={1}
+                    bg="orange.500"
+                    fontSize="xs"
                 >
                   طالب نشط ⭐
                 </Badge>
               </VStack>
-            </HStack>
-          </Flex>
-        </Flex>
+              </VStack>
+           </Box>
+
+                                   {/* Competition Notifications - إشعارات المسابقات */}
+             <Box
+               bgGradient="linear(135deg, orange.400, orange.500)"
+               borderRadius="2xl"
+               p={{ base: 3, md: 4 }}
+               position="relative"
+               overflow="hidden"
+               boxShadow="0 15px 30px rgba(251, 146, 60, 0.3)"
+               height="100%"
+               display="flex"
+               flexDirection="column"
+             >
+              {/* Background Pattern */}
+              <Box position="absolute" top={-10} right={-10} opacity={0.1}>
+                <Icon as={FaTrophy} w={24} h={24} color="white" />
       </Box>
 
-      {/* Main Content */}
-      <Box width="100%" px={{ base: 2, sm: 4, md: 6, lg: 8 }}>
-        <VStack width="100%" align="stretch" spacing={{ base: 4, sm: 6, md: 8, lg: 10 }}>
+              <VStack spacing={4} align="stretch" height="100%" justify="space-between">
+                <HStack justify="space-between" align="center">
+                  <HStack spacing={3}>
+                    <Icon as={FaBell} color="white" boxSize={6} />
+                    <Heading size="md" color="white">
+                      إشعارات المسابقات
+                    </Heading>
+                    <Badge 
+                      colorScheme="white" 
+                      variant="solid" 
+                      borderRadius="full"
+                      bg="whiteAlpha.20"
+                    >
+                      {competitionNotifications.length}
+                    </Badge>
+                  </HStack>
+                  
+                  <Button
+                    as={Link}
+                    to="/competitions"
+                    size="sm"
+                    colorScheme="white"
+                    variant="outline"
+                    borderRadius="full"
+                    _hover={{ bg: "whiteAlpha.20" }}
+                    rightIcon={<FaArrowRight />}
+                  >
+                    عرض جميع المسابقات
+                  </Button>
+                </HStack>
+
+                <VStack spacing={4} align="stretch" flex={1} overflow="hidden">
+                  <SimpleGrid columns={1} spacing={4}>
+                    {competitionNotifications.slice(0, visibleNotifications).map((notification, index) => (
+                      <MotionCard
+                        key={notification.id}
+                        variants={itemVariants}
+                        bg="white"
+                        borderRadius="xl"
+                        p={4}
+                        cursor="pointer"
+                        _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
+                        transition="all 0.2s"
+                        onClick={() => handleAnnouncementClick(notification)}
+                      >
+                        <VStack spacing={3} align="stretch">
+                          <HStack justify="space-between" align="start">
+                            <VStack align="start" spacing={1} flex={1}>
+                              <HStack spacing={2}>
+                                <Icon 
+                                  as={notification.urgent ? FaFire : FaGift} 
+                                  color={notification.urgent ? "red.500" : "orange.500"} 
+                                  boxSize={4}
+                                />
+                                <Text fontWeight="bold" fontSize="sm" color="gray.800">
+                                  {notification.title}
+                                </Text>
+                              </HStack>
+                              <Text fontSize="xs" color="gray.600" noOfLines={2}>
+                                {notification.message}
+                              </Text>
+                            </VStack>
+                            
+                            {notification.urgent && (
+                              <Badge colorScheme="red" variant="solid" size="sm">
+                                عاجل
+                              </Badge>
+                            )}
+                          </HStack>
+                          
+                          <HStack justify="space-between" fontSize="xs" color="gray.500">
+                            <HStack spacing={1}>
+                              <Icon as={FaClock} />
+                              <Text>{notification.time}</Text>
+                            </HStack>
+                            <Button
+                              size="xs"
+                              colorScheme="blue"
+                              variant="ghost"
+                              borderRadius="full"
+                              _hover={{ bg: "blue.50" }}
+                            >
+                              عرض التفاصيل
+                            </Button>
+                          </HStack>
+                        </VStack>
+                      </MotionCard>
+                    ))}
+                  </SimpleGrid>
+
+                  {/* زر عرض المزيد من الإشعارات */}
+                  {competitionNotifications.length > visibleNotifications && (
+                    <Button
+                      size="sm"
+                      colorScheme="white"
+                      variant="outline"
+                      borderRadius="full"
+                      _hover={{ bg: "whiteAlpha.20" }}
+                      onClick={() => {
+                        if (showAllNotifications) {
+                          setVisibleNotifications(2);
+                          setShowAllNotifications(false);
+                        } else {
+                          setVisibleNotifications(competitionNotifications.length);
+                          setShowAllNotifications(true);
+                        }
+                      }}
+                      width="100%"
+                      leftIcon={showAllNotifications ? <FaArrowRight style={{ transform: 'rotate(180deg)' }} /> : <FaArrowRight />}
+                    >
+                      {showAllNotifications ? "عرض أقل" : `عرض ${competitionNotifications.length - visibleNotifications} إشعارات أخرى`}
+                    </Button>
+                  )}
+                </VStack>
+              </VStack>
+            </Box>
+         </SimpleGrid>
+       </MotionBox>
+
+      
+
           {/* Quick Actions - الوصول السريع */}
-          <Box width="100%">
             <MotionBox
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        mb={{ base: 6, md: 8 }}
+      >
+        <Box
               bg={cardBg}
-              borderRadius="xl"
-              shadow="md"
+          borderRadius="2xl"
+          shadow="lg"
               border="1px solid"
               borderColor={borderColor}
-              width="100%"
               overflow="hidden"
-              variants={itemVariants}
-            >
-              <Flex
-                bgGradient="linear(to-r, blue.50, green.50)"
-                px={{ base: 4, sm: 5, md: 6 }}
-                py={3}
+        >
+          <Box
+            bgGradient="linear(135deg, blue.50, blue.100)"
+            px={6}
+            py={4}
                 borderBottom="1px solid"
                 borderColor={borderColor}
-                width="100%"
-                align="center"
-                justify="center"
-              >
-                <HStack spacing={{ base: 2, sm: 3, md: 4 }}>
-                  <Icon as={FaLightbulb} color="blue.500" boxSize={{ base: 4, sm: 5, md: 6 }} />
-                  <Heading 
-                    size={{ base: "sm", md: "md" }} 
-                    color={headingColor}
-                    textAlign="center"
-                  >
+          >
+            <HStack spacing={3}>
+              <Icon as={FaLightbulb} color="blue.500" boxSize={6} />
+              <Heading size="md" color="blue.700">
                     الوصول السريع
                   </Heading>
                 </HStack>
-              </Flex>
+          </Box>
               
-              <Box p={{ base: 3, sm: 4, md: 5, lg: 6 }} width="100%">
+          <Box p={6}>
                 <SimpleGrid 
-                  columns={{ base: 1, sm: 2, md: 2, lg: 4 }} 
-                  spacing={{ base: 3, sm: 4, md: 5 }}
+              columns={{ base: 1, sm: 2, md: 4 }} 
+              spacing={5}
                 >
                   {mainLinks.map((link, index) => (
                     <Link key={index} to={link.href}>
-                      <MotionBox
+                  <MotionCard
+                    variants={itemVariants}
                         bg={cardBg}
-                        borderRadius="lg"
+                    borderRadius="xl"
                         shadow="md"
-                        p={{ base: 3, md: 4, lg: 5 }}
-                        variants={itemVariants}
-                        whileHover={{
-                          scale: 1.05,
-                          boxShadow: useColorModeValue(
-                            "0 10px 20px rgba(0, 0, 0, 0.1)", 
-                            "0 10px 20px rgba(0, 0, 0, 0.3)"
-                          )
-                        }}
-                        transition={{ duration: 0.2 }}
+                    p={5}
                         cursor="pointer"
                         border="1px solid"
                         borderColor={borderColor}
-                        width="100%"
-                        minHeight={{ base: "100px", sm: "120px", md: "140px" }}
+                    _hover={{ transform: "translateY(-4px)", shadow: "xl" }}
+                    transition="all 0.3s"
+                    height="100%"
                       >
-                        <VStack spacing={{ base: 2, sm: 3, md: 4 }} align="center" height="100%">
+                    <VStack spacing={4} align="center" height="100%">
                           <Box
-                            p={{ base: 2, sm: 3 }}
+                        p={4}
                             borderRadius="full"
                             bgGradient={link.gradient}
                             color="white"
-                            shadow="md"
+                        shadow="lg"
                           >
-                            <Icon as={link.icon} boxSize={{ base: 4, sm: 5 }} />
+                        <Icon as={link.icon} boxSize={6} />
                           </Box>
                           
-                          <VStack 
-                            spacing={{ base: 1, sm: 2 }} 
-                            align="center" 
-                            flex={1} 
-                            justify="center"
-                          >
+                      <VStack spacing={2} align="center" flex={1}>
                             <Text 
                               fontWeight="bold" 
-                              fontSize={{ base: "sm", sm: "md" }} 
+                          fontSize="md" 
                               color={textColor}
                               textAlign="center"
                             >
@@ -430,131 +509,170 @@ const HomePage = () => {
                             </Text>
                             
                             <Text 
-                              fontSize={{ base: "xs", sm: "sm" }} 
+                          fontSize="sm" 
                               color="gray.500" 
                               textAlign="center"
                               noOfLines={2}
-                              lineHeight="1.3"
+                          lineHeight="1.4"
                             >
                               {link.desc}
                             </Text>
                           </VStack>
+                      
+                      <Icon 
+                        as={FaArrowRight} 
+                        color={link.color} 
+                        boxSize={4}
+                        opacity={0.7}
+                      />
                         </VStack>
-                      </MotionBox>
+                  </MotionCard>
                     </Link>
                   ))}
                 </SimpleGrid>
+          </Box>
               </Box>
             </MotionBox>
-          </Box>
 
           {/* My Teachers - محاضرينى */}
           <MotionBox
   initial="hidden"
   animate="visible"
   variants={containerVariants}
-  width="100%"
+        mb={{ base: 6, md: 8 }}
 >
   <Box
     bg={cardBg}
-    borderRadius="xl"
-    shadow="md"
+          borderRadius="2xl"
+          shadow="lg"
     border="1px solid"
     borderColor={borderColor}
-    width="100%"
     overflow="hidden"
-    dir="rtl" // ✅ أضف هذا السطر هنا
-  >
-    <Flex
-      bgGradient="linear(to-r, green.50, blue.50)"
-      px={{ base: 4, sm: 5, md: 6 }}
-      py={3}
+        >
+          <Box
+            bgGradient="linear(135deg, orange.50, orange.100)"
+            px={6}
+            py={4}
       borderBottom="1px solid"
       borderColor={borderColor}
-      width="100%"
-      align="center"
-      justify="start"
-    >
-      <HStack spacing={{ base: 2, sm: 3, md: 4 }}>
-        <Icon as={FaChalkboardTeacher} color="green.500" boxSize={{ base: 4, sm: 5, md: 6 }} />
-        <Heading 
-          size={{ base: "sm", md: "md" }} 
-          color={headingColor}
-          textAlign="center"
-        >
+          >
+            <HStack spacing={3}>
+              <Icon as={FaChalkboardTeacher} color="orange.500" boxSize={6} />
+              <Heading size="md" color="orange.700">
           محاضرينى
         </Heading>
         <Badge 
-          colorScheme="green" 
-          variant="subtle" 
+                colorScheme="orange" 
+                variant="solid" 
           borderRadius="full" 
-          fontSize={{ base: "xs", sm: "sm" }}
+                bg="orange.500"
         >
           مميز
         </Badge>
       </HStack>
-    </Flex>
+          </Box>
     
-    <Box p={{ base: 3, sm: 4, md: 5 }}>
+          <Box p={6}>
       <MyTeacher />
     </Box>
   </Box>
 </MotionBox>
-
 
           {/* My Lectures - كورساتي */}
           <MotionBox
             initial="hidden"
             animate="visible"
             variants={containerVariants}
-            width="100%"
+        mb={{ base: 6, md: 8 }}
           >
             <Box
               bg={cardBg}
-              borderRadius="xl"
-              shadow="md"
+          borderRadius="2xl"
+          shadow="lg"
               border="1px solid"
               borderColor={borderColor}
-              width="100%"
               overflow="hidden"
             >
-              <Flex
-                bgGradient="linear(to-r, blue.50, purple.50)"
-                px={{ base: 4, sm: 5, md: 6 }}
-                py={3}
+          <Box
+            bgGradient="linear(135deg, blue.50, blue.100)"
+            px={6}
+            py={4}
                 borderBottom="1px solid"
                 borderColor={borderColor}
-                width="100%"
-                align="center"
-                justify="center"
-              >
-                <HStack spacing={{ base: 2, sm: 3, md: 4 }}>
-                  <Icon as={FaBookOpen} color="blue.500" boxSize={{ base: 4, sm: 5, md: 6 }} />
-                  <Heading 
-                    size={{ base: "sm", md: "md" }} 
-                    color={headingColor}
-                    textAlign="center"
-                  >
+          >
+            <HStack spacing={3}>
+              <Icon as={FaBookOpen} color="blue.500" boxSize={6} />
+              <Heading size="md" color="blue.700">
                     كورساتي
                   </Heading>
                   <Badge 
                     colorScheme="blue" 
-                    variant="subtle" 
+                variant="solid" 
                     borderRadius="full" 
-                    fontSize={{ base: "xs", sm: "sm" }}
+                bg="blue.500"
                   >
                     نشط
                   </Badge>
                 </HStack>
-              </Flex>
+          </Box>
               
-              <Box p={{ base: 3, sm: 4, md: 5 }}>
+          <Box p={6}>
                 <MyLecture />
               </Box>
             </Box>
           </MotionBox>
+
+      {/* Notification Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="md">
+        <ModalOverlay />
+        <ModalContent borderRadius="xl">
+          <ModalHeader bg="blue.500" color="white" borderRadius="xl">
+            <HStack spacing={3}>
+              <Icon as={FaBell} />
+              <Text>تفاصيل الإشعار</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalBody py={6}>
+            {selectedAnnouncement && (
+              <VStack spacing={4} align="stretch">
+                <Box>
+                  <Text fontWeight="bold" fontSize="lg" color="gray.800" mb={2}>
+                    {selectedAnnouncement.title}
+                  </Text>
+                  <Text color="gray.600" lineHeight="1.6">
+                    {selectedAnnouncement.message}
+                  </Text>
+                </Box>
+                
+                <HStack justify="space-between" fontSize="sm" color="gray.500">
+                  <HStack spacing={2}>
+                    <Icon as={FaClock} />
+                    <Text>{selectedAnnouncement.time}</Text>
+                  </HStack>
+                  {selectedAnnouncement.urgent && (
+                    <Badge colorScheme="red" variant="solid">
+                      عاجل
+                    </Badge>
+                  )}
+                </HStack>
         </VStack>
-      </Box>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose} variant="ghost" mr={3}>
+              إغلاق
+            </Button>
+            <Button 
+              as={Link} 
+              to="/competitions" 
+              colorScheme="blue"
+              leftIcon={<FaTrophy />}
+            >
+              عرض المسابقات
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

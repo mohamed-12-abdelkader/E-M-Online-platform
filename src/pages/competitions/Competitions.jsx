@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Box, 
   Skeleton, 
@@ -14,7 +14,13 @@ import {
   Icon,
   useColorModeValue,
   Stack,
-  Divider
+  Divider,
+  useToast,
+  Image,
+  HStack,
+  Card,
+  CardBody,
+  CardFooter
 } from "@chakra-ui/react";
 import { 
   FiAward, 
@@ -23,10 +29,14 @@ import {
   FiCalendar,
   FiBarChart2,
   FiChevronRight,
-  FiStar
+  FiStar,
+  FiPlay,
+  FiUserCheck,
+  FiUserPlus
 } from "react-icons/fi";
-import useGitComps from "../../Hooks/student/competition/useGitComps";
-import { CoursesCard } from "../../ui/card/CoursesCard";
+import baseUrl from "../../api/baseUrl";
+import { Link } from "react-router-dom";
+import ScrollToTop from "../../components/scollToTop/ScrollToTop";
 
 // بيانات الطالب (يمكن استبدالها ببيانات حقيقية من API)
 const studentData = {
@@ -60,10 +70,310 @@ const CompetitionSkeleton = () => {
   );
 };
 
+// كارد المسابقة المخصص
+const CompetitionCard = ({ competition, onSubscribe, onUnsubscribe, isLoading }) => {
+  const isSubscribed = competition.is_enrolled;
+  const cardBg = useColorModeValue("white", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  
+  return (
+    <Card 
+      bg={cardBg} 
+      shadow="lg" 
+      borderRadius="xl" 
+      border="1px solid" 
+      borderColor={borderColor}
+      _hover={{ transform: 'translateY(-4px)', shadow: 'xl' }}
+      transition="all 0.3s"
+      overflow="hidden"
+    >
+      {/* صورة المسابقة */}
+      <Box position="relative">
+        <Image
+          src={competition.image_url || 'https://via.placeholder.com/300x200?text=صورة+المسابقة'}
+          alt={competition.title}
+          height="200px"
+          width="100%"
+          objectFit="cover"
+          fallbackSrc="https://via.placeholder.com/300x200?text=صورة+المسابقة"
+        />
+        
+        {/* Badges للحالة */}
+        <HStack position="absolute" top={3} right={3} spacing={2}>
+          <Badge 
+            colorScheme={competition.is_active ? "green" : "red"}
+            variant="solid"
+            borderRadius="full"
+            px={2}
+            py={1}
+          >
+            {competition.is_active ? "نشطة" : "متوقفة"}
+          </Badge>
+          <Badge 
+            colorScheme={competition.is_visible ? "blue" : "gray"}
+            variant="solid"
+            borderRadius="full"
+            px={2}
+            py={1}
+          >
+            {competition.is_visible ? "مرئية" : "مخفية"}
+          </Badge>
+        </HStack>
+      </Box>
+
+      <CardBody p={6}>
+        {/* عنوان المسابقة */}
+        <Heading size="md" mb={3} color="gray.800" noOfLines={2}>
+          {competition.title}
+        </Heading>
+        
+        {/* وصف المسابقة */}
+        <Text color="gray.600" mb={4} noOfLines={3}>
+          {competition.description || "لا يوجد وصف للمسابقة"}
+        </Text>
+
+        {/* تفاصيل المسابقة */}
+        <VStack spacing={3} align="stretch">
+          {/* الصف الدراسي */}
+          <HStack justify="space-between">
+            <Text fontSize="sm" color="gray.500">الصف الدراسي:</Text>
+            <Badge colorScheme="purple" variant="subtle">
+              {competition.grade_name}
+            </Badge>
+          </HStack>
+
+          {/* مدة المسابقة */}
+          <HStack justify="space-between">
+            <Text fontSize="sm" color="gray.500">المدة:</Text>
+            <HStack spacing={1}>
+              <Icon as={FiClock} color="orange.500" />
+              <Text fontWeight="semibold">{competition.duration} دقيقة</Text>
+            </HStack>
+          </HStack>
+
+          {/* عدد الأسئلة */}
+          <HStack justify="space-between">
+            <Text fontSize="sm" color="gray.500">عدد الأسئلة:</Text>
+            <Text fontWeight="semibold" color="blue.600">
+              {competition.questions_count} سؤال
+            </Text>
+          </HStack>
+
+          {/* تاريخ الإنشاء */}
+          <HStack justify="space-between">
+            <Text fontSize="sm" color="gray.500">تاريخ الإنشاء:</Text>
+            <Text fontSize="sm" color="gray.600">
+              {new Date(competition.created_at).toLocaleDateString('ar-EG')}
+            </Text>
+          </HStack>
+        </VStack>
+      </CardBody>
+
+      <CardFooter p={6} pt={0}>
+        <VStack spacing={3} w="full">
+          {/* زر الاشتراك/إلغاء الاشتراك */}
+          <Button
+            w="full"
+            colorScheme={isSubscribed ? "red" : "blue"}
+            variant={isSubscribed ? "outline" : "solid"}
+            leftIcon={isSubscribed ? <FiUserCheck /> : <FiUserPlus />}
+            onClick={() => isSubscribed ? onUnsubscribe(competition.id) : onSubscribe(competition.id)}
+            isLoading={isLoading}
+            size="lg"
+            borderRadius="xl"
+          >
+            {isSubscribed ? "إلغاء الاشتراك" : "اشتراك في المسابقة"}
+          </Button>
+
+          {/* زر عرض المسابقة - يظهر فقط للمشتركين */}
+          {isSubscribed && (
+            <Button
+              w="full"
+              colorScheme="green"
+              variant="outline"
+              leftIcon={<FiPlay />}
+              as={Link}
+              to={`/competition/${competition.id}`}
+              size="md"
+              borderRadius="xl"
+              _hover={{ bg: "green.50" }}
+            >
+              دخول المسابقة
+            </Button>
+          )}
+        </VStack>
+      </CardFooter>
+    </Card>
+  );
+};
+
 const Competitions = () => {
-  const [compsLoading, comps, refetchComps] = useGitComps();
+  const [competitions, setCompetitions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState({});
+  const [studentSubscriptions, setStudentSubscriptions] = useState(new Set());
+  const toast = useToast();
+  
   const bgColor = useColorModeValue("gray.50", "gray.800");
   const cardBg = useColorModeValue("white", "gray.700");
+
+  const fetchCompetitions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const response = await baseUrl.get('api/competitions/student', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.data?.success) {
+        setCompetitions(response.data.data || []);
+        
+        // تحديث حالة الاشتراكات أيضاً
+        const enrolledCompetitions = response.data.data.filter(comp => comp.is_enrolled);
+        const enrolledIds = new Set(enrolledCompetitions.map(comp => comp.id));
+        setStudentSubscriptions(enrolledIds);
+      } else {
+        throw new Error('فشل في جلب المسابقات');
+      }
+    } catch (err) {
+      setError(err?.message || 'حدث خطأ غير متوقع');
+      toast({
+        title: 'خطأ',
+        description: 'فشل في جلب المسابقات',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // جلب اشتراكات الطالب
+  const fetchStudentSubscriptions = async () => {
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const response = await baseUrl.get('api/competitions/student', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (response.data?.success) {
+        // تحديث قائمة المسابقات مع حالة الاشتراك
+        setCompetitions(response.data.data || []);
+        
+        // نستخدم حقل is_enrolled من API لتحديد المسابقات المشترك فيها
+        const enrolledCompetitions = response.data.data.filter(comp => comp.is_enrolled);
+        const enrolledIds = new Set(enrolledCompetitions.map(comp => comp.id));
+        setStudentSubscriptions(enrolledIds);
+      }
+    } catch (error) {
+      console.error('Error fetching subscriptions:', error);
+    }
+  };
+
+  // الاشتراك في مسابقة
+  const handleSubscribe = async (competitionId) => {
+    try {
+      setSubscriptionLoading(prev => ({ ...prev, [competitionId]: true }));
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      
+      const response = await baseUrl.post(`api/competitions/${competitionId}/join`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.data?.success) {
+        // تحديث حالة الاشتراك في القائمة
+        updateCompetitionEnrollment(competitionId, true);
+        
+        toast({
+          title: 'تم الاشتراك',
+          description: 'تم الاشتراك في المسابقة بنجاح',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error subscribing:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل في الاشتراك في المسابقة',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setSubscriptionLoading(prev => ({ ...prev, [competitionId]: false }));
+    }
+  };
+
+  // دالة مساعدة لتحديث حالة مسابقة واحدة
+  const updateCompetitionEnrollment = (competitionId, isEnrolled) => {
+    setCompetitions(prev => prev.map(comp => 
+      comp.id === competitionId 
+        ? { ...comp, is_enrolled: isEnrolled }
+        : comp
+    ));
+    
+    setStudentSubscriptions(prev => {
+      const newSet = new Set(prev);
+      if (isEnrolled) {
+        newSet.add(competitionId);
+      } else {
+        newSet.delete(competitionId);
+      }
+      return newSet;
+    });
+  };
+
+  // إلغاء الاشتراك من مسابقة
+  const handleUnsubscribe = async (competitionId) => {
+    try {
+      setSubscriptionLoading(prev => ({ ...prev, [competitionId]: true }));
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      
+      const response = await baseUrl.delete(`api/competitions/${competitionId}/leave`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.data?.success) {
+        // تحديث حالة الاشتراك في القائمة
+        updateCompetitionEnrollment(competitionId, false);
+        
+        toast({
+          title: 'تم إلغاء الاشتراك',
+          description: 'تم إلغاء الاشتراك من المسابقة بنجاح',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error unsubscribing:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل في إلغاء الاشتراك من المسابقة',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setSubscriptionLoading(prev => ({ ...prev, [competitionId]: false }));
+    }
+  };
+
+  useEffect(() => {
+    fetchCompetitions();
+  }, []);
 
   return (
     <Box bg={bgColor} minH="100vh" pb="120px">
@@ -147,7 +457,7 @@ const Competitions = () => {
               </Box>
               <Box>
                 <Text fontSize="sm" color="gray.500">المسابقات النشطة</Text>
-                <Text fontWeight="bold" fontSize="xl">12</Text>
+                <Text fontWeight="bold" fontSize="xl">{competitions.filter(c => c.is_active).length}</Text>
               </Box>
             </Flex>
           </Box>
@@ -171,8 +481,8 @@ const Competitions = () => {
                 <Icon as={FiUsers} />
               </Box>
               <Box>
-                <Text fontSize="sm" color="gray.500">المشاركين</Text>
-                <Text fontWeight="bold" fontSize="xl">348</Text>
+                <Text fontSize="sm" color="gray.500">إجمالي المسابقات</Text>
+                <Text fontWeight="bold" fontSize="xl">{competitions.length}</Text>
               </Box>
             </Flex>
           </Box>
@@ -196,8 +506,8 @@ const Competitions = () => {
                 <Icon as={FiClock} />
               </Box>
               <Box>
-                <Text fontSize="sm" color="gray.500">الوقت المتبقي</Text>
-                <Text fontWeight="bold" fontSize="xl">3 أيام</Text>
+                <Text fontSize="sm" color="gray.500">متوسط المدة</Text>
+                <Text fontWeight="bold" fontSize="xl">{competitions.length ? Math.round(competitions.reduce((s,c)=>s+c.duration,0)/competitions.length) : 0} دقيقة</Text>
               </Box>
             </Flex>
           </Box>
@@ -221,8 +531,8 @@ const Competitions = () => {
                 <Icon as={FiBarChart2} />
               </Box>
               <Box>
-                <Text fontSize="sm" color="gray.500">ترتيبك</Text>
-                <Text fontWeight="bold" fontSize="xl">#24</Text>
+                <Text fontSize="sm" color="gray.500">المرئية</Text>
+                <Text fontWeight="bold" fontSize="xl">{competitions.filter(c => c.is_visible).length}</Text>
               </Box>
             </Flex>
           </Box>
@@ -263,7 +573,7 @@ const Competitions = () => {
 
         {/* Competitions Grid */}
         <Box>
-          {compsLoading ? (
+          {loading ? (
             <SimpleGrid 
               columns={{ base: 1, sm: 2, md: 3 }} 
               spacing="4"
@@ -272,18 +582,19 @@ const Competitions = () => {
                 <CompetitionSkeleton key={index} />
               ))}
             </SimpleGrid>
-          ) : comps?.data?.length > 0 ? (
+          ) : competitions?.length > 0 ? (
             <SimpleGrid 
               columns={{ base: 1, sm: 2, md: 3 }} 
               spacing="4"
             >
-              {comps.data.map((comp, idx) => (
-                <CoursesCard
-                  type={"comp"}
-                  lectre={comp}
-                  key={comp.id || idx}
-                  href={`/competition/${comp.id}`}
-                />
+              {competitions.map((comp, idx) => (
+                                 <CompetitionCard
+                   key={comp.id || idx}
+                   competition={comp}
+                   onSubscribe={handleSubscribe}
+                   onUnsubscribe={handleUnsubscribe}
+                   isLoading={subscriptionLoading[comp.id]}
+                 />
               ))}
             </SimpleGrid>
           ) : (
@@ -297,15 +608,19 @@ const Competitions = () => {
               <Text fontSize="xl" mb="4">لا توجد مسابقات متاحة حالياً</Text>
               <Button 
                 colorScheme="blue"
-                onClick={refetchComps}
+                onClick={fetchCompetitions}
                 leftIcon={<Icon as={FiAward} />}
               >
                 تحديث القائمة
               </Button>
+              {error && (
+                <Text mt="3" color="red.500" fontSize="sm">{error}</Text>
+              )}
             </Center>
           )}
         </Box>
       </Box>
+      <ScrollToTop/>
     </Box>
   );
 };

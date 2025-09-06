@@ -35,7 +35,7 @@ import { useState, useEffect } from "react";
 import { FaHeart, FaMoon, FaRegComment, FaReply, FaSun, FaBookOpen, FaVideo, FaFileAlt, FaBell, FaCheck } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { MdNotificationsActive } from "react-icons/md";
-import logo from "../../../public/2 (5).png";
+import logo from "../../../public/Picsart_25-08-26_23-28-39-014.png";
 import logo2 from "../../../public/logooo.png";
 import baseUrl from "../../api/baseUrl";
 
@@ -87,6 +87,16 @@ export default function Nav() {
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      
+      // Check if error message indicates session expired
+      if (error.response && error.response.data && error.response.data.message === "Session expired or replaced") {
+        // Clear localStorage and redirect to login
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+        return;
+      }
+      
       setNotifications({ notifications: [] });
       setUnreadCount(0);
     } finally {
@@ -121,6 +131,15 @@ export default function Nav() {
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Error marking notification as read:', error);
+      
+      // Check if error message indicates session expired
+      if (error.response && error.response.data && error.response.data.message === "Session expired or replaced") {
+        // Clear localStorage and redirect to login
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+        return;
+      }
     }
   };
 
@@ -142,7 +161,7 @@ export default function Nav() {
           <Link to={user ? `/home` : "/"}>
        
             <div className="flex items-center space-x-2 space-x-reverse">
-                 <img  src={colorMode === "light" ? logo : logo2} alt="شعار أكاديمية EM"  className="h-40 w-auto" />
+                 <img  src={logo} alt="شعار أكاديمية EM"  className="h-[65px] w-auto" />
                                 
            </div>
           </Link>

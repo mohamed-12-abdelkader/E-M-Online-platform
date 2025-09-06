@@ -93,7 +93,12 @@ import {
   FaCalendar,
   FaKey,
   FaLock, // New: For locked lectures
-  FaSearch, // For no data component
+  FaSearch,
+  FaRegFileAlt,
+  FaListOl,
+  FaTimes,
+  FaCheck,
+  FaFilm, // For no data component
 } from "react-icons/fa";
 import baseUrl from "../../api/baseUrl";
 import UserType from "../../Hooks/auth/userType";
@@ -137,50 +142,82 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading}>
+     <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading} size="lg">
       <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>
-          {type === 'add' ? 'إضافة محاضرة جديدة' : 'تعديل المحاضرة'}
+      <ModalContent borderRadius="2xl" boxShadow="2xl">
+        <ModalHeader display="flex" alignItems="center" fontWeight="bold" fontSize="xl" color="blue.600">
+          <Icon as={FaChalkboardTeacher} className="ml-2" />
+          {type === "add" ? "إضافة محاضرة جديدة" : "تعديل المحاضرة"}
         </ModalHeader>
         <ModalCloseButton isDisabled={loading} />
         <form onSubmit={handleSubmit}>
           <ModalBody>
-            <VStack spacing={4}>
+            <VStack spacing={5} align="stretch">
+              {/* عنوان المحاضرة */}
               <FormControl isRequired>
-                <FormLabel>عنوان المحاضرة</FormLabel>
+                <FormLabel display="flex" alignItems="center" gap={2}>
+                  <FaChalkboardTeacher /> عنوان المحاضرة
+                </FormLabel>
                 <Input
                   value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="أدخل عنوان المحاضرة"
+                  borderRadius="lg"
                 />
               </FormControl>
+
+              {/* وصف المحاضرة */}
               <FormControl>
-                <FormLabel>وصف المحاضرة (اختياري)</FormLabel>
+                <FormLabel display="flex" alignItems="center" gap={2}>
+                  <FaRegFileAlt /> وصف المحاضرة (اختياري)
+                </FormLabel>
                 <Textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="أدخل وصف المحاضرة"
                   rows={3}
+                  borderRadius="lg"
                 />
               </FormControl>
+
+              {/* ترتيب المحاضرة */}
               <FormControl isRequired>
-                <FormLabel>ترتيب المحاضرة</FormLabel>
+                <FormLabel display="flex" alignItems="center" gap={2}>
+                  <FaListOl /> ترتيب المحاضرة
+                </FormLabel>
                 <Input
                   type="number"
                   value={formData.position}
-                  onChange={(e) => setFormData({...formData, position: parseInt(e.target.value)})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, position: parseInt(e.target.value) })
+                  }
                   placeholder="أدخل ترتيب المحاضرة"
+                  borderRadius="lg"
                 />
               </FormControl>
             </VStack>
           </ModalBody>
+
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
+            <Button
+              variant="outline"
+              colorScheme="red"
+              mr={3}
+              onClick={onClose}
+              leftIcon={<FaTimes />}
+              borderRadius="xl"
+            >
               إلغاء
             </Button>
-            <Button colorScheme="blue" type="submit" isLoading={loading}>
-              {type === 'add' ? 'إضافة' : 'تعديل'}
+            <Button
+            className="mx-2"
+              colorScheme="blue"
+              type="submit"
+              isLoading={loading}
+              leftIcon={<FaCheck />}
+              borderRadius="xl"
+            >
+              {type === "add" ? "إضافة" : "تعديل"}
             </Button>
           </ModalFooter>
         </form>
@@ -217,52 +254,96 @@ const VideoModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading 
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading}>
+    <Modal
+      isOpen={isOpen}
+      onClose={loading ? undefined : onClose}
+      closeOnOverlayClick={!loading}
+      size="lg"
+    >
       <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>
-          {type === 'add' ? 'إضافة فيديو جديد' : 'تعديل الفيديو'}
+      <ModalContent borderRadius="2xl" boxShadow="2xl">
+        <ModalHeader
+          display="flex"
+          alignItems="center"
+          gap={2}
+          fontWeight="bold"
+          fontSize="xl"
+          color="blue.600"
+        >
+          <Icon as={FaFilm} />
+          {type === "add" ? "إضافة فيديو جديد" : "تعديل الفيديو"}
         </ModalHeader>
         <ModalCloseButton isDisabled={loading} />
         <form onSubmit={handleSubmit}>
           <ModalBody>
-            <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>رابط الفيديو</FormLabel>
-                <Input
-                  value={formData.video_url}
-                  onChange={(e) => setFormData({...formData, video_url: e.target.value})}
-                  placeholder="أدخل رابط الفيديو"
-                  isDisabled={loading}
-                />
-              </FormControl>
+            <VStack spacing={5} align="stretch">
+              {/* رابط الفيديو */}
+             
+
+              {/* عنوان الفيديو */}
               <FormControl>
-                <FormLabel>عنوان الفيديو (اختياري)</FormLabel>
+                <FormLabel display="flex" alignItems="center" gap={2}>
+                  <FaRegFileAlt /> عنوان الفيديو (اختياري)
+                </FormLabel>
                 <Input
                   value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="أدخل عنوان الفيديو"
                   isDisabled={loading}
+                  borderRadius="lg"
                 />
               </FormControl>
+ <FormControl isRequired>
+                <FormLabel display="flex" alignItems="center" gap={2}>
+                  <FaVideo /> رابط الفيديو
+                </FormLabel>
+                <Input
+                  value={formData.video_url}
+                  onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                  placeholder="أدخل رابط الفيديو"
+                  isDisabled={loading}
+                  borderRadius="lg"
+                />
+              </FormControl>
+              {/* ترتيب الفيديو */}
               <FormControl isRequired>
-                <FormLabel>ترتيب الفيديو</FormLabel>
+                <FormLabel display="flex" alignItems="center" gap={2}>
+                  <FaListOl /> ترتيب الفيديو
+                </FormLabel>
                 <Input
                   type="number"
                   value={formData.position}
-                  onChange={(e) => setFormData({...formData, position: parseInt(e.target.value)})}
+                  onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value) })}
                   placeholder="أدخل ترتيب الفيديو"
                   isDisabled={loading}
+                  borderRadius="lg"
                 />
               </FormControl>
             </VStack>
           </ModalBody>
+
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose} isDisabled={loading}>
+            <Button
+              variant="outline"
+              colorScheme="red"
+              mr={3}
+              onClick={onClose}
+              isDisabled={loading}
+              leftIcon={<FaTimes />}
+              borderRadius="xl"
+            >
               إلغاء
             </Button>
-            <Button colorScheme="blue" type="submit" isLoading={loading} loadingText={type === 'add' ? 'جاري الإضافة...' : 'جاري التعديل...'}>
-              {type === 'add' ? 'إضافة' : 'تعديل'}
+            <Button
+              colorScheme="blue"
+              type="submit"
+              isLoading={loading}
+              loadingText={type === "add" ? "جاري الإضافة..." : "جاري التعديل..."}
+              leftIcon={!loading && <FaCheck />}
+              borderRadius="xl"
+              className="mx-2"
+            >
+              {type === "add" ? "إضافة" : "تعديل"}
             </Button>
           </ModalFooter>
         </form>
@@ -1978,7 +2059,7 @@ D) has made`}
         maxW="container.xl"
         mx="auto"
         py={{ base: 4, sm: 6, md: 16 }}
-        px={{ base: 2, sm: 4, md: 6, lg: 10 }}
+       
         gap={{ base: 4, sm: 6, md: 8 }}
       >
         <MotionBox
@@ -1988,7 +2069,7 @@ D) has made`}
           bg={sectionBg}
           borderRadius={{ base: 'xl', md: '2xl' }}
           shadow={{ base: 'lg', md: 'xl' }}
-          p={{ base: 3, sm: 4, md: 6, lg: 8 }}
+        
           w="100%"
           minW={0}
           overflowX="hidden"
@@ -2007,7 +2088,6 @@ D) has made`}
               <Box
                 bg={useColorModeValue("white", "gray.800")}
                 borderRadius="2xl"
-                p={{ base: 4, md: 6 }}
                 shadow="lg"
                 border="1px solid"
                 borderColor={useColorModeValue("gray.200", "gray.700")}

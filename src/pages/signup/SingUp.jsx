@@ -551,25 +551,25 @@ const SignUp = () => {
               <h2 className="text-2xl font-bold text-gray-800 mb-2">اختر صفك الدراسي</h2>
               <p className="text-gray-600">حدد الصف الدراسي المحدد</p>
             </Box>
-            
+
             <FormControl>
               <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
-                الصف الدراسي
-              </FormLabel>
-              <Select
-                dir="ltr"
+            الصف الدراسي
+          </FormLabel>
+          <Select
+            dir="ltr"
                 placeholder={selectedCategory ? "اختر الصف الدراسي" : "اختر الفئة الدراسية أولاً"}
                 value={gradeId}
                 onChange={(e) => setGradeId(e.target.value)}
-                size="lg"
-                focusBorderColor="blue.500"
-                _placeholder={{ color: "gray.400" }}
+            size="lg"
+            focusBorderColor="blue.500"
+            _placeholder={{ color: "gray.400" }}
                 borderColor="gray.200"
                 borderRadius="xl"
                 py={4}
                 px={6}
                 className="text-gray-800 transition-all duration-300"
-                bg="white"
+            bg="white"
                 isDisabled={!selectedCategory}
                 _hover={{ borderColor: selectedCategory ? "gray.300" : "gray.200" }}
                 _focus={{ 
@@ -579,15 +579,15 @@ const SignUp = () => {
                 }}
               >
                 {getFilteredGradesByCategory(selectedCategory).map((grade) => (
-                  <option key={grade.id} value={grade.id}>{grade.name}</option>
-                ))}
-              </Select>
+              <option key={grade.id} value={grade.id}>{grade.name}</option>
+            ))}
+          </Select>
               {!selectedCategory && (
                 <Text fontSize="sm" color="orange.500" mt={2}>
                   ⚠️ يجب اختيار الفئة الدراسية أولاً
                 </Text>
               )}
-            </FormControl>
+        </FormControl>
           </VStack>
         );
 

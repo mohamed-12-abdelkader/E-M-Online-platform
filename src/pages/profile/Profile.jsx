@@ -1,55 +1,47 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IoPersonCircleSharp } from "react-icons/io5";
-import { MdAttachEmail, MdEdit, MdSave, MdCancel } from "react-icons/md";
+import { MdAttachEmail } from "react-icons/md";
 import { FaPhone, FaGraduationCap } from "react-icons/fa";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop"; // Ensure this path is correct
+import baseUrl from "../../api/baseUrl";
 
 const Profile = () => {
-  // Retrieve user data from localStorage and initialize state
-  const initialUser = JSON.parse(localStorage.getItem("user")) || {};
-  const [user, setUser] = useState(initialUser);
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState(initialUser); // State to hold form input values
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
 
-  // Handle input changes in edit mode
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("يرجى تسجيل الدخول للوصول إلى الملف الشخصي.");
+          setLoading(false);
+          return;
+        }
+        const response = await baseUrl.get("/api/student/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(response.data);
+      } catch (err) {
+        setError(
+          err.response?.data?.message || "فشل في جلب البيانات. حاول مرة أخرى."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMe();
+  }, []);
 
-  // Handle saving changes
-  const handleSave = () => {
-    // --- IMPORTANT: This is where you'd typically send data to your backend ---
-    console.log("Saving user data:", formData);
-    // For now, we'll just update localStorage and local state
-    localStorage.setItem("user", JSON.stringify(formData));
-    setUser(formData); // Update the displayed user data
-    setIsEditing(false); // Exit edit mode
-    // --- You would typically make an API call here, e.g.:
-    // axios.put('/api/users/profile', formData)
-    //   .then(response => {
-    //     localStorage.setItem("user", JSON.stringify(response.data));
-    //     setUser(response.data);
-    //     setIsEditing(false);
-    //     alert('Profile updated successfully!');
-    //   })
-    //   .catch(error => {
-    //     console.error('Error updating profile:', error);
-    //     alert('Failed to update profile. Please try again.');
-    //   });
-  };
-
-  // Handle canceling edits
-  const handleCancel = () => {
-    setFormData(user); // Revert form data to the original user data
-    setIsEditing(false); // Exit edit mode
-  };
-
-  // Helper function to render grade text
+  // Helper to render grade text from array or id/string
   const getGradeText = (grade) => {
+    if (Array.isArray(grade)) {
+      if (grade.length === 0) return "غير محدد";
+      return grade.map((g) => g?.name).filter(Boolean).join("، ");
+    }
+    if (typeof grade === "string") return grade || "غير محدد";
     switch (parseInt(grade)) {
       case 1:
         return "الصف الأول الثانوي";
@@ -64,103 +56,98 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center py-20 px-4">
-      {/* Container for the profile card */}
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden my-10 transform transition-all duration-500 hover:scale-[1.01]">
-        {/* Profile Header */}
         <div className="relative bg-gradient-to-r from-blue-700 to-blue-500 p-8 text-white text-center">
           <div className="absolute inset-0 bg-pattern opacity-10"></div>
-          <IoPersonCircleSharp className="mx-auto text-8xl mb-4 drop-shadow-lg" />
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt="avatar"
+              className="mx-auto w-28 h-28 rounded-full object-cover mb-4 ring-4 ring-white/40 shadow-xl"
+            />
+          ) : (
+            <IoPersonCircleSharp className="mx-auto text-8xl mb-4 drop-shadow-lg" />)
+          }
           <h1 className="font-extrabold text-3xl md:text-4xl leading-tight tracking-wide relative z-10">
             ملفي الشخصي
           </h1>
           <p className="text-blue-100 text-lg mt-2 relative z-10">إدارة معلوماتك الشخصية</p>
-
-          {/* Edit Button */}
-          {!isEditing && user.mail && ( // Only show edit button if user data exists and not in edit mode
-            <button
-              onClick={() => setIsEditing(true)}
-              className="absolute top-4 right-4 p-2 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300"
-              title="تعديل الملف الشخصي"
-            >
-              <MdEdit className="text-2xl" />
-            </button>
-          )}
         </div>
 
-        {/* Profile Details / Edit Form */}
         <div className="p-6 md:p-8 space-y-6">
-          {user.mail ? ( // Check if user has data (e.g., by checking if email exists)
+          {loading ? (
+            <div className="text-center py-10">
+              <p className="text-xl font-semibold text-gray-600">جاري تحميل البيانات...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-10">
+              <p className="text-xl font-semibold text-red-600">{error}</p>
+            </div>
+          ) : user ? (
             <>
-              {/* Student Name */}
               <ProfileField
                 icon={<IoPersonCircleSharp />}
                 label="اسم الطالب:"
-                value={`${formData.fname || ""} ${formData.lname || ""}`}
-                name="fname" // Using fname as the primary name field for simplicity in formData
-                isEditing={isEditing}
-                onChange={handleChange}
+                value={user.name || ""}
+                isEditing={false}
                 type="text"
-                splitNames={true} // Indicate that name needs to be split
-                fname={formData.fname}
-                lname={formData.lname}
               />
 
-              {/* Email */}
               <ProfileField
                 icon={<MdAttachEmail />}
                 label="ايميل الطالب:"
-                value={formData.mail || ""}
-                name="mail"
-                isEditing={isEditing}
-                onChange={handleChange}
-                type="email"
+                value={user.email || "غير متوفر"}
+                isEditing={false}
+                type="text"
               />
 
-              {/* Phone */}
               <ProfileField
                 icon={<FaPhone />}
                 label="رقم الهاتف:"
-                value={formData.phone || ""}
-                name="phone"
-                isEditing={isEditing}
-                onChange={handleChange}
-                type="tel"
+                value={user.phone || ""}
+                isEditing={false}
+                type="text"
               />
 
-              {/* Academic Grade */}
+              <ProfileField
+                icon={<FaPhone />}
+                label="رقم ولي الأمر:"
+                value={user.parent_phone || "غير متوفر"}
+                isEditing={false}
+                type="text"
+              />
+
               <ProfileField
                 icon={<FaGraduationCap />}
                 label="الصف الدراسي:"
-                value={getGradeText(formData.grad)}
-                name="grad"
-                isEditing={isEditing}
-                onChange={handleChange}
-                type="select" // Use a select input for grade
-              >
-                <option value="1">الصف الأول الثانوي</option>
-                <option value="2">الصف الثاني الثانوي</option>
-                <option value="3">الصف الثالث الثانوي</option>
-              </ProfileField>
+                value={getGradeText(user?.grades)}
+                isEditing={false}
+                type="text"
+              />
 
-              {/* Save/Cancel Buttons in Edit Mode */}
-              {isEditing && (
-                <div className="flex justify-end space-x-4 mt-8">
-                  <button
-                    onClick={handleCancel}
-                    className="flex items-center px-6 py-3 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300 font-semibold"
-                  >
-                    <MdCancel className="ml-2 text-xl" />
-                    إلغاء
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 font-semibold"
-                  >
-                    <MdSave className="ml-2 text-xl" />
-                    حفظ التغييرات
-                  </button>
-                </div>
-              )}
+              <ProfileField
+                icon={<IoPersonCircleSharp />}
+                label="الدور:"
+                value={user.role === "student" ? "طالب" : user.role || ""}
+                isEditing={false}
+                type="text"
+              />
+
+              <ProfileField
+                icon={<IoPersonCircleSharp />}
+                label="تاريخ الانضمام:"
+                value={
+                  user.created_at
+                    ? new Date(user.created_at).toLocaleDateString("ar-EG", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "غير متوفر"
+                }
+                isEditing={false}
+                type="text"
+              />
             </>
           ) : (
             <div className="text-center py-10">

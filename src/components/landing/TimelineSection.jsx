@@ -1,35 +1,47 @@
 import React from 'react';
-import { FaChartBar, FaTasks } from 'react-icons/fa';
+import { FaChartBar, FaCalendarAlt, FaVideo, FaMoneyBillWave, FaChalkboardTeacher } from 'react-icons/fa';
 import { BsChatDots } from 'react-icons/bs';
 import { Slide } from 'react-awesome-reveal'; // ← استيراد الأنيميشن
 
 const steps = [
   {
     id: 1,
-    title: 'حدد احتياج وضع التفاصيل',
-    description: 'نحدد احتياجك من المشروع ونفهم متطلباتك وتفاصيل المشروع بشكل دقيق',
-    icon: <BsChatDots size={24} />,
+    title: 'أنشئ حساب مدرس وملفك التعريفي',
+    description: 'سجّل كمعلم، عرّف بنفسك وحدد المواد التي تقدمها للطلاب.',
+    icon: <FaChalkboardTeacher size={24} />,
   },
   {
     id: 2,
-    title: 'بحث ودراسة المشروع',
-    description: 'نقوم بإجراء بحث ودراسة معمقة لفهم نطاق المشروع والسوق المستهدف',
-    icon: <FaChartBar size={24} />,
+    title: 'أنشئ دورتك وحدد الجدول الزمني',
+    description: 'أضف محتوى الدورة، نظّم المجموعات، واضبط مواعيد المحاضرات بسهولة.',
+    icon: <FaCalendarAlt size={24} />,
   },
   {
     id: 3,
-    title: 'البدء في تخطيط وتحديد المهام',
-    description: 'نقوم بتحديد الأهداف ووضع خطة عمل مفصلة تشمل جميع المهام والجداول الزمنية',
-    icon: <FaTasks size={24} />,
+    title: 'ابدأ البث وارفع التسجيلات',
+    description: 'قدّم محاضرات مباشرة بجودة عالية مع حفظ التسجيلات وإتاحتها فورًا.',
+    icon: <FaVideo size={24} />,
+  },
+  {
+    id: 4,
+    title: 'أنشئ اختبارات وتابع نتائج الطلاب',
+    description: 'اختبارات تلقائية التصحيح وتقارير تفصيلية لمستويات الطلاب.',
+    icon: <FaChartBar size={24} />,
+  },
+  {
+    id: 5,
+    title: 'راقب الأداء واستلم أرباحك',
+    description: 'لوحات تحليلات لحظية مع إدارة أرباح وطرق سحب مرنة وآمنة.',
+    icon: <FaMoneyBillWave size={24} />,
   },
 ];
 
 const TimelineSection = () => {
   return (
     <div className="py-12 px-4 text-center">
-      <h3 className="text-purple-400 mb-2 text-lg">الجدول الزمني للمشروع</h3>
-      <h2 className="text-3xl font-bold mb-2">كيف نعمل</h2>
-      <p className="text-gray-400 mb-12">عملية خطوة بخطوة لتسليم مشروعك.</p>
+      <h3 className="text-purple-400 mb-2 text-lg">رحلة المدرس على منصتنا</h3>
+      <h2 className="text-3xl font-bold mb-2">كيف تبدأ وتنجح</h2>
+      <p className="text-gray-400 mb-12">خطوات واضحة للانطلاق وإدارة عملك التعليمي باحتراف.</p>
 
       <div className="relative max-w-5xl mx-auto">
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 h-full w-1 bg-gray-700 rounded" />

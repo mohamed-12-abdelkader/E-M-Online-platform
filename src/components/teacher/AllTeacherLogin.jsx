@@ -1,9 +1,9 @@
 import { useState } from "react";
+
 import { PiChalkboardTeacherBold } from "react-icons/pi";
 import {
   Box,
   Heading,
-  Spinner,
   FormControl,
   Input,
   Button,
@@ -17,13 +17,11 @@ import {
   VStack,
   HStack,
 } from "@chakra-ui/react";
+
 import { MdCancelPresentation } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { FaVideo } from "react-icons/fa";
 import useGitTeacherByToken from "../../Hooks/student/GitTeacherByToken";
-import { FaUserCircle } from "react-icons/fa";
-import img from "../../img/Screenshot_2025-03-07_210502-removebg-preview.png";
-import { motion } from "framer-motion";
 
 const AllTeacherLogin = () => {
   const [loading, teachers] = useGitTeacherByToken();
@@ -55,7 +53,11 @@ const AllTeacherLogin = () => {
 
     // Boost score for consecutive character matches
     let matchLength = 0;
-    for (let i = 0; i < normalizedText.length && i < normalizedQuery.length; i++) {
+    for (
+      let i = 0;
+      i < normalizedText.length && i < normalizedQuery.length;
+      i++
+    ) {
       if (normalizedText[i] === normalizedQuery[i]) {
         matchLength++;
       }
@@ -78,8 +80,18 @@ const AllTeacherLogin = () => {
       return;
     }
 
-    const results = Array.isArray(teachers)
-      ? teachers
+    let results = [];
+
+    if (Array.isArray(teachers)) {
+      // 1. البحث الدقيق (Exact Match) - غير حساس لحالة الأحرف
+      results = teachers.filter(
+        (teacher) =>
+          teacher.name.trim().toLowerCase() === searchQuery.trim().toLowerCase()
+      );
+
+      // 2. لو مفيش نتائج دقيقة نستخدم fuzzy search
+      if (results.length === 0) {
+        results = teachers
           .map((teacher) => ({
             teacher,
             score: Math.max(
@@ -89,16 +101,24 @@ const AllTeacherLogin = () => {
           }))
           .filter((item) => item.score > 20)
           .sort((a, b) => b.score - a.score)
-          .map((item) => item.teacher)
-      : [];
+          .map((item) => item.teacher);
+      }
+    }
 
     setSearchResults(results);
   };
 
   return (
     <div className="p-7 mb-[120px]">
-      <Box w="100%" my="5" style={{ width: '100% !important' }}>
-        <Heading as="h1" fontSize="30px" display="flex" alignItems="center" mb="2" className="text-[#03a9f5]">
+      <Box w="100%" my="5" style={{ width: "100% !important" }}>
+        <Heading
+          as="h1"
+          fontSize="30px"
+          display="flex"
+          alignItems="center"
+          mb="2"
+          className="text-[#03a9f5]"
+        >
           <PiChalkboardTeacherBold className="mx-2 text-red-500" />
           ابحث عن محاضرك
         </Heading>
@@ -119,7 +139,7 @@ const AllTeacherLogin = () => {
 
         <Box>
           {loading ? (
-            <Stack className="w-full my-5" style={{ width: '100% !important' }}>
+            <Stack className="w-full my-5" style={{ width: "100% !important" }}>
               <Skeleton height="20px" className="mt-5" />
               <Skeleton height="20px" />
               <Skeleton height="20px" />
@@ -127,7 +147,10 @@ const AllTeacherLogin = () => {
             </Stack>
           ) : searchClicked ? (
             searchResults.length > 0 ? (
-              <div className="flex justify-start flex-wrap gap-6" style={{ width: 'fit-content' }}>
+              <div
+                className="flex justify-start flex-wrap gap-6"
+                style={{ width: "fit-content" }}
+              >
                 {searchResults.map((teacher) => (
                   <Link key={teacher.id} to={`/teacher/${teacher.id}`}>
                     <Card
@@ -139,11 +162,11 @@ const AllTeacherLogin = () => {
                         overflow: "hidden",
                         border: "1px solid #f0f0f0",
                         transition: "all 0.3s ease",
-                        cursor: "pointer"
+                        cursor: "pointer",
                       }}
                       _hover={{
                         transform: "translateY(-8px)",
-                        boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)"
+                        boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)",
                       }}
                     >
                       {/* صورة المدرس مع تأثيرات */}
@@ -154,7 +177,10 @@ const AllTeacherLogin = () => {
                         overflow="hidden"
                       >
                         <Image
-                          src={teacher.avatar || "https://via.placeholder.com/320x200/4fd1c5/ffffff?text=صورة+المدرس"}
+                          src={
+                            teacher.avatar ||
+                            "https://via.placeholder.com/320x200/4fd1c5/ffffff?text=صورة+المدرس"
+                          }
                           alt={teacher.name}
                           w="100%"
                           h="100%"
@@ -200,22 +226,22 @@ const AllTeacherLogin = () => {
                         <VStack align="flex-start" spacing={4}>
                           {/* اسم المدرس */}
                           <Box w="full">
-                            <Text 
-                              fontWeight="bold" 
-                              fontSize="xl" 
-                              color="#2d3748" 
+                            <Text
+                              fontWeight="bold"
+                              fontSize="xl"
+                              color="#2d3748"
                               textAlign="right"
                               mb={1}
                             >
-                               {teacher.name}
+                              {teacher.name}
                             </Text>
                           </Box>
 
                           {/* وصف المدرس */}
                           {teacher.description && (
-                            <Text 
-                              fontSize="sm" 
-                              color="#718096" 
+                            <Text
+                              fontSize="sm"
+                              color="#718096"
                               textAlign="right"
                               noOfLines={3}
                               lineHeight="1.5"
@@ -225,28 +251,37 @@ const AllTeacherLogin = () => {
                           )}
 
                           {/* معلومات إضافية */}
-                          <Flex justify="space-between" align="center" w="full" pt={2}>
+                          <Flex
+                            justify="space-between"
+                            align="center"
+                            w="full"
+                            pt={2}
+                          >
                             <HStack spacing={2}>
                               <FaVideo color="#3b82f6" />
-                              <Text fontSize="xs" color="#718096" fontWeight="medium">
+                              <Text
+                                fontSize="xs"
+                                color="#718096"
+                                fontWeight="medium"
+                              >
                                 {teacher.subject}
                               </Text>
                             </HStack>
-                           
                           </Flex>
 
                           {/* زر عرض التفاصيل */}
-                          <Button 
-                            colorScheme="blue" 
-                            w="full" 
-                            borderRadius="xl" 
-                            fontWeight="bold" 
+                          <Button
+                            colorScheme="blue"
+                            w="full"
+                            borderRadius="xl"
+                            fontWeight="bold"
                             fontSize="md"
                             h="48px"
                             mt={2}
                             _hover={{
                               transform: "translateY(-2px)",
-                              boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)"
+                              boxShadow:
+                                "0 8px 16px rgba(0, 0, 0, 0.2)",
                             }}
                             transition="all 0.2s ease"
                           >
@@ -259,8 +294,19 @@ const AllTeacherLogin = () => {
                 ))}
               </div>
             ) : (
-              <Flex justify="center" alignItems="center" bg="white" h="200px" borderRadius="20px">
-                <Text fontWeight="bold" display="flex" alignItems="center" color="black">
+              <Flex
+                justify="center"
+                alignItems="center"
+                bg="white"
+                h="200px"
+                borderRadius="20px"
+              >
+                <Text
+                  fontWeight="bold"
+                  display="flex"
+                  alignItems="center"
+                  color="black"
+                >
                   <MdCancelPresentation className="m-1 text-red-500" />
                   لا يوجد مدرس بهذا الاسم أو رقم الهوية
                 </Text>
@@ -277,8 +323,11 @@ const AllTeacherLogin = () => {
                 </h1>
                 <p className="text-lg font-medium leading-relaxed">
                   يمكنك البحث عن محاضرك باستخدام{" "}
-                  <span className="text-blue-600 font-semibold">كود المحاضر</span>{" "}
-                  أو من خلال <span className="text-blue-600 font-semibold">اسمه</span>.
+                  <span className="text-blue-600 font-semibold">
+                    كود المحاضر
+                  </span>{" "}
+                  أو من خلال{" "}
+                  <span className="text-blue-600 font-semibold">اسمه</span>.
                 </p>
               </div>
             </section>

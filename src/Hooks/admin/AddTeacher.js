@@ -7,7 +7,8 @@ const useAddTeacher = () => {
   const token = localStorage.getItem("token");
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState("");
-  const [name, setName] = useState("");
+
+             const [name, setName] = useState("");
   const [mail, setMail] = useState("");
   const [pass, setPass] = useState("");
   const [subject, setSubject] = useState("");

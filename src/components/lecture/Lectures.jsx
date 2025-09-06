@@ -1,8 +1,8 @@
-import { 
-  Button, 
-  Card, 
-  CardBody, 
-  Skeleton, 
+import {
+  Button,
+  Card,
+  CardBody,
+  Skeleton,
   Stack,
   Box,
   Image,
@@ -14,154 +14,187 @@ import {
   Icon,
   useColorModeValue,
   Heading,
-  SimpleGrid,
+  SimpleGrid, // Changed from div for better grid control
   Center,
 } from "@chakra-ui/react";
 import { MdOutlineVideoLibrary } from "react-icons/md";
 import { FaSearch, FaPlay, FaCalendarAlt, FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import GitMyMonthes from "../../Hooks/student/GitMyMonthes";
-import { CoursesCard } from "../../ui/card/CoursesCard";
-import img from "../../img/Screenshot_2025-03-07_203419-removebg-preview.png";
+// Assuming CoursesCard is not strictly needed if we are customizing the Card directly
+// import { CoursesCard } from "../../ui/card/CoursesCard";
+import img from "../../img/Screenshot_2025-03-07_203419-removebg-preview.png"; // Unused import
 import { motion } from "framer-motion";
 
 const Lectures = () => {
   const [myMonth, myMonthLoading] = GitMyMonthes();
-  
+
   // Colors for light and dark mode
-  const cardBg = useColorModeValue("white", "gray.800");
-  const textColor = useColorModeValue("gray.700", "gray.300");
-  const subTextColor = useColorModeValue("gray.500", "gray.400");
+  const cardBg = useColorModeValue("white", "gray.700"); // Slightly darker gray for dark mode for better contrast
+  const textColor = useColorModeValue("gray.800", "gray.100"); // Stronger contrast
+  const subTextColor = useColorModeValue("gray.600", "gray.300"); // Adjusted for readability
   const borderColor = useColorModeValue("gray.200", "gray.600");
+  const buttonColorScheme = useColorModeValue("blue", "teal"); // Different button color for dark mode
 
   return (
-    <Box w="100%" style={{ width: '100% !important' }}>
-      {/* عنوان الصفحة */}
-    
+    <Box   w="100%">
+      {/* Page Title - You can add one here if needed */}
+      {/* <Heading as="h1" size="xl" mb={6} textAlign="center" color={textColor}>
+        دوراتي المسجلة 📚
+      </Heading> */}
 
-      {/* عرض الكورسات */}
+      {/* Display Courses */}
       {myMonthLoading ? (
-        <VStack spacing={{ base: 3, sm: 4 }} p={{ base: 3, sm: 4, md: 6 }} w="100%" style={{ width: '100% !important' }}>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={{ base: 4, md: 6 }}>
           {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} height={{ base: "16px", sm: "20px" }} w="full" />
-          ))}
-        </VStack>
-      ) : myMonth.courses?.length > 0 ? (
-        <div className="flex justify-start flex-wrap gap-3 sm:gap-4 md:gap-6" style={{ width: 'fit-content' }}>
-          {myMonth.courses.map((course) => (
-            <Link className="w-[300px]" key={course.id} to={`/CourseDetailsPage/${course.id}`}>
-            <Card
-              w="350px"
-              bg={cardBg}
-              border="1px solid"
-              borderColor={borderColor}
-              borderRadius={{ base: "lg", sm: "xl" }}
-              overflow="hidden"
-              shadow={{ base: "md", sm: "lg" }}
-              _hover={{ 
-                transform: "translateY(-4px)", 
-                shadow: { base: "lg", sm: "xl" }
-              }}
-              transition="all 0.3s ease"
-              mx="auto"
-            >
-              <Image
-                src={course.avatar || "https://via.placeholder.com/300x200/4fd1c5/ffffff?text=صورة+الكورس"}
-                alt={course.title}
-               className="h-[200px]"
-                width="100%"
-                objectFit="cover"
-              />
-              <CardBody p={{ base: 3, sm: 4, md: 5 }}>
-                <VStack align="flex-start" spacing={{ base: 2, sm: 3, md: 4 }}>
-                  <Text 
-                    fontWeight="bold" 
-                    fontSize={{ base: "sm", sm: "md", md: "lg" }} 
-                    color={textColor} 
-                    textAlign="right"
-                    noOfLines={2}
-                    lineHeight={{ base: "1.3", md: "1.2" }}
-                  >
-                    {course.title}
-                  </Text>
-                  {course.description && (
-                    <Text 
-                      fontSize={{ base: "xs", sm: "sm", md: "md" }} 
-                      color={subTextColor} 
-                      textAlign="right"
-                      noOfLines={2}
-                      lineHeight={{ base: "1.4", md: "1.3" }}
-                    >
-                      {course.description}
-                    </Text>
-                  )}
-                  <HStack justify="space-between" w="full" spacing={{ base: 2, sm: 3 }}>
-                    <Badge 
-                      colorScheme="green" 
-                      borderRadius="full" 
-                      px={{ base: 2, sm: 3 }}
-                      py={{ base: 0.5, sm: 1, md: 2 }}
-                      fontSize={{ base: "2xs", sm: "xs", md: "sm" }}
-                    >
-                      {course.price} جنيه
-                    </Badge>
-                    <Text 
-                      fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
-                      color={subTextColor}
-                      noOfLines={1}
-                    >
-                      {new Date(course.created_at).toLocaleDateString('ar-EG')}
-                    </Text>
+            <Card key={i} bg={cardBg} borderRadius="xl" shadow="md" overflow="hidden">
+              <Skeleton height="200px" width="100%" />
+              <CardBody p={4}>
+                <VStack align="flex-start" spacing={3}>
+                  <Skeleton height="20px" width="80%" />
+                  <Skeleton height="16px" width="60%" />
+                  <HStack justify="space-between" w="full">
+                    <Skeleton height="24px" width="30%" />
+                    <Skeleton height="16px" width="40%" />
                   </HStack>
-                  <Button 
-                    colorScheme="blue" 
-                    w="full" 
-                    size={{ base: "xs", sm: "sm", md: "md" }}
-                    rightIcon={<FaPlay />}
-                    borderRadius={{ base: "md", sm: "lg" }}
-                    fontSize={{ base: "xs", sm: "sm", md: "md" }}
-                    py={{ base: 2, sm: 3 }}
-                    h={{ base: "32px", sm: "36px", md: "40px" }}
-                  >
-                    دخول الكورس
-                  </Button>
+                  <Skeleton height="40px" width="100%" />
                 </VStack>
               </CardBody>
             </Card>
-          </Link>
-          
-            ))}
-        </div>
+          ))}
+        </SimpleGrid>
+      ) : myMonth.courses?.length > 0 ? (
+        <SimpleGrid columns={{ base: 1, sm: 2, md: 2, lg: 3 }} spacing={{ base: 4, md: 6, lg: 8 }}>
+          {myMonth.courses.map((course) => (
+            <Link key={course.id} to={`/CourseDetailsPage/${course.id}`}>
+              <motion.div
+                whileHover={{ translateY: -5, boxShadow: "lg" }}
+                transition={{ duration: 0.2 }}
+              >
+                <Card
+                  bg={cardBg}
+                  border="1px solid"
+                  borderColor={borderColor}
+                  borderRadius="xl" // Larger border radius for a softer look
+                  overflow="hidden"
+                  shadow="md" // Initial shadow
+                  _hover={{
+                    shadow: "xl", // Enhanced shadow on hover
+                    transform: "translateY(-5px)", // Subtle lift effect
+                  }}
+                  transition="all 0.3s ease-in-out" // Smooth transition for all properties
+                  w="330px" // Ensure card takes full width of grid item
+                >
+                  <Image
+                    src={"/4edb8c38-39e2-40ff-9449-52246cf2a029.jpg"}
+                    alt={course.title}
+                    height={{ base: "180px", sm: "200px", md: "220px" }} // Responsive image height
+                    width="100%"
+                    objectFit="cover"
+                    borderBottom="1px solid"
+                    borderColor={borderColor}
+                  />
+                  <CardBody p={{ base: 3, sm: 4, md: 5 }}>
+                    <VStack align="flex-end" spacing={{ base: 2, sm: 3 }}> {/* Align text to the right for Arabic */}
+                      <Text
+                        fontWeight="extrabold" // Bolder title
+                        fontSize={{ base: "md", sm: "lg", md: "xl" }} // Larger font size for title
+                        color={textColor}
+                        textAlign="right"
+                        noOfLines={2}
+                        lineHeight="short" // Tighter line height
+                      >
+                        {course.title}
+                      </Text>
+                      {course.description && (
+                        <Text
+                          fontSize={{ base: "xs", sm: "sm", md: "md" }}
+                          color={subTextColor}
+                          textAlign="right"
+                          noOfLines={3} // Allow more lines for description
+                          lineHeight="tall"
+                        >
+                          {course.description}
+                        </Text>
+                      )}
+                      <HStack justify="space-between" w="full" pt={2}> {/* Add padding top */}
+                        <Badge
+                          colorScheme="green"
+                          borderRadius="full"
+                          px={{ base: 2.5, sm: 3.5 }}
+                          py={{ base: 1, sm: 1.5 }}
+                          fontSize={{ base: "xs", sm: "sm" }} // Slightly larger badge text
+                          fontWeight="bold"
+                        >
+                          {course.price} جنيه 💰
+                        </Badge>
+                        <HStack spacing={1} color={subTextColor} fontSize={{ base: "xs", sm: "sm" }}>
+                            <Icon as={FaCalendarAlt} /> {/* Calendar icon for date */}
+                            <Text>
+                            {new Date(course.created_at).toLocaleDateString('ar-EG', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                            })}
+                            </Text>
+                        </HStack>
+                      </HStack>
+                      <Button
+                        colorScheme={buttonColorScheme}
+                        w="full"
+                        size="lg" // Larger button
+                        rightIcon={<FaPlay />}
+                        borderRadius="lg" // Matching card's border radius
+                        mt={4} // Margin top for separation from text
+                        fontSize={{ base: "sm", sm: "md" }}
+                        _hover={{ opacity: 0.9 }}
+                      >
+                        دخول الكورس
+                      </Button>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              </motion.div>
+            </Link>
+          ))}
+        </SimpleGrid>
       ) : (
-        // في حالة عدم وجود كورسات
-        <Center py={{ base: 8, sm: 12, md: 16 }}>
-          <VStack 
-            spacing={{ base: 6, sm: 8 }} 
-            align="center" 
+        // No courses message
+        <Center py={{ base: 8, sm: 12, md: 16 }} flexDirection="column">
+          <Icon as={MdOutlineVideoLibrary} boxSize={{ base: 16, md: 20 }} color="gray.400" mb={4} />
+          <VStack
+            spacing={{ base: 4, sm: 6 }}
+            align="center"
             w="100%"
             textAlign="center"
-            style={{ width: '100% !important' }}
           >
-            <VStack spacing={{ base: 4, sm: 6 }} align="center" style={{ width: '100% !important' }}>
-              <Heading 
-                size={{ base: "lg", sm: "xl", md: "xl" }}
-                color={textColor}
-                textAlign="center"
-                lineHeight={{ base: "1.3", md: "1.2" }}
-              >
-                🚀 لم تقم بالاشتراك فى أي كورسات بعد!
-              </Heading>
+            <Heading
+              size={{ base: "lg", sm: "xl" }}
+              color={textColor}
+              textAlign="center"
+              lineHeight="short"
+            >
+              🚀 لم تقم بالاشتراك في أي كورسات بعد!
+            </Heading>
 
-              <Text 
-                fontSize={{ base: "md", sm: "lg", md: "xl" }}
-                color={subTextColor}
-                textAlign="center"
-                lineHeight={{ base: "1.5", md: "1.4" }}
-                maxW={{ base: "320px", sm: "500px" }}
-              >
-                بمجرد الاشتراك فى اى كورسات سوف تظهر فى هذا القسم
-              </Text>
-            </VStack>
+            <Text
+              fontSize={{ base: "md", sm: "lg" }}
+              color={subTextColor}
+              textAlign="center"
+              lineHeight="tall"
+              maxW="500px"
+            >
+              بمجرد الاشتراك في أي كورسات سوف تظهر في هذا القسم. انطلق واكتشف
+              المزيد!
+            </Text>
+            <Button
+              colorScheme="blue"
+              size="lg"
+              leftIcon={<FaSearch />}
+              mt={6}
+            >
+              تصفح الكورسات المتاحة
+            </Button>
           </VStack>
         </Center>
       )}

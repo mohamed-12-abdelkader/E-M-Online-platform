@@ -103,6 +103,14 @@ import AddEmployees from "../components/admin/AddEmployees";
 import { MangeEmployees } from "../components/admin/MangeEmployees";
 import SuggestedTeachers from "../pages/suggested-teachers/SuggestedTeachers";
 import StudentDetailsPage from "../pages/centerSystem/StudentDetailsPage";
+import AllStudents from "../pages/allStudents/AllStudents";
+import PackagesManagement from "../components/admin/PackagesManagement";
+import Lesson from "../pages/Question Bank/Lesson";
+import TeacherSubject from "../pages/Question Bank/TeacherSubject";
+import LecturCommints from "../pages/lecturCommints/LecturCommints";
+import Social from "../pages/social/Social";
+import PlatfourmLeagues from "../pages/league/PlatfourmLeagues";
+import League from "../pages/league/League";
 
 
 
@@ -245,20 +253,25 @@ const AppRouter = () => {
           <Route path='monthly_exam/:id' element={<MonthlyExams />} />
           <Route path='monthly_exam/:id/show_grades' element={<ShowGrades />} />
 
-          <Route path='question_bank' element={<QuestionBank />} />
+          <Route path='question-bank/:id' element={<QuestionBank />} />
           <Route path='supject/:id' element={<SubjectPage />} />
           <Route path='QuestionsPage/:id' element={<QuestionsPage />} />
           <Route path='chapter/:id' element={<ChapterQuestion />} />
-       
+        <Route path='lesson/:id' element={<Lesson />} />
+         <Route path='Teacher_subjects' element={<TeacherSubject />} />
           <Route path='competition/:id' element={<CompetitionDetails />} />
           <Route path='Platform_exams' element={<PlatformExams />} />
+
+          {/* Tournament System */}
+          <Route path='leagues' element={<PlatfourmLeagues />} />
+          <Route path='league/:id' element={<League />} />
 
           <Route path='exam_content/:id' element={<ExamContent />} />
           <Route path='create_exam' element={<CreateExams />} />
           <Route path='add_sup_questions' element={<AddSubQuestions />} />
           <Route path='view_exams' element={<ViewExams />} />
           <Route path='all_exams' element={<AllExams />} />
-
+          <Route path='social' element={<Social />} />
           <Route path='exam_details/:id' element={<ExamDetails />} />
           <Route path='subject_exam/:id' element={<SubjectExam />} />
           <Route path='subject_exam/:id/review' element={<ReviewResult />} />
@@ -295,6 +308,10 @@ const AppRouter = () => {
           <Route path='/teacher/:id' element={<TeacherDetails />} />
         
         </Route>
+          <Route
+            path='lectur_commints/:id'
+            element={<LecturCommints />}
+          />
         <Route element={<ProtectedRoute auth={isTeacher} />}>
           <Route path='/teacher_wallet' element={<TeacherWallet />} />
           <Route path='/teacher_code' element={<TeacherCode />} />
@@ -302,6 +319,7 @@ const AppRouter = () => {
           <Route path='/teacher_courses/*' element={<TeacherCourses />}>
             <Route path='courses/:id' element={<AllCourses />} />
           </Route>
+        
           <Route path='/my_groups' element={<MyGroups />}>
             <Route path='group/:id' element={<Groups />} />
           </Route>
@@ -323,17 +341,19 @@ const AppRouter = () => {
         <Route path='/landing' element={<LandingPage />} />
         <Route path='/tasks' element={<TasksPage />} />
         <Route path='/teamChat' element={<TeamChat />} />
-        <Route path='/dashboard' element={<QuestionBankDashboard />} />
+        <Route path='/question-bank-dashboard' element={<QuestionBankDashboard />} />
         <Route path='/CourseDetailsPage/:id' element={<CourseDetailsPage />} />
         <Route path='/PlatformAccounts' element={<PlatformAccounts />} />
         <Route path='/LecturesSchedule' element={<LecturesSchedule />} />
         <Route path='/CourseStatisticsPage/:id' element={<CourseStatisticsPage />} />
         <Route path='/QuestionLibraryPage' element={<QuestionLibraryPage />} />
+        
         <Route path='/TeacherChat' element={<TeacherChat />} />
         <Route path='/ComprehensiveExam/:id' element={<ComprehensiveExam />} />
         <Route path='/exam/:examId' element={<Exam />} />
         <Route path='/exam_grades' element={<ExamGrades />} />
-      
+       <Route path='/all_students' element={<AllStudents />} />
+       <Route path='/packages-management' element={<PackagesManagement />} />
 
       </Routes>
     </div>
