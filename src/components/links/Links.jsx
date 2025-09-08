@@ -5,7 +5,6 @@ import {
   MdMenuBook,
   MdAccountBalanceWallet,
   MdLibraryBooks,
-  MdBusinessCenter,
   MdForum,
   MdAssignment,
   MdEmojiEvents,
@@ -24,12 +23,13 @@ import {
   MdMilitaryTech,
   MdBookmark,
   MdLogout,
-  MdInventory
+  MdInventory,
+  MdHome
 } from "react-icons/md";
 
 import UserType from "../../Hooks/auth/userType";
 import { NavLink } from "react-router-dom";
-import { PiStudent } from "react-icons/pi";
+
 
 const NavLinkItem = ({ to, Icon, label, onClick, isSidebarOpen }) => (
   <li>
@@ -59,40 +59,39 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
   };
 
   const commonLinks = [
-    { to: "/home", Icon: MdDashboard, label: "الصفحة الرئيسية" },
+    { to: "/home", Icon: MdHome, label: "الصفحة الرئيسية" },
   ];
 
   const adminLinks = [
-    { to: "/stream-management", Icon: MdLiveTv, label: "إدارة البث المباشر" },
+    { to: "/streams", Icon: MdLiveTv, label: "البث المباشر" }, 
     { to: "/admin/management", Icon: MdDashboard, label: "لوحة التحكم" },
     { to: "/teamChat", Icon: MdForum, label: "دردشة الفريق" },
-    { to: "/all_students", Icon: PiStudent, label: " كل الطلاب" },
+    { to: "/all_students", Icon: MdPeople, label: " كل الطلاب" },
     { to: "/packages-management", Icon: MdInventory, label: "إدارة الباقات" },
     { to: "/tasks", Icon: MdAssignment, label: "المهام" },
     { to: "/question-bank-dashboard", Icon: MdLibraryBooks, label: "لوحة تحكم بنك الأسئلة" },
     { to: "/create_comp", Icon: MdEmojiEvents, label: "إنشاء مسابقة" },
     { to: "/allComps", Icon: MdLeaderboard, label: "عرض المسابقات" },
     { to: "/create_exam", Icon: MdDateRange, label: "إنشاء امتحان شهري" },
-    { to: "/add_sub_exam", Icon: MdLibraryBooks, label: "إنشاء امتحان المادة" },
+    { to: "/add_sub_exam", Icon: MdQuiz, label: "إنشاء امتحان المادة" },
     { to: "/add_video_exam", Icon: MdVideoLibrary, label: "إضافة فيديو للامتحان" },
-    { to: "/add_sup_questions", Icon: MdQuiz, label: "إضافة أسئلة للامتحان" },
+    { to: "/add_sup_questions", Icon: MdQuestionAnswer, label: "إضافة أسئلة للامتحان" },
     { to: "/view_exams", Icon: MdEventAvailable, label: "عرض الامتحانات" },
     { to: "/show_grades", Icon: MdGrading, label: "عرض درجات الامتحان" },
     { to: "/leagues", Icon: MdLeaderboard, label: "إدارة الدوريات" },
   ];
 
   const teacherLinks = [
-   
     { to: "/suggested-teachers", Icon: MdGroups, label: "المدرسين المقترحة "},
     { to: "/QuestionLibraryPage", Icon: MdLibraryBooks, label: "مكتبة الأسئلة" },
-     { to: "/Teacher_subjects", Icon: MdBusinessCenter, label: " بنك الاسئله  " },
-    { to: "/center_groups", Icon: MdBusinessCenter, label: "سيستم إدارة السنتر" },
-    { to: "/TeacherChat", Icon: MdBusinessCenter, label: " الرسائل " },
+    { to: "/Teacher_subjects", Icon: MdQuestionAnswer, label: " بنك الاسئله  " },
+    { to: "/center_groups", Icon: MdGroups, label: "سيستم إدارة السنتر" },
+    { to: "/TeacherChat", Icon: MdForum, label: " الرسائل " },
   ];
 
      const studentLinks = [
     { to: "/profile", Icon: MdPerson, label: "الملف الشخصي" },
-    { to: "/exam_grades", Icon: MdPerson, label: "درجات الامتحانات" },
+    { to: "/exam_grades", Icon: MdGrading, label: "درجات الامتحانات" },
     { to: "/teachers", Icon: MdSearch, label: "ابحث عن محاضرك" },
     { to: "/my-teachers", Icon: MdPeople, label: "محاضرينى" },
     { to: "/view_exams", Icon: MdAssessment, label: "امتحانات المنصة" },
@@ -180,3 +179,4 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
 };
 
 export default Links;
+

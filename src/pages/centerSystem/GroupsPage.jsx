@@ -342,7 +342,7 @@ const center_groups = () => {
     ];
 
     return (
-        <Box p={6} className='mt-[80px]'>
+        <Box p={6} className='mt-[0px]'>
             {/* شريط التنقل (الـ Slider) */}
             <Flex
                 overflowX="auto"

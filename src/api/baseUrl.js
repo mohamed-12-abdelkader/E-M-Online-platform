@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const baseUrl = axios.create({
-  baseURL: "https://api.e-monline.online/",
+  baseURL: "http://localhost:8000/",
 });
 
 export default baseUrl;

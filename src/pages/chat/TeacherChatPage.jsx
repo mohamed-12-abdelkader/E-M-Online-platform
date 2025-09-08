@@ -808,7 +808,7 @@ const TeacherChat = () => {
 
 
     return (
-        <Flex h="calc(100vh - 80px)" mt="80px" bg={useColorModeValue('gray.100','gray.900')} className='chat-page'>
+        <Flex h="calc(100vh - 80px)" mt="30px" bg={useColorModeValue('gray.100','gray.900')} className='chat-page'>
             {/* Sidebar */}
             {(showSidebar || !isMobile) && (
                 <Box

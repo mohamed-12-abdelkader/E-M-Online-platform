@@ -48,6 +48,7 @@ const Video = () => {
       return url.split("v=")[1].split("&")[0];
     } else if (url.includes("youtu.be/")) {
       return url.split("youtu.be/")[1].split("?")[0];
+
     }
     return null;
   };

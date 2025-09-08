@@ -28,7 +28,6 @@ import {
   Center,
   Skeleton,
   SkeletonText,
-  keyframes,
   Tooltip,
   Modal,
   ModalOverlay,
@@ -48,6 +47,9 @@ import {
   FormControl,
   FormLabel,
   Input,
+  InputGroup,
+  InputLeftElement,
+  InputRightElement,
   Textarea,
   Select,
   useToast,
@@ -112,6 +114,8 @@ import dayjs from "dayjs";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
+import CourseStreams from "../../components/stream/courseStreams";
+import StudentStreamsList from "../../components/stream/studentStreamsList";
 
 // Modal Components
 const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
@@ -427,10 +431,10 @@ const courseHeroImage = "/lE7lWBexvOTPM2MPEKyTRRBo1TQtNGMoL1pxWCxD.jpg";
 const instructorImage = "/lE7lWBexvOTPM2MPEKyTRRBo1TQtNGMoL1pxWCxD.jpg";
 
 // Custom keyframes for shimmer effect
-const shimmer = keyframes`
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-`;
+// const shimmer = keyframes`
+//   0% { transform: translateX(-100%); }
+//   100% { transform: translateX(100%); }
+// `;
 
 const MotionBox = motion(Box);
 const MotionFlex = motion(Flex);
@@ -439,7 +443,6 @@ const MotionHStack = motion(HStack);
 
 const CourseDetailsPage = () => {
   const {id}=useParams()
-  console.log(id)
   const [userData, isAdmin, isTeacher, student] = UserType();
   const [showFullDescription, setShowFullDescription] = React.useState(false);
   const [expandedLecture, setExpandedLecture] = React.useState(null);
@@ -450,6 +453,8 @@ const CourseDetailsPage = () => {
   const [error, setError] = useState(null);
   const [enrollments, setEnrollments] = useState([]);
   const [enrollmentsLoading, setEnrollmentsLoading] = useState(false);
+  const [searchStudent, setSearchStudent] = useState('');
+  const [filteredEnrollments, setFilteredEnrollments] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   
   // Lecture management states
@@ -496,6 +501,8 @@ const CourseDetailsPage = () => {
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [exportStartIndex, setExportStartIndex] = useState(1);
   const [exportEndIndex, setExportEndIndex] = useState(50);
+  const [searchCode, setSearchCode] = useState('');
+  const [filteredCodes, setFilteredCodes] = useState([]);
 
   // State للفيديو
   const [videoPlayer, setVideoPlayer] = useState({
@@ -511,6 +518,33 @@ const CourseDetailsPage = () => {
       setExportEndIndex(Math.min(50, activationCodes.length));
     }
   }, [activationCodes.length]);
+
+  // فلترة الأكواد عند تغيير نص البحث
+  useEffect(() => {
+    if (searchCode.trim() === '') {
+      setFilteredCodes(activationCodes);
+    } else {
+      const filtered = activationCodes.filter(code => 
+        code.code.toLowerCase().includes(searchCode.toLowerCase())
+      );
+      setFilteredCodes(filtered);
+    }
+  }, [searchCode, activationCodes]);
+
+  // فلترة الطلاب عند تغيير نص البحث
+  useEffect(() => {
+    if (searchStudent.trim() === '') {
+      setFilteredEnrollments(enrollments);
+    } else {
+      const filtered = enrollments.filter(student => 
+        student.name.toLowerCase().includes(searchStudent.toLowerCase()) ||
+        (student.phone && student.phone.includes(searchStudent)) ||
+        (student.email && student.email.toLowerCase().includes(searchStudent.toLowerCase())) ||
+        (student.activation_code && student.activation_code.toLowerCase().includes(searchStudent.toLowerCase()))
+      );
+      setFilteredEnrollments(filtered);
+    }
+  }, [searchStudent, enrollments]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1786,11 +1820,8 @@ D) has made`}
   }
 
   const { course, lectures } = courseData;
-  console.log(lectures)
-  console.log('Current bulkQuestionsModal state:', bulkQuestionsModal);
-  console.log('Current tabIndex:', tabIndex);
   return (
-    <Box minH={{ base: '100vh', md: '100vh' }} bg={pageBg} dir="rtl" className="mt-[80px]">
+    <Box minH={{ base: '100vh', md: '100vh' }} bg={pageBg} dir="rtl" className="mt-[=5 0px]">
       {/* Hero Section - Full Width Image with Overlay */}
       <CourseHeroSection 
         course={course}
@@ -1881,12 +1912,51 @@ D) has made`}
       </Modal>
 
       {/* مودال عرض الأكواد */}
-      <Modal isOpen={showCodesModal} onClose={() => setShowCodesModal(false)} size="3xl" isCentered>
+      <Modal isOpen={showCodesModal} onClose={() => {
+        setShowCodesModal(false);
+        setSearchCode('');
+      }} size="3xl" isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>أكواد تفعيل الكورس</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            {/* حقل البحث */}
+            {activationCodes.length > 0 && (
+              <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="blue.50">
+                <Text fontWeight="bold" mb={3} color="blue.700">البحث في الأكواد:</Text>
+                <InputGroup>
+                  <InputLeftElement>
+                    <Icon as={FaSearch} color="blue.500" />
+                  </InputLeftElement>
+                  <Input
+                    placeholder="ابحث بالكود..."
+                    value={searchCode}
+                    onChange={(e) => setSearchCode(e.target.value)}
+                    bg="white"
+                    borderColor="blue.200"
+                    _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 1px blue.400" }}
+                  />
+                  {searchCode && (
+                    <InputRightElement>
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
+                        icon={<Icon as={FaTimes} />}
+                        onClick={() => setSearchCode('')}
+                        aria-label="مسح البحث"
+                      />
+                    </InputRightElement>
+                  )}
+                </InputGroup>
+                {searchCode && (
+                  <Text fontSize="sm" color="blue.600" mt={2}>
+                    تم العثور على {filteredCodes.length} كود من أصل {activationCodes.length}
+                  </Text>
+                )}
+              </Box>
+            )}
+            
             {activationCodes.length > 0 && (
               <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="gray.50">
                 <Text fontWeight="bold" mb={3}>تحديد نطاق التصدير:</Text>
@@ -1956,6 +2026,21 @@ D) has made`}
               <Text color="red.500" textAlign="center">{codesError}</Text>
             ) : activationCodes.length === 0 ? (
               <Text color="gray.500" textAlign="center">لا توجد أكواد لهذا الكورس</Text>
+            ) : filteredCodes.length === 0 && searchCode ? (
+              <Box textAlign="center" py={8}>
+                <Icon as={FaSearch} boxSize={12} color="gray.400" mb={4} />
+                <Text color="gray.500" fontSize="lg" mb={2}>لم يتم العثور على نتائج</Text>
+                <Text color="gray.400" fontSize="sm">لا توجد أكواد تطابق البحث: "{searchCode}"</Text>
+                <Button 
+                  size="sm" 
+                  colorScheme="blue" 
+                  variant="outline" 
+                  mt={3}
+                  onClick={() => setSearchCode('')}
+                >
+                  مسح البحث
+                </Button>
+              </Box>
             ) : (
               <>
                 <Box overflowX="auto">
@@ -1969,7 +2054,7 @@ D) has made`}
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {activationCodes.map(code => (
+                      {filteredCodes.map(code => (
                         <Tr key={code.id}>
                           <Td fontFamily="mono" fontWeight="bold">{code.code}</Td>
                           <Td>{code.uses} / {code.max_uses}</Td>
@@ -2046,7 +2131,10 @@ D) has made`}
             )}
           </ModalBody>
           <ModalFooter>
-            <Button onClick={() => setShowCodesModal(false)} colorScheme="blue">إغلاق</Button>
+            <Button onClick={() => {
+              setShowCodesModal(false);
+              setSearchCode('');
+            }} colorScheme="blue">إغلاق</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -2137,16 +2225,8 @@ D) has made`}
               </TabPanel>
 
               {/* Tab Panel للجلسات المباشرة */}
-              <TabPanel>
-                <VStack spacing={4} align="stretch">
-                  <Heading size="md" color={headingColor} mb={4}>
-                    الجلسات المباشرة
-                  </Heading>
-                  <Text color={subTextColor} textAlign="center" py={8}>
-                    لا توجد جلسات مباشرة متاحة حالياً
-                  </Text>
-                </VStack>
-              </TabPanel>
+              {(isAdmin || isTeacher) ? <CourseStreams courseId={id} /> : <StudentStreamsList courseId={id}/>}
+              
 
               {/* Tab Panel للامتحانات */}
               <TabPanel>
@@ -2275,7 +2355,10 @@ D) has made`}
       {console.log('BulkQuestionsModal isOpen:', bulkQuestionsModal.isOpen)}
 
       {/* Enrollments Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="6xl">
+      <Modal isOpen={isOpen} onClose={() => {
+        onClose();
+        setSearchStudent('');
+      }} size="6xl">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
@@ -2286,6 +2369,42 @@ D) has made`}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            {/* حقل البحث في الطلاب */}
+            {enrollments.length > 0 && (
+              <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="green.50">
+                <Text fontWeight="bold" mb={3} color="green.700">البحث في الطلاب:</Text>
+                <InputGroup>
+                  <InputLeftElement>
+                    <Icon as={FaSearch} color="green.500" />
+                  </InputLeftElement>
+                  <Input
+                    placeholder="ابحث بالاسم، الهاتف، البريد الإلكتروني، أو كود التفعيل..."
+                    value={searchStudent}
+                    onChange={(e) => setSearchStudent(e.target.value)}
+                    bg="white"
+                    borderColor="green.200"
+                    _focus={{ borderColor: "green.400", boxShadow: "0 0 0 1px green.400" }}
+                  />
+                  {searchStudent && (
+                    <InputRightElement>
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
+                        icon={<Icon as={FaTimes} />}
+                        onClick={() => setSearchStudent('')}
+                        aria-label="مسح البحث"
+                      />
+                    </InputRightElement>
+                  )}
+                </InputGroup>
+                {searchStudent && (
+                  <Text fontSize="sm" color="green.600" mt={2}>
+                    تم العثور على {filteredEnrollments.length} طالب من أصل {enrollments.length}
+                  </Text>
+                )}
+              </Box>
+            )}
+
             {enrollmentsLoading ? (
               <Center py={10}>
                 <VStack spacing={4}>
@@ -2294,8 +2413,24 @@ D) has made`}
                 </VStack>
               </Center>
             ) : enrollments.length > 0 ? (
-              <TableContainer>
-                <Table variant="simple">
+              filteredEnrollments.length === 0 && searchStudent ? (
+                <Box textAlign="center" py={8}>
+                  <Icon as={FaSearch} boxSize={12} color="gray.400" mb={4} />
+                  <Text color="gray.500" fontSize="lg" mb={2}>لم يتم العثور على نتائج</Text>
+                  <Text color="gray.400" fontSize="sm">لا يوجد طلاب يطابقون البحث: "{searchStudent}"</Text>
+                  <Button 
+                    size="sm" 
+                    colorScheme="green" 
+                    variant="outline" 
+                    mt={3}
+                    onClick={() => setSearchStudent('')}
+                  >
+                    مسح البحث
+                  </Button>
+                </Box>
+              ) : (
+                <TableContainer>
+                  <Table variant="simple">
                   <Thead>
                     <Tr>
                       <Th>الطالب</Th>
@@ -2307,7 +2442,7 @@ D) has made`}
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {enrollments.map((student) => (
+                    {filteredEnrollments.map((student) => (
                       <Tr key={student.id}>
                         <Td>
                           <HStack spacing={3}>
@@ -2365,6 +2500,7 @@ D) has made`}
                   </Tbody>
                 </Table>
               </TableContainer>
+              )
             ) : (
               <Center py={10}>
                 <VStack spacing={4}>
@@ -2375,7 +2511,10 @@ D) has made`}
             )}
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" onClick={onClose}>
+            <Button colorScheme="blue" onClick={() => {
+              onClose();
+              setSearchStudent('');
+            }}>
               إغلاق
             </Button>
           </ModalFooter>

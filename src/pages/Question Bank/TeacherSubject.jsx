@@ -161,7 +161,7 @@ const TeacherSubject = () => {
         position="sticky"
         top={0}
         zIndex={10}
-        mt="50px"
+        mt="0px"
       >
         <Box maxW="1200px" mx="auto" px={{ base: 4, md: 8 }} py={{ base: 4, md: 6 }}>
           <Flex align="center" gap={4}>

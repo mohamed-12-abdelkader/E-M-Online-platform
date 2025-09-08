@@ -711,11 +711,11 @@ const TeacherDashboardHome = () => {
       >
         {/* Welcome Section */}
         <MotionCard
-          bgGradient="linear(to-r, blue.600, blue.400)"
+          bgGradient="linear(to-br, purple.700, blue.600)"
           color="white"
           borderRadius={{ base: "lg", sm: "xl", md: "2xl" }}
           shadow="2xl"
-          p={{ base: 4, sm: 5, md: 6, lg: 8 }}
+          p={{ base: 4, sm: 6, md: 8 }}
           initial="hidden"
           animate="visible"
           variants={cardVariants}
@@ -724,11 +724,20 @@ const TeacherDashboardHome = () => {
           mx={{ base: "auto", md: "0" }}
           maxW={{ base: "95%", sm: "100%" }}
         >
-          <Box position="absolute" top={-10} right={-10} opacity={0.1} display={{ base: "none", md: "block" }}>
+          {/* Decorative background shapes */}
+          <Box position="absolute" top={-10} right={-10} opacity={0.15} display={{ base: "none", md: "block" }}>
             <Icon as={FaBookOpen} w={32} h={32} />
           </Box>
-          <VStack spacing={{ base: 4, sm: 5, md: 6, lg: 8 }} alignItems="center">
+          <Box position="absolute" left={-20} bottom={-20} w="280px" h="280px" bgGradient="radial(whiteAlpha.500, transparent 70%)" filter="blur(30px)" borderRadius="full" />
+          <Box position="absolute" right={-24} top={-24} w="220px" h="220px" bgGradient="radial(whiteAlpha.400, transparent 70%)" filter="blur(30px)" borderRadius="full" />
+
+          <VStack spacing={{ base: 5, sm: 6, md: 7 }} alignItems="center" position="relative">
             <VStack align="center" spacing={{ base: 3, sm: 4 }} flex={1} w="full">
+              <HStack spacing={3} justify="center">
+                <Badge colorScheme="yellow" variant="solid" borderRadius="full" px={3} py={1} fontSize={{ base: "xs", sm: "sm" }}>
+                  حساب مدرس
+                </Badge>
+              </HStack>
               <Heading 
                 as="h1" 
                 size={{ base: "lg", sm: "xl", md: "2xl" }} 
@@ -737,50 +746,92 @@ const TeacherDashboardHome = () => {
                 textAlign="center"
                 lineHeight={{ base: "1.3", md: "1.1" }}
               >
-                مرحباً بك، {user.name}! 👋
+                مرحباً بك، {user.name || "المعلم"}! 👋
               </Heading>
               <Text 
                 fontSize={{ base: "md", sm: "lg", md: "xl" }} 
-                opacity={0.9} 
+                opacity={0.92} 
                 fontWeight="medium"
                 textAlign="center"
                 lineHeight={{ base: "1.5", md: "1.3" }}
-                maxW={{ base: "280px", sm: "100%" }}
+                maxW={{ base: "320px", sm: "720px" }}
               >
-                {user.description}
+                {user.description || "ابدأ رحلتك التعليمية وشارك خبراتك مع طلابك بسهولة."}
               </Text>
+
+              {/* Highlight chips */}
               <SimpleGrid 
                 columns={{ base: 1, sm: 2, md: 3 }} 
-                spacing={{ base: 2, sm: 3, md: 4, lg: 6 }} 
+                spacing={{ base: 3, sm: 4, md: 5 }} 
                 mt={{ base: 2, sm: 3 }}
                 w="full"
                 justifyItems="center"
-                maxW={{ base: "300px", sm: "100%" }}
+                maxW={{ base: "360px", sm: "100%" }}
               >
-                <HStack spacing={2}>
+                <HStack spacing={2} bg="whiteAlpha.200" borderRadius="full" px={3} py={2} backdropFilter="auto" backdropBlur="4px">
                   <Icon as={FaCalendarAlt} />
-                  <Text fontSize="sm" opacity={0.8}>{teacherInfo.joinDate}</Text>
+                  <Text fontSize="sm" opacity={0.95}>{teacherInfo.joinDate}</Text>
                 </HStack>
-                <HStack spacing={2}>
+                <HStack spacing={2} bg="whiteAlpha.200" borderRadius="full" px={3} py={2} backdropFilter="auto" backdropBlur="4px">
                   <Icon as={FaUsers} />
-                  <Text fontSize="sm" opacity={0.8}>{teacherInfo.totalStudents} طالب</Text>
+                  <Text fontSize="sm" opacity={0.95}>{teacherInfo.totalStudents} طالب</Text>
                 </HStack>
-                <HStack spacing={2}>
+                <HStack spacing={2} bg="whiteAlpha.200" borderRadius="full" px={3} py={2} backdropFilter="auto" backdropBlur="4px">
                   <Icon as={FaStar} />
-                  <Text fontSize="sm" opacity={0.8}>{teacherInfo.averageRating} تقييم</Text>
+                  <Text fontSize="sm" opacity={0.95}>{teacherInfo.averageRating} تقييم</Text>
                 </HStack>
               </SimpleGrid>
+
+              {/* Call to actions */}
+              <HStack spacing={{ base: 3, sm: 4 }} justify="center" mt={{ base: 2, sm: 3 }} flexWrap="wrap">
+                <Button
+                  colorScheme="yellow"
+                  variant="solid"
+                  leftIcon={<FaBookOpen />}
+                  onClick={onOpen}
+                  borderRadius="full"
+                  size={{ base: "sm", sm: "md" }}
+                  px={{ base: 5, sm: 6 }}
+                >
+                  إنشاء كورس جديد
+                </Button>
+                <Link to="/teacher_courses">
+                  <Button
+                    colorScheme="whiteAlpha"
+                    variant="outline"
+                    rightIcon={<FaArrowRight />}
+                    borderRadius="full"
+                    size={{ base: "sm", sm: "md" }}
+                    px={{ base: 5, sm: 6 }}
+                  >
+                    إدارة كورساتي
+                  </Button>
+                </Link>
+              </HStack>
             </VStack>
+
+            {/* Avatar with glow ring */}
             <Box 
               display={{ base: "none", lg: "block" }}
               w={{ base: "120px", md: "160px", lg: "180px", xl: "200px" }}
               h={{ base: "120px", md: "160px", lg: "180px", xl: "200px" }}
             >
-              <img 
-                src={user.avatar} 
-                className="w-full h-full rounded-full object-cover"
-                alt="Teacher Avatar"
-              />
+              <Box
+                position="relative"
+                w="full"
+                h="full"
+                borderRadius="full"
+                p={2}
+                bgGradient="conic(at 50% 50%, whiteAlpha.400, whiteAlpha.200, whiteAlpha.400)"
+              >
+                <Box w="full" h="full" borderRadius="full" overflow="hidden" boxShadow="xl">
+                  <img 
+                    src={user.avatar} 
+                    className="w-full h-full object-cover"
+                    alt="Teacher Avatar"
+                  />
+                </Box>
+              </Box>
             </Box>
           </VStack>
         </MotionCard>

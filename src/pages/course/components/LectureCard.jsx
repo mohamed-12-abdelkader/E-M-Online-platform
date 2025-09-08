@@ -5,7 +5,7 @@ import {
 } from "@chakra-ui/react";
 import {
   FaPlayCircle, FaLock, FaEdit, FaTrash, FaPlus, FaGraduationCap, FaRegPaperPlane, FaVideo, FaFilePdf, FaLightbulb, FaClock, FaBookOpen, FaStar,
-  FaAngleDown, FaAngleUp, FaEye, FaEyeSlash, FaCalendar, FaTag, FaComments
+  FaAngleDown, FaAngleUp, FaEye, FaEyeSlash, FaCalendar, FaTag, FaComments, FaUsers, FaRegComment
 } from "react-icons/fa";
 import baseUrl from "../../../api/baseUrl";
 import { Link } from "react-router-dom";
@@ -52,6 +52,11 @@ const LectureCard = ({
   const [isVisible, setIsVisible] = React.useState(lecture.is_visible ?? true);
   const [lectureExam, setLectureExam] = React.useState(null);
   const [examLoading, setExamLoading] = React.useState(false);
+  const [commentsStats, setCommentsStats] = React.useState({
+    total: 0,
+    recent: 0,
+    loading: false
+  });
 console.log(lecture)
   const handleToggleVisibility = async (e) => {
     e.stopPropagation();
@@ -91,12 +96,38 @@ console.log(lecture)
     }
   };
 
+  // دالة جلب إحصائيات التعليقات
+  const fetchCommentsStats = async () => {
+    if (!lecture.id) return;
+    
+    setCommentsStats(prev => ({ ...prev, loading: true }));
+    try {
+      const token = localStorage.getItem("token");
+      const response = await baseUrl.get(`/api/lecture/${lecture.id}/comments/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCommentsStats({
+        total: response.data.total || 0,
+        recent: response.data.recent || 0,
+        loading: false
+      });
+    } catch (error) {
+      console.log("Error fetching comments stats:", error);
+      setCommentsStats(prev => ({ ...prev, loading: false }));
+    }
+  };
+
   // جلب امتحان المحاضرة عند فتح المحاضرة
   React.useEffect(() => {
     if (isExpanded && !lectureExam && !examLoading) {
       fetchLectureExam();
     }
   }, [isExpanded, lecture.id]);
+
+  // جلب إحصائيات التعليقات عند تحميل المكون
+  React.useEffect(() => {
+    fetchCommentsStats();
+  }, [lecture.id]);
 
   // دالة تعديل امتحان المحاضرة
   const handleEditLectureExam = async (examData) => {
@@ -285,24 +316,6 @@ console.log(lecture)
         <HStack spacing={{ base: 1, md: 2 }} flexWrap="wrap" gap={1}>
           {isTeacher && (
             <>
-              {!lecture.exam && !lectureExam && (
-                <Button 
-                  size={{ base: 'xs', md: 'sm' }}
-                  colorScheme="green" 
-                  leftIcon={<Icon as={FaPlus} />} 
-                  onClick={() => setExamModal({ 
-                    isOpen: true, 
-                    type: 'add', 
-                    lectureId: lecture.id, 
-                    data: null,
-                    onSave: handleAddLectureExam
-                  })} 
-                  isLoading={examActionLoading}
-                  fontSize={{ base: 'xs', md: 'sm' }}
-                >
-                  إضافة امتحان
-                </Button>
-              )}
               <Tooltip label="تعديل المحاضرة">
                 <IconButton 
                   size={{ base: 'xs', md: 'sm' }} 
@@ -339,19 +352,7 @@ console.log(lecture)
               )}
             </>
           )}
-          {/* زر التعليقات - واضح للجميع */}
-          <Link to={`/lectur_commints/${lecture.id}`} style={{ textDecoration: 'none' }}>
-            <IconButton
-              size={{ base: 'sm', md: 'md' }}
-              colorScheme="orange"
-              variant="solid"
-              icon={<Icon as={FaComments} />}
-              aria-label="تعليقات المحاضرة"
-              borderRadius="full"
-              transition="all 0.2s"
-              _hover={{ transform: 'scale(1.15)' }}
-            />
-          </Link>
+          {/* قسم التعليقات المحسن */}
           {canExpand && (
             <IconButton
               size={{ base: 'sm', md: 'md' }}
@@ -363,6 +364,7 @@ console.log(lecture)
               borderRadius="full"
             />
           )}
+       
         </HStack>
       </Flex>
       {/* تفاصيل المحاضرة */}
@@ -370,29 +372,30 @@ console.log(lecture)
         <Box px={6} py={4} bg={itemBg} borderBottomRadius="2xl">
           <VStack align="start" spacing={6} divider={<Divider borderColor={dividerColor} />}> 
             {/* وصف المحاضرة */}
-            <HStack spacing={3} align="start">
-              <Icon as={FaRegPaperPlane} color="blue.400" boxSize={5} mt={1} />
-              <Box>
-                <Text fontWeight="bold" color={headingColor} mb={1}>وصف المحاضرة</Text>
-                <Text color={textColor} fontSize="md" fontWeight="medium">
-                  {lecture.description || "لا يوجد وصف للمحاضرة"}
-                </Text>
-              </Box>
-            </HStack>
-            {/* عرض الامتحان إذا وجد */}
-            {lecture.exam && (
-              <HStack spacing={3} align="center" w="full">
+          
+            {/* قسم الامتحانات */}
+            <Box w="full">
+              <HStack spacing={2} mb={2} display={{ base: 'none', md: 'flex' }}>
                 <Icon as={FaGraduationCap} color="green.500" boxSize={5} />
-                <Box flex={1}>
-                  <Text fontWeight="bold" color={headingColor} mb={1}>امتحان المحاضرة</Text>
-                  <Text fontWeight="medium">{lecture.exam.title}</Text>
-                  <VStack spacing={2} mt={2} fontSize="sm" color={subTextColor} align="start">
-                 
-                   
-                  
-                   
-                  </VStack>
-                </Box>
+                <Text fontWeight="bold" color={headingColor}>امتحان المحاضرة</Text>
+              </HStack>
+              <Stack direction={{ base: 'column', md: 'row' }} spacing={2} mb={2} display={{ base: 'flex', md: 'none' }}>
+                <Icon as={FaGraduationCap} color="green.500" boxSize={5} />
+                <Text fontWeight="bold" color={headingColor}>امتحان المحاضرة</Text>
+              </Stack>
+              
+              {/* عرض الامتحان إذا وجد */}
+              {lecture.exam && (
+                <HStack spacing={3} align="center" w="full" mb={2}>
+                  <Box flex={1}>
+                    <Text fontWeight="medium">{lecture.exam.title}</Text>
+                    <VStack spacing={2} mt={2} fontSize="sm" color={subTextColor} align="start">
+                     
+                       
+                      
+                       
+                    </VStack>
+                  </Box>
                 <HStack spacing={{ base: 1, sm: 2 }} flexWrap="wrap">
                   <Link to={`/ComprehensiveExam/${lecture.exam.id}`} style={{ textDecoration: 'none', width: '100%', minWidth: { base: '120px', sm: '140px' } }}>
                     <Button
@@ -489,7 +492,38 @@ console.log(lecture)
                   )}
                 </HStack>
               </HStack>
-            )}
+              )}
+              
+              {/* زر إضافة امتحان إذا لم يوجد امتحان */}
+              {!lecture.exam && !lectureExam && isTeacher && (
+                <Button 
+                  size="sm" 
+                  colorScheme="green" 
+                  variant="outline" 
+                  leftIcon={<Icon as={FaPlus} />} 
+                  onClick={() => setExamModal({ 
+                    isOpen: true, 
+                    type: 'add', 
+                    lectureId: lecture.id, 
+                    data: null,
+                    onSave: handleAddLectureExam
+                  })} 
+                  isLoading={examActionLoading}
+                  mt={2}
+                >
+                  إضافة امتحان
+                </Button>
+              )}
+              
+              {/* رسالة عدم وجود امتحان للطلاب */}
+              {!lecture.exam && !lectureExam && !isTeacher && (
+                <Text color={subTextColor} fontSize="sm">لا يوجد امتحان لهذه المحاضرة بعد.</Text>
+              )}
+            </Box>
+            
+            {/* قسم التعليقات التفصيلي */}
+           
+
             {/* الفيديوهات */}
             <Box w="full">
               <HStack spacing={2} mb={2} display={{ base: 'none', md: 'flex' }}>
@@ -564,6 +598,95 @@ console.log(lecture)
               )}
               {isTeacher && (
                 <Button size="sm" colorScheme="green" variant="outline" leftIcon={<Icon as={FaPlus} />} mt={2} onClick={() => handleAddFile(lecture.id)}>إضافة ملف</Button>
+              )}
+            </Box>
+             <Box w="full">
+              <HStack spacing={3} align="center" w="full" mb={3}>
+                <Icon as={FaComments} color="orange.500" boxSize={5} />
+                <Box flex={1}>
+                  <Text fontWeight="bold" color={headingColor} mb={1}>مناقشة المحاضرة</Text>
+                  <Text fontSize="sm" color={subTextColor}>
+                    شارك في النقاش مع زملائك حول هذه المحاضرة
+                  </Text>
+                </Box>
+                <VStack spacing={1} align="center">
+                  <HStack spacing={4}>
+                   
+                    {commentsStats.recent > 0 && (
+                      <VStack spacing={0} align="center">
+                        <Text fontSize="lg" fontWeight="bold" color="green.600">
+                          {commentsStats.recent}
+                        </Text>
+                        <Text fontSize="xs" color={subTextColor}>جديدة</Text>
+                      </VStack>
+                    )}
+                  </HStack>
+                </VStack>
+              </HStack>
+              
+              <HStack spacing={2} flexWrap="wrap">
+                <Link to={`/lectur_commints/${lecture.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                  <Button
+                    size="md"
+                    colorScheme="orange"
+                    variant="solid"
+                    leftIcon={<Icon as={FaRegComment} />}
+                    borderRadius="full"
+                    w="full"
+                    _hover={{
+                      transform: 'translateY(-2px)',
+                      boxShadow: 'lg',
+                      bg: 'orange.600'
+                    }}
+                    transition="all 0.2s"
+                    fontWeight="bold"
+                  >
+                    {commentsStats.total > 0 ? "عرض التعليقات" : "ابدأ النقاش"}
+                  </Button>
+                </Link>
+                
+                {commentsStats.total > 0 && (
+                  <Link to={`/lectur_commints/${lecture.id}`} style={{ textDecoration: 'none' }}>
+                    <Button
+                      size="md"
+                      colorScheme="orange"
+                      variant="outline"
+                      leftIcon={<Icon as={FaUsers} />}
+                      borderRadius="full"
+                      _hover={{
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'md',
+                        bg: 'orange.50'
+                      }}
+                      transition="all 0.2s"
+                    >
+                      المشاركون
+                    </Button>
+                  </Link>
+                )}
+              </HStack>
+              
+              {commentsStats.total === 0 && (
+                <Box
+                  mt={3}
+                  p={4}
+                  bg={useColorModeValue('orange.50', 'orange.900')}
+                  borderRadius="lg"
+                  border="1px solid"
+                  borderColor="orange.200"
+                >
+                  <HStack spacing={3}>
+                    <Icon as={FaLightbulb} color="orange.500" boxSize={5} />
+                    <VStack align="start" spacing={1}>
+                      <Text fontSize="sm" fontWeight="medium" color="orange.700">
+                       اسال سؤالك عن المحاضرة
+                      </Text>
+                      <Text fontSize="xs" color="orange.600">
+                        شارك استفساراتك أو ملاحظاتك مع زملائك
+                      </Text>
+                    </VStack>
+                  </HStack>
+                </Box>
               )}
             </Box>
             {/* إذا لا يوجد محتوى */}
