@@ -35,6 +35,7 @@ import {
   ModalCloseButton,
   InputGroup,
   InputLeftElement,
+  InputRightElement,
   Divider
 } from "@chakra-ui/react";
 import { 
@@ -46,7 +47,8 @@ import {
   FaGraduationCap,
   FaEye,
   FaEdit,
-  FaTrash
+  FaTrash,
+  FaDollarSign
 } from "react-icons/fa";
 import baseUrl from "../../api/baseUrl";
 
@@ -56,7 +58,8 @@ const QuestionBankDashboard = () => {
     name: "",
     description: "",
     grade_id: "",
-    is_active: true
+    is_active: true,
+    price: 0
   });
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -316,6 +319,7 @@ const QuestionBankDashboard = () => {
     submitFormData.append("description", formData.description);
     submitFormData.append("grade_id", formData.grade_id);
     submitFormData.append("is_active", formData.is_active);
+    submitFormData.append("price", formData.price ?? 0);
     
     if (selectedImage) {
       submitFormData.append("image", selectedImage);
@@ -357,7 +361,8 @@ const QuestionBankDashboard = () => {
       name: "",
       description: "",
       grade_id: "",
-      is_active: true
+      is_active: true,
+      price: 0
     });
     setSelectedImage(null);
     setImagePreview(null);
@@ -375,7 +380,8 @@ const QuestionBankDashboard = () => {
       name: bank.name,
       description: bank.description || "",
       grade_id: bank.grade_id,
-      is_active: bank.is_active
+      is_active: bank.is_active,
+      price: bank.price ?? 0
     });
     setImagePreview(bank.image_url);
     onEditOpen();
@@ -517,6 +523,7 @@ const QuestionBankDashboard = () => {
     submitFormData.append("description", formData.description);
     submitFormData.append("grade_id", formData.grade_id);
     submitFormData.append("is_active", formData.is_active);
+    submitFormData.append("price", formData.price ?? 0);
     
     if (selectedImage) {
       submitFormData.append("image", selectedImage);
@@ -579,7 +586,7 @@ const QuestionBankDashboard = () => {
         position="sticky"
         top={0}
         zIndex={10}
-        mt="80px"
+        mt="0px"
       >
         <Container maxW="container.xl" py={6}>
           <Flex justify="space-between" align="center">
@@ -1012,21 +1019,82 @@ const QuestionBankDashboard = () => {
           <ModalBody>
             <form onSubmit={handleSubmit}>
               <VStack spacing={6}>
+                {/* السعر */}
+                <FormControl>
+                  <FormLabel>
+                    <HStack spacing={2}>
+                      <FaDollarSign color="#3182ce" />
+                      <Text>السعر</Text>
+                    </HStack>
+                  </FormLabel>
+                  <InputGroup size="lg">
+                    <InputLeftElement pointerEvents="none">
+                      <FaDollarSign color="#3182ce" />
+                    </InputLeftElement>
+                    <Input
+                      name="price"
+                      type="number"
+                      min={0}
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      placeholder="أدخل السعر"
+                    />
+                    <InputRightElement pr={3}>
+                      <Text color="gray.500" fontSize="sm">جنيه</Text>
+                    </InputRightElement>
+                  </InputGroup>
+                </FormControl>
+                {/* السعر */}
+                <FormControl>
+                  <FormLabel>السعر</FormLabel>
+                  <InputGroup size="lg">
+                    <InputLeftElement pointerEvents="none">
+                      <FaDollarSign color="#38a169" />
+                    </InputLeftElement>
+                    <Input
+                      name="price"
+                      type="number"
+                      min={0}
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      placeholder="أدخل السعر"
+                    />
+                    <InputRightElement pr={3}>
+                      <Text color="gray.500" fontSize="sm">جنيه</Text>
+                    </InputRightElement>
+                  </InputGroup>
+                </FormControl>
+                {/* السعر */}
+                
                 {/* اسم بنك الأسئلة */}
                 <FormControl isRequired>
-                  <FormLabel>اسم بنك الأسئلة</FormLabel>
-                  <Input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="أدخل اسم بنك الأسئلة"
-                    size="lg"
-                  />
+                  <FormLabel>
+                    <HStack spacing={2}>
+                      <FaBook color="#3182ce" />
+                      <Text>اسم بنك الأسئلة</Text>
+                    </HStack>
+                  </FormLabel>
+                  <InputGroup size="lg">
+                    <InputLeftElement pointerEvents="none">
+                      <FaBook color="#3182ce" />
+                    </InputLeftElement>
+                    <Input
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="أدخل اسم بنك الأسئلة"
+                    />
+                  </InputGroup>
                 </FormControl>
 
                 {/* وصف بنك الأسئلة */}
                 <FormControl>
-                  <FormLabel>وصف بنك الأسئلة (اختياري)</FormLabel>
+                  <FormLabel>
+                    <HStack spacing={2}>
+                      <FaEdit color="#3182ce" />
+                      <Text>وصف بنك الأسئلة (اختياري)</Text>
+                    </HStack>
+                  </FormLabel>
                   <Textarea
                     name="description"
                     value={formData.description}
@@ -1039,21 +1107,30 @@ const QuestionBankDashboard = () => {
 
                 {/* اختيار الصف */}
                 <FormControl isRequired>
-                  <FormLabel>الصف الدراسي</FormLabel>
-                  <Select
-                    name="grade_id"
-                    value={formData.grade_id}
-                    onChange={handleInputChange}
-                    placeholder="اختر الصف الدراسي"
-                    size="lg"
-                    isDisabled={gradesLoading}
-                  >
-                    {grades.map((grade) => (
-                      <option key={grade.id} value={grade.id}>
-                        {grade.name}
-                      </option>
-                    ))}
-                  </Select>
+                  <FormLabel>
+                    <HStack spacing={2}>
+                      <FaGraduationCap color="#3182ce" />
+                      <Text>الصف الدراسي</Text>
+                    </HStack>
+                  </FormLabel>
+                  <InputGroup size="lg">
+                    <InputLeftElement pointerEvents="none">
+                      <FaGraduationCap color="#3182ce" />
+                    </InputLeftElement>
+                    <Select
+                      name="grade_id"
+                      value={formData.grade_id}
+                      onChange={handleInputChange}
+                      placeholder="اختر الصف الدراسي"
+                      isDisabled={gradesLoading}
+                    >
+                      {grades.map((grade) => (
+                        <option key={grade.id} value={grade.id}>
+                          {grade.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </InputGroup>
                   {gradesLoading && (
                     <HStack mt={2}>
                       <Spinner size="sm" />
@@ -1064,22 +1141,36 @@ const QuestionBankDashboard = () => {
 
                 {/* حالة النشاط */}
                 <FormControl>
-                  <FormLabel>حالة النشاط</FormLabel>
-                  <Select
-                    name="is_active"
-                    value={formData.is_active}
-                    onChange={handleInputChange}
-                    placeholder="اختر حالة النشاط"
-                    size="lg"
-                  >
-                    <option value={true}>نشط</option>
-                    <option value={false}>غير نشط</option>
-                  </Select>
+                  <FormLabel>
+                    <HStack spacing={2}>
+                      <FaEye color="#3182ce" />
+                      <Text>حالة النشاط</Text>
+                    </HStack>
+                  </FormLabel>
+                  <InputGroup size="lg">
+                    <InputLeftElement pointerEvents="none">
+                      <FaEye color="#3182ce" />
+                    </InputLeftElement>
+                    <Select
+                      name="is_active"
+                      value={formData.is_active}
+                      onChange={handleInputChange}
+                      placeholder="اختر حالة النشاط"
+                    >
+                      <option value={true}>نشط</option>
+                      <option value={false}>غير نشط</option>
+                    </Select>
+                  </InputGroup>
                 </FormControl>
 
                 {/* رفع الصورة */}
                 <FormControl>
-                  <FormLabel>صورة بنك الأسئلة (اختياري)</FormLabel>
+                  <FormLabel>
+                    <HStack spacing={2}>
+                      <FaUpload color="#3182ce" />
+                      <Text>صورة بنك الأسئلة (اختياري)</Text>
+                    </HStack>
+                  </FormLabel>
                   <VStack spacing={4} align="stretch">
                     {!imagePreview ? (
                       <Button

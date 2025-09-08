@@ -825,11 +825,11 @@ const TeacherDashboardHome = () => {
                 bgGradient="conic(at 50% 50%, whiteAlpha.400, whiteAlpha.200, whiteAlpha.400)"
               >
                 <Box w="full" h="full" borderRadius="full" overflow="hidden" boxShadow="xl">
-                  <img 
-                    src={user.avatar} 
+              <img 
+                src={user.avatar} 
                     className="w-full h-full object-cover"
-                    alt="Teacher Avatar"
-                  />
+                alt="Teacher Avatar"
+              />
                 </Box>
               </Box>
             </Box>
