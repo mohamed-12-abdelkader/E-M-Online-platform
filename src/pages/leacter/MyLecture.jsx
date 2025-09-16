@@ -16,7 +16,7 @@ const MyLecture = () => {
       pb={{ base: "80px", sm: "90px", md: "100px" }}
       position="relative"
       overflow="hidden"
-      px={{ base: 2, sm: 4, md: 6 }}
+     
       w="100%"
       style={{ width: '100% !important' }}
     >

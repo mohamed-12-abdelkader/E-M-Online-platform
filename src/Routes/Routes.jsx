@@ -134,6 +134,7 @@ import TeacherDashboardHome from "../pages/home/TeacherDashboardHome";
 import UserType from "../Hooks/auth/userType";
 import ProtectedRoute from "../components/protectedRoute/ProtectedRoute";
 import ProtectedLogin from "../components/protectedRoute/ProtectedLogin";
+import Match from "../pages/league/Match";
 
 
 const AppRouter = () => {
@@ -357,7 +358,7 @@ const AppRouter = () => {
           {/* Leagues */}
           <Route path="leagues" element={<PlatfourmLeagues />} />
           <Route path="league/:id" element={<League />} />
-
+          <Route path="matche/:id" element={<Match />} />
           {/* Chat */}
           <Route path="chatbot-page" element={<ChatbotPage />} />
           <Route path="chats" element={<ChatPage />} />

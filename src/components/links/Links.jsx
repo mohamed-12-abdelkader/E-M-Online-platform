@@ -102,7 +102,7 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
     { to: "/the_Firsts", Icon: MdMilitaryTech, label: "أوائل المسابقات" },
     { to: "/save_posts", Icon: MdBookmark, label: "المنشورات المحفوظة" },
     { to: "/wallet", Icon: MdAccountBalanceWallet, label: "محفظة الطالب" },
-    { to: "/league", Icon: MdLeaderboard, label: "الدوريات" },
+    { to: "/leagues", Icon: MdLeaderboard, label: "الدوريات" },
   ];
 
   return (

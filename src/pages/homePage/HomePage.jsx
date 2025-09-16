@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Heading,
@@ -21,6 +21,7 @@ import {
   VStack,
   HStack,
   Card,
+  Collapse,
 } from "@chakra-ui/react";
 import {
   FaChalkboardTeacher,
@@ -42,6 +43,7 @@ import MyTeacher from "../myTeacher/MyTeacher";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import UserType from "../../Hooks/auth/userType";
+import baseUrl from "../../api/baseUrl";
 
 const MotionBox = motion(Box);
 const MotionCard = motion(Card);
@@ -51,52 +53,55 @@ const HomePage = () => {
   const notificationsLoading = false;
   const notifications = { notifications: [] };
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const quickActionsDisclosure = useDisclosure({ defaultIsOpen: false });
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [userData, isAdmin, isTeacher, student] = UserType();
 
-  // بيانات المسابقات والإشعارات
-  const competitionNotifications = [
-    {
-      id: 1,
-      title: "مسابقة الرياضيات",
-      message: "مسابقة جديدة في الرياضيات! شارك واربح 100 نقطة",
-      time: "منذ 2 ساعة",
-      type: "competition",
-      urgent: true
-    },
-    {
-      id: 2,
-      title: "مسابقة اللغة الإنجليزية",
-      message: "مسابقة في قواعد اللغة الإنجليزية تنتهي غداً",
-      time: "منذ 5 ساعات",
-      type: "competition",
-      urgent: false
-    },
-    {
-      id: 3,
-      title: "مسابقة العلوم",
-      message: "مسابقة في العلوم للصف الثالث الثانوي",
-      time: "منذ يوم",
-      type: "competition",
-      urgent: false
-    },
-    {
-      id: 4,
-      title: "مسابقة التاريخ",
-      message: "مسابقة في التاريخ الإسلامي للصف الثاني الثانوي",
-      time: "منذ يومين",
-      type: "competition",
-      urgent: false
-    },
-    {
-      id: 5,
-      title: "مسابقة الجغرافيا",
-      message: "مسابقة في الجغرافيا الطبيعية",
-      time: "منذ 3 أيام",
-      type: "competition",
-      urgent: false
+  // إشعارات مسابقات/دوريات من الـ API
+  const [competitionNotifications, setCompetitionNotifications] = useState([]);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedError, setFeedError] = useState("");
+  const authHeader = useMemo(() => ({
+    Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+  }), []);
+
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+    } catch {
+      return dateStr;
     }
-  ];
+  };
+
+  const fetchGradeFeed = async () => {
+    try {
+      setFeedLoading(true);
+      setFeedError("");
+      const res = await baseUrl.get('/api/notifications/grade-feed', { headers: authHeader });
+      const feed = res?.data?.feed || [];
+      const mapped = feed.map((n, idx) => ({
+        id: `${n.type}-${n.item_id}-${idx}`,
+        title: n.title,
+        message: n.description || (n.type === 'league' ? 'دوري جديد متاح لصفك' : 'مسابقة جديدة لصفك'),
+        time: formatDateTime(n.created_at),
+        type: n.type,
+        urgent: n.type === 'league',
+        itemId: n.item_id,
+      }));
+      setCompetitionNotifications(mapped);
+    } catch (e) {
+      setFeedError('تعذر جلب إشعارات الصف');
+      setCompetitionNotifications([]);
+    } finally {
+      setFeedLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGradeFeed();
+  }, [authHeader]);
 
   // عدد الإشعارات المعروضة في البداية
   const [visibleNotifications, setVisibleNotifications] = useState(2);
@@ -105,28 +110,28 @@ const HomePage = () => {
   // روابط التنقل الرئيسية
   const mainLinks = [
     {
-      name: "ابحث عن محاضر",
-      href: "/teachers",
-      icon: FaSearch,
-      color: "blue.500",
-      desc: "ابحث عن أفضل المحاضرين في تخصصك",
-      gradient: "linear(135deg, blue.400, blue.600)"
-    },
-    {
-      name: "محاضرينى",
-      href: "/my-teachers",
-      icon: FaChalkboardTeacher,
-      color: "orange.500",
-      desc: "المحاضرين الذين تدرس معهم حالياً",
-      gradient: "linear(135deg, orange.400, orange.600)"
-    },
-    {
-      name: "المسابقات",
-      href: "/competitions",
+      name: "دوري EM",
+      href: "/leagues",
       icon: FaTrophy,
-      color: "blue.300",
-      desc: "شارك واربح جوائز قيمة",
-      gradient: "linear(135deg, blue.300, blue.500)"
+      color: "yellow.500",
+      desc: "شارك في دوري EM وتحدَّي زملاءك",
+      gradient: "linear(135deg, yellow.400, yellow.600)"
+    },
+    {
+      name: "بنك الأسئلة",
+      href: "/question_bank",
+      icon: FaLightbulb,
+      color: "green.500",
+      desc: "تدرّب على أسئلة متنوعة مع الحلول",
+      gradient: "linear(135deg, green.400, green.600)"
+    },
+    {
+      name: "EM سوشيال",
+      href: "/social",
+      icon: FaRocket,
+      color: "pink.500",
+      desc: "تواصل وتفاعل مع مجتمع EM",
+      gradient: "linear(135deg, pink.400, pink.600)"
     },
     {
       name: "كورساتي",
@@ -186,6 +191,7 @@ const HomePage = () => {
 
   // Responsive values
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const isDesktop = useBreakpointValue({ base: false, md: true });
   const avatarSize = useBreakpointValue({ base: "md", md: "lg", lg: "xl" });
   const headingSize = useBreakpointValue({ base: "lg", md: "xl", lg: "2xl" });
   const subHeadingSize = useBreakpointValue({ base: "sm", md: "md", lg: "lg" });
@@ -349,7 +355,13 @@ const HomePage = () => {
 
                 <VStack spacing={4} align="stretch" flex={1} overflow="hidden">
                   <SimpleGrid columns={1} spacing={4}>
-                    {competitionNotifications.slice(0, visibleNotifications).map((notification, index) => (
+                    {feedLoading && (
+                      <Box bg="white" borderRadius="xl" p={4}>جارِ تحميل الإشعارات...</Box>
+                    )}
+                    {feedError && !feedLoading && (
+                      <Box bg="white" borderRadius="xl" p={4} color="red.600">{feedError}</Box>
+                    )}
+                    {!feedLoading && !feedError && competitionNotifications.slice(0, visibleNotifications).map((notification, index) => (
                       <MotionCard
                         key={notification.id}
                         variants={itemVariants}
@@ -459,78 +471,92 @@ const HomePage = () => {
                 borderBottom="1px solid"
                 borderColor={borderColor}
           >
-            <HStack spacing={3}>
-              <Icon as={FaLightbulb} color="blue.500" boxSize={6} />
-              <Heading size="md" color="blue.700">
-                    الوصول السريع
-                  </Heading>
-                </HStack>
+            <HStack spacing={3} justify="space-between" align="center">
+              <HStack spacing={3}>
+                <Icon as={FaLightbulb} color="blue.500" boxSize={6} />
+                <Heading size="md" color="blue.700">
+                      الوصول السريع
+                    </Heading>
+                  </HStack>
+              <Button
+                display={{ base: "inline-flex", md: "none" }}
+                size="sm"
+                variant="outline"
+                colorScheme="blue"
+                borderRadius="full"
+                onClick={quickActionsDisclosure.isOpen ? quickActionsDisclosure.onClose : quickActionsDisclosure.onOpen}
+                rightIcon={<FaArrowRight style={{ transform: quickActionsDisclosure.isOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }} />}
+              >
+                {quickActionsDisclosure.isOpen ? 'إخفاء' : 'عرض'}
+              </Button>
+            </HStack>
           </Box>
               
-          <Box p={6}>
-                <SimpleGrid 
-              columns={{ base: 1, sm: 2, md: 4 }} 
-              spacing={5}
-                >
-                  {mainLinks.map((link, index) => (
-                    <Link key={index} to={link.href}>
-                  <MotionCard
-                    variants={itemVariants}
-                        bg={cardBg}
-                    borderRadius="xl"
-                        shadow="md"
-                    p={5}
-                        cursor="pointer"
-                        border="1px solid"
-                        borderColor={borderColor}
-                    _hover={{ transform: "translateY(-4px)", shadow: "xl" }}
-                    transition="all 0.3s"
-                    height="100%"
-                      >
-                    <VStack spacing={4} align="center" height="100%">
-                          <Box
-                        p={4}
-                            borderRadius="full"
-                            bgGradient={link.gradient}
-                            color="white"
-                        shadow="lg"
-                          >
-                        <Icon as={link.icon} boxSize={6} />
-                          </Box>
-                          
-                      <VStack spacing={2} align="center" flex={1}>
-                            <Text 
-                              fontWeight="bold" 
-                          fontSize="md" 
-                              color={textColor}
-                              textAlign="center"
+          <Collapse in={isDesktop || quickActionsDisclosure.isOpen} animateOpacity style={{ overflow: 'hidden' }}>
+            <Box p={6}>
+                  <div 
+              className="flex flex-wrap justify-center"
+                  >
+                    {mainLinks.map((link, index) => (
+                      <Link className="m-3 w-[90%] mx-auto md:w-[250px]" key={index} to={link.href}>
+                    <MotionCard
+                      variants={itemVariants}
+                          bg={cardBg}
+                      borderRadius="xl"
+                          shadow="md"
+                      p={5}
+                          cursor="pointer"
+                          border="1px solid"
+                          borderColor={borderColor}
+                      _hover={{ transform: "translateY(-4px)", shadow: "xl" }}
+                      transition="all 0.3s"
+                      height="100%"
+                        >
+                      <VStack spacing={4} align="center" height="100%">
+                            <Box
+                          p={4}
+                              borderRadius="full"
+                              bgGradient={link.gradient}
+                              color="white"
+                          shadow="lg"
                             >
-                              {link.name}
-                            </Text>
+                          <Icon as={link.icon} boxSize={6} />
+                            </Box>
                             
-                            <Text 
-                          fontSize="sm" 
-                              color="gray.500" 
-                              textAlign="center"
-                              noOfLines={2}
-                          lineHeight="1.4"
-                            >
-                              {link.desc}
-                            </Text>
+                        <VStack spacing={2} align="center" flex={1}>
+                              <Text 
+                                fontWeight="bold" 
+                            fontSize="md" 
+                                color={textColor}
+                                textAlign="center"
+                              >
+                                {link.name}
+                              </Text>
+                              
+                              <Text 
+                            fontSize="sm" 
+                                color="gray.500" 
+                                textAlign="center"
+                                noOfLines={2}
+                            lineHeight="1.4"
+                              >
+                                {link.desc}
+                              </Text>
+                            </VStack>
+                        
+                        <Icon 
+                          as={FaArrowRight} 
+                          color={link.color} 
+                          boxSize={4}
+                          opacity={0.7}
+                        />
                           </VStack>
-                      
-                      <Icon 
-                        as={FaArrowRight} 
-                        color={link.color} 
-                        boxSize={4}
-                        opacity={0.7}
-                      />
-                        </VStack>
-                  </MotionCard>
-                    </Link>
-                  ))}
-                </SimpleGrid>
-          </Box>
+                    </MotionCard>
+                      </Link>
+                    ))}
+                  </div>
+            </Box>
+          </Collapse>
               </Box>
             </MotionBox>
 

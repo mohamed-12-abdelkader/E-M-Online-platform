@@ -1380,8 +1380,8 @@ D) has made`}
                     </div>
                     
                     <div style='margin-top: 8px;'>
-                      <p style='font-size: 11px; font-weight: bold; color: #4a5568; display: flex; justify-content: center; align-items: center; gap: 4px; margin: 0;'>
-                        01210726096 |01032127531
+                      <p style='font-size: 11px; font-weight: 600; color: #4a5568; text-align: center; margin: 0; white-space: nowrap;'>
+                        01210726096 | 01032127531 | 01288781012 | 01289587761
                       </p>
                     </div>
                   </div>`
@@ -1393,14 +1393,14 @@ D) has made`}
         try {
           const pxPerMm = 3.78;
           const canvas = await html2canvas(tempDiv, {
-            scale: 2,
+            scale: 1.5,
             useCORS: true,
             width: pageWidth * pxPerMm,
             height: pageHeight * pxPerMm,
           });
           pdf.addImage(
-            canvas.toDataURL("image/png"),
-            "PNG",
+            canvas.toDataURL("image/jpeg", 0.8),
+            "JPEG",
             0,
             0,
             pageWidth,
@@ -2119,8 +2119,8 @@ D) has made`}
                           <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#c53030', wordBreak: 'break-all', maxWidth: '60%' }}>{code.code}</span>
                         </div>
                         <div style={{ marginTop: '8px' }}>
-                          <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#4a5568', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px', margin: '0' }}>
-                            01210726096 | 01274620654
+                          <p style={{ fontSize: '11px', fontWeight: 600, color: '#4a5568', textAlign: 'center', margin: 0, whiteSpace: 'nowrap' }}>
+                            01210726096 | 01274620654 | 01288781012 | 01289587761
                           </p>
                         </div>
                       </div>

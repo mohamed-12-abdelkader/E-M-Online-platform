@@ -16,6 +16,7 @@ import {
   Heading,
   SimpleGrid, // Changed from div for better grid control
   Center,
+  AspectRatio,
 } from "@chakra-ui/react";
 import { MdOutlineVideoLibrary } from "react-icons/md";
 import { FaSearch, FaPlay, FaCalendarAlt, FaStar } from "react-icons/fa";
@@ -23,7 +24,7 @@ import { Link } from "react-router-dom";
 import GitMyMonthes from "../../Hooks/student/GitMyMonthes";
 // Assuming CoursesCard is not strictly needed if we are customizing the Card directly
 // import { CoursesCard } from "../../ui/card/CoursesCard";
-import img from "../../img/Screenshot_2025-03-07_203419-removebg-preview.png"; // Unused import
+// Removed unused image import
 import { motion } from "framer-motion";
 
 const Lectures = () => {
@@ -47,7 +48,7 @@ const Lectures = () => {
       {myMonthLoading ? (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={{ base: 4, md: 6 }}>
           {[...Array(6)].map((_, i) => (
-            <Card key={i} bg={cardBg} borderRadius="xl" shadow="md" overflow="hidden">
+            <Card  key={i} bg={cardBg} borderRadius="xl" shadow="md" overflow="hidden">
               <Skeleton height="200px" width="100%" />
               <CardBody p={4}>
                 <VStack align="flex-start" spacing={3}>
@@ -64,16 +65,15 @@ const Lectures = () => {
           ))}
         </SimpleGrid>
       ) : myMonth.courses?.length > 0 ? (
-        <SimpleGrid columns={{ base: 1, sm: 2, md: 2, lg: 3 }} spacing={{ base: 4, md: 6, lg: 8 }}>
+        <div className="md:flex flex-wrap" >
           {myMonth.courses.map((course) => (
             <Link key={course.id} to={`/CourseDetailsPage/${course.id}`}>
-              <motion.div
-                whileHover={{ translateY: -5, boxShadow: "lg" }}
-                transition={{ duration: 0.2 }}
-              >
+           
                 <Card
+              className=" m-3 md:w-[310px]"
                   bg={cardBg}
                   border="1px solid"
+                  
                   borderColor={borderColor}
                   borderRadius="xl" // Larger border radius for a softer look
                   overflow="hidden"
@@ -83,20 +83,26 @@ const Lectures = () => {
                     transform: "translateY(-5px)", // Subtle lift effect
                   }}
                   transition="all 0.3s ease-in-out" // Smooth transition for all properties
-                  w="330px" // Ensure card takes full width of grid item
+                
+                  display="flex"
+                  flexDirection="column"
                 >
-                  <Image
-                    src={"/4edb8c38-39e2-40ff-9449-52246cf2a029.jpg"}
-                    alt={course.title}
-                    height={{ base: "180px", sm: "200px", md: "220px" }} // Responsive image height
-                    width="100%"
-                    objectFit="cover"
+                  <AspectRatio
+                    ratio={16 / 9}
+                    w="100%"
                     borderBottom="1px solid"
                     borderColor={borderColor}
-                  />
-                  <CardBody p={{ base: 3, sm: 4, md: 5 }}>
-                    <VStack align="flex-end" spacing={{ base: 2, sm: 3 }}> {/* Align text to the right for Arabic */}
-                      <Text
+                  >
+                    <Image
+                      src={course.avatar}
+                      alt={course.title}
+                      objectFit="cover"
+                    />
+                  </AspectRatio>
+                  <CardBody p={{ base: 3, sm: 4, md: 5 }} display="flex" flexDirection="column" flex="1">
+                    <VStack align="flex-end" spacing={{ base: 2, sm: 3 }} w="full" h="100%" justify="space-between"> {/* Align text to the right for Arabic */}
+                      <Box w="full" >
+                        <Text
                         fontWeight="extrabold" // Bolder title
                         fontSize={{ base: "md", sm: "lg", md: "xl" }} // Larger font size for title
                         color={textColor}
@@ -105,18 +111,21 @@ const Lectures = () => {
                         lineHeight="short" // Tighter line height
                       >
                         {course.title}
-                      </Text>
-                      {course.description && (
-                        <Text
-                          fontSize={{ base: "xs", sm: "sm", md: "md" }}
-                          color={subTextColor}
-                          textAlign="right"
-                          noOfLines={3} // Allow more lines for description
-                          lineHeight="tall"
-                        >
-                          {course.description}
                         </Text>
-                      )}
+                      </Box>
+                      <Box w="full" minH={{ base: "54px", sm: "60px", md: "72px" }}>
+                        {course.description ? (
+                          <Text
+                            fontSize={{ base: "xs", sm: "sm", md: "md" }}
+                            color={subTextColor}
+                            textAlign="right"
+                            noOfLines={3} // Allow more lines for description
+                            lineHeight="tall"
+                          >
+                            {course.description}
+                          </Text>
+                        ) : null}
+                      </Box>
                       <HStack justify="space-between" w="full" pt={2}> {/* Add padding top */}
                         <Badge
                           colorScheme="green"
@@ -154,10 +163,10 @@ const Lectures = () => {
                     </VStack>
                   </CardBody>
                 </Card>
-              </motion.div>
+             
             </Link>
           ))}
-        </SimpleGrid>
+        </div>
       ) : (
         // No courses message
         <Center py={{ base: 8, sm: 12, md: 16 }} flexDirection="column">

@@ -82,6 +82,7 @@ const Lesson = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   
+  
   // Loading states
   const [submitLoading, setSubmitLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);

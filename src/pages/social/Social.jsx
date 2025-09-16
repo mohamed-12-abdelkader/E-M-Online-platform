@@ -31,13 +31,14 @@ import {
   MenuItem,
 } from '@chakra-ui/react'
 import { FiThumbsUp, FiHeart } from 'react-icons/fi'
-import { IoAttachOutline, IoClose, IoChatbubbleOutline, IoShareSocialOutline, IoImageOutline, IoVideocamOutline, IoHappyOutline, IoEarthOutline, IoLockClosedOutline, IoPeopleOutline, IoEllipsisVertical, IoChevronBack, IoChevronForward, IoDownloadOutline } from 'react-icons/io5'
+import { IoAttachOutline, IoClose, IoChatbubbleOutline, IoShareSocialOutline, IoImageOutline, IoVideocamOutline, IoHappyOutline, IoEarthOutline, IoLockClosedOutline, IoPeopleOutline, IoEllipsisVertical, IoChevronBack, IoChevronForward, IoDownloadOutline, IoSendOutline } from 'react-icons/io5'
 import { BiSupport } from 'react-icons/bi'
 import dayjs from 'dayjs'
 import baseUrl from '../../api/baseUrl'
 import UserType from '../../Hooks/auth/userType'
 import { io } from 'socket.io-client'
 import img from "../../../public/Picsart_25-08-26_23-28-39-014.png"
+import ScrollToTop from '../../components/scollToTop/ScrollToTop'
 const ReactionBar = ({ myReaction, onReact, isSubmitting }) => {
   const iconColor = useColorModeValue('gray.600', 'gray.300')
   const activeColor = 'teal.500'
@@ -101,6 +102,9 @@ const Media = ({ url, type, onImageClick }) => {
 
 const CommentItem = ({ comment, onReplySelect, onReact, reacting, onUpdateComment, onDeleteComment, onOpenImage }) => {
   const borderColor = useColorModeValue('gray.200', 'gray.700')
+  const isEmAcademy = (comment?.author_email === 'emonline1111@gmail.com') || (comment?.author_name === 'emonline1111@gmail.com') || (comment?.author_name === 'EM Academy')
+  const displayName = isEmAcademy ? 'EM Academy' : (comment?.author_name || '')
+  const displayAvatar = isEmAcademy ? img : (comment?.author_avatar)
   return (
     <Box 
       border='1px solid' 
@@ -114,11 +118,8 @@ const CommentItem = ({ comment, onReplySelect, onReact, reacting, onUpdateCommen
         <Avatar 
          className='mx-2 border-2 border-gray-300'
           size={{ base: 'xs', sm: 'sm' }} 
-          name={comment.author_name}
-          src={comment.author_name === 'EM Academy' 
-            ? img
-            : comment.author_avatar
-          }
+          name={displayName}
+          src={displayAvatar}
         />
         <Box flex='1' w='full'>
           <Flex 
@@ -127,7 +128,7 @@ const CommentItem = ({ comment, onReplySelect, onReact, reacting, onUpdateCommen
             align={{ base: 'start', sm: 'start' }}
             gap={1}
           >
-            <Text fontWeight='bold' fontSize={{ base: 'xs', sm: 'sm' }}>{comment.author_name}</Text>
+            <Text fontWeight='bold' fontSize={{ base: 'xs', sm: 'sm' }}>{displayName}</Text>
             <Text 
               fontSize={{ base: 'xs', sm: 'xs' }} 
               color={useColorModeValue('gray.500','gray.400')}
@@ -398,14 +399,7 @@ const Social = () => {
     if (editComment) setEditCommentDraft(editComment.content || '')
   }, [editComment])
 
-  const toggleComments = async (postId) => {
-    setActiveCommentsPost(postId)
-    setCommentsOpen(prev => ({ ...prev, [postId]: true }))
-    if (!commentsByPost[postId]) {
-      try {
-        const { data } = await baseUrl.get(`/api/social/posts/${postId}/comments`, { headers: authHeader ? { Authorization: authHeader } : {} })
-        const comments = (data?.comments || [])
-        // Build tree from parent_comment_id
+  const buildCommentsTree = (comments) => {
         const byId = new Map(comments.map(c => [c.id, { ...c, replies: [] }]))
         const roots = []
         byId.forEach((c) => {
@@ -417,10 +411,21 @@ const Social = () => {
             roots.push(c)
           }
         })
-        setCommentsByPost(prev => ({ ...prev, [postId]: roots }))
-      } catch {
-        toast({ title: 'فشل تحميل التعليقات', status: 'error', duration: 2500, isClosable: true })
-      }
+    return roots
+  }
+
+  const fetchAndSetComments = async (postId) => {
+    const { data } = await baseUrl.get(`/api/social/posts/${postId}/comments`, { headers: authHeader ? { Authorization: authHeader } : {} })
+    const comments = (data?.comments || [])
+    const tree = buildCommentsTree(comments)
+    setCommentsByPost(prev => ({ ...prev, [postId]: tree }))
+  }
+
+  const toggleComments = async (postId) => {
+    setActiveCommentsPost(postId)
+    setCommentsOpen(prev => ({ ...prev, [postId]: true }))
+    if (!commentsByPost[postId]) {
+      try { await fetchAndSetComments(postId) } catch { toast({ title: 'فشل تحميل التعليقات', status: 'error', duration: 2500, isClosable: true }) }
     }
   }
 
@@ -448,6 +453,8 @@ const Social = () => {
           }
           return { ...prev, [postId]: existing }
         })
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p))
+        try { await fetchAndSetComments(postId) } catch {}
         setReplyTargetByPost(prev => ({ ...prev, [postId]: null }))
       }
     } catch {
@@ -888,11 +895,27 @@ const Social = () => {
           size={{ base: 'full', sm: 'xl', md: '2xl' }} 
           scrollBehavior='inside'
         >
-          <ModalOverlay />
-          <ModalContent maxH={{ base: '100vh', sm: '90vh' }} m={{ base: 0, sm: 4 }}>
-            <ModalHeader fontSize={{ base: 'md', sm: 'lg' }}>التعليقات</ModalHeader>
+          <ModalOverlay bg='blackAlpha.600' backdropFilter='blur(2px)' />
+          <ModalContent 
+            maxH={{ base: '100vh', sm: '88vh' }} 
+            m={{ base: 0, sm: 4 }} 
+            borderRadius={{ base: '0', sm: '2xl' }}
+            borderWidth='1px'
+            borderColor={useColorModeValue('gray.200','gray.700')}
+            boxShadow={useColorModeValue('xl','dark-lg')}
+          >
+            <ModalHeader 
+              fontSize={{ base: 'md', sm: 'lg' }} 
+              borderBottomWidth='1px' 
+              borderColor={useColorModeValue('gray.200','gray.700')}
+            >
+              التعليقات
+              <Text as='span' ml={2} color={useColorModeValue('gray.500','gray.400')} fontSize='sm'>
+                {(commentsByPost[activeCommentsPost] || []).length}
+              </Text>
+            </ModalHeader>
             <ModalCloseButton />
-            <ModalBody pb={0}>
+            <ModalBody p={{ base: 3, sm: 4 }}>
               <Box>
                 {/* Reply bar */}
                 {replyTargetByPost[activeCommentsPost] && (
@@ -955,7 +978,10 @@ const Social = () => {
                 </VStack>
               </Box>
             </ModalBody>
-            <ModalFooter>
+            <ModalFooter 
+              borderTopWidth='1px' 
+              borderColor={useColorModeValue('gray.200','gray.700')}
+            >
               <Flex 
                 w='full' 
                 direction={{ base: 'column', sm: 'row' }}
@@ -981,6 +1007,7 @@ const Social = () => {
                 />
                 <Button 
                   colorScheme='teal' 
+                  rightIcon={<IoSendOutline />} 
                   onClick={() => {
                     const input = document.getElementById('modal-comment-input')
                     const content = input?.value || ''
@@ -1270,6 +1297,7 @@ const Social = () => {
           </ModalContent>
         </Modal>
       )}
+      <ScrollToTop/>
     </Box>
   )
 }
