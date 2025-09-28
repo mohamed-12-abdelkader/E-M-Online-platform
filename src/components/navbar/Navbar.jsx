@@ -28,12 +28,13 @@ import {
   Badge,
   Icon,
   Divider,
+  useToast,
 } from "@chakra-ui/react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-import { FaHeart, FaMoon, FaRegComment, FaReply, FaSun, FaBookOpen, FaVideo, FaFileAlt, FaBell, FaCheck } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { FaHeart, FaMoon, FaRegComment, FaReply, FaSun, FaBookOpen, FaVideo, FaFileAlt, FaBell, FaCheck, FaComments, FaThumbsUp, FaHeart as FaHeartSolid, FaHandsHelping, FaGraduationCap, FaClipboardList, FaFilePdf, FaPlayCircle, FaBook, FaUserGraduate, FaChalkboardTeacher, FaUsers, FaShare, FaEdit, FaExclamationCircle } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
 import { MdNotificationsActive } from "react-icons/md";
 import logo from "../../../public/Picsart_25-08-26_23-28-39-014.png";
 import logo2 from "../../../public/logooo.png";
@@ -45,8 +46,11 @@ export default function Nav() {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
   const { colorMode, toggleColorMode } = useColorMode();
+  const toast = useToast();
+  const navigate = useNavigate();
  
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isNotificationOpen, onOpen: onNotificationOpen, onClose: onNotificationClose } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   const { scrollYProgress } = useScroll();
@@ -57,6 +61,14 @@ export default function Nav() {
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasFetched, setHasFetched] = useState(false);
+  
+  // WebSocket state
+  const [wsConnection, setWsConnection] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+  const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 5;
 
   const handleDrawerOpen = () => {
     if (!isOpen) {
@@ -105,12 +117,280 @@ export default function Nav() {
     }
   };
 
+  // WebSocket connection functions
+  const connectWebSocket = () => {
+    if (!user || !token || wsRef.current) return;
+
+    try {
+      // Get WebSocket URL from baseUrl or construct it
+      const baseURL = baseUrl.defaults.baseURL || 'http://localhost:8000';
+      // Remove trailing slash if exists and add ws path
+      const cleanBaseURL = baseURL.replace(/\/$/, '');
+      const wsUrl = cleanBaseURL.replace('http', 'ws') + '/ws/notifications/';
+      console.log('Connecting to WebSocket:', wsUrl);
+      const ws = new WebSocket(`${wsUrl}?token=${token}`);
+      
+      wsRef.current = ws;
+      setWsConnection(ws);
+
+      ws.onopen = () => {
+        console.log('WebSocket connected successfully');
+        setConnectionStatus('connected');
+        reconnectAttempts.current = 0;
+        
+        // Clear any existing reconnect timeout
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'notification') {
+            // Add new notification to the list
+            setNotifications(prev => ({
+              ...prev,
+              notifications: [data.notification, ...prev.notifications]
+            }));
+            
+            // Update unread count
+            setUnreadCount(prev => prev + 1);
+            
+            // Show toast notification
+            toast({
+              title: data.notification.title,
+              description: data.notification.message,
+              status: 'info',
+              duration: 5000,
+              isClosable: true,
+              position: 'top-right',
+            });
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      ws.onclose = (event) => {
+        console.log('WebSocket disconnected:', event.code, event.reason);
+        setConnectionStatus('disconnected');
+        wsRef.current = null;
+        setWsConnection(null);
+        
+        // Attempt to reconnect if not manually closed and not a normal closure
+        if (event.code !== 1000 && event.code !== 1001 && reconnectAttempts.current < maxReconnectAttempts) {
+          reconnectAttempts.current += 1;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
+          
+          console.log(`Attempting to reconnect in ${delay}ms... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
+          setConnectionStatus('connecting');
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connectWebSocket();
+          }, delay);
+        } else if (event.code === 1006) {
+          // Abnormal closure - server might be down
+          console.log('WebSocket connection lost abnormally. Server might be down.');
+          setConnectionStatus('error');
+          
+          // Still try to reconnect after a longer delay for abnormal closure
+          if (reconnectAttempts.current < maxReconnectAttempts) {
+            reconnectAttempts.current += 1;
+            const delay = Math.min(5000 * Math.pow(2, reconnectAttempts.current), 60000);
+            
+            console.log(`Server might be down. Retrying in ${delay}ms... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
+            setConnectionStatus('connecting');
+            
+            reconnectTimeoutRef.current = setTimeout(() => {
+              connectWebSocket();
+            }, delay);
+          }
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setConnectionStatus('error');
+        
+        // Close the connection on error to trigger reconnection
+        if (wsRef.current) {
+          wsRef.current.close();
+        }
+      };
+
+    } catch (error) {
+      console.error('Error creating WebSocket connection:', error);
+      setConnectionStatus('error');
+      
+      // Attempt to reconnect after a delay if this is not the first attempt
+      if (reconnectAttempts.current < maxReconnectAttempts) {
+        reconnectAttempts.current += 1;
+        const delay = Math.min(2000 * Math.pow(2, reconnectAttempts.current), 30000);
+        
+        console.log(`WebSocket creation failed. Retrying in ${delay}ms... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
+        setConnectionStatus('connecting');
+        
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connectWebSocket();
+        }, delay);
+      } else {
+        console.log('Max reconnection attempts reached. WebSocket connection failed.');
+        setConnectionStatus('error');
+      }
+    }
+  };
+
+  const disconnectWebSocket = () => {
+    if (wsRef.current) {
+      wsRef.current.close(1000, 'Component unmounting');
+      wsRef.current = null;
+      setWsConnection(null);
+    }
+    
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    
+    setConnectionStatus('disconnected');
+  };
+
   // Fetch notifications on component mount only
   useEffect(() => {
     if (user && token && !hasFetched) {
       fetchNotifications();
     }
   }, [user, token, hasFetched]);
+
+  // WebSocket connection management
+  useEffect(() => {
+    if (user && token) {
+      // Reset reconnection attempts when user/token changes
+      reconnectAttempts.current = 0;
+      connectWebSocket();
+    }
+
+    return () => {
+      disconnectWebSocket();
+    };
+  }, [user, token]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      disconnectWebSocket();
+    };
+  }, []);
+
+  // Auto-reconnect when connection is lost
+  useEffect(() => {
+    if (connectionStatus === 'error' && reconnectAttempts.current < maxReconnectAttempts) {
+      const delay = Math.min(5000 * Math.pow(2, reconnectAttempts.current), 60000);
+      
+      console.log(`Auto-reconnecting in ${delay}ms... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
+      setConnectionStatus('connecting');
+      
+      reconnectTimeoutRef.current = setTimeout(() => {
+        connectWebSocket();
+      }, delay);
+    }
+  }, [connectionStatus]);
+
+  // Function to get notification icon based on type
+  const getNotificationIcon = (notification) => {
+    switch (notification.type) {
+      case 'lecture_added':
+        return FaBookOpen;
+      case 'video_added':
+        return FaPlayCircle;
+      case 'file_added':
+        return FaFilePdf;
+      case 'exam_added':
+        return FaClipboardList;
+      case 'course_added':
+        return FaGraduationCap;
+      case 'chat_message':
+        return FaComments;
+      case 'social_comment':
+        return FaRegComment;
+      case 'social_reply':
+        return FaReply;
+      case 'social_reaction':
+        if (notification.social_reaction_type === 'like') return FaThumbsUp;
+        if (notification.social_reaction_type === 'love') return FaHeartSolid;
+        if (notification.social_reaction_type === 'support') return FaHandsHelping;
+        return FaThumbsUp;
+      case 'social_post':
+        return FaShare;
+      case 'teacher_message':
+        return FaChalkboardTeacher;
+      case 'student_message':
+        return FaUserGraduate;
+      case 'group_message':
+        return FaUsers;
+      case 'announcement':
+        return FaExclamationCircle;
+      default:
+        return FaBell;
+    }
+  };
+
+  // Function to get notification color based on type
+  const getNotificationColor = (notification) => {
+    switch (notification.type) {
+      case 'lecture_added':
+      case 'video_added':
+      case 'file_added':
+      case 'exam_added':
+      case 'course_added':
+        return 'blue';
+      case 'chat_message':
+      case 'teacher_message':
+      case 'student_message':
+      case 'group_message':
+        return 'green';
+      case 'social_comment':
+      case 'social_reply':
+        return 'orange';
+      case 'social_reaction':
+        return 'purple';
+      case 'social_post':
+        return 'pink';
+      case 'announcement':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  };
+
+  // Function to get navigation path based on notification type
+  const getNotificationPath = (notification) => {
+    switch (notification.type) {
+      case 'lecture_added':
+      case 'video_added':
+      case 'file_added':
+      case 'exam_added':
+      case 'course_added':
+        return notification.course_id ? `/CourseDetailsPage/${notification.course_id}` : '/home';
+      case 'chat_message':
+      case 'teacher_message':
+      case 'student_message':
+      case 'group_message':
+        return '/TeacherChat';
+      case 'social_comment':
+      case 'social_reply':
+      case 'social_reaction':
+      case 'social_post':
+        return '/social';
+      case 'announcement':
+        return '/home';
+      default:
+        return '/home';
+    }
+  };
 
   // Function to mark notification as read
   const markAsRead = async (notificationId) => {
@@ -187,12 +467,18 @@ export default function Nav() {
 
               {user ? (
                 <>
-                  <Popover placement='bottom-end' isLazy>
+                  <Popover 
+                    placement='bottom-end' 
+                    isLazy
+                    isOpen={isNotificationOpen}
+                    onClose={onNotificationClose}
+                  >
                     <PopoverTrigger>
                       <Button
                         variant='ghost'
                         position='relative'
                         className='mt-2'
+                        onClick={onNotificationOpen}
                       >
                         <MdNotificationsActive className='text-3xl' />
                         {unreadCount > 0 && (
@@ -212,19 +498,85 @@ export default function Nav() {
                             {unreadCount > 99 ? '99+' : unreadCount}
                           </Badge>
                         )}
+                        {/* Connection status indicator */}
+                        <Box
+                          position="absolute"
+                          bottom="-1"
+                          right="-1"
+                          w="12px"
+                          h="12px"
+                          borderRadius="full"
+                          bg={connectionStatus === 'connected' ? 'green.500' : 
+                               connectionStatus === 'connecting' ? 'yellow.500' : 
+                               connectionStatus === 'error' ? 'red.500' : 'gray.500'}
+                          border="2px solid"
+                          borderColor="white"
+                          title={connectionStatus === 'connected' ? 'متصل - الإشعارات فورية' : 
+                                 connectionStatus === 'connecting' ? 'جاري الاتصال...' : 
+                                 connectionStatus === 'error' ? 'خطأ في الاتصال' : 'غير متصل'}
+                          animation={connectionStatus === 'connecting' ? 'pulse 1s infinite' : 'none'}
+                        />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
-                      width='300px'
+                      width='350px'
+                      maxW="90vw"
                       style={{ transition: "all 0.3s ease" }}
+                      borderRadius="xl"
+                      shadow="2xl"
+                      border="none"
+                      bg={useColorModeValue("white", "gray.800")}
                     >
                       <PopoverArrow />
                       <PopoverCloseButton />
-                      <PopoverHeader fontWeight='bold' borderBottomWidth="1px" borderColor="gray.200" pb={3}>
-                        <HStack spacing={2}>
-                          <Icon as={FaBell} color="blue.500" />
-                          <Text>الإشعارات</Text>
-                        
+                      <PopoverHeader 
+                        fontWeight='bold' 
+                        borderBottomWidth="1px" 
+                        borderColor={useColorModeValue("gray.200", "gray.600")} 
+                        pb={4}
+                        pt={4}
+                        px={6}
+                        bg={useColorModeValue("gray.50", "gray.700")}
+                        borderRadius="xl 0 0 0"
+                      >
+                        <HStack spacing={3} justify="space-between">
+                          <HStack spacing={3}>
+                            <Box
+                              p={2}
+                              borderRadius="lg"
+                              bg="blue.500"
+                              color="white"
+                            >
+                              <Icon as={FaBell} boxSize={4} />
+                            </Box>
+                            <VStack align="flex-start" spacing={0}>
+                              <Text fontSize="lg" fontWeight="bold">
+                                الإشعارات
+                              </Text>
+                              <Text fontSize="xs" color="gray.500">
+                                {unreadCount > 0 ? `${unreadCount} إشعار جديد` : 'لا توجد إشعارات جديدة'}
+                              </Text>
+                            </VStack>
+                          </HStack>
+                          <HStack spacing={2}>
+                            <Box
+                              w="10px"
+                              h="10px"
+                              borderRadius="full"
+                              bg={connectionStatus === 'connected' ? 'green.500' : 
+                                   connectionStatus === 'connecting' ? 'yellow.500' : 
+                                   connectionStatus === 'error' ? 'red.500' : 'gray.500'}
+                              title={connectionStatus === 'connected' ? 'متصل - الإشعارات فورية' : 
+                                     connectionStatus === 'connecting' ? 'جاري الاتصال...' : 
+                                     connectionStatus === 'error' ? 'خطأ في الاتصال - تحديث يدوي' : 'غير متصل - تحديث يدوي'}
+                              animation={connectionStatus === 'connected' ? 'pulse 2s infinite' : 'none'}
+                            />
+                            <Text fontSize="xs" color="gray.500" fontWeight="medium">
+                              {connectionStatus === 'connected' ? 'فوري' : 
+                               connectionStatus === 'connecting' ? 'جاري الاتصال...' : 
+                               connectionStatus === 'error' ? 'خطأ في الاتصال' : 'غير متصل'}
+                            </Text>
+                          </HStack>
                         </HStack>
                       </PopoverHeader>
                       <PopoverBody maxH='400px' overflowY='auto' p={0}>
@@ -241,86 +593,190 @@ export default function Nav() {
                                 p={4}
                                 borderBottom={index < notifications.notifications.length - 1 ? '1px solid' : 'none'}
                                 borderColor="gray.100"
-                                _hover={{ bg: useColorModeValue("gray.50", "gray.700") }}
-                                transition="all 0.2s ease"
+                                _hover={{ 
+                                  bg: useColorModeValue(`${getNotificationColor(notification)}.100`, `${getNotificationColor(notification)}.800`),
+                                  transform: 'translateX(4px)',
+                                  shadow: 'md'
+                                }}
+                                transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                                 cursor="pointer"
                                 position="relative"
-                                bg={!notification.is_read ? useColorModeValue("blue.50", "blue.900") : "transparent"}
+                                bg={!notification.is_read ? useColorModeValue(`${getNotificationColor(notification)}.50`, `${getNotificationColor(notification)}.900`) : "transparent"}
+                                borderRadius="lg"
+                                mx={2}
+                                my={1}
+                                borderLeft={!notification.is_read ? `4px solid` : '4px solid transparent'}
+                                borderLeftColor={!notification.is_read ? `${getNotificationColor(notification)}.500` : 'transparent'}
                                 onClick={() => {
                                   // Mark as read if not already read
                                   if (!notification.is_read) {
                                     markAsRead(notification.id);
                                   }
                                   
-                                  // Navigate based on notification type
-                                  if (notification.type === 'lecture_added') {
-                                    window.location.href = `/CourseDetailsPage/${notification.course_id}`;
-                                  } else if (notification.type === 'video_added') {
-                                    window.location.href = `/CourseDetailsPage/${notification.course_id}`;
-                                  } else {
-                                    window.location.href = `/CourseDetailsPage/${notification.course_id}`;
-                                  }
+                                  // Close the notification popover
+                                  onNotificationClose();
+                                  
+                                  // Navigate based on notification type using React Router
+                                  const path = getNotificationPath(notification);
+                                  navigate(path);
                                 }}
                               >
                                 <HStack spacing={3} align="flex-start">
                                   <Box
-                                    p={2}
-                                    borderRadius="full"
-                                    bg={notification.type === "lecture_added" ? "blue.500" : 
-                                        notification.type === "video_added" ? "green.500" : "purple.500"}
+                                    p={3}
+                                    borderRadius="xl"
+                                    bg={`${getNotificationColor(notification)}.500`}
                                     color="white"
-                                    shadow="md"
+                                    shadow="lg"
+                                    position="relative"
+                                    _before={{
+                                      content: '""',
+                                      position: 'absolute',
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      bottom: 0,
+                                      borderRadius: 'xl',
+                                      bg: 'white',
+                                      opacity: 0.1,
+                                      transform: 'scale(0.8)',
+                                      transition: 'all 0.3s ease'
+                                    }}
+                                    _hover={{
+                                      transform: 'scale(1.1)',
+                                      shadow: 'xl'
+                                    }}
+                                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                                   >
                                     <Icon 
-                                      as={notification.type === "lecture_added" ? FaBookOpen : 
-                                          notification.type === "video_added" ? FaVideo : FaFileAlt} 
-                                      boxSize={4} 
+                                      as={getNotificationIcon(notification)} 
+                                      boxSize={5} 
                                     />
                                   </Box>
                                   
-                                  <VStack align="flex-start" spacing={2} flex={1}>
-                                    <VStack align="flex-start" spacing={1} w="full">
-                                      <Text fontWeight="bold" fontSize="sm" color={useColorModeValue("gray.800", "gray.100")}>
+                                  <VStack align="flex-start" spacing={3} flex={1}>
+                                    <VStack align="flex-start" spacing={2} w="full">
+                                      <Text 
+                                        fontWeight="bold" 
+                                        fontSize="md" 
+                                        color={useColorModeValue("gray.800", "gray.100")}
+                                        lineHeight="1.4"
+                                      >
                                         {notification.title}
                                       </Text>
-                                      <Text fontSize="xs" color="gray.500" noOfLines={2}>
+                                      <Text 
+                                        fontSize="sm" 
+                                        color={useColorModeValue("gray.600", "gray.300")} 
+                                        noOfLines={2}
+                                        lineHeight="1.5"
+                                      >
                                         {notification.message}
                                       </Text>
                                     </VStack>
                                     
-                                    <VStack align="flex-start" spacing={1} w="full">
-                                      <HStack spacing={2} w="full">
-                                        <Badge colorScheme="blue" size="sm" fontSize="xs">
-                                          {notification.course_title}
-                                        </Badge>
+                                    <VStack align="flex-start" spacing={2} w="full">
+                                      <HStack spacing={2} w="full" flexWrap="wrap">
+                                        {notification.course_title && (
+                                          <Badge 
+                                            colorScheme={getNotificationColor(notification)} 
+                                            size="md" 
+                                            fontSize="xs"
+                                            px={3}
+                                            py={1}
+                                            borderRadius="full"
+                                            fontWeight="semibold"
+                                          >
+                                            {notification.course_title}
+                                          </Badge>
+                                        )}
                                         {!notification.is_read && (
-                                          <Badge colorScheme="red" size="sm" fontSize="xs">
+                                          <Badge 
+                                            colorScheme="red" 
+                                            size="md" 
+                                            fontSize="xs"
+                                            px={3}
+                                            py={1}
+                                            borderRadius="full"
+                                            fontWeight="bold"
+                                            animation="pulse 2s infinite"
+                                          >
                                             جديد
                                           </Badge>
                                         )}
+                                        <Badge 
+                                          colorScheme={getNotificationColor(notification)} 
+                                          variant="subtle" 
+                                          size="md" 
+                                          fontSize="xs"
+                                          px={3}
+                                          py={1}
+                                          borderRadius="full"
+                                          fontWeight="medium"
+                                        >
+                                          {notification.type === 'lecture_added' ? 'محاضرة' :
+                                           notification.type === 'video_added' ? 'فيديو' :
+                                           notification.type === 'file_added' ? 'ملف' :
+                                           notification.type === 'exam_added' ? 'امتحان' :
+                                           notification.type === 'course_added' ? 'كورس' :
+                                           notification.type === 'chat_message' ? 'دردشة' :
+                                           notification.type === 'social_comment' ? 'تعليق' :
+                                           notification.type === 'social_reply' ? 'رد' :
+                                           notification.type === 'social_reaction' ? 'تفاعل' :
+                                           notification.type === 'social_post' ? 'منشور' :
+                                           notification.type === 'announcement' ? 'إعلان' :
+                                           'إشعار'}
+                                        </Badge>
                                       </HStack>
                                       
-                                      <Text fontSize="xs" color="gray.400">
-                                        {new Date(notification.created_at).toLocaleDateString('ar-EG', {
-                                          year: 'numeric',
-                                          month: 'short',
-                                          day: 'numeric',
-                                          hour: '2-digit',
-                                          minute: '2-digit'
-                                        })}
-                                      </Text>
+                                      <HStack spacing={2} w="full" justify="space-between">
+                                        <Text 
+                                          fontSize="xs" 
+                                          color={useColorModeValue("gray.500", "gray.400")}
+                                          fontWeight="medium"
+                                        >
+                                          {new Date(notification.created_at).toLocaleDateString('ar-EG', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}
+                                        </Text>
+                                        {!notification.is_read && (
+                                          <Box
+                                            w="8px"
+                                            h="8px"
+                                            borderRadius="full"
+                                            bg={`${getNotificationColor(notification)}.500`}
+                                            animation="pulse 2s infinite"
+                                          />
+                                        )}
+                                      </HStack>
                                     </VStack>
                                   </VStack>
                                   
                                   {!notification.is_read && (
                                     <Box
                                       position="absolute"
-                                      top={3}
-                                      right={3}
-                                      w={2}
-                                      h={2}
+                                      top={4}
+                                      right={4}
+                                      w={3}
+                                      h={3}
                                       borderRadius="full"
-                                      bg="red.500"
+                                      bg={`${getNotificationColor(notification)}.500`}
+                                      shadow="md"
+                                      _before={{
+                                        content: '""',
+                                        position: 'absolute',
+                                        top: '-2px',
+                                        left: '-2px',
+                                        right: '-2px',
+                                        bottom: '-2px',
+                                        borderRadius: 'full',
+                                        bg: `${getNotificationColor(notification)}.200`,
+                                        opacity: 0.6,
+                                        animation: 'pulse 2s infinite'
+                                      }}
                                     />
                                   )}
                                 </HStack>
@@ -328,27 +784,81 @@ export default function Nav() {
                             ))}
                           </VStack>
                         ) : (
-                          <VStack spacing={4} py={8}>
-                            <Icon as={FaBell} color="gray.400" boxSize={12} />
-                            <Text color="gray.500" fontSize="sm" textAlign="center">
-                              لا توجد إشعارات جديدة
-                            </Text>
+                          <VStack spacing={6} py={12}>
+                            <Box
+                              p={6}
+                              borderRadius="full"
+                              bg={useColorModeValue("gray.100", "gray.700")}
+                              color="gray.400"
+                            >
+                              <Icon as={FaBell} boxSize={16} />
+                            </Box>
+                            <VStack spacing={2}>
+                              <Text 
+                                color={useColorModeValue("gray.600", "gray.300")} 
+                                fontSize="lg" 
+                                fontWeight="semibold"
+                                textAlign="center"
+                              >
+                                لا توجد إشعارات جديدة
+                              </Text>
+                              <Text 
+                                color={useColorModeValue("gray.500", "gray.400")} 
+                                fontSize="sm" 
+                                textAlign="center"
+                                maxW="200px"
+                              >
+                                ستظهر الإشعارات الجديدة هنا عند وصولها
+                              </Text>
+                            </VStack>
                           </VStack>
                         )}
                       </PopoverBody>
-                      <PopoverFooter textAlign='center' borderTopWidth="1px" borderColor="gray.200" pt={3}>
-                        <Button 
-                          size='sm' 
-                          variant='link' 
-                          colorScheme="blue"
-                          onClick={() => {
-                            // Refresh notifications
-                            fetchNotifications();
-                          }}
-                          isLoading={notificationsLoading}
-                        >
-                          تحديث الإشعارات
-                        </Button>
+                      <PopoverFooter 
+                        textAlign='center' 
+                        borderTopWidth="1px" 
+                        borderColor={useColorModeValue("gray.200", "gray.600")} 
+                        pt={4}
+                        pb={4}
+                        px={6}
+                        bg={useColorModeValue("gray.50", "gray.700")}
+                        borderRadius="0 0 xl xl"
+                      >
+                        <HStack spacing={3} justify="center">
+                          <Button 
+                            size='sm' 
+                            variant='solid' 
+                            colorScheme="blue"
+                            borderRadius="full"
+                            px={6}
+                            onClick={() => {
+                              // Refresh notifications
+                              fetchNotifications();
+                              // Keep popover open after refresh
+                            }}
+                            isLoading={notificationsLoading}
+                            leftIcon={<Icon as={FaBell} />}
+                          >
+                            تحديث الإشعارات
+                          </Button>
+                          {connectionStatus !== 'connected' && (
+                            <Button 
+                              size='sm' 
+                              variant='outline' 
+                              colorScheme="green"
+                              borderRadius="full"
+                              px={6}
+                              onClick={() => {
+                                // Manual reconnect
+                                disconnectWebSocket();
+                                setTimeout(() => connectWebSocket(), 100);
+                                // Keep popover open after reconnect
+                              }}
+                            >
+                              إعادة الاتصال
+                            </Button>
+                          )}
+                        </HStack>
                       </PopoverFooter>
                     </PopoverContent>
                   </Popover>

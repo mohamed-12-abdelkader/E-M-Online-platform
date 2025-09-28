@@ -18,13 +18,31 @@ import {
   Center,
   Button,
   AspectRatio,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import { FaVideo, FaSearch } from "react-icons/fa";
 import useGitMyTeacher from "../../Hooks/student/useGitMyTeacher";
 
 const MyTeacher = () => {
-  const [loading, teachers] = useGitMyTeacher();
+  const [loading, teachers, error] = useGitMyTeacher();
+
+  const sessionExpired = error === "Session expired or replaced";
+
+  const handleForceLogout = () => {
+    try {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("examAnswers");
+      localStorage.removeItem("examTimeLeft");
+    } catch (e) {}
+    window.location.href = "/login";
+  };
 
   const cardBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.700", "gray.300");
@@ -43,7 +61,27 @@ const MyTeacher = () => {
   }
 
   return (
-    <Box w="100%">
+    <Box w="100%" height={"100%"}>
+      <Modal isOpen={sessionExpired} onClose={() => {}} isCentered closeOnOverlayClick={false} closeOnEsc={false}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader textAlign="center">انتهاء الجلسة</ModalHeader>
+          <ModalBody>
+            <Text textAlign="center" color={subTextColor}>
+              لقد انتهت جلستك أو تم استبدالها. يجب تسجيل الدخول مرة أخرى.
+            </Text>
+            <Text textAlign="center" color={subTextColor}>
+          سجّل دخولك باستخدام رقم الهاتف وكلمة المرور التي قمت بالتسجيل بهما من قبل.
+إذا كنت قد نسيت كلمة المرور، يُرجى التواصل مع الدعم الفني لاستعادتها.
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="red" w="full" onClick={handleForceLogout}>
+              تسجيل الدخول مرة أخرى
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       <VStack spacing={{ base: 4, sm: 5, md: 6 }} mb={{ base: 6, sm: 8 }}>
         {!teachers?.teachers && (
           <Heading
@@ -61,9 +99,9 @@ const MyTeacher = () => {
           {teachers.teachers.map((teacher) => (
             <Link key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
               <Card
-             className="m-2 my-3 w-[90%] mx-auto md:w-[310px] min-[840px]:mx-3 "
+             className="m-2 my-5  mx-auto md:w-[340px]  min-[840px]:m-3 :my-5  "
                 style={{
-                  
+                  marginTop:"10px !important",
                   borderRadius: "20px",
                   boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
                   background: "#fff",

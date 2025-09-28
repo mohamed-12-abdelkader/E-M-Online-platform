@@ -53,8 +53,12 @@ const studentLogin = () => {
       localStorage.setItem("employee_data", JSON.stringify(response.data.employee_data));
 
       toast.success("تم تسجيل الدخول بنجاح");
+      // Redirect back if redirect param exists
+      const params = new URLSearchParams(window.location.search);
+      const redirectTarget = params.get("redirect");
+      const destination = redirectTarget && redirectTarget.startsWith("/") ? redirectTarget : "/";
       setTimeout(() => {
-        window.location.href = "/";
+        window.location.href = destination;
       }, 500);
     } catch (error) {
       if (error.response) {

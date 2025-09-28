@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 const ProtectedRoute = ({ auth, children }) => {
   const [redirected, setRedirected] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     let timer;
@@ -16,7 +17,7 @@ const ProtectedRoute = ({ auth, children }) => {
   }, [auth, redirected]);
 
   return redirected ? (
-    <Navigate to="/" replace />
+    <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search + location.hash)}`} replace />
   ) : children ? (
     children
   ) : (

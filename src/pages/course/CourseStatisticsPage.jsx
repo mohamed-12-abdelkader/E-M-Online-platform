@@ -153,9 +153,13 @@ const ExamSection = ({ examsSolved, examsNotSolved, title, icon, successColor, f
 
 const CourseStatisticsPage = () => {
   const { id } = useParams();
+  
+  // State management
   const [progressData, setProgressData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lectures, setLectures] = useState([]);
+  const [exams, setExams] = useState([]);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedStudent, setExpandedStudent] = useState(null);
@@ -171,37 +175,68 @@ const CourseStatisticsPage = () => {
   const successColor = useColorModeValue("green.500", "green.300");
   const failColor = useColorModeValue("red.400", "red.300");
 
-  // جلب البيانات
+  // Fetch progress data
   const fetchProgress = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem("token");
-      const res = await baseUrl.get(`/api/course/${id}/students-progress`, {
+      const response = await baseUrl.get(`/api/course/${id}/students-progress`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProgressData(res.data);
+      setProgressData(response.data);
     } catch (err) {
-      setError("حدث خطأ أثناء تحميل بيانات تقدم الطلاب");
+      console.error("Error fetching progress:", err);
+      setError(err.response?.data?.message || "حدث خطأ أثناء جلب البيانات");
     } finally {
       setLoading(false);
     }
   }, [id]);
 
+  // Fetch lectures data
+  const fetchLectures = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await baseUrl.get(`api/course/${id}/lectures`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setLectures(response.data.lectures || []);
+    } catch (err) {
+      console.error("Error fetching lectures:", err);
+    }
+  }, [id]);
+
+  // Fetch exams data
+  const fetchExams = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await baseUrl.get(`api/course/${id}/course-exams`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setExams(response.data.exams || []);
+    } catch (err) {
+      console.error("Error fetching exams:", err);
+    }
+  }, [id]);
+
   useEffect(() => {
-    fetchProgress();
-  }, [fetchProgress]);
+    if (id) {
+      fetchProgress();
+      fetchLectures();
+      fetchExams();
+    }
+  }, [id, fetchProgress, fetchLectures, fetchExams]);
 
   // تصفية الطلاب
   const filteredStudents = progressData?.students_details
-    .filter((student) => {
+    ?.filter((student) => {
       if (filter === "completed") return student.watched_count === progressData.total_lectures;
       if (filter === "incomplete") return student.watched_count < progressData.total_lectures;
       return true;
     })
-    .filter((student) =>
+    ?.filter((student) =>
       student.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ) || [];
 
   // Framer Motion variants
   const containerVariants = {

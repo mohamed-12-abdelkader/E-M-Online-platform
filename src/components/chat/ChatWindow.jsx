@@ -75,9 +75,10 @@ const ChatWindow = ({ chatData, messages, onSendMessage }) => {
             </VStack>
 
             {/* مربع إدخال الرسائل */}
-            <Box p={4} borderTop="1px solid" borderColor="gray.200">
+            <Box p={4} borderTop="1px solid" borderColor="gray.200" >
                 <InputGroup>
                     <Input
+                    
                         placeholder="اكتب رسالة..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}

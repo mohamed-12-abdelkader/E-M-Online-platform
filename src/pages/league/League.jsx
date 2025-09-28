@@ -1,8 +1,64 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import {
+  Box,
+  Flex,
+  Text,
+  Button,
+  Image,
+  VStack,
+  HStack,
+  Badge,
+  IconButton,
+  useColorModeValue,
+  Container,
+  Heading,
+  Divider,
+  Collapse,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Spinner,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  Grid,
+  GridItem,
+  Card,
+  CardBody,
+  CardHeader,
+  Stack,
+  Tag,
+  Tooltip,
+  ScaleFade,
+  Fade,
+  Input,
+  Textarea,
+  Select,
+  Checkbox,
+  FormControl,
+  FormLabel,
+  FormHelperText,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper
+} from '@chakra-ui/react'
 import baseUrl from '../../api/baseUrl'
 import UserType from '../../Hooks/auth/userType'
 import ScrollToTop from '../../components/scollToTop/ScrollToTop'
+import CelebrationInterface from '../../components/celebration/CelebrationInterface'
 
 const League = () => {
   const { id } = useParams()
@@ -14,6 +70,15 @@ const League = () => {
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState("")
   const [createMsg, setCreateMsg] = useState("")
+
+  // Chakra UI color mode values
+  const bg = useColorModeValue('gray.50', 'gray.900')
+  const cardBg = useColorModeValue('white', 'gray.800')
+  const borderColor = useColorModeValue('gray.200', 'gray.600')
+  const textColor = useColorModeValue('gray.800', 'white')
+  const subTextColor = useColorModeValue('gray.600', 'gray.300')
+  const headerBg = useColorModeValue('white', 'gray.800')
+  const gradientBg = useColorModeValue('linear(to-br, blue.50, purple.50)', 'linear(to-br, gray.800, gray.900)')
 
   // Match creation form states
   const [matchName, setMatchName] = useState("")
@@ -44,13 +109,15 @@ const League = () => {
   const [deletingMatch, setDeletingMatch] = useState(false)
 
   // Leaderboard
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false) // legacy modal flag (unused for full-page)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [leaderboard, setLeaderboard] = useState([])
   const [leaderboardLeague, setLeaderboardLeague] = useState(null)
   const [lbLoading, setLbLoading] = useState(false)
   const [lbError, setLbError] = useState("")
   const [lbPagination, setLbPagination] = useState({ total: 0, limit: 10, offset: 0, has_more: false })
+
+  // Tournament details collapse
+  const [isTournamentDetailsCollapsed, setIsTournamentDetailsCollapsed] = useState(true)
 
   const authHeader = useMemo(() => ({
     Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
@@ -265,40 +332,40 @@ const League = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="flex items-center space-x-3 space-x-reverse">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-          <span className="text-lg text-slate-600">جارِ تحميل تفاصيل الدوري...</span>
-        </div>
-      </div>
+      <Box minH="100vh" bg={gradientBg} display="flex" alignItems="center" justifyContent="center">
+        <VStack spacing={4}>
+          <Spinner size="xl" color="blue.500" thickness="4px" />
+          <Text fontSize="lg" color={subTextColor}>
+            جارِ تحميل تفاصيل الدوري...
+          </Text>
+        </VStack>
+      </Box>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md mx-4">
-          <div className="flex items-center">
-            <svg className="w-5 h-5 text-red-400 ml-3" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <span className="text-red-700">{error}</span>
-          </div>
-        </div>
-      </div>
+      <Box minH="100vh" bg={gradientBg} display="flex" alignItems="center" justifyContent="center">
+        <Alert status="error" maxW="md" borderRadius="xl">
+          <AlertIcon />
+          <Text>{error}</Text>
+        </Alert>
+      </Box>
     )
   }
 
   if (!tournament) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-xl font-semibold text-slate-700 mb-2">الدوري غير موجود</h3>
-          <Link to="/leagues" className="text-indigo-600 hover:text-indigo-700">
+      <Box minH="100vh" bg={gradientBg} display="flex" alignItems="center" justifyContent="center">
+        <VStack spacing={4}>
+          <Heading size="lg" color={textColor}>
+            الدوري غير موجود
+          </Heading>
+          <Button as={Link} to="/leagues" colorScheme="blue" variant="outline">
             العودة للدوريات
-          </Link>
-        </div>
-      </div>
+          </Button>
+        </VStack>
+      </Box>
     )
   }
 
@@ -381,720 +448,846 @@ const League = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <Box minH="100vh" bg={gradientBg}>
       {/* Header Section */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <Link to="/leagues" className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-                <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </Link>
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+      <Box 
+        bg={headerBg} 
+        borderBottom="1px" 
+        borderColor={borderColor}
+        position="sticky" 
+        top={0} 
+        zIndex={40}
+        backdropFilter="blur(10px)"
+      >
+        <Container maxW="7xl" py={6}>
+          <Flex align="center" justify="space-between" direction={{ base: 'column', md: 'row' }} gap={4}>
+            <Flex align="center" gap={4}>
+              <IconButton
+                as={Link}
+                to="/leagues"
+                aria-label="العودة للدوريات"
+                icon={
+                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                }
+                variant="ghost"
+                colorScheme="gray"
+              />
+              <Box
+                w={12}
+                h={12}
+                bgGradient="linear(to-br, blue.500, purple.600)"
+                borderRadius="xl"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <svg width="24" height="24" fill="white" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              </Box>
+              <VStack align="start" spacing={1}>
+                <Heading size="lg" color={textColor}>
                   {tournament.name}
-                </h1>
-                <div className="flex items-center space-x-4 space-x-reverse mt-1">
-                  <span className="text-sm text-slate-500">{tournament.grade_name}</span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                </Heading>
+                <HStack spacing={4}>
+                  <Text fontSize="sm" color={subTextColor}>
+                    {tournament.grade_name}
+                  </Text>
+                  <Badge colorScheme="blue" variant="subtle">
                     {tournament.matches_count} مباراة
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
+                  </Badge>
+                </HStack>
+              </VStack>
+            </Flex>
+            
+            <HStack spacing={3}>
               {(isAdmin || student) && (
-                <button
+                <Button
                   onClick={openLeaderboard}
-                  className="px-5 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  colorScheme="yellow"
+                  size="lg"
+                  leftIcon={
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                  }
+                  _hover={{ transform: 'scale(1.05)' }}
+                  transition="all 0.2s"
                 >
                   عرض متصدرين الدوري
-                </button>
+                </Button>
               )}
+              
               {isAdmin && (
-              <>
-                <button
-                  onClick={openStudentsModal}
-                  className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  الطلاب المشتركين
-                </button>
-              <button
-                onClick={() => setIsCreateMatchOpen(true)}
-                className="group relative px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-105"
-              >
-                <div className="flex items-center space-x-2 space-x-reverse">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span className="font-medium">إنشاء مباراة جديدة</span>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-700 to-purple-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
-              </button>
-              </>
+                <>
+                  <Button
+                    onClick={openStudentsModal}
+                    colorScheme="green"
+                    size="lg"
+                  >
+                    الطلاب المشتركين
+                  </Button>
+                  <Button
+                    onClick={() => setIsCreateMatchOpen(true)}
+                    colorScheme="blue"
+                    size="lg"
+                    leftIcon={
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    }
+                    _hover={{ transform: 'scale(1.05)' }}
+                    transition="all 0.2s"
+                  >
+                    إنشاء مباراة جديدة
+                  </Button>
+                </>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
+            </HStack>
+          </Flex>
+        </Container>
+      </Box>
 
-      {showLeaderboard && (
-        <div className="relative max-w-7xl mx-auto px-4 py-8">
-          <div className="absolute inset-0 -z-10 overflow-hidden">
-            <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-gradient-to-br from-amber-200 to-yellow-300 blur-3xl opacity-50 animate-pulse"></div>
-            <div className="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-gradient-to-br from-pink-200 to-red-300 blur-3xl opacity-40 animate-pulse"></div>
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm border border-amber-200/60 rounded-2xl shadow-lg overflow-hidden">
-            <div className="bg-gradient-to-r from-amber-500 to-yellow-500 px-6 py-5 text-white flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-extrabold">لوحة المتصدرين</h3>
-                <p className="text-white/85 text-sm mt-1">{leaderboardLeague ? leaderboardLeague.name : tournament?.name}</p>
-              </div>
-              <button onClick={closeLeaderboard} className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30">عودة</button>
-            </div>
-            <div className="p-6">
-              {lbError && <div className="mb-3 bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{lbError}</div>}
-              {lbLoading ? (
-                <div className="py-10 text-center">جارِ تحميل المتصدرين...</div>
-              ) : leaderboard.length === 0 ? (
-                <div className="py-10 text-center text-slate-600">لا يوجد بيانات للمتصدرين بعد</div>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {leaderboard.map((row) => (
-                    <div key={`${row.rank}-${row.student_id}`} className="relative bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 text-white flex items-center justify-center text-xl font-extrabold">{row.rank}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-slate-900 font-bold">{row.student_name}</h4>
-                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">{row.submissions_count} محاولات</span>
-                        </div>
-                        <div className="mt-2 flex items-center gap-2 text-slate-700">
-                          <svg className="w-5 h-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                          <span className="font-semibold">{row.total_score} نقطة</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="bg-slate-50/70 px-6 py-4 border-t border-slate-200/70 flex items-center justify-between">
-              <div className="text-sm text-slate-600">الإجمالي: {lbPagination.total}</div>
-              <div className="flex items-center gap-2">
-                <button onClick={prevLeaderboardPage} disabled={lbPagination.offset === 0 || lbLoading} className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 disabled:opacity-50 hover:bg-white">السابق</button>
-                <button onClick={nextLeaderboardPage} disabled={!lbPagination.has_more || lbLoading} className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-white disabled:opacity-50">التالي</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Celebration Interface */}
+      <CelebrationInterface
+        isOpen={showLeaderboard}
+        onClose={closeLeaderboard}
+        leaderboard={leaderboard}
+        leagueName={leaderboardLeague ? leaderboardLeague.name : tournament?.name}
+        autoPlay={true}
+      />
       {!showLeaderboard && (
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <Container maxW="7xl" py={8}>
         {/* Tournament Details Card */}
-        <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden mb-8">
-          {/* Tournament Image */}
-          <div className="relative  overflow-hidden">
-            {tournament.image_url ? (
-              <img src={tournament.image_url} alt={tournament.name} className="w-full h-[400px] object-cover" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                <svg className="w-16 h-16 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-            )}
-            
-            {/* Price Badge */}
-            <div className="absolute top-4 right-4">
-              {tournament.price == null ? (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500/90 text-white backdrop-blur-sm">
-                  <svg className="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        <Card bg={cardBg} border="1px" borderColor={borderColor} mb={8} overflow="hidden">
+          {/* Header with Collapse Button */}
+          <CardHeader bg={useColorModeValue('gray.50', 'gray.700')} borderBottom="1px" borderColor={borderColor}>
+            <Flex align="center" justify="space-between">
+              <HStack spacing={3}>
+                <Box color="blue.500">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  مجاني
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-500/90 text-white backdrop-blur-sm">
-                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                  {formatPrice(tournament.price)}
-                </span>
-              )}
-            </div>
+                </Box>
+                <Heading size="lg" color={textColor}>
+                  تفاصيل الدوري
+                </Heading>
+              </HStack>
+              <Button
+                onClick={() => setIsTournamentDetailsCollapsed(!isTournamentDetailsCollapsed)}
+                variant="outline"
+                size="sm"
+                rightIcon={
+                  <Box
+                    transform={isTournamentDetailsCollapsed ? 'rotate(180deg)' : 'rotate(0deg)'}
+                    transition="transform 0.2s"
+                  >
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </Box>
+                }
+              >
+                {isTournamentDetailsCollapsed ? 'عرض التفاصيل' : 'إخفاء التفاصيل'}
+              </Button>
+            </Flex>
+          </CardHeader>
 
-            {/* Status Badges (only if provided by API) */}
-            <div className="absolute top-4 left-4 space-y-2">
-              {typeof tournament.is_visible !== 'undefined' && (
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm ${
-                tournament.is_visible ? 'bg-blue-500/90 text-white' : 'bg-gray-500/90 text-white'
-              }`}>
-                {tournament.is_visible ? 'ظاهر' : 'مخفي'}
-              </span>
-              )}
-              {typeof tournament.is_subscribed !== 'undefined' && (
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm ${
-                  tournament.is_subscribed ? 'bg-emerald-500/90 text-white' : 'bg-slate-500/90 text-white'
-                }`}>
-                  {tournament.is_subscribed ? 'مشترك' : 'غير مشترك'}
-                </span>
-              )}
-            </div>
-          </div>
+          {/* Collapsible Content */}
+          <Collapse in={!isTournamentDetailsCollapsed} animateOpacity>
+            <Box>
+              {/* Tournament Image */}
+              <Box position="relative" overflow="hidden">
+                {tournament.image_url ? (
+                  <Image 
+                    src={tournament.image_url} 
+                    alt={tournament.name} 
+                    w="full" 
+                    h="400px" 
+                    objectFit="cover" 
+                  />
+                ) : (
+                  <Box 
+                    w="full" 
+                    h="400px" 
+                    bgGradient="linear(to-br, blue.100, purple.100)"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Box color="blue.300">
+                      <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </Box>
+                  </Box>
+                )}
+                
+                {/* Price Badge */}
+                <Box position="absolute" top={4} right={4}>
+                  {tournament.price == null ? (
+                    <Badge colorScheme="green" variant="solid" p={2} borderRadius="full">
+                      <HStack spacing={1}>
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <Text>مجاني</Text>
+                      </HStack>
+                    </Badge>
+                  ) : (
+                    <Badge colorScheme="orange" variant="solid" p={2} borderRadius="full">
+                      <HStack spacing={1}>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                        </svg>
+                        <Text>{formatPrice(tournament.price)}</Text>
+                      </HStack>
+                    </Badge>
+                  )}
+                </Box>
 
-          {/* Tournament Info */}
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="bg-slate-50/80 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-slate-800 mb-1">{tournament.matches_count}</div>
-                <div className="text-sm text-slate-500">مباراة</div>
-              </div>
-              <div className="bg-slate-50/80 rounded-xl p-4 text-center">
-                <div className="text-sm text-slate-500 mb-1">الفترة</div>
-                <div className="text-base font-semibold text-slate-800">{formatDate(tournament.start_date)} → {formatDate(tournament.end_date)}</div>
-              </div>
-              <div className="bg-slate-50/80 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-slate-800 mb-1">{tournament.grade_name}</div>
-                <div className="text-sm text-slate-500">الصف الدراسي</div>
-              </div>
-            </div>
+                {/* Status Badges */}
+                <VStack position="absolute" top={4} left={4} spacing={2} align="start">
+                  {typeof tournament.is_visible !== 'undefined' && (
+                    <Badge 
+                      colorScheme={tournament.is_visible ? 'blue' : 'gray'} 
+                      variant="solid" 
+                      p={2} 
+                      borderRadius="full"
+                    >
+                      {tournament.is_visible ? 'ظاهر' : 'مخفي'}
+                    </Badge>
+                  )}
+                  {typeof tournament.is_subscribed !== 'undefined' && (
+                    <Badge 
+                      colorScheme={tournament.is_subscribed ? 'green' : 'gray'} 
+                      variant="solid" 
+                      p={2} 
+                      borderRadius="full"
+                    >
+                      {tournament.is_subscribed ? 'مشترك' : 'غير مشترك'}
+                    </Badge>
+                  )}
+                </VStack>
+              </Box>
 
-            {tournament.description && (
-              <div className="bg-slate-50/50 rounded-xl p-4 mb-6">
-                <h3 className="text-lg font-semibold text-slate-700 mb-2">الوصف</h3>
-                <p className="text-slate-600 leading-relaxed">{tournament.description}</p>
-              </div>
-            )}
-          </div>
-        </div>
+              {/* Tournament Info */}
+              <CardBody p={8}>
+                <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={6} mb={6}>
+                  <Card bg={useColorModeValue('gray.50', 'gray.700')} textAlign="center">
+                    <CardBody>
+                      <Text fontSize="2xl" fontWeight="bold" color={textColor} mb={1}>
+                        {tournament.matches_count}
+                      </Text>
+                      <Text fontSize="sm" color={subTextColor}>
+                        مباراة
+                      </Text>
+                    </CardBody>
+                  </Card>
+                  
+                  <Card bg={useColorModeValue('gray.50', 'gray.700')} textAlign="center">
+                    <CardBody>
+                      <Text fontSize="sm" color={subTextColor} mb={1}>
+                        الفترة
+                      </Text>
+                      <Text fontSize="md" fontWeight="semibold" color={textColor}>
+                        {formatDate(tournament.start_date)} → {formatDate(tournament.end_date)}
+                      </Text>
+                    </CardBody>
+                  </Card>
+                  
+                  <Card bg={useColorModeValue('gray.50', 'gray.700')} textAlign="center">
+                    <CardBody>
+                      <Text fontSize="2xl" fontWeight="bold" color={textColor} mb={1}>
+                        {tournament.grade_name}
+                      </Text>
+                      <Text fontSize="sm" color={subTextColor}>
+                        الصف الدراسي
+                      </Text>
+                    </CardBody>
+                  </Card>
+                </Grid>
+
+                {tournament.description && (
+                  <Card bg={useColorModeValue('gray.50', 'gray.700')} mb={6}>
+                    <CardBody>
+                      <Heading size="md" color={textColor} mb={2}>
+                        الوصف
+                      </Heading>
+                      <Text color={subTextColor} lineHeight="tall">
+                        {tournament.description}
+                      </Text>
+                    </CardBody>
+                  </Card>
+                )}
+              </CardBody>
+            </Box>
+          </Collapse>
+        </Card>
 
         {/* Students Modal (Admin) */}
-        {isAdmin && isStudentsOpen && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[100px]">
-            <div 
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" 
-              onClick={closeStudentsModal}
-            />
-            <div className="relative bg-white/95 backdrop-blur-sm w-full max-w-3xl rounded-3xl shadow-2xl border border-white/20 animate-scale-in overflow-hidden max-h-[85vh] overflow-y-auto">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-emerald-600 to-green-600 px-6 py-4 text-white flex items-center justify-between">
-                <h3 className="text-xl font-bold">الطلاب المشتركين ({students.length})</h3>
-                <button onClick={closeStudentsModal} className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              {/* Content */}
-              <div className="p-6">
-                {/* Delete confirmation inline modal */}
+        {isAdmin && (
+          <Modal isOpen={isStudentsOpen} onClose={closeStudentsModal} size="4xl">
+            <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+            <ModalContent maxH="85vh" overflow="hidden">
+              <ModalHeader 
+                bgGradient="linear(to-r, green.500, green.600)" 
+                color="white"
+                borderTopRadius="md"
+              >
+                <HStack justify="space-between" align="center">
+                  <Heading size="lg">
+                    الطلاب المشتركين ({students.length})
+                  </Heading>
+                  <ModalCloseButton color="white" />
+                </HStack>
+              </ModalHeader>
+              <ModalBody p={6} overflowY="auto">
+                {/* Delete confirmation */}
                 {studentToDelete && (
-                  <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="text-red-700 font-semibold mb-1">تأكيد حذف اشتراك الطالب</h4>
-                        <p className="text-red-600 text-sm">سيتم حذف اشتراك <span className="font-bold">{studentToDelete.student_name}</span> ولن يتمكن من الوصول للدوري.</p>
-                      </div>
-                      <button onClick={() => setStudentToDelete(null)} className="w-8 h-8 rounded-lg bg-white text-red-600 border border-red-200 hover:bg-red-100">×</button>
-                    </div>
-                    <div className="mt-3 flex items-center justify-end gap-3">
-                      <button onClick={() => setStudentToDelete(null)} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white">إلغاء</button>
-                      <button
-                        onClick={() => studentToDelete && handleDeleteStudent(studentToDelete.student_id)}
-                        disabled={deletingStudentId === studentToDelete?.student_id}
-                        className="px-5 py-2 rounded-lg bg-gradient-to-r from-red-600 to-pink-600 text-white hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {deletingStudentId === studentToDelete?.student_id ? 'جارٍ الحذف...' : 'تأكيد الحذف'}
-                      </button>
-                    </div>
-                  </div>
+                  <Alert status="error" mb={4} borderRadius="lg">
+                    <AlertIcon />
+                    <Box flex="1">
+                      <AlertTitle>تأكيد حذف اشتراك الطالب</AlertTitle>
+                      <Text fontSize="sm">
+                        سيتم حذف اشتراك <Text as="span" fontWeight="bold">{studentToDelete.student_name}</Text> ولن يتمكن من الوصول للدوري.
+                      </Text>
+                      <HStack mt={3} justify="end">
+                        <Button size="sm" onClick={() => setStudentToDelete(null)}>
+                          إلغاء
+                        </Button>
+                        <Button
+                          size="sm"
+                          colorScheme="red"
+                          onClick={() => studentToDelete && handleDeleteStudent(studentToDelete.student_id)}
+                          isLoading={deletingStudentId === studentToDelete?.student_id}
+                          loadingText="جارٍ الحذف..."
+                        >
+                          تأكيد الحذف
+                        </Button>
+                      </HStack>
+                    </Box>
+                  </Alert>
                 )}
+                
                 {studentsLoading ? (
-                  <div className="flex items-center justify-center py-6">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-                    <span className="mr-3 text-slate-600">جارِ تحميل الطلاب...</span>
-                  </div>
+                  <VStack py={6}>
+                    <Spinner size="lg" color="green.500" />
+                    <Text color={subTextColor}>جارِ تحميل الطلاب...</Text>
+                  </VStack>
                 ) : studentsError ? (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{studentsError}</div>
+                  <Alert status="error" borderRadius="lg">
+                    <AlertIcon />
+                    <Text>{studentsError}</Text>
+                  </Alert>
                 ) : students.length === 0 ? (
-                  <div className="text-center text-slate-600">لا يوجد طلاب مشتركين بعد</div>
+                  <Text textAlign="center" color={subTextColor} py={6}>
+                    لا يوجد طلاب مشتركين بعد
+                  </Text>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-slate-200">
-                      <thead className="bg-slate-50">
-                        <tr>
-                          <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">الاسم</th>
-                          <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">البريد الإلكتروني</th>
-                          <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">الصف</th>
-                          <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">تاريخ الاشتراك</th>
-                          <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">إجراءات</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
+                  <Box overflowX="auto">
+                    <Table variant="simple" size="sm">
+                      <Thead bg={useColorModeValue('gray.50', 'gray.700')}>
+                        <Tr>
+                          <Th color={textColor}>الاسم</Th>
+                          <Th color={textColor}>البريد الإلكتروني</Th>
+                          <Th color={textColor}>الصف</Th>
+                          <Th color={textColor}>تاريخ الاشتراك</Th>
+                          <Th color={textColor}>إجراءات</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
                         {students.map((s) => (
-                          <tr key={s.subscription_id} className="hover:bg-slate-50">
-                            <td className="px-4 py-3 text-sm text-slate-800">{s.student_name}</td>
-                            <td className="px-4 py-3 text-sm text-slate-600">{s.student_email}</td>
-                            <td className="px-4 py-3 text-sm text-slate-600">{s.grade_name || `الصف ${s.grade_id}`}</td>
-                            <td className="px-4 py-3 text-sm text-slate-600">{formatDateTime(s.joined_at)}</td>
-                            <td className="px-4 py-3 text-sm text-slate-600">
-                              <button
-                                onClick={() => setStudentToDelete(s)}
-                                className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-pink-600 text-white hover:shadow-md"
-                                title="حذف الطالب"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </td>
-                          </tr>
+                          <Tr key={s.subscription_id} _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}>
+                            <Td color={textColor}>{s.student_name}</Td>
+                            <Td color={subTextColor}>{s.student_email}</Td>
+                            <Td color={subTextColor}>{s.grade_name || `الصف ${s.grade_id}`}</Td>
+                            <Td color={subTextColor}>{formatDateTime(s.joined_at)}</Td>
+                            <Td>
+                              <Tooltip label="حذف الطالب">
+                                <IconButton
+                                  size="sm"
+                                  colorScheme="red"
+                                  variant="solid"
+                                  icon={
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  }
+                                  onClick={() => setStudentToDelete(s)}
+                                />
+                              </Tooltip>
+                            </Td>
+                          </Tr>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </Tbody>
+                    </Table>
+                  </Box>
                 )}
-              </div>
-              {/* Footer */}
-              <div className="bg-slate-50/50 px-6 py-4 border-t border-slate-200/50 flex items-center justify-end">
-                <button onClick={closeStudentsModal} className="px-5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white">إغلاق</button>
-              </div>
-            </div>
-          </div>
+              </ModalBody>
+            </ModalContent>
+          </Modal>
         )}
 
         {/* Matches Section */}
-        <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-8 py-6 border-b border-slate-200/60">
-            <h2 className="text-2xl font-bold text-slate-800 flex items-center">
-              <svg className="w-6 h-6 ml-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              المباريات ({matches?.length || 0})
-            </h2>
-          </div>
+        <Card bg={cardBg} border="1px" borderColor={borderColor} overflow="hidden">
+          <CardHeader borderBottom="1px" borderColor={borderColor}>
+            <HStack spacing={3}>
+              <Box color="blue.500">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </Box>
+              <Heading size="lg" color={textColor}>
+                المباريات ({matches?.length || 0})
+              </Heading>
+            </HStack>
+          </CardHeader>
 
-          <div className="p-8">
+          <CardBody p={8}>
             {matchesLoading ? (
-              <div className="text-center py-12">جارِ تحميل المباريات...</div>
+              <VStack py={12}>
+                <Spinner size="lg" color="blue.500" />
+                <Text color={subTextColor}>جارِ تحميل المباريات...</Text>
+              </VStack>
             ) : matchesError ? (
-              <div className="text-center py-12 text-red-600">{matchesError}</div>
+              <Alert status="error" borderRadius="lg">
+                <AlertIcon />
+                <Text>{matchesError}</Text>
+              </Alert>
             ) : !matches || matches.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-slate-700 mb-2">لا توجد مباريات حالياً</h3>
-                <p className="text-slate-500 mb-6">ابدأ بإنشاء أول مباراة في هذا الدوري</p>
-                {isAdmin && (
-                  <button
-                    onClick={() => setIsCreateMatchOpen(true)}
-                    className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <VStack py={12} spacing={4}>
+                <Box
+                  w={16}
+                  h={16}
+                  bg={useColorModeValue('gray.100', 'gray.700')}
+                  borderRadius="full"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Box color={useColorModeValue('gray.400', 'gray.500')}>
+                    <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
-                    إنشاء مباراة الآن
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {matches.map((match, index) => (
-                  <div 
-                    key={match.id} 
-                    className="group bg-white/50 backdrop-blur-sm border border-slate-200/60 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
-                    style={{ animationDelay: `${index * 100}ms` }}
+                  </Box>
+                </Box>
+                <Heading size="md" color={textColor}>
+                  لا توجد مباريات حالياً
+                </Heading>
+                <Text color={subTextColor} textAlign="center">
+                  ابدأ بإنشاء أول مباراة في هذا الدوري
+                </Text>
+                {isAdmin && (
+                  <Button
+                    onClick={() => setIsCreateMatchOpen(true)}
+                    colorScheme="blue"
+                    leftIcon={
+                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    }
                   >
-                    {/* Match Image */}
-                    <div className="relative h-32 overflow-hidden">
-                      {match.image_url ? (
-                        <img src={match.image_url} alt={match.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                          <svg className="w-8 h-8 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                          </svg>
-                        </div>
-                      )}
-                      
-                      {/* Visibility Badge */}
-                      <div className="absolute top-2 left-2">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
-                          match.is_visible ? 'bg-green-500/90 text-white' : 'bg-gray-500/90 text-white'
-                        }`}>
-                          {match.is_visible ? 'ظاهر' : 'مخفي'}
-                        </span>
-                      </div>
-                    </div>
+                    إنشاء مباراة الآن
+                  </Button>
+                )}
+              </VStack>
+            ) : (
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }} gap={6}>
+                {matches.map((match, index) => (
+                  <ScaleFade key={match.id} in={true} delay={index * 0.1}>
+                    <Card
+                      bg={cardBg}
+                      border="1px"
+                      borderColor={borderColor}
+                      _hover={{ 
+                        shadow: 'lg', 
+                        transform: 'translateY(-4px)',
+                        transition: 'all 0.3s'
+                      }}
+                      overflow="hidden"
+                    >
+                      {/* Match Image */}
+                      <Box position="relative" h="32" overflow="hidden">
+                        {match.image_url ? (
+                          <Image 
+                            src={match.image_url} 
+                            alt={match.name} 
+                            w="full" 
+                            h="full" 
+                            objectFit="cover"
+                            _hover={{ transform: 'scale(1.1)' }}
+                            transition="transform 0.5s"
+                          />
+                        ) : (
+                          <Box 
+                            w="full" 
+                            h="full" 
+                            bgGradient="linear(to-br, blue.100, purple.100)"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                          >
+                            <Box color="blue.300">
+                              <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                              </svg>
+                            </Box>
+                          </Box>
+                        )}
+                        
+                        {/* Visibility Badge */}
+                        <Box position="absolute" top={2} left={2}>
+                          <Badge 
+                            colorScheme={match.is_visible ? 'green' : 'gray'} 
+                            variant="solid" 
+                            p={1} 
+                            borderRadius="full"
+                            fontSize="xs"
+                          >
+                            {match.is_visible ? 'ظاهر' : 'مخفي'}
+                          </Badge>
+                        </Box>
+                      </Box>
 
-                    {/* Match Content */}
-                    <div className="p-4">
-                      <h3 className="text-lg font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-2">
-                        {match.name}
-                      </h3>
-                      
-                      {match.description && (
-                        <p className="text-sm text-slate-600 line-clamp-2 mb-3">
-                          {match.description}
-                        </p>
-                      )}
+                      {/* Match Content */}
+                      <CardBody p={4}>
+                        <Heading size="md" color={textColor} mb={2} _hover={{ color: 'blue.500' }} transition="color 0.2s">
+                          {match.name}
+                        </Heading>
+                        
+                        {match.description && (
+                          <Text 
+                            fontSize="sm" 
+                            color={subTextColor} 
+                            noOfLines={2} 
+                            mb={3}
+                          >
+                            {match.description}
+                          </Text>
+                        )}
 
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            try {
-                              const now = new Date()
-                              const start = match.start_date && match.start_time ? new Date(`${match.start_date}T${match.start_time}:00`) : null
-                              const end = match.start_date && match.end_time ? new Date(`${match.start_date}T${match.end_time}:00`) : null
-                              const available = start && end ? (now >= start && now <= end) : false
-                              return (
-                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${available ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
-                                  {available ? 'متاحة الآن' : 'غير متاحة'}
-                                </span>
-                              )
-                            } catch {
-                              return null
-                            }
-                          })()}
-                          {(match.start_time && match.end_time) && (
-                            <span className="text-[11px] text-slate-500">{match.start_time} → {match.end_time}</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isAdmin && (
-                            <>
-                              <button
-                                onClick={() => openEditMatch(match)}
-                                className="p-2 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
-                                title="تعديل"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() => handleToggleMatchVisibility(match.id)}
-                                className={`p-2 rounded-lg hover:bg-slate-100 ${match.is_visible ? 'text-emerald-600 bg-emerald-50' : 'text-slate-600 bg-slate-50'}`}
-                                title={match.is_visible ? 'إخفاء' : 'إظهار'}
-                              >
-                                {match.is_visible ? (
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                  </svg>
-                                ) : (
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9-4-9-7 0-1.07.41-2.07 1.125-2.925M6.223 6.223A9.956 9.956 0 0112 5c5 0 9 4 9 7 0 1.137-.41 2.2-1.123 3.063M3 3l18 18" />
-                                  </svg>
-                                )}
-                              </button>
-                              <button
-                                onClick={() => setMatchToDelete(match)}
-                                className="p-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100"
-                                title="حذف"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                              <Link to={`/matche/${match.id}`}>
-                                <button className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-200 transition-colors">
-                                  عرض المباراة
-                                </button>
-                              </Link>
-                            </>
-                          )}
-                          {(!isAdmin) && (
-                            (() => {
-                              const availableNow = isMatchAvailableNow(match)
-                              return (
-                                <Link to={`/matche/${match.id}`}>
-                                  <button
-                                    className={
-                                      availableNow
-                                        ? "px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-                                        : "px-3 py-1 bg-slate-200 text-slate-600 rounded-lg text-sm font-medium cursor-not-allowed"
+                        <Flex align="center" justify="space-between" mt={2}>
+                          <HStack spacing={2}>
+                            {(() => {
+                              try {
+                                const now = new Date()
+                                const start = match.start_date && match.start_time ? new Date(`${match.start_date}T${match.start_time}:00`) : null
+                                const end = match.start_date && match.end_time ? new Date(`${match.start_date}T${match.end_time}:00`) : null
+                                const available = start && end ? (now >= start && now <= end) : false
+                                return (
+                                  <Badge 
+                                    colorScheme={available ? 'green' : 'gray'} 
+                                    variant="subtle" 
+                                    fontSize="xs"
+                                  >
+                                    {available ? 'متاحة الآن' : 'غير متاحة'}
+                                  </Badge>
+                                )
+                              } catch {
+                                return null
+                              }
+                            })()}
+                            {(match.start_time && match.end_time) && (
+                              <Text fontSize="xs" color={subTextColor}>
+                                {match.start_time} → {match.end_time}
+                              </Text>
+                            )}
+                          </HStack>
+                          <HStack spacing={2}>
+                            {isAdmin && (
+                              <>
+                                <Tooltip label="تعديل">
+                                  <IconButton
+                                    size="sm"
+                                    colorScheme="blue"
+                                    variant="ghost"
+                                    icon={
+                                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                      </svg>
                                     }
-                                    disabled={!availableNow}
+                                    onClick={() => openEditMatch(match)}
+                                  />
+                                </Tooltip>
+                                <Tooltip label={match.is_visible ? 'إخفاء' : 'إظهار'}>
+                                  <IconButton
+                                    size="sm"
+                                    colorScheme={match.is_visible ? 'green' : 'gray'}
+                                    variant="ghost"
+                                    icon={
+                                      match.is_visible ? (
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                      ) : (
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9-4-9-7 0-1.07.41-2.07 1.125-2.925M6.223 6.223A9.956 9.956 0 0112 5c5 0 9 4 9 7 0 1.137-.41 2.2-1.123 3.063M3 3l18 18" />
+                                        </svg>
+                                      )
+                                    }
+                                    onClick={() => handleToggleMatchVisibility(match.id)}
+                                  />
+                                </Tooltip>
+                                <Tooltip label="حذف">
+                                  <IconButton
+                                    size="sm"
+                                    colorScheme="red"
+                                    variant="ghost"
+                                    icon={
+                                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    }
+                                    onClick={() => setMatchToDelete(match)}
+                                  />
+                                </Tooltip>
+                                <Button as={Link} to={`/matche/${match.id}`} size="sm" colorScheme="blue" variant="outline">
+                                  عرض المباراة
+                                </Button>
+                              </>
+                            )}
+                            {(!isAdmin) && (
+                              (() => {
+                                const availableNow = isMatchAvailableNow(match)
+                                return (
+                                  <Button 
+                                    as={Link} 
+                                    to={`/matche/${match.id}`}
+                                    size="sm"
+                                    colorScheme={availableNow ? 'blue' : 'gray'}
+                                    variant={availableNow ? 'solid' : 'outline'}
+                                    isDisabled={!availableNow}
                                   >
                                     {availableNow ? 'بدء المباراة' : 'غير متاحة'}
-                                  </button>
-                                </Link>
-                              )
-                            })()
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                                  </Button>
+                                )
+                              })()
+                            )}
+                          </HStack>
+                        </Flex>
+                      </CardBody>
+                    </Card>
+                  </ScaleFade>
                 ))}
-              </div>
+              </Grid>
             )}
-          </div>
-        </div>
-      </div>
-      )}
-      {/* Leaderboard Modal */}
-      {isLeaderboardOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[100px]">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeLeaderboard} />
-          <div className="relative bg-white/95 backdrop-blur-sm w-full max-w-3xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-            <div className="bg-gradient-to-r from-amber-500 to-yellow-500 px-6 py-4 text-white flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold">متصدرين الدوري</h3>
-                <p className="text-white/80 text-sm mt-1">{leaderboardLeague ? leaderboardLeague.name : tournament?.name}</p>
-              </div>
-              <button onClick={closeLeaderboard} className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-6">
-              {lbError && (
-                <div className="mb-3 bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{lbError}</div>
-              )}
-              {lbLoading ? (
-                <div className="py-8 text-center">جارِ تحميل المتصدرين...</div>
-              ) : leaderboard.length === 0 ? (
-                <div className="py-8 text-center text-slate-600">لا يوجد بيانات للمتصدرين بعد</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">الترتيب</th>
-                        <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">الطالب</th>
-                        <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">النقاط</th>
-                        <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">محاولات</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {leaderboard.map((row) => (
-                        <tr key={`${row.rank}-${row.student_id}`} className="hover:bg-slate-50">
-                          <td className="px-4 py-2 text-sm font-bold text-slate-800">#{row.rank}</td>
-                          <td className="px-4 py-2 text-sm text-slate-700">{row.student_name}</td>
-                          <td className="px-4 py-2 text-sm text-slate-700">{row.total_score}</td>
-                          <td className="px-4 py-2 text-sm text-slate-700">{row.submissions_count}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-            <div className="bg-slate-50/50 px-6 py-4 border-t border-slate-200/50 flex items-center justify-between">
-              <div className="text-sm text-slate-500">الإجمالي: {lbPagination.total}</div>
-              <div className="flex items-center gap-2">
-                <button onClick={prevLeaderboardPage} disabled={lbPagination.offset === 0 || lbLoading} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50">السابق</button>
-                <button onClick={nextLeaderboardPage} disabled={!lbPagination.has_more || lbLoading} className="px-4 py-2 rounded-lg bg-amber-500 text-white disabled:opacity-50">التالي</button>
-              </div>
-            </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
+      </Container>
       )}
 
       {/* Create Match Modal */}
-      {isCreateMatchOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[100px]">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" 
-            onClick={() => { setIsCreateMatchOpen(false); resetMatchForm() }} 
-          />
-          <div className="relative bg-white/95 backdrop-blur-sm w-full max-w-2xl rounded-3xl shadow-2xl border border-white/20 animate-scale-in overflow-hidden max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6 text-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 space-x-reverse">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold">إنشاء مباراة جديدة</h3>
-                    <p className="text-white/80 text-sm mt-1">أضف مباراة جديدة للدوري</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => { setIsCreateMatchOpen(false); resetMatchForm() }} 
-                  className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      <Modal isOpen={isCreateMatchOpen} onClose={() => { setIsCreateMatchOpen(false); resetMatchForm() }} size="2xl">
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent maxH="90vh" overflow="hidden">
+          <ModalHeader 
+            bgGradient="linear(to-r, blue.500, purple.600)" 
+            color="white"
+            borderTopRadius="md"
+          >
+            <HStack justify="space-between" align="center">
+              <HStack spacing={3}>
+                <Box w={10} h={10} bg="whiteAlpha.200" borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                </button>
-              </div>
-            </div>
+                </Box>
+                <VStack align="start" spacing={0}>
+                  <Heading size="lg">إنشاء مباراة جديدة</Heading>
+                  <Text fontSize="sm" color="whiteAlpha.800">أضف مباراة جديدة للدوري</Text>
+                </VStack>
+              </HStack>
+              <ModalCloseButton color="white" />
+            </HStack>
+          </ModalHeader>
 
-            {/* Modal Content */}
-            <div className="px-8 py-6">
-              <form onSubmit={handleCreateMatch} className="space-y-6">
-                {/* Match Name */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    <span className="flex items-center">
-                      <svg className="w-4 h-4 ml-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <ModalBody p={8} overflowY="auto">
+            <VStack spacing={6} as="form" onSubmit={handleCreateMatch}>
+              {/* Match Name */}
+              <Box w="full">
+                <Text fontSize="sm" fontWeight="medium" color={textColor} mb={2}>
+                  <HStack spacing={2}>
+                    <Box color="blue.500">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
-                      اسم المباراة
-                    </span>
-                  </label>
-                  <input 
-                    value={matchName} 
-                    onChange={(e) => setMatchName(e.target.value)} 
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50 backdrop-blur-sm" 
-                    placeholder="مثال: المرحلة الأولى" 
-                    required 
-                  />
-                </div>
+                    </Box>
+                    <Text>اسم المباراة</Text>
+                  </HStack>
+                </Text>
+                <Input 
+                  value={matchName} 
+                  onChange={(e) => setMatchName(e.target.value)} 
+                  placeholder="مثال: المرحلة الأولى" 
+                  required 
+                  bg={cardBg}
+                  borderColor={borderColor}
+                  _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px blue.500' }}
+                />
+              </Box>
 
-                {/* Description */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    <span className="flex items-center">
-                      <svg className="w-4 h-4 ml-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Description */}
+              <Box w="full">
+                <Text fontSize="sm" fontWeight="medium" color={textColor} mb={2}>
+                  <HStack spacing={2}>
+                    <Box color="blue.500">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                       </svg>
-                      الوصف (اختياري)
-                    </span>
-                  </label>
-                  <textarea 
-                    value={matchDescription} 
-                    onChange={(e) => setMatchDescription(e.target.value)} 
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50 backdrop-blur-sm resize-none" 
-                    rows={3} 
-                    placeholder="وصف المباراة وأهدافها..."
-                  />
-                </div>
+                    </Box>
+                    <Text>الوصف (اختياري)</Text>
+                  </HStack>
+                </Text>
+                <Textarea 
+                  value={matchDescription} 
+                  onChange={(e) => setMatchDescription(e.target.value)} 
+                  placeholder="وصف المباراة وأهدافها..."
+                  rows={3}
+                  resize="none"
+                  bg={cardBg}
+                  borderColor={borderColor}
+                  _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px blue.500' }}
+                />
+              </Box>
 
-                {/* Date & Time + Visibility */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 ml-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Date & Time + Visibility */}
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6} w="full">
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color={textColor} mb={2}>
+                    <HStack spacing={2}>
+                      <Box color="blue.500">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m4 4H4m0 0v8a2 2 0 002 2h12a2 2 0 002-2v-8M4 11h16" />
                         </svg>
-                        تاريخ البداية
-                      </span>
-                    </label>
-                    <input 
-                      type="date" 
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50 backdrop-blur-sm" 
-                      required 
-                    />
-                  </div>
+                      </Box>
+                      <Text>تاريخ البداية</Text>
+                    </HStack>
+                  </Text>
+                  <Input 
+                    type="date" 
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required 
+                    bg={cardBg}
+                    borderColor={borderColor}
+                    _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px blue.500' }}
+                  />
+                </Box>
 
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 ml-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color={textColor} mb={2}>
+                    <HStack spacing={2}>
+                      <Box color="blue.500">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
                         </svg>
-                        وقت البداية
-                      </span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <select 
-                        value={getTimeParts(startTime).hour}
-                        onChange={(e) => setStartTimeFromParts(e.target.value, null)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50 backdrop-blur-sm"
-                        required
-                      >
-                        <option value="">الساعة</option>
-                        {hoursOptions.map((h) => (
-                          <option key={h} value={h}>{h}</option>
-                        ))}
-                      </select>
-                      <select 
-                        value={getTimeParts(startTime).minute}
-                        onChange={(e) => setStartTimeFromParts(null, e.target.value)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50 backdrop-blur-sm"
-                        required
-                      >
-                        <option value="">الدقيقة</option>
-                        {minutesOptions.map((m) => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
-                    </div>
-                    {startTime && (
-                      <div className="text-xs text-slate-500 mt-1">الوقت: {startTime}</div>
-                    )}
-                  </div>
+                      </Box>
+                      <Text>وقت البداية</Text>
+                    </HStack>
+                  </Text>
+                  <HStack spacing={3}>
+                    <Select 
+                      value={getTimeParts(startTime).hour}
+                      onChange={(e) => setStartTimeFromParts(e.target.value, null)}
+                      placeholder="الساعة"
+                      required
+                      bg={cardBg}
+                      borderColor={borderColor}
+                      _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px blue.500' }}
+                    >
+                      {hoursOptions.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </Select>
+                    <Select 
+                      value={getTimeParts(startTime).minute}
+                      onChange={(e) => setStartTimeFromParts(null, e.target.value)}
+                      placeholder="الدقيقة"
+                      required
+                      bg={cardBg}
+                      borderColor={borderColor}
+                      _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px blue.500' }}
+                    >
+                      {minutesOptions.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </Select>
+                  </HStack>
+                  {startTime && (
+                    <Text fontSize="xs" color={subTextColor} mt={1}>الوقت: {startTime}</Text>
+                  )}
+                </Box>
 
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 ml-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <Box gridColumn={{ base: '1', md: '1 / -1' }}>
+                  <Text fontSize="sm" fontWeight="medium" color={textColor} mb={2}>
+                    <HStack spacing={2}>
+                      <Box color="blue.500">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
                         </svg>
-                        وقت النهاية
-                      </span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <select 
-                        value={getTimeParts(endTime).hour}
-                        onChange={(e) => setEndTimeFromParts(e.target.value, null)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50 backdrop-blur-sm"
-                        required
-                      >
-                        <option value="">الساعة</option>
-                        {hoursOptions.map((h) => (
-                          <option key={h} value={h}>{h}</option>
-                        ))}
-                      </select>
-                      <select 
-                        value={getTimeParts(endTime).minute}
-                        onChange={(e) => setEndTimeFromParts(null, e.target.value)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50 backdrop-blur-sm"
-                        required
-                      >
-                        <option value="">الدقيقة</option>
-                        {minutesOptions.map((m) => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
-                    </div>
-                    {endTime && (
-                      <div className="text-xs text-slate-500 mt-1">الوقت: {endTime}</div>
-                    )}
-                  </div>
+                      </Box>
+                      <Text>وقت النهاية</Text>
+                    </HStack>
+                  </Text>
+                  <HStack spacing={3}>
+                    <Select 
+                      value={getTimeParts(endTime).hour}
+                      onChange={(e) => setEndTimeFromParts(e.target.value, null)}
+                      placeholder="الساعة"
+                      required
+                      bg={cardBg}
+                      borderColor={borderColor}
+                      _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px blue.500' }}
+                    >
+                      {hoursOptions.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </Select>
+                    <Select 
+                      value={getTimeParts(endTime).minute}
+                      onChange={(e) => setEndTimeFromParts(null, e.target.value)}
+                      placeholder="الدقيقة"
+                      required
+                      bg={cardBg}
+                      borderColor={borderColor}
+                      _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px blue.500' }}
+                    >
+                      {minutesOptions.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </Select>
+                  </HStack>
+                  {endTime && (
+                    <Text fontSize="xs" color={subTextColor} mt={1}>الوقت: {endTime}</Text>
+                  )}
+                </Box>
 
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 ml-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <Box gridColumn={{ base: '1', md: '1 / -1' }}>
+                  <Text fontSize="sm" fontWeight="medium" color={textColor} mb={2}>
+                    <HStack spacing={2}>
+                      <Box color="blue.500">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        حالة الظهور
-                      </span>
-                    </label>
-                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-white/50 transition-colors">
-                      <input 
-                        type="checkbox" 
-                        checked={isVisible} 
-                        onChange={(e) => setIsVisible(e.target.checked)} 
-                        className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
-                      />
-                      <span className="text-sm font-medium text-slate-700">ظاهر للطلاب</span>
-                    </label>
-                  </div>
-                </div>
+                      </Box>
+                      <Text>حالة الظهور</Text>
+                    </HStack>
+                  </Text>
+                  <Checkbox 
+                    isChecked={isVisible} 
+                    onChange={(e) => setIsVisible(e.target.checked)}
+                    colorScheme="blue"
+                    size="md"
+                  >
+                    ظاهر للطلاب
+                  </Checkbox>
+                </Box>
+              </Grid>
 
                 {/* Image Upload */}
                 <div className="space-y-2">
@@ -1144,94 +1337,77 @@ const League = () => {
                   )}
                 </div>
 
-                {/* Messages */}
-                {createError && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div className="flex items-center">
-                      <svg className="w-5 h-5 text-red-400 ml-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-red-700 text-sm">{createError}</span>
-                    </div>
-                  </div>
-                )}
-                {createMsg && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center">
-                      <svg className="w-5 h-5 text-green-400 ml-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-green-700 text-sm">{createMsg}</span>
-                    </div>
-                  </div>
-                )}
-              </form>
-            </div>
+              {/* Messages */}
+              {createError && (
+                <Alert status="error" borderRadius="lg">
+                  <AlertIcon />
+                  <Text>{createError}</Text>
+                </Alert>
+              )}
+              {createMsg && (
+                <Alert status="success" borderRadius="lg">
+                  <AlertIcon />
+                  <Text>{createMsg}</Text>
+                </Alert>
+              )}
+            </VStack>
+          </ModalBody>
 
-            {/* Modal Footer */}
-            <div className="bg-slate-50/50 px-8 py-6 border-t border-slate-200/50">
-              <div className="flex items-center justify-end gap-4">
-                <button 
-                  type="button" 
-                  onClick={() => { setIsCreateMatchOpen(false); resetMatchForm() }} 
-                  className="px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-white hover:shadow-sm transition-all duration-200"
-                >
-                  إلغاء
-                </button>
-                <button 
-                  type="submit" 
-                  onClick={handleCreateMatch}
-                  disabled={creating} 
-                  className="group relative px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-105"
-                >
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    {creating ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>جارٍ الإنشاء...</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        <span>إنشاء المباراة</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-700 to-purple-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+          {/* Modal Footer */}
+          <Flex justify="flex-end" gap={4} p={8} borderTop="1px" borderColor={borderColor}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateMatchOpen(false)
+                resetMatchForm()
+              }}
+            >
+              إلغاء
+            </Button>
+            <Button
+              colorScheme="blue"
+              onClick={handleCreateMatch}
+              isLoading={creating}
+              loadingText="جارٍ الإنشاء..."
+            >
+              إنشاء المباراة
+            </Button>
+          </Flex>
+        </ModalContent>
+      </Modal>
 
-      {isAdmin && matchToDelete && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[100px]">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" 
-            onClick={() => setMatchToDelete(null)} 
-          />
-          <div className="relative bg-white/95 backdrop-blur-sm w-full max-w-md rounded-3xl shadow-2xl border border-white/20 animate-scale-in overflow-hidden">
-            <div className="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-4 text-white">
-              <h3 className="text-xl font-bold">تأكيد حذف المباراة</h3>
-              <p className="text-white/80 text-sm mt-1">سيتم حذف "{matchToDelete?.name}" نهائياً</p>
-            </div>
-            <div className="px-6 py-6">
-              <p className="text-slate-700 text-sm">هذا الإجراء لا يمكن التراجع عنه.</p>
-            </div>
-            <div className="bg-slate-50/50 px-6 py-4 border-t border-slate-200/50 flex items-center justify-end gap-3">
-              <button onClick={() => setMatchToDelete(null)} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white">إلغاء</button>
-              <button onClick={confirmDeleteMatch} disabled={deletingMatch} className="px-6 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed">
-                {deletingMatch ? 'جارٍ الحذف...' : 'حذف نهائي'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      <ScrollToTop/>
-    </div>
+      {/* Delete Match Confirmation Modal */}
+      <Modal isOpen={!!matchToDelete} onClose={() => setMatchToDelete(null)} size="md">
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent>
+          <ModalHeader bgGradient="linear(to-r, red.500, pink.600)" color="white">
+            <HStack justify="space-between" align="center">
+              <Heading size="md">تأكيد حذف المباراة</Heading>
+              <ModalCloseButton color="white" />
+            </HStack>
+          </ModalHeader>
+          <ModalBody p={6}>
+            <Text color={textColor}>
+              سيتم حذف "{matchToDelete?.name}" نهائياً. هذا الإجراء لا يمكن التراجع عنه.
+            </Text>
+          </ModalBody>
+          <Flex justify="flex-end" gap={3} p={6} borderTop="1px" borderColor={borderColor}>
+            <Button variant="outline" onClick={() => setMatchToDelete(null)}>
+              إلغاء
+            </Button>
+            <Button
+              colorScheme="red"
+              onClick={confirmDeleteMatch}
+              isLoading={deletingMatch}
+              loadingText="جارٍ الحذف..."
+            >
+              حذف نهائي
+            </Button>
+          </Flex>
+        </ModalContent>
+      </Modal>
+      <ScrollToTop />
+    </Box>
   )
 }
 

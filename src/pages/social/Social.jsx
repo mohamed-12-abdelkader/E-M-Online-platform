@@ -31,7 +31,7 @@ import {
   MenuItem,
 } from '@chakra-ui/react'
 import { FiThumbsUp, FiHeart } from 'react-icons/fi'
-import { IoAttachOutline, IoClose, IoChatbubbleOutline, IoShareSocialOutline, IoImageOutline, IoVideocamOutline, IoHappyOutline, IoEarthOutline, IoLockClosedOutline, IoPeopleOutline, IoEllipsisVertical, IoChevronBack, IoChevronForward, IoDownloadOutline, IoSendOutline } from 'react-icons/io5'
+import { IoAttachOutline, IoClose, IoChatbubbleOutline, IoShareSocialOutline, IoImageOutline, IoVideocamOutline, IoHappyOutline, IoEarthOutline, IoLockClosedOutline, IoPeopleOutline, IoEllipsisVertical, IoChevronBack, IoChevronForward, IoDownloadOutline, IoSendOutline, IoCreateOutline, IoTrashOutline, IoBookmarkOutline, IoBookmark } from 'react-icons/io5'
 import { BiSupport } from 'react-icons/bi'
 import dayjs from 'dayjs'
 import baseUrl from '../../api/baseUrl'
@@ -39,6 +39,49 @@ import UserType from '../../Hooks/auth/userType'
 import { io } from 'socket.io-client'
 import img from "../../../public/Picsart_25-08-26_23-28-39-014.png"
 import ScrollToTop from '../../components/scollToTop/ScrollToTop'
+
+// Function to convert URLs in text to clickable links
+const linkifyText = (text) => {
+  if (!text) return text
+  
+  // Regular expression to match various URL formats
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g
+  
+  const parts = text.split(urlRegex)
+  
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      // Normalize URL - add https:// if missing
+      let href = part
+      if (!part.startsWith('http://') && !part.startsWith('https://')) {
+        href = `https://${part}`
+      }
+      
+      return (
+        <Text
+          key={index}
+          as="a"
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          color="teal.500"
+          textDecoration="underline"
+          _hover={{ 
+            color: "teal.600",
+            textDecoration: "none"
+          }}
+          display="inline"
+          cursor="pointer"
+          fontWeight="medium"
+        >
+          {part}
+        </Text>
+      )
+    }
+    return part
+  })
+}
+
 const ReactionBar = ({ myReaction, onReact, isSubmitting }) => {
   const iconColor = useColorModeValue('gray.600', 'gray.300')
   const activeColor = 'teal.500'
@@ -143,7 +186,7 @@ const CommentItem = ({ comment, onReplySelect, onReact, reacting, onUpdateCommen
             wordBreak='break-word'
             whiteSpace='pre-wrap'
           >
-            {comment.content}
+            {linkifyText(comment.content)}
           </Text>
           {comment.media_url && (
             <Box mt={2}>
@@ -174,30 +217,36 @@ const CommentItem = ({ comment, onReplySelect, onReact, reacting, onUpdateCommen
                 isSubmitting={reacting === comment.id} 
               />
             </HStack>
-            <Menu>
-              <MenuButton 
-                as={IconButton} 
-                aria-label='خيارات التعليق' 
-                icon={<IoEllipsisVertical />} 
-                size={{ base: 'xs', sm: 'xs' }} 
-                variant='ghost' 
+            <HStack spacing={1}>
+              <IconButton
+                aria-label='تعديل التعليق'
+                icon={<IoCreateOutline />}
+                size={{ base: 'xs', sm: 'xs' }}
+                variant='ghost'
+                colorScheme='teal'
+                onClick={() => setConfirmEditComment({ id: comment.id, postId: comment.post_id, content: comment.content || '' })}
+                _hover={{ 
+                  bg: 'teal.50',
+                  transform: 'scale(1.1)',
+                  transition: 'all 0.2s'
+                }}
+                _active={{ transform: 'scale(0.95)' }}
               />
-              <MenuList>
-                <MenuItem 
-                  onClick={() => setEditComment({ id: comment.id, postId: comment.post_id, content: comment.content || '' })}
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                >
-                  تعديل
-                </MenuItem>
-                <MenuItem 
-                  color='red.500' 
-                  onClick={() => setDeleteComment({ id: comment.id, postId: comment.post_id })}
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                >
-                  حذف
-                </MenuItem>
-              </MenuList>
-            </Menu>
+              <IconButton
+                aria-label='حذف التعليق'
+                icon={<IoTrashOutline />}
+                size={{ base: 'xs', sm: 'xs' }}
+                variant='ghost'
+                colorScheme='red'
+                onClick={() => setDeleteComment({ id: comment.id, postId: comment.post_id })}
+                _hover={{ 
+                  bg: 'red.50',
+                  transform: 'scale(1.1)',
+                  transition: 'all 0.2s'
+                }}
+                _active={{ transform: 'scale(0.95)' }}
+              />
+            </HStack>
           </Flex>
         </Box>
       </Flex>
@@ -244,7 +293,9 @@ const Social = () => {
   const [editComment, setEditComment] = useState(null) // { id, postId, content }
   const [deleteComment, setDeleteComment] = useState(null) // { id, postId }
   const [editCommentDraft, setEditCommentDraft] = useState('')
+  const [confirmEditComment, setConfirmEditComment] = useState(null) // { id, postId, content }
   const [imageViewer, setImageViewer] = useState({ isOpen: false, urls: [], index: 0 })
+  const [pinningPost, setPinningPost] = useState(null) // postId being pinned/unpinned
 
   const openImageViewer = (urls, index = 0) => {
     if (!Array.isArray(urls) || urls.length === 0) return
@@ -367,15 +418,24 @@ const Social = () => {
 
     socket.on('social:comment-created', ({ post_id, comment }) => {
       if (!post_id || !comment) return
+      
+      // Update post comments count
       setPosts(prev => prev.map(p => p.id === post_id ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p))
+      
+      // Update comments if they are loaded
       setCommentsByPost(prev => {
         if (!prev[post_id]) return prev
+        
         const existing = JSON.parse(JSON.stringify(prev[post_id]))
         const node = { ...comment, replies: [] }
+        
         if (comment.parent_comment_id) {
           const attach = (arr) => {
             for (const c of arr) {
-              if (c.id === comment.parent_comment_id) { c.replies.push(node); return true }
+              if (c.id === comment.parent_comment_id) { 
+                c.replies.push(node); 
+                return true 
+              }
               if (attach(c.replies || [])) return true
             }
             return false
@@ -384,7 +444,41 @@ const Social = () => {
         } else {
           existing.unshift(node)
         }
+        
         return { ...prev, [post_id]: existing }
+      })
+    })
+
+    // Handle comment updates
+    socket.on('social:comment-updated', ({ post_id, comment }) => {
+      if (!post_id || !comment) return
+      
+      setCommentsByPost(prev => {
+        if (!prev[post_id]) return prev
+        
+        const existing = JSON.parse(JSON.stringify(prev[post_id]))
+        const update = (arr) => arr.map(c => 
+          c.id === comment.id ? { ...c, content: comment.content } : { ...c, replies: update(c.replies || []) }
+        )
+        
+        return { ...prev, [post_id]: update(existing) }
+      })
+    })
+
+    // Handle comment deletions
+    socket.on('social:comment-deleted', ({ post_id, comment_id }) => {
+      if (!post_id || !comment_id) return
+      
+      // Update post comments count
+      setPosts(prev => prev.map(p => p.id === post_id ? { ...p, comments_count: Math.max(0, (p.comments_count || 0) - 1) } : p))
+      
+      setCommentsByPost(prev => {
+        if (!prev[post_id]) return prev
+        
+        const existing = JSON.parse(JSON.stringify(prev[post_id]))
+        const remove = (arr) => arr.filter(c => c.id !== comment_id).map(c => ({ ...c, replies: remove(c.replies || []) }))
+        
+        return { ...prev, [post_id]: remove(existing) }
       })
     })
 
@@ -454,8 +548,14 @@ const Social = () => {
           return { ...prev, [postId]: existing }
         })
         setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p))
-        try { await fetchAndSetComments(postId) } catch {}
         setReplyTargetByPost(prev => ({ ...prev, [postId]: null }))
+        
+        // Refresh comments to ensure all users see the new comment
+        try {
+          await fetchAndSetComments(postId)
+        } catch {
+          // Silent fail - the comment was already added locally
+        }
       }
     } catch {
       toast({ title: 'تعذر إضافة التعليق', status: 'error', duration: 2500, isClosable: true })
@@ -501,24 +601,84 @@ const Social = () => {
     }
   }
 
+  // دالة تثبيت البوست
+  const handlePinPost = async (postId, isPinned) => {
+    try {
+      setPinningPost(postId)
+      const body = isPinned 
+        ? { is_pinned: true, pinned_order: 1 }
+        : { is_pinned: false }
+      
+      await baseUrl.patch(`/api/social/posts/${postId}/pin`, body, { 
+        headers: authHeader ? { Authorization: authHeader } : {} 
+      })
+      
+      // تحديث البوست محلياً
+      setPosts(prev => prev.map(p => 
+        p.id === postId 
+          ? { ...p, is_pinned: isPinned, pinned_order: isPinned ? 1 : null }
+          : p
+      ))
+      
+      toast({ 
+        title: isPinned ? 'تم تثبيت البوست بنجاح' : 'تم إلغاء تثبيت البوست', 
+        status: 'success', 
+        duration: 2000, 
+        isClosable: true 
+      })
+    } catch {
+      toast({ 
+        title: 'تعذر تثبيت البوست', 
+        status: 'error', 
+        duration: 2500, 
+        isClosable: true 
+      })
+    } finally {
+      setPinningPost(null)
+    }
+  }
+
   const PostCard = ({ post }) => {
     const [commentText, setCommentText] = useState('')
     const replyTarget = replyTargetByPost[post.id]
     const borderColor = useColorModeValue('gray.200', 'gray.700')
     const cardBg = useColorModeValue('white', 'gray.800')
+    const [userData, isAdmin, isTeacher, student] = UserType()
 
     return (
       <Box 
         border='1px solid' 
-        borderColor={borderColor} 
+        borderColor={post.is_pinned ? 'teal.300' : borderColor} 
         borderRadius={{ base: 'xl', md: '2xl' }} 
-        bg={cardBg} 
+        bg={post.is_pinned ? useColorModeValue('teal.50', 'teal.900') : cardBg} 
         p={{ base: 3, sm: 4, md: 5 }} 
         mb={{ base: 4, md: 6 }} 
-        boxShadow={useColorModeValue('sm','dark-lg')} 
-        _hover={{ borderColor: useColorModeValue('gray.300','gray.600') }} 
+        boxShadow={post.is_pinned ? useColorModeValue('lg','dark-lg') : useColorModeValue('sm','dark-lg')} 
+        _hover={{ borderColor: post.is_pinned ? 'teal.400' : useColorModeValue('gray.300','gray.600') }} 
         transition='border-color 0.15s ease'
+        position='relative'
       >
+        {/* مؤشر التثبيت */}
+        {post.is_pinned && (
+          <Box
+            position='absolute'
+            top={2}
+            right={2}
+            bg='teal.500'
+            color='white'
+            px={2}
+            py={1}
+            borderRadius='md'
+            fontSize='xs'
+            fontWeight='bold'
+            display='flex'
+            alignItems='center'
+            gap={1}
+          >
+            <IoBookmark size={12} />
+            مثبت
+          </Box>
+        )}
         <Flex direction={{ base: 'column', sm: 'row' }} align='start' spacing={{ base: 3, sm: 4 }}>
           <Avatar 
           className='mx-2 border-2 border-gray-300'
@@ -559,20 +719,56 @@ const Social = () => {
                 >
                   {dayjs(post.created_at).fromNow?.() || dayjs(post.created_at).format('YYYY/MM/DD HH:mm')}
                 </Text>
-                {/* Actions menu */}
-                <Menu>
-                  <MenuButton 
-                    as={IconButton} 
-                    aria-label='خيارات' 
-                    icon={<IoEllipsisVertical />} 
-                    size={{ base: 'xs', sm: 'sm' }} 
-                    variant='ghost' 
+                {/* Action buttons */}
+                <HStack spacing={1}>
+                  {/* زر التثبيت - للادمن فقط */}
+                  {isAdmin && (
+                    <IconButton
+                      aria-label={post.is_pinned ? 'إلغاء تثبيت المنشور' : 'تثبيت المنشور'}
+                      icon={post.is_pinned ? <IoBookmark /> : <IoBookmarkOutline />}
+                      size={{ base: 'xs', sm: 'sm' }}
+                      variant='ghost'
+                      colorScheme={post.is_pinned ? 'teal' : 'gray'}
+                      onClick={() => handlePinPost(post.id, !post.is_pinned)}
+                      isLoading={pinningPost === post.id}
+                      isDisabled={pinningPost === post.id}
+                      _hover={{ 
+                        bg: post.is_pinned ? 'teal.50' : 'gray.50',
+                        transform: 'scale(1.1)',
+                        transition: 'all 0.2s'
+                      }}
+                      _active={{ transform: 'scale(0.95)' }}
+                    />
+                  )}
+                  <IconButton
+                    aria-label='تعديل المنشور'
+                    icon={<IoCreateOutline />}
+                    size={{ base: 'xs', sm: 'sm' }}
+                    variant='ghost'
+                    colorScheme='teal'
+                    onClick={() => setEditPost({ id: post.id, content: post.content || '', visibility: post.visibility || 'public' })}
+                    _hover={{ 
+                      bg: 'teal.50',
+                      transform: 'scale(1.1)',
+                      transition: 'all 0.2s'
+                    }}
+                    _active={{ transform: 'scale(0.95)' }}
                   />
-                  <MenuList>
-                    <MenuItem onClick={() => setEditPost({ id: post.id, content: post.content || '', visibility: post.visibility || 'public' })}>تعديل</MenuItem>
-                    <MenuItem color='red.500' onClick={() => setDeletePostId(post.id)}>حذف</MenuItem>
-                  </MenuList>
-                </Menu>
+                  <IconButton
+                    aria-label='حذف المنشور'
+                    icon={<IoTrashOutline />}
+                    size={{ base: 'xs', sm: 'sm' }}
+                    variant='ghost'
+                    colorScheme='red'
+                    onClick={() => setDeletePostId(post.id)}
+                    _hover={{ 
+                      bg: 'red.50',
+                      transform: 'scale(1.1)',
+                      transition: 'all 0.2s'
+                    }}
+                    _active={{ transform: 'scale(0.95)' }}
+                  />
+                </HStack>
               </HStack>
             </Flex>
 
@@ -585,20 +781,11 @@ const Social = () => {
                 wordBreak='break-word'
                 whiteSpace='pre-wrap'
               >
-                {post.content}
+                {linkifyText(post.content)}
               </Text>
             )}
 
             {/* Media */}
-            {post.media_url && (
-              <Box mt={3} overflow='hidden' borderRadius='lg'>
-                <Media 
-                  url={post.media_url} 
-                  type={post.media_type} 
-                  onImageClick={post.media_type === 'image' ? () => openImageViewer([post.media_url], 0) : undefined}
-                />
-              </Box>
-            )}
             {Array.isArray(post.media_list) && post.media_list.length > 0 && (
               <SimpleGrid 
                 mt={3} 
@@ -625,6 +812,16 @@ const Social = () => {
                   })
                 })()}
               </SimpleGrid>
+            )}
+            {/* Fallback for old media_url format */}
+            {!Array.isArray(post.media_list) && post.media_url && (
+              <Box mt={3} overflow='hidden' borderRadius='lg'>
+                <Media 
+                  url={post.media_url} 
+                  type={post.media_type} 
+                  onImageClick={post.media_type === 'image' ? () => openImageViewer([post.media_url], 0) : undefined}
+                />
+              </Box>
             )}
 
             {/* Counts row */}
@@ -875,9 +1072,17 @@ const Social = () => {
           <Text textAlign='center' color={useColorModeValue('gray.600','gray.400')}>لا توجد منشورات بعد</Text>
         ) : (
           <>
-            {posts.map((p) => (
-              <PostCard key={p.id} post={p} />
-            ))}
+            {posts
+              .sort((a, b) => {
+                // البوستات المثبتة تظهر أولاً
+                if (a.is_pinned && !b.is_pinned) return -1
+                if (!a.is_pinned && b.is_pinned) return 1
+                // ثم ترتيب حسب التاريخ
+                return new Date(b.created_at) - new Date(a.created_at)
+              })
+              .map((p) => (
+                <PostCard key={p.id} post={p} />
+              ))}
             {hasMore && (
               <Flex align='center' justify='center' py={6}>
                 <Button onClick={handleLoadMore} isLoading={loadingMore} variant='outline'>عرض المزيد</Button>
@@ -1138,12 +1343,12 @@ const Social = () => {
       )}
 
       {/* Edit Comment Modal */}
-      {editComment && (
-        <Modal 
-          isOpen={!!editComment} 
-          onClose={() => setEditComment(null)}
-          size={{ base: 'full', sm: 'md', md: 'lg' }}
-        >
+      <Modal 
+        isOpen={!!editComment} 
+        onClose={() => setEditComment(null)}
+        size={{ base: 'full', sm: 'md', md: 'lg' }}
+        zIndex={9999}
+      >
           <ModalOverlay />
           <ModalContent m={{ base: 0, sm: 4 }}>
             <ModalHeader fontSize={{ base: 'md', sm: 'lg' }}>تعديل التعليق</ModalHeader>
@@ -1181,6 +1386,13 @@ const Social = () => {
                       return clone
                     })
                     setEditComment(null)
+                    
+                    // Refresh comments to ensure all users see the updated comment
+                    try {
+                      await fetchAndSetComments(editComment.postId)
+                    } catch {
+                      // Silent fail - the comment was already updated locally
+                    }
                   } catch {
                     toast({ title: 'تعذر تعديل التعليق', status: 'error', duration: 2500, isClosable: true })
                   }
@@ -1193,7 +1405,6 @@ const Social = () => {
             </ModalFooter>
           </ModalContent>
         </Modal>
-      )}
 
       {/* Image Lightbox */}
       {imageViewer.isOpen && (
@@ -1248,15 +1459,66 @@ const Social = () => {
         </Modal>
       )}
 
+      {/* Confirm Edit Comment Modal */}
+      <Modal 
+        isOpen={!!confirmEditComment} 
+        onClose={() => setConfirmEditComment(null)}
+        size={{ base: 'sm', sm: 'md' }}
+        isCentered
+        zIndex={9999}
+      >
+        <ModalOverlay bg='blackAlpha.600' />
+        <ModalContent m={{ base: 4, sm: 0 }}>
+            <ModalHeader fontSize={{ base: 'md', sm: 'lg' }}>تأكيد التعديل</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Text fontSize={{ base: 'sm', sm: 'md' }} mb={3}>هل تريد تعديل هذا التعليق؟</Text>
+              {confirmEditComment && (
+                <Textarea 
+                  value={confirmEditComment.content || ''} 
+                  onChange={(e) => setConfirmEditComment(prev => ({ ...prev, content: e.target.value }))}
+                  minH={{ base: '80px', sm: '100px' }}
+                  fontSize={{ base: 'sm', sm: 'md' }}
+                  resize='vertical'
+                  placeholder='اكتب التعليق المعدل...'
+                />
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <Button 
+                variant='ghost' 
+                mr={3} 
+                onClick={() => setConfirmEditComment(null)}
+                size={{ base: 'sm', sm: 'md' }}
+                fontSize={{ base: 'sm', sm: 'md' }}
+              >
+                إلغاء
+              </Button>
+              <Button 
+                colorScheme='teal' 
+                onClick={() => {
+                  setEditComment(confirmEditComment)
+                  setConfirmEditComment(null)
+                }}
+                size={{ base: 'sm', sm: 'md' }}
+                fontSize={{ base: 'sm', sm: 'md' }}
+              >
+                تأكيد التعديل
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
       {/* Delete Comment Confirm */}
-      {deleteComment && (
-        <Modal 
-          isOpen={!!deleteComment} 
-          onClose={() => setDeleteComment(null)}
-          size={{ base: 'sm', sm: 'md' }}
-        >
-          <ModalOverlay />
-          <ModalContent m={{ base: 4, sm: 0 }}>
+      <Modal 
+        isOpen={!!deleteComment} 
+        onClose={() => setDeleteComment(null)}
+        size={{ base: 'sm', sm: 'md' }}
+        isCentered
+        zIndex={9999}
+      >
+        <ModalOverlay bg='blackAlpha.600' />
+        <ModalContent m={{ base: 4, sm: 0 }}>
             <ModalHeader fontSize={{ base: 'md', sm: 'lg' }}>تأكيد الحذف</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
@@ -1284,6 +1546,13 @@ const Social = () => {
                       return clone
                     })
                     setDeleteComment(null)
+                    
+                    // Refresh comments to ensure all users see the deletion
+                    try {
+                      await fetchAndSetComments(deleteComment.postId)
+                    } catch {
+                      // Silent fail - the comment was already removed locally
+                    }
                   } catch {
                     toast({ title: 'تعذر حذف التعليق', status: 'error', duration: 2500, isClosable: true })
                   }
@@ -1296,7 +1565,6 @@ const Social = () => {
             </ModalFooter>
           </ModalContent>
         </Modal>
-      )}
       <ScrollToTop/>
     </Box>
   )

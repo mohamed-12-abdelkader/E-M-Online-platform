@@ -9,7 +9,10 @@ import {
 import {
     IoSearchOutline, IoPeopleOutline, IoPersonOutline, IoArrowBackOutline,
     IoEllipsisVertical, IoHappyOutline, IoAttachOutline, IoMicOutline, IoSend,
-    IoImageOutline, IoDocumentOutline, IoCameraOutline, IoPlayCircleOutline, IoCloseOutline, IoReturnUpBack
+    IoImageOutline, IoDocumentOutline, IoCameraOutline, IoPlayCircleOutline, IoCloseOutline, IoReturnUpBack,
+    IoCreateOutline, IoTrashOutline, IoCheckmarkOutline, IoBookOutline, IoSchoolOutline, 
+    IoLibraryOutline, IoRocketOutline, IoStarOutline, IoFlameOutline, IoHeartOutline,
+    IoDiamondOutline, IoShieldOutline, IoFlashOutline, IoLeafOutline, IoPlanetOutline
 } from 'react-icons/io5';
 import { io } from 'socket.io-client';
 import dayjs from 'dayjs';
@@ -29,46 +32,172 @@ const useChatBackground = () => {
     };
 };
 
+// --- دالة اختيار أيقونة المجموعة ---
+const getGroupIcon = (groupName, index) => {
+    const icons = [
+        IoBookOutline, IoSchoolOutline, IoLibraryOutline, IoRocketOutline, 
+        IoStarOutline, IoFlameOutline, IoHeartOutline, IoDiamondOutline,
+        IoShieldOutline, IoFlashOutline, IoLeafOutline, IoPlanetOutline
+    ];
+    
+    // اختيار أيقونة بناءً على اسم المجموعة أو الفهرس
+    const iconIndex = groupName ? 
+        groupName.charCodeAt(0) % icons.length : 
+        index % icons.length;
+    
+    return icons[iconIndex];
+};
+
+// --- دالة اختيار لون المجموعة ---
+const getGroupColor = (groupName, index) => {
+    const colors = [
+        'blue', 'green', 'purple', 'orange', 'pink', 'cyan', 
+        'teal', 'indigo', 'red', 'yellow', 'gray', 'emerald'
+    ];
+    
+    const colorIndex = groupName ? 
+        groupName.charCodeAt(0) % colors.length : 
+        index % colors.length;
+    
+    return colors[colorIndex];
+};
+
 
 // --- 2. مكون ChatListItem ---
-const ChatListItem = ({ chat, type, onSelectChat, isActive }) => {
+const ChatListItem = ({ chat, type, onSelectChat, isActive, index = 0 }) => {
+    const GroupIcon = getGroupIcon(chat.name, index);
+    const groupColor = getGroupColor(chat.name, index);
+    
     return (
         <Flex
             align="center"
-            p={2}
-            borderRadius="lg"
-            _hover={{ bg: 'gray.100', cursor: 'pointer' }}
-            bg={isActive ? 'teal.50' : 'transparent'}
+            p={4}
+            borderRadius="xl"
+            _hover={{ 
+                bg: useColorModeValue('gray.50', 'gray.700'), 
+                cursor: 'pointer',
+                transform: 'translateX(4px)',
+                boxShadow: 'lg'
+            }}
+            bg={isActive ? useColorModeValue(`${groupColor}.50`, `${groupColor}.900`) : 'transparent'}
+            borderLeft={isActive ? '4px solid' : '4px solid transparent'}
+            borderColor={isActive ? `${groupColor}.500` : 'transparent'}
             onClick={() => onSelectChat(type, chat.id)}
             position="relative"
+            transition="all 0.3s ease"
+            mb={2}
+            boxShadow={isActive ? 'md' : 'sm'}
+            _before={{
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderRadius: 'xl',
+                bg: isActive ? 
+                    `linear-gradient(135deg, ${useColorModeValue(`${groupColor}.100`, `${groupColor}.800`)}, transparent)` : 
+                    'transparent',
+                zIndex: -1
+            }}
         >
             {type === 'group' ? (
-                <Avatar size="md" icon={<IoPeopleOutline fontSize="1.5rem" />} bg="gray.200" color="gray.600" />
+                <Box
+                    position="relative"
+                    w="48px"
+                    h="48px"
+                    borderRadius="full"
+                    bg={isActive ? 
+                        `linear-gradient(135deg, ${useColorModeValue(`${groupColor}.200`, `${groupColor}.700`)}, ${useColorModeValue(`${groupColor}.300`, `${groupColor}.600`)})` : 
+                        `linear-gradient(135deg, ${useColorModeValue('gray.100', 'gray.600')}, ${useColorModeValue('gray.200', 'gray.500')})`
+                    }
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    boxShadow="md"
+                    _hover={{
+                        transform: 'scale(1.05)',
+                        boxShadow: 'lg'
+                    }}
+                    transition="all 0.2s ease"
+                >
+                    <GroupIcon 
+                        fontSize="1.5rem" 
+                        color={isActive ? 
+                            useColorModeValue(`${groupColor}.700`, `${groupColor}.200`) : 
+                            useColorModeValue('gray.600', 'gray.300')
+                        } 
+                    />
+                    {isActive && (
+                        <Box
+                            position="absolute"
+                            top="-2px"
+                            right="-2px"
+                            w="12px"
+                            h="12px"
+                            borderRadius="full"
+                            bg={`${groupColor}.500`}
+                            border="2px solid"
+                            borderColor={useColorModeValue('white', 'gray.800')}
+                        />
+                    )}
+                </Box>
             ) : (
                 <Avatar size="md" src={chat.avatar} name={chat.name} />
             )}
-            <Box ml={3} flex="1" overflow="hidden">
-                <Flex justify="space-between" align="center" mb={0.5}>
-                    <Text fontWeight="semibold" fontSize="md" noOfLines={1}>{chat.name}</Text>
-                    <Text fontSize="xs" color="gray.500">{chat.time}</Text>
+            <Box ml={4} flex="1" overflow="hidden" minW={0}>
+                <Flex justify="space-between" align="center" mb={2}>
+                    <Text 
+                        fontWeight={isActive ? "bold" : "semibold"} 
+                        fontSize="md" 
+                        noOfLines={1}
+                        color={isActive ? 
+                            useColorModeValue(`${groupColor}.700`, `${groupColor}.200`) : 
+                            useColorModeValue('gray.800', 'gray.200')
+                        }
+                    >
+                        {chat.name}
+                    </Text>
+                    <Text 
+                        fontSize="xs" 
+                        color={useColorModeValue('gray.500', 'gray.400')}
+                        fontWeight="medium"
+                    >
+                        {chat.time}
+                    </Text>
                 </Flex>
-                <Text fontSize="sm" color="gray.600" noOfLines={1}>
-                    {chat.lastMessage}
+                <Text 
+                    fontSize="sm" 
+                    color={isActive ? 
+                        useColorModeValue(`${groupColor}.600`, `${groupColor}.300`) : 
+                        useColorModeValue('gray.600', 'gray.400')
+                    } 
+                    noOfLines={2}
+                    lineHeight="1.4"
+                >
+                    {chat.lastMessage || 'لا توجد رسائل'}
                 </Text>
             </Box>
             {chat.unread > 0 && (
                 <Badge
-                    colorScheme="teal"
+                    colorScheme={groupColor}
                     borderRadius="full"
-                    px={2}
-                    py={0.5}
+                    px={3}
+                    py={1}
                     fontSize="xs"
-                    position="absolute"
-                    top="50%"
-                    left="8px"
-                    transform="translateY(-50%)"
+                    fontWeight="bold"
+                    minW="24px"
+                    h="24px"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    boxShadow="md"
+                    _hover={{
+                        transform: 'scale(1.1)'
+                    }}
+                    transition="all 0.2s ease"
                 >
-                    {chat.unread}
+                    {chat.unread > 99 ? '99+' : chat.unread}
                 </Badge>
             )}
         </Flex>
@@ -84,7 +213,22 @@ const Sidebar = ({ groups, onSelectGroup, activeGroupId }) => {
     }, [groups, searchTerm]);
 
     return (
-        <Box p={4}>
+        <Box p={{ base: 3, md: 4 }} h="full" display="flex" flexDirection="column">
+            {/* Header */}
+            <Box mb={4}>
+                <Text 
+                    fontSize={{ base: "lg", md: "xl" }} 
+                    fontWeight="bold" 
+                    color={useColorModeValue('gray.700','gray.200')} 
+                    mb={1}
+                >
+                    المحادثات
+                </Text>
+                <Text fontSize="sm" color={useColorModeValue('gray.500','gray.400')}>
+                    {groups?.length || 0} مجموعة متاحة
+                </Text>
+            </Box>
+
             {/* شريط البحث */}
             <InputGroup mb={4}>
                 <InputLeftElement pointerEvents="none">
@@ -94,28 +238,60 @@ const Sidebar = ({ groups, onSelectGroup, activeGroupId }) => {
                     placeholder="ابحث عن محادثة..."
                     borderRadius="full"
                     bg={useColorModeValue('gray.50','gray.700')}
+                    border="1px solid"
+                    borderColor={useColorModeValue('gray.200','gray.600')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    _focus={{
+                        borderColor: 'teal.500',
+                        boxShadow: '0 0 0 1px teal.500'
+                    }}
                 />
             </InputGroup>
 
             {/* جزء المجموعات */}
-            <Text fontSize="md" fontWeight="bold" color={useColorModeValue('gray.600','gray.300')} mb={2}>مجموعات الصفوف</Text>
-            <VStack align="stretch" spacing={1} mb={6}>
-                {filteredGroups.length > 0 ? (
-                    filteredGroups.map((chat) => (
-                        <ChatListItem
-                            key={chat.id}
-                            chat={chat}
-                            type="group"
-                            onSelectChat={() => onSelectGroup(chat.id)}
-                            isActive={activeGroupId === chat.id}
-                        />
-                    ))
-                ) : (
-                    <Text fontSize="sm" color={useColorModeValue('gray.500','gray.400')} textAlign="center" py={4}>لا توجد مجموعات مطابقة.</Text>
-                )}
-            </VStack>
+            <Box flex="1" overflowY="auto">
+                <Text 
+                    fontSize="sm" 
+                    fontWeight="semibold" 
+                    color={useColorModeValue('gray.600','gray.300')} 
+                    mb={3}
+                    px={2}
+                >
+                    مجموعات الصفوف
+                </Text>
+                <VStack align="stretch" spacing={1}>
+                    {filteredGroups.length > 0 ? (
+                        filteredGroups.map((chat, index) => (
+                            <ChatListItem
+                                key={chat.id}
+                                chat={chat}
+                                type="group"
+                                onSelectChat={() => onSelectGroup(chat.id)}
+                                isActive={activeGroupId === chat.id}
+                                index={index}
+                            />
+                        ))
+                    ) : (
+                        <Flex 
+                            align="center" 
+                            justify="center" 
+                            py={8}
+                            flexDirection="column"
+                        >
+                            <IoPeopleOutline size="48px" color={useColorModeValue('gray.300','gray.600')} />
+                            <Text 
+                                fontSize="sm" 
+                                color={useColorModeValue('gray.500','gray.400')} 
+                                textAlign="center" 
+                                mt={2}
+                            >
+                                {searchTerm ? 'لا توجد مجموعات مطابقة' : 'لا توجد مجموعات متاحة'}
+                            </Text>
+                        </Flex>
+                    )}
+                </VStack>
+            </Box>
         </Box>
     );
 };
@@ -126,72 +302,153 @@ const ChatHeader = ({ chatInfo, onBack, isMobile, canTogglePermission, allowStud
 
     return (
         <Flex
-            p={3}
+            p={{ base: 3, md: 4 }}
             borderBottom="1px solid"
             borderColor={useColorModeValue('gray.200','gray.700')}
             align="center"
             bg={useColorModeValue('white','gray.800')}
             boxShadow="sm"
+            minH="70px"
         >
             {isMobile && (
                 <IconButton
                     icon={<IoArrowBackOutline />}
                     onClick={onBack}
                     variant="ghost"
-                    aria-label="Back to chats"
+                    aria-label="العودة للمحادثات"
                     mr={2}
+                    size="md"
+                    _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
                 />
             )}
-            <Avatar size="md" icon={<IoPeopleOutline fontSize="1.5rem" />} bg={useColorModeValue('teal.100','gray.700')} color={useColorModeValue('teal.700','teal.200')} />
-            <Box ml={3} flex="1">
-                <Text fontSize="lg" fontWeight="semibold" noOfLines={1}>{chatInfo.name}</Text>
-                <Text fontSize="sm" color={useColorModeValue('gray.500','gray.400')}>دردشة صفية جماعية</Text>
+            
+            <Avatar 
+                size="md" 
+                icon={<IoPeopleOutline fontSize="1.5rem" />} 
+                bg={useColorModeValue('teal.100','teal.900')} 
+                color={useColorModeValue('teal.700','teal.200')} 
+            />
+            
+            <Box ml={3} flex="1" minW={0}>
+                <Text 
+                    fontSize={{ base: "md", md: "lg" }} 
+                    fontWeight="semibold" 
+                    noOfLines={1}
+                    color={useColorModeValue('gray.800', 'gray.200')}
+                >
+                    {chatInfo.name}
+                </Text>
+                <Text 
+                    fontSize="sm" 
+                    color={useColorModeValue('gray.500','gray.400')}
+                >
+                    دردشة صفية جماعية
+                </Text>
             </Box>
-            {canViewMembers && (
-            <IconButton
-                    icon={<IoPersonOutline />}
-                    onClick={onOpenMembers}
-                variant="ghost"
-                    aria-label="عرض الأعضاء"
-                    mr={1}
+
+            <HStack spacing={2} align="center">
+                {canViewMembers && (
+                    <IconButton
+                        icon={<IoPersonOutline />}
+                        onClick={onOpenMembers}
+                        variant="ghost"
+                        aria-label="عرض الأعضاء"
+                        size="md"
+                        _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                    />
+                )}
+                
+                {canTogglePermission && (
+                    <HStack spacing={2} display={{ base: 'none', md: 'flex' }}>
+                        <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                            سماح الطلاب
+                        </Text>
+                        <Switch 
+                            isChecked={allowStudentSend} 
+                            onChange={onTogglePermission} 
+                            isDisabled={togglingPermission} 
+                            colorScheme="teal" 
+                            size="sm"
+                        />
+                    </HStack>
+                )}
+                
+                <IconButton 
+                    icon={<IoEllipsisVertical />} 
+                    variant="ghost" 
+                    aria-label="خيارات المحادثة"
+                    size="md"
+                    _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
                 />
-            )}
-            {canTogglePermission && (
-                <HStack spacing={2} mr={2}>
-                    <Text fontSize="sm" color="gray.600">سماح الطلاب بالإرسال</Text>
-                    <Switch isChecked={allowStudentSend} onChange={onTogglePermission} isDisabled={togglingPermission} colorScheme="teal" />
-                </HStack>
-            )}
-            <IconButton icon={<IoEllipsisVertical />} variant="ghost" aria-label="Chat options" />
+            </HStack>
         </Flex>
     );
 };
 
 // --- 5. مكون ChatMessage ---
-const ChatMessage = ({ message, onReply }) => {
+const ChatMessage = ({ message, onReply, onEdit, onDelete, isEditing, isDeleting }) => {
     const isMine = message.isMine;
-    const bgColor = isMine ? 'teal.400' : 'white';
-    const textColor = isMine ? 'white' : 'gray.800';
+    const bgColor = isMine ? 
+        'linear-gradient(135deg, #38B2AC, #319795)' : 
+        useColorModeValue('white', 'gray.700');
+    const textColor = isMine ? 'white' : useColorModeValue('gray.800', 'gray.200');
     const alignment = isMine ? 'flex-end' : 'flex-start';
     const hasAttachment = !!message.attachment_url;
     const attachmentType = message.attachment_type;
 
     return (
-        <Flex justify={alignment}>
+        <Flex justify={alignment} mb={4} px={2}>
             <Box
-                bg={bgColor}
+                bg={isMine ? 'transparent' : bgColor}
+                backgroundImage={isMine ? bgColor : 'none'}
                 color={textColor}
-                px={3}
-                py={2}
-                borderRadius="lg"
-                maxWidth="75%"
+                px={5}
+                py={4}
+                borderRadius="2xl"
+                maxWidth="80%"
+                position="relative"
+                boxShadow={isMine ? 
+                    '0 6px 20px rgba(56, 178, 172, 0.25)' : 
+                    useColorModeValue('0 4px 15px rgba(0,0,0,0.08)', '0 4px 15px rgba(0,0,0,0.25)')
+                }
+                _hover={{
+                    transform: 'translateY(-2px)',
+                    boxShadow: isMine ? 
+                        '0 8px 25px rgba(56, 178, 172, 0.35)' : 
+                        useColorModeValue('0 6px 20px rgba(0,0,0,0.12)', '0 6px 20px rgba(0,0,0,0.35)')
+                }}
+                transition="all 0.3s ease"
+                border={isMine ? 'none' : '1px solid'}
+                borderColor={useColorModeValue('gray.100', 'gray.600')}
                 sx={{
-                    // لتقليد الذيل (يعمل بشكل جيد في Chrome و Firefox)
-                    // يمكن تحسينه أكثر أو استخدام CSS خارجي
+                    // تحسين الذيل
                     ...(isMine ? {
-                        borderBottomRightRadius: '2px', // لجعل الذيل يبرز
+                        borderBottomRightRadius: '8px',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: 0,
+                            right: '-10px',
+                            width: 0,
+                            height: 0,
+                            borderLeft: '10px solid #38B2AC',
+                            borderTop: '10px solid transparent',
+                            borderBottom: '10px solid transparent',
+                        }
                     } : {
-                        borderBottomLeftRadius: '2px',
+                        borderBottomLeftRadius: '8px',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: 0,
+                            left: '-10px',
+                            width: 0,
+                            height: 0,
+                            borderRight: '10px solid',
+                            borderRightColor: useColorModeValue('white', 'gray.700'),
+                            borderTop: '10px solid transparent',
+                            borderBottom: '10px solid transparent',
+                        }
                     }),
                 }}
             >
@@ -211,7 +468,15 @@ const ChatMessage = ({ message, onReply }) => {
                 )}
 
                 {message.type === 'text' && (
-                    <Text fontSize="sm">{message.text}</Text>
+                    <Text 
+                        fontSize="md" 
+                        lineHeight="1.6"
+                        fontWeight="400"
+                        wordBreak="break-word"
+                        whiteSpace="pre-wrap"
+                    >
+                        {message.text}
+                    </Text>
                 )}
 
                 {(message.type === 'image' || (hasAttachment && attachmentType === 'image')) && (
@@ -246,11 +511,107 @@ const ChatMessage = ({ message, onReply }) => {
                     </Box>
                 )}
 
-                <Flex justify="space-between" align="center" mt={1}>
-                    <IconButton aria-label="reply" icon={<IoReturnUpBack />} size="xs" variant="ghost" colorScheme={isMine ? 'whiteAlpha' : 'teal'} onClick={() => onReply?.(message)} />
-                    <Text fontSize="xx-small" color={isMine ? 'whiteAlpha.700' : 'gray.600'} textAlign="end">
+                <Flex justify="space-between" align="center" mt={3}>
+                    <HStack spacing={2} opacity={0.8} _groupHover={{ opacity: 1 }} transition="opacity 0.3s">
+                        <IconButton 
+                            aria-label="reply" 
+                            icon={<IoReturnUpBack />} 
+                            size="sm" 
+                            variant="ghost" 
+                            colorScheme={isMine ? 'whiteAlpha' : 'teal'} 
+                            onClick={() => onReply?.(message)}
+                            _hover={{
+                                bg: isMine ? 'whiteAlpha.300' : 'teal.100',
+                                transform: 'scale(1.15)',
+                                boxShadow: 'md'
+                            }}
+                            transition="all 0.2s"
+                            borderRadius="full"
+                        />
+                        {isMine && message.type === 'text' && !hasAttachment && (
+                            <Menu placement="top-start">
+                                <MenuButton
+                                    as={IconButton}
+                                    icon={<IoEllipsisVertical />}
+                                    size="sm"
+                                    variant="ghost"
+                                    colorScheme={isMine ? 'whiteAlpha' : 'teal'}
+                                    aria-label="خيارات الرسالة"
+                                    _hover={{
+                                        bg: isMine ? 'whiteAlpha.300' : 'teal.100',
+                                        transform: 'scale(1.15)',
+                                        boxShadow: 'md'
+                                    }}
+                                    transition="all 0.2s"
+                                    borderRadius="full"
+                                />
+                                <MenuList 
+                                    bg={useColorModeValue('white','gray.800')} 
+                                    borderColor={useColorModeValue('gray.200','gray.600')}
+                                    boxShadow="2xl"
+                                    borderRadius="xl"
+                                    py={3}
+                                    px={2}
+                                    minW="140px"
+                                >
+                                    <MenuItem 
+                                    color="blue.500"
+                                        icon={<IoCreateOutline />} 
+                                        onClick={() => onEdit?.(message)}
+                                        _hover={{ 
+                                            bg: useColorModeValue('blue.50', 'blue.900'),
+                                            color: 'blue.500',
+                                            transform: 'translateX(4px)'
+                                        }}
+                                        borderRadius="lg"
+                                        mx={1}
+                                        py={3}
+                                        transition="all 0.2s"
+                                        fontWeight="medium"
+                                    >
+                                        تعديل الرسالة
+                                    </MenuItem>
+                                    <MenuItem 
+                                        icon={<IoTrashOutline />} 
+                                        onClick={() => onDelete?.(message.id)}
+                                        color="red.500"
+                                        _hover={{ 
+                                            bg: useColorModeValue('red.50', 'red.900'),
+                                            color: 'red.600',
+                                            transform: 'translateX(4px)'
+                                        }}
+                                        borderRadius="lg"
+                                        mx={1}
+                                        py={3}
+                                        transition="all 0.2s"
+                                        fontWeight="medium"
+                                    >
+                                        حذف الرسالة
+                                    </MenuItem>
+                                </MenuList>
+                            </Menu>
+                        )}
+                    </HStack>
+                    <VStack spacing={0} align="end">
+                        <Text 
+                            fontSize="xs" 
+                            color={isMine ? 'whiteAlpha.800' : 'gray.500'} 
+                            textAlign="end"
+                            fontWeight="500"
+                        >
                     {message.timestamp}
                 </Text>
+                        {message.isEdited && (
+                            <Text 
+                                fontSize="xs" 
+                                color={isMine ? 'whiteAlpha.700' : 'gray.400'} 
+                                fontStyle="italic"
+                                fontWeight="400"
+                            >
+                                (تم التعديل)
+                            </Text>
+                        )}
+                    </VStack>
                 </Flex>
             </Box>
         </Flex>
@@ -258,7 +619,7 @@ const ChatMessage = ({ message, onReply }) => {
 };
 
 // --- 6. مكون MessagesContainer ---
-const MessagesContainer = ({ messages, onReply }) => {
+const MessagesContainer = ({ messages, onReply, onEdit, onDelete, isEditing, isDeleting }) => {
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -277,6 +638,10 @@ const MessagesContainer = ({ messages, onReply }) => {
                         key={msg.id}
                         message={msg}
                         onReply={onReply}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        isEditing={isEditing}
+                        isDeleting={isDeleting}
                     />
                 ))
             ) : (
@@ -287,42 +652,67 @@ const MessagesContainer = ({ messages, onReply }) => {
     );
 };
 
-// --- 7. مكون AudioRecorderButton (مبسط) ---
-const AudioRecorderButton = ({ onSendAudio, isRecording, onStartRecording, onStopRecording }) => {
-    // هذا مجرد Placeholder للواجهة
+// --- 7. مكون SendButton ---
+const SendButton = ({ onSend, disabled, isLoading }) => {
     return (
         <IconButton
-            icon={<IoMicOutline />}
-            colorScheme={isRecording ? 'red' : 'gray'}
-            variant="ghost"
-            aria-label="Record audio"
-            size="lg"
-            onClick={isRecording ? onStopRecording : onStartRecording}
+            icon={<IoSend />}
+            colorScheme="teal"
+            variant="solid"
+            aria-label="إرسال الرسالة"
+            size="md"
+            onClick={onSend}
+            isDisabled={disabled}
+            isLoading={isLoading}
             borderRadius="full"
+            bg="linear-gradient(135deg, #38B2AC, #319795)"
+            _hover={{
+                transform: 'scale(1.1)',
+                boxShadow: '0 6px 16px rgba(56, 178, 172, 0.5)',
+                bg: 'linear-gradient(135deg, #319795, #2C7A7B)'
+            }}
+            _active={{
+                transform: 'scale(0.95)'
+            }}
+            _disabled={{
+                bg: 'gray.300',
+                cursor: 'not-allowed',
+                transform: 'none',
+                boxShadow: 'none'
+            }}
+            transition="all 0.2s ease"
+            boxShadow="0 2px 8px rgba(56, 178, 172, 0.3)"
         />
     );
 };
 
 // --- 8. مكون MessageInputBar ---
-const MessageInputBar = ({ onSendMessage, onSendAttachment, disabled, replyTarget, onCancelReply }) => {
+const MessageInputBar = ({ onSendMessage, onSendAttachment, disabled, replyTarget, onCancelReply, isSending, editingMessage, editText, setEditText, onSaveEdit, onCancelEdit }) => {
     const [message, setMessage] = useState('');
-    const [isRecording, setIsRecording] = useState(false);
     const fileInputRef = useRef(null);
     const toast = useToast();
     const [pendingAttachment, setPendingAttachment] = useState(null);
 
     const handleSend = () => {
-        if (disabled) return;
-        if (message.trim()) {
-            onSendMessage(message, 'text');
-            setMessage('');
-        }
+        if (disabled || !message.trim()) return;
+        onSendMessage(message, 'text');
+        setMessage('');
     };
 
     const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (editingMessage) {
+                onSaveEdit(editingMessage.id, editText);
+            } else {
             handleSend();
+            }
         }
+    };
+
+    const handleSaveEdit = () => {
+        if (!editText.trim()) return;
+        onSaveEdit(editingMessage.id, editText);
     };
 
     const handleImageUploadClick = () => {
@@ -338,160 +728,410 @@ const MessageInputBar = ({ onSendMessage, onSendAttachment, disabled, replyTarge
         e.target.value = '';
     };
 
-    const startRecording = () => {
-        setIsRecording(true);
-        toast({
-            title: "بدء التسجيل الصوتي...",
-            status: "info",
-            duration: 1500,
-            isClosable: true,
-        });
-        // هنا تبدأ فعلياً بتسجيل الصوت
-    };
-
-    const stopRecording = () => {
-        setIsRecording(false);
-        // هنا توقف التسجيل وتحصل على ملف الصوت وترسله
-        toast({
-            title: "تم إرسال التسجيل الصوتي.",
-            status: "success",
-            duration: 2000,
-            isClosable: true,
-        });
-        onSendMessage('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 'audio'); // مثال لـ URL صوتي وهمي
-    };
-
 
     return (
-        <Flex p={4} bg={useColorModeValue('gray.100','gray.800')} align="center" borderTop="1px solid" borderColor={useColorModeValue('gray.200','gray.700')}>
-            {/* زر الإيموجي (Placeholder) */}
-            <IconButton
-                icon={<IoHappyOutline />}
-                variant="ghost"
-                aria-label="Emoji"
-                size="lg"
-                color="gray.600"
-                borderRadius="full"
-                mr={2}
-                isDisabled={disabled}
-            />
-
-            {/* قائمة الإرفاق */}
-            <Menu>
-                <MenuButton
-                    as={IconButton}
-                    icon={<IoAttachOutline />}
-                    variant="ghost"
-                    aria-label="Attach file"
-                    size="lg"
-                    color="gray.600"
-                    borderRadius="full"
-                    mr={2}
-                    isDisabled={disabled}
-                />
-                <MenuList bg={useColorModeValue('white','gray.800')}>
-                    <MenuItem icon={<IoImageOutline />} onClick={handleImageUploadClick}>
-                        صورة/ملف
-                    </MenuItem>
-                </MenuList>
-            </Menu>
-            {/* Input مخفي لرفع الملفات */}
-            <input
-                type="file"
-                accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,audio/*,video/*,application/zip,application/x-zip-compressed,application/x-7z-compressed"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-            />
+        <Box>
+            {/* شريط تعديل الرسالة */}
+            {editingMessage && (
+                <Flex 
+                    align="center" 
+                    bg={useColorModeValue('blue.50','blue.900')} 
+                    border="2px solid"
+                    borderColor="blue.300"
+                    px={4} 
+                    py={3} 
+                    borderRadius="xl" 
+                    mx={4}
+                    mb={3}
+                    boxShadow="lg"
+                    position="relative"
+                    _before={{
+                        content: '""',
+                        position: 'absolute',
+                        top: '-8px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: 0,
+                        height: 0,
+                        borderLeft: '8px solid transparent',
+                        borderRight: '8px solid transparent',
+                        borderBottom: '8px solid',
+                        borderBottomColor: 'blue.300'
+                    }}
+                >
+                    <Box flex="1">
+                        <Text fontSize="sm" fontWeight="bold" color={useColorModeValue('blue.700','blue.200')} mb={2}>
+                            ✏️ تعديل الرسالة
+                        </Text>
+                        <Text 
+                            fontSize="sm" 
+                            color={useColorModeValue('blue.600','blue.300')} 
+                            noOfLines={2}
+                            bg={useColorModeValue('white','blue.800')}
+                            p={2}
+                            borderRadius="md"
+                            border="1px solid"
+                            borderColor={useColorModeValue('blue.200','blue.600')}
+                        >
+                            {editingMessage.text}
+                        </Text>
+                    </Box>
+                    <HStack spacing={2} ml={4}>
+                        <IconButton 
+                            aria-label="حفظ التعديل" 
+                            icon={<IoCheckmarkOutline />} 
+                            size="md" 
+                            colorScheme="green" 
+                            variant="solid"
+                            onClick={handleSaveEdit}
+                            isDisabled={!editText.trim()}
+                            borderRadius="full"
+                            _hover={{
+                                transform: 'scale(1.1)',
+                                boxShadow: 'lg'
+                            }}
+                            transition="all 0.2s"
+                        />
+                        <IconButton 
+                            aria-label="إلغاء التعديل" 
+                            icon={<IoCloseOutline />} 
+                            size="md" 
+                            colorScheme="red" 
+                            variant="solid"
+                            onClick={onCancelEdit}
+                            borderRadius="full"
+                            _hover={{
+                                transform: 'scale(1.1)',
+                                boxShadow: 'lg'
+                            }}
+                            transition="all 0.2s"
+                        />
+                    </HStack>
+                </Flex>
+            )}
 
             {/* شريط الرد */}
-            {replyTarget && (
-                <Flex align="center" bg={useColorModeValue('green.50','green.900')} borderLeft="4px solid" borderColor="green.400" px={3} py={2} borderRadius="md" mr={3} mb={2}>
+            {replyTarget && !editingMessage && (
+                <Flex 
+                    align="center" 
+                    bg={useColorModeValue('green.50','green.900')} 
+                    border="2px solid"
+                    borderColor="green.300"
+                    px={4} 
+                    py={3} 
+                    borderRadius="xl" 
+                    mx={4}
+                    mb={3}
+                    boxShadow="lg"
+                    position="relative"
+                    _before={{
+                        content: '""',
+                        position: 'absolute',
+                        top: '-8px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: 0,
+                        height: 0,
+                        borderLeft: '8px solid transparent',
+                        borderRight: '8px solid transparent',
+                        borderBottom: '8px solid',
+                        borderBottomColor: 'green.300'
+                    }}
+                >
                     <Box flex="1">
-                        <Text fontSize="xs" fontWeight="bold" color={useColorModeValue('green.700','green.200')} noOfLines={1}>{replyTarget.sender || 'مستخدم'}</Text>
-                        <Text fontSize="xs" color={useColorModeValue('green.700','green.300')} noOfLines={2}>{replyTarget.text || (replyTarget.attachment_type === 'image' ? 'صورة' : replyTarget.attachment_name || 'مرفق')}</Text>
+                        <Text fontSize="sm" fontWeight="bold" color={useColorModeValue('green.700','green.200')} mb={2}>
+                            💬 الرد على {replyTarget.sender || 'مستخدم'}
+                        </Text>
+                        <Text 
+                            fontSize="sm" 
+                            color={useColorModeValue('green.600','green.300')} 
+                            noOfLines={2}
+                            bg={useColorModeValue('white','green.800')}
+                            p={2}
+                            borderRadius="md"
+                            border="1px solid"
+                            borderColor={useColorModeValue('green.200','green.600')}
+                        >
+                            {replyTarget.text || (replyTarget.attachment_type === 'image' ? 'صورة' : replyTarget.attachment_name || 'مرفق')}
+                        </Text>
                     </Box>
-                    <IconButton aria-label="إلغاء الرد" icon={<IoCloseOutline />} size="sm" variant="ghost" onClick={onCancelReply} />
+                    <IconButton 
+                        aria-label="إلغاء الرد" 
+                        icon={<IoCloseOutline />} 
+                        size="md" 
+                        colorScheme="red" 
+                        variant="solid"
+                        onClick={onCancelReply} 
+                        borderRadius="full"
+                        ml={4}
+                        _hover={{
+                            transform: 'scale(1.1)',
+                            boxShadow: 'lg'
+                        }}
+                        transition="all 0.2s"
+                    />
                 </Flex>
             )}
 
             {/* معاينة المرفق قبل الإرسال */}
             {pendingAttachment && (
-                <Flex align="center" bg={useColorModeValue('gray.50','gray.700')} border="1px solid" borderColor={useColorModeValue('gray.200','gray.600')} px={3} py={2} borderRadius="md" mr={3}>
+                <Flex 
+                    align="center" 
+                    bg={useColorModeValue('purple.50','purple.900')} 
+                    border="2px solid" 
+                    borderColor="purple.300" 
+                    px={4} 
+                    py={3} 
+                    borderRadius="xl" 
+                    mx={4}
+                    mb={3}
+                    boxShadow="lg"
+                    position="relative"
+                    _before={{
+                        content: '""',
+                        position: 'absolute',
+                        top: '-8px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: 0,
+                        height: 0,
+                        borderLeft: '8px solid transparent',
+                        borderRight: '8px solid transparent',
+                        borderBottom: '8px solid',
+                        borderBottomColor: 'purple.300'
+                    }}
+                >
+                    <Box flex="1">
+                        <Text fontSize="sm" fontWeight="bold" color={useColorModeValue('purple.700','purple.200')} mb={2}>
+                            📎 معاينة المرفق
+                        </Text>
+                        <Flex align="center">
                     {pendingAttachment.previewUrl ? (
-                        <Image src={pendingAttachment.previewUrl} alt="preview" boxSize="44px" objectFit="cover" borderRadius="md" mr={3} />
+                        <Image 
+                            src={pendingAttachment.previewUrl} 
+                            alt="preview" 
+                                    boxSize="60px" 
+                            objectFit="cover" 
+                                    borderRadius="lg" 
+                            mr={3} 
+                                    border="2px solid"
+                                    borderColor={useColorModeValue('purple.200','purple.600')}
+                        />
                     ) : (
-                        <Text fontSize="sm" mr={3}>ملف: {pendingAttachment.file.name}</Text>
-                    )}
-                    <IconButton aria-label="إزالة" icon={<IoCloseOutline />} size="sm" variant="ghost" onClick={() => setPendingAttachment(null)} />
-                    <Button ml={2} colorScheme="teal" size="sm" onClick={async () => {
-                        if (!pendingAttachment) return;
-                        try {
-                            await onSendAttachment(pendingAttachment.file, { text: message });
-                            setPendingAttachment(null);
-                            setMessage('');
-                        } catch {
-                            // toast داخل onSendAttachment
-                        }
-                    }}>إرسال</Button>
+                                <Box 
+                                    bg={useColorModeValue('white','purple.800')}
+                                    p={3}
+                                    borderRadius="lg"
+                                    border="2px solid"
+                                    borderColor={useColorModeValue('purple.200','purple.600')}
+                                    mr={3}
+                                >
+                                    <Text fontSize="sm" fontWeight="medium" color={useColorModeValue('purple.600','purple.300')}>
+                                        📄 {pendingAttachment.file.name}
+                                    </Text>
+                                </Box>
+                            )}
+                        </Flex>
+                    </Box>
+                    <HStack spacing={2} ml={4}>
+                    <IconButton 
+                        aria-label="إزالة" 
+                        icon={<IoCloseOutline />} 
+                            size="md" 
+                            colorScheme="red" 
+                            variant="solid"
+                        onClick={() => setPendingAttachment(null)} 
+                            borderRadius="full"
+                            _hover={{
+                                transform: 'scale(1.1)',
+                                boxShadow: 'lg'
+                            }}
+                            transition="all 0.2s"
+                    />
+                    <Button 
+                        colorScheme="teal" 
+                            size="md" 
+                            borderRadius="full"
+                        onClick={async () => {
+                            if (!pendingAttachment) return;
+                            try {
+                                await onSendAttachment(pendingAttachment.file, { text: message });
+                                setPendingAttachment(null);
+                                setMessage('');
+                            } catch {
+                                // toast داخل onSendAttachment
+                            }
+                        }}
+                            _hover={{
+                                transform: 'scale(1.05)',
+                                boxShadow: 'lg'
+                            }}
+                            transition="all 0.2s"
+                    >
+                        إرسال
+                    </Button>
+                    </HStack>
                 </Flex>
             )}
 
-            {/* مربع إدخال الرسالة */}
-            <InputGroup flex="1" bg={useColorModeValue('white','gray.700')} borderRadius="full">
-                <Input
-                    placeholder="اكتب رسالة..."
-                    borderRadius="full"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    pr="4.5rem"
-                    isDisabled={disabled}
+            {/* شريط الإدخال الرئيسي */}
+            <Flex 
+                p={{ base: 3, md: 4 }} 
+                bg={useColorModeValue('white','gray.800')} 
+                align="center" 
+                borderTop="1px solid" 
+                borderColor={useColorModeValue('gray.200','gray.700')}
+                gap={3}
+                boxShadow="0 -4px 12px rgba(0,0,0,0.05)"
+                position="relative"
+                _before={{
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '1px',
+                    bg: 'linear-gradient(90deg, transparent, teal.300, transparent)'
+                }}
+            >
+                {/* قائمة الإرفاق */}
+                <Menu>
+                    <MenuButton
+                        as={IconButton}
+                        icon={<IoAttachOutline />}
+                        variant="ghost"
+                        aria-label="إرفاق ملف"
+                        size="lg"
+                        color="gray.600"
+                        borderRadius="full"
+                        isDisabled={disabled}
+                        _hover={{
+                            bg: useColorModeValue('gray.100', 'gray.700'),
+                            transform: 'scale(1.05)'
+                        }}
+                        transition="all 0.2s"
+                    />
+                    <MenuList bg={useColorModeValue('white','gray.800')} borderColor={useColorModeValue('gray.200','gray.600')}>
+                        <MenuItem 
+                            icon={<IoImageOutline />} 
+                            onClick={handleImageUploadClick}
+                            _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}
+                        >
+                            صورة/ملف
+                        </MenuItem>
+                    </MenuList>
+                </Menu>
+
+                {/* Input مخفي لرفع الملفات */}
+                <input
+                    type="file"
+                    accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,audio/*,video/*,application/zip,application/x-zip-compressed,application/x-7z-compressed"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
                 />
-                <InputRightElement width="4.5rem">
-                    {message.trim() && !pendingAttachment ? (
-                        <IconButton
-                            icon={<IoSend />}
-                            onClick={handleSend}
-                            colorScheme="teal"
-                            aria-label="Send message"
-                            borderRadius="full"
-                            size="md"
-                            isDisabled={disabled}
+
+                {/* مربع إدخال الرسالة */}
+                <InputGroup 
+                    flex="1" 
+                    bg={useColorModeValue('gray.50','gray.700')} 
+                    borderRadius="full"
+                    boxShadow="sm"
+                    _hover={{
+                        boxShadow: 'md'
+                    }}
+                    transition="all 0.2s ease"
+                >
+                    <Input
+                        placeholder={editingMessage ? "عدل الرسالة..." : "اكتب رسالة..."}
+                        borderRadius="full"
+                        value={editingMessage ? editText : message}
+                        onChange={(e) => editingMessage ? setEditText(e.target.value) : setMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        pr="3.5rem"
+                        isDisabled={disabled}
+                        border="none"
+                        bg="transparent"
+                        _focus={{
+                            boxShadow: '0 0 0 2px teal.400',
+                            bg: useColorModeValue('white', 'gray.600')
+                        }}
+                        _hover={{
+                            bg: useColorModeValue('white', 'gray.600')
+                        }}
+                        transition="all 0.2s ease"
+                    />
+                    <InputRightElement width="3.5rem" pr={2}>
+                        <SendButton
+                            onSend={editingMessage ? handleSaveEdit : handleSend}
+                            disabled={disabled || (editingMessage ? !editText.trim() : !message.trim())}
+                            isLoading={isSending}
                         />
-                    ) : (
-                        <AudioRecorderButton
-                            isRecording={isRecording}
-                            onStartRecording={startRecording}
-                            onStopRecording={stopRecording}
-                            isDisabled={disabled}
-                        />
-                    )}
-                </InputRightElement>
-            </InputGroup>
-        </Flex>
+                    </InputRightElement>
+                </InputGroup>
+            </Flex>
+        </Box>
     );
 };
 
 // --- 9. مكون MainChatArea ---
-const MainChatArea = ({ chatInfo, messages, onSendMessage, onBack, isMobile, canTogglePermission, allowStudentSend, onTogglePermission, togglingPermission, inputDisabled, onOpenMembers, canViewMembers, onSendAttachment, replyTarget, onSelectReply }) => {
+const MainChatArea = ({ chatInfo, messages, onSendMessage, onBack, isMobile, canTogglePermission, allowStudentSend, onTogglePermission, togglingPermission, inputDisabled, onOpenMembers, canViewMembers, onSendAttachment, replyTarget, onSelectReply, isSending, onEditMessage, onDeleteMessage, editingMessage, editText, setEditText, onSaveEdit, onCancelEdit, isEditing, isDeleting }) => {
     return (
         <Flex direction="column" h="full">
             {/* Header */}
-            <ChatHeader chatInfo={chatInfo} onBack={onBack} isMobile={isMobile} canTogglePermission={canTogglePermission} allowStudentSend={allowStudentSend} onTogglePermission={onTogglePermission} togglingPermission={togglingPermission} onOpenMembers={onOpenMembers} canViewMembers={canViewMembers} />
+            <ChatHeader 
+                chatInfo={chatInfo} 
+                onBack={onBack} 
+                isMobile={isMobile} 
+                canTogglePermission={canTogglePermission} 
+                allowStudentSend={allowStudentSend} 
+                onTogglePermission={onTogglePermission} 
+                togglingPermission={togglingPermission} 
+                onOpenMembers={onOpenMembers} 
+                canViewMembers={canViewMembers} 
+            />
 
             {/* Messages Container */}
-            <MessagesContainer messages={messages} onReply={onSelectReply} />
+            <MessagesContainer 
+                messages={messages} 
+                onReply={onSelectReply} 
+                onEdit={onEditMessage}
+                onDelete={onDeleteMessage}
+                isEditing={isEditing}
+                isDeleting={isDeleting}
+            />
 
             {/* Notice: sending disabled for students */}
             {inputDisabled && (
-                <Flex px={4} py={2} bg="yellow.50" borderTop="1px solid" borderColor="yellow.200" align="center">
-                    <Text fontSize="sm" color="yellow.700">تم إيقاف إرسال الرسائل للطلاب من قبل المعلم.</Text>
+                <Flex 
+                    px={4} 
+                    py={2} 
+                    bg="yellow.50" 
+                    borderTop="1px solid" 
+                    borderColor="yellow.200" 
+                    align="center"
+                    justify="center"
+                >
+                    <Text fontSize="sm" color="yellow.700" textAlign="center">
+                        تم إيقاف إرسال الرسائل للطلاب من قبل المعلم.
+                    </Text>
                 </Flex>
             )}
 
             {/* Message Input Bar */}
-            <MessageInputBar onSendMessage={onSendMessage} onSendAttachment={onSendAttachment} disabled={inputDisabled} replyTarget={replyTarget} onCancelReply={() => onSelectReply(null)} />
+            <MessageInputBar 
+                onSendMessage={onSendMessage} 
+                onSendAttachment={onSendAttachment} 
+                disabled={inputDisabled} 
+                replyTarget={replyTarget} 
+                onCancelReply={() => onSelectReply(null)}
+                isSending={isSending}
+                editingMessage={editingMessage}
+                editText={editText}
+                setEditText={setEditText}
+                onSaveEdit={onSaveEdit}
+                onCancelEdit={onCancelEdit}
+            />
         </Flex>
     );
 };
@@ -515,6 +1155,10 @@ const TeacherChat = () => {
     const [members, setMembers] = useState([]);
     const [membersLoading, setMembersLoading] = useState(false);
     const [replyTarget, setReplyTarget] = useState(null);
+    const [editingMessage, setEditingMessage] = useState(null);
+    const [editText, setEditText] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const socketRef = useRef(null);
 
     const authHeader = useMemo(() => {
@@ -806,53 +1450,161 @@ const TeacherChat = () => {
         }
     };
 
+    // دالة تعديل الرسالة
+    const handleEditMessage = async (messageId, newText) => {
+        if (!messageId || !newText.trim()) return;
+        try {
+            setIsEditing(true);
+            await baseUrl.put(`/api/chat/messages/${messageId}`, { text: newText }, {
+                headers: authHeader ? { Authorization: authHeader } : {},
+            });
+            
+            // تحديث الرسالة في المحادثة المحلية
+            setMessagesByGroup(prev => {
+                const updated = { ...prev };
+                Object.keys(updated).forEach(groupId => {
+                    updated[groupId] = updated[groupId].map(msg => 
+                        msg.id === messageId ? { ...msg, text: newText, isEdited: true } : msg
+                    );
+                });
+                return updated;
+            });
+            
+            setEditingMessage(null);
+            setEditText('');
+            toast({ title: 'تم تعديل الرسالة بنجاح', status: 'success', duration: 2000, isClosable: true });
+        } catch (e) {
+            toast({ title: 'تعذر تعديل الرسالة', status: 'error', duration: 2500, isClosable: true });
+        } finally {
+            setIsEditing(false);
+        }
+    };
+
+    // دالة حذف الرسالة
+    const handleDeleteMessage = async (messageId) => {
+        if (!messageId) return;
+        try {
+            setIsDeleting(true);
+            await baseUrl.delete(`/api/chat/messages/${messageId}`, {
+                headers: authHeader ? { Authorization: authHeader } : {},
+            });
+            
+            // إزالة الرسالة من المحادثة المحلية
+            setMessagesByGroup(prev => {
+                const updated = { ...prev };
+                Object.keys(updated).forEach(groupId => {
+                    updated[groupId] = updated[groupId].filter(msg => msg.id !== messageId);
+                });
+                return updated;
+            });
+            
+            toast({ title: 'تم حذف الرسالة بنجاح', status: 'success', duration: 2000, isClosable: true });
+        } catch (e) {
+            toast({ title: 'تعذر حذف الرسالة', status: 'error', duration: 2500, isClosable: true });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // دالة بدء تعديل الرسالة
+    const startEditMessage = (message) => {
+        setEditingMessage(message);
+        setEditText(message.text);
+    };
+
+    // دالة إلغاء التعديل
+    const cancelEdit = () => {
+        setEditingMessage(null);
+        setEditText('');
+    };
+
 
     return (
-        <Flex h="calc(100vh - 80px)" mt="30px" bg={useColorModeValue('gray.100','gray.900')} className='chat-page'>
-            {/* Sidebar */}
-            {(showSidebar || !isMobile) && (
+        <Box 
+            h="calc(100vh - 80px)" 
+            mt={{ base: "20px", md: "30px" }} 
+            bg={useColorModeValue('gray.50','gray.900')} 
+            className='chat-page'
+            borderRadius={{ base: "none", md: "lg" }}
+            overflow="hidden"
+            boxShadow={{ base: "none", md: "xl" }}
+        >
+            <Flex h="full" direction={{ base: "column", md: "row" }}>
+                {/* Sidebar */}
                 <Box
-                    w={{ base: 'full', md: '350px' }}
+                    w={{ base: '100%', md: '350px', lg: '380px' }}
+                    h={{ base: showSidebar ? '50%' : '0', md: '100%' }}
                     bg={useColorModeValue('white','gray.800')}
                     borderEnd={{ base: 'none', md: '1px solid' }}
                     borderColor={useColorModeValue('gray.200','gray.700')}
                     overflowY="auto"
-                    h="full"
-                    pb={4}
-                    display={isMobile && !showSidebar ? 'none' : 'block'}
+                    transition="all 0.3s ease"
+                    transform={{ base: showSidebar ? 'translateY(0)' : 'translateY(-100%)', md: 'translateY(0)' }}
+                    position={{ base: 'absolute', md: 'relative' }}
+                    zIndex={{ base: 10, md: 1 }}
+                    display={{ base: showSidebar ? 'block' : 'none', md: 'block' }}
                 >
                     {isLoadingGroups ? (
                         <Flex align="center" justify="center" h="full" py={6}>
-                            <Spinner color="teal.500" />
+                            <VStack spacing={4}>
+                                <Spinner color="teal.500" size="lg" />
+                                <Text color="gray.500" fontSize="sm">جاري تحميل المجموعات...</Text>
+                            </VStack>
                         </Flex>
                     ) : (
-                    <Sidebar
+                        <Sidebar
                             groups={groups}
                             onSelectGroup={handleChatSelect}
                             activeGroupId={activeGroupId}
                         />
                     )}
                 </Box>
-            )}
 
-            {/* Main Chat Area */}
-            {(!showSidebar || !isMobile) && (
+                {/* Main Chat Area */}
                 <Box
                     flex="1"
                     h="full"
                     bg={useColorModeValue('white','gray.800')}
                     style={useChatBackground()}
-                    display={isMobile && showSidebar ? 'none' : 'block'}
+                    position="relative"
+                    display={{ base: !showSidebar ? 'block' : 'none', md: 'block' }}
                 >
                     {!activeGroupId ? (
-                        <Flex h="full" align="center" justify="center" direction="column">
-                            <Text fontSize="2xl" color="gray.400">اختر محادثة للبدء</Text>
-                            <Text fontSize="md" color="gray.400" mt={2}>يمكنك اختيار مجموعة لبدء محادثة.</Text>
+                        <Flex 
+                            h="full" 
+                            align="center" 
+                            justify="center" 
+                            direction="column"
+                            px={6}
+                            textAlign="center"
+                        >
+                            <Box
+                                w="120px"
+                                h="120px"
+                                bg={useColorModeValue('teal.50','teal.900')}
+                                borderRadius="full"
+                                display="flex"
+                                align="center"
+                                justify="center"
+                                mb={6}
+                            >
+                                <IoPeopleOutline size="48px" color={useColorModeValue('teal.500','teal.300')} />
+                            </Box>
+                            <Text fontSize={{ base: "xl", md: "2xl" }} color={useColorModeValue('gray.600','gray.300')} fontWeight="semibold">
+                                اختر محادثة للبدء
+                            </Text>
+                            <Text fontSize={{ base: "sm", md: "md" }} color={useColorModeValue('gray.500','gray.400')} mt={2}>
+                                يمكنك اختيار مجموعة لبدء محادثة.
+                            </Text>
                         </Flex>
                     ) : isLoadingHistory && !messagesByGroup[activeGroupId]?.length ? (
                         <Flex h="full" align="center" justify="center" direction="column">
-                            <Spinner color="teal.500" />
-                            <Text fontSize="md" color="gray.500" mt={3}>جاري تحميل الرسائل...</Text>
+                            <VStack spacing={4}>
+                                <Spinner color="teal.500" size="lg" />
+                                <Text fontSize="md" color={useColorModeValue('gray.500','gray.400')}>
+                                    جاري تحميل الرسائل...
+                                </Text>
+                            </VStack>
                         </Flex>
                     ) : (
                         <MainChatArea
@@ -871,10 +1623,20 @@ const TeacherChat = () => {
                             onSendAttachment={onSendAttachment}
                             replyTarget={replyTarget}
                             onSelectReply={setReplyTarget}
+                            isSending={isSending}
+                            onEditMessage={startEditMessage}
+                            onDeleteMessage={handleDeleteMessage}
+                            editingMessage={editingMessage}
+                            editText={editText}
+                            setEditText={setEditText}
+                            onSaveEdit={handleEditMessage}
+                            onCancelEdit={cancelEdit}
+                            isEditing={isEditing}
+                            isDeleting={isDeleting}
                         />
                     )}
                 </Box>
-            )}
+            </Flex>
             {canViewMembers && (
                 <Drawer isOpen={isMembersOpen} placement="right" onClose={() => setIsMembersOpen(false)} size="sm">
                     <DrawerOverlay />
@@ -906,7 +1668,7 @@ const TeacherChat = () => {
                     </DrawerContent>
                 </Drawer>
             )}
-        </Flex>
+        </Box>
     );
 };
 

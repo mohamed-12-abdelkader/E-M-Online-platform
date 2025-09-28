@@ -1,7 +1,8 @@
 import React from "react";
 import {
   Box, Flex, HStack, VStack, Text, Badge, Icon, IconButton, Button, Collapse, Divider, Tooltip, useColorModeValue,
-  Stack
+  Stack, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton,
+  FormControl, FormLabel, Input, Textarea
 } from "@chakra-ui/react";
 import {
   FaPlayCircle, FaLock, FaEdit, FaTrash, FaPlus, FaGraduationCap, FaRegPaperPlane, FaVideo, FaFilePdf, FaLightbulb, FaClock, FaBookOpen, FaStar,
@@ -57,6 +58,12 @@ const LectureCard = ({
     recent: 0,
     loading: false
   });
+  const [essayExam, setEssayExam] = React.useState(null);
+  const [essayExamLoading, setEssayExamLoading] = React.useState(false);
+  const [essayExamModal, setEssayExamModal] = React.useState({ isOpen: false, type: 'add', data: null });
+  const [essayExamModalLoading, setEssayExamModalLoading] = React.useState(false);
+  const [essayExamSubmissions, setEssayExamSubmissions] = React.useState([]);
+  const [submissionsLoading, setSubmissionsLoading] = React.useState(false);
 console.log(lecture)
   const handleToggleVisibility = async (e) => {
     e.stopPropagation();
@@ -128,6 +135,108 @@ console.log(lecture)
   React.useEffect(() => {
     fetchCommentsStats();
   }, [lecture.id]);
+
+  // دالة جلب الامتحانات المقالية للمحاضرة
+  const fetchEssayExam = async () => {
+    if (!lecture.id) return;
+    
+    setEssayExamLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await baseUrl.get(`/api/essay-exams/lectures/${lecture.id}/exams`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // جلب أول امتحان إذا وجد (يمكن تعديل هذا لاحقاً لدعم عدة امتحانات)
+      setEssayExam(response.data.exams && response.data.exams.length > 0 ? response.data.exams[0] : null);
+    } catch (error) {
+      console.log("Error fetching essay exam:", error);
+      setEssayExam(null);
+    } finally {
+      setEssayExamLoading(false);
+    }
+  };
+
+  // دالة جلب الطلاب الذين حلوا الامتحان المقالي (للمعلمين)
+  const fetchEssayExamSubmissions = async (examId) => {
+    setSubmissionsLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await baseUrl.get(`/api/essay-exams/exams/${examId}/students`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setEssayExamSubmissions(response.data.students || []);
+    } catch (error) {
+      console.log("Error fetching essay exam submissions:", error);
+      setEssayExamSubmissions([]);
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
+
+  // دالة إنشاء امتحان مقالي
+  const createEssayExam = async (examData) => {
+    setEssayExamModalLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await baseUrl.post(`/api/essay-exams/lectures/${lecture.id}/exams`, {
+        title: examData.title,
+        description: examData.description,
+        is_visible: examData.is_visible !== undefined ? examData.is_visible : true
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setEssayExam(response.data.exam);
+      return response.data.exam;
+    } catch (error) {
+      console.error("Error creating essay exam:", error);
+      throw error;
+    } finally {
+      setEssayExamModalLoading(false);
+    }
+  };
+
+  // دالة تحديث امتحان مقالي
+  const updateEssayExam = async (examId, examData) => {
+    setEssayExamModalLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await baseUrl.put(`/api/essay-exams/exams/${examId}`, {
+        title: examData.title,
+        description: examData.description,
+        is_visible: examData.is_visible !== undefined ? examData.is_visible : true
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setEssayExam(response.data.exam);
+      return response.data.exam;
+    } catch (error) {
+      console.error("Error updating essay exam:", error);
+      throw error;
+    } finally {
+      setEssayExamModalLoading(false);
+    }
+  };
+
+  // دالة حذف امتحان مقالي
+  const deleteEssayExam = async (examId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await baseUrl.delete(`/api/essay-exams/exams/${examId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setEssayExam(null);
+    } catch (error) {
+      console.error("Error deleting essay exam:", error);
+      throw error;
+    }
+  };
+
+  // جلب الامتحان المقالي عند فتح المحاضرة
+  React.useEffect(() => {
+    if (isExpanded && !essayExam && !essayExamLoading) {
+      fetchEssayExam();
+    }
+  }, [isExpanded, lecture.id]);
 
   // دالة تعديل امتحان المحاضرة
   const handleEditLectureExam = async (examData) => {
@@ -373,29 +482,153 @@ console.log(lecture)
           <VStack align="start" spacing={6} divider={<Divider borderColor={dividerColor} />}> 
             {/* وصف المحاضرة */}
           
+            {/* الامتحانات المقالية */}
+            <Box w="full">
+              <HStack spacing={2} mb={3} display={{ base: 'none', md: 'flex' }}>
+                <Icon as={FaRegPaperPlane} color="purple.400" boxSize={5} />
+                <Text fontWeight="bold" color={headingColor}>الامتحانات المقالية</Text>
+              </HStack>
+              <Stack direction={{ base: 'column', md: 'row' }} spacing={2} mb={3} display={{ base: 'flex', md: 'none' }}>
+                <Icon as={FaRegPaperPlane} color="purple.400" boxSize={5} />
+                <Text fontWeight="bold" color={headingColor}>الامتحانات المقالية</Text>
+              </Stack>
+              
+              {essayExamLoading ? (
+                <Text color={subTextColor} fontSize="sm">جاري تحميل الامتحان...</Text>
+              ) : essayExam ? (
+                <VStack align="start" spacing={2} w="full">
+                  <Flex align="center" p={3} bg={useColorModeValue('purple.50','purple.600')} borderRadius="md" w="full" _hover={{ bg: useColorModeValue('purple.100','purple.500'), boxShadow: 'sm' }}>
+                    <Icon as={FaRegPaperPlane} color="purple.400" boxSize={4} mr={3} />
+                    <VStack align="start" spacing={1} flex={1}>
+                      <Text fontSize="sm" fontWeight="medium">{essayExam.title}</Text>
+                      {essayExam.description && (
+                        <Text fontSize="xs" color={subTextColor}>{essayExam.description}</Text>
+                      )}
+                      <Text fontSize="xs" color="purple.600">
+                        {essayExam.questions_count || 0} سؤال
+                      </Text>
+                    </VStack>
+                    <HStack spacing={1}>
+                      {isTeacher ? (
+                        <>
+                          <Tooltip label="عرض التسليمات">
+                            <IconButton 
+                              size="xs" 
+                              icon={<Icon as={FaUsers} />} 
+                              colorScheme="blue" 
+                              variant="ghost" 
+                              onClick={() => fetchEssayExamSubmissions(essayExam.id)}
+                            />
+                          </Tooltip>
+                          <Tooltip label="تعديل الامتحان">
+                            <IconButton 
+                              size="xs" 
+                              icon={<Icon as={FaEdit} />} 
+                              colorScheme="green" 
+                              variant="ghost" 
+                              onClick={() => setEssayExamModal({ isOpen: true, type: 'edit', data: essayExam })}
+                            />
+                          </Tooltip>
+                          <Tooltip label="حذف الامتحان">
+                            <IconButton 
+                              size="xs" 
+                              icon={<Icon as={FaTrash} />} 
+                              colorScheme="red" 
+                              variant="ghost" 
+                              onClick={() => deleteEssayExam(essayExam.id)}
+                            />
+                          </Tooltip>
+                        </>
+                      ) : (
+                        <Link to={`/essay-exam/${essayExam.id}`}>
+                          <Button 
+                            size="xs" 
+                            variant="ghost" 
+                            colorScheme="purple" 
+                            _hover={{ bg: 'purple.50' }}
+                          >
+                            ابدأ الامتحان
+                          </Button>
+                        </Link>
+                      )}
+                    </HStack>
+                  </Flex>
+                  
+                  {/* عرض التسليمات للمعلمين */}
+                  {isTeacher && essayExamSubmissions.length > 0 && (
+                    <Box w="full" mt={2}>
+                      <Text fontSize="sm" fontWeight="bold" color={headingColor} mb={2}>
+                        التسليمات ({essayExamSubmissions.length})
+                      </Text>
+                      <VStack spacing={2} align="start" w="full">
+                        {essayExamSubmissions.map((student) => (
+                          <Flex key={student.student_id} align="center" p={2} bg={useColorModeValue('gray.50','gray.600')} borderRadius="md" w="full">
+                            <VStack align="start" spacing={0} flex={1}>
+                              <Text fontSize="sm" fontWeight="medium">{student.student_name}</Text>
+                              <Text fontSize="xs" color={subTextColor}>
+                                {student.student_email}
+                              </Text>
+                              <Text fontSize="xs" color={subTextColor}>
+                                {student.answered_questions}/{student.total_questions} أسئلة
+                              </Text>
+                            </VStack>
+                            <HStack spacing={1}>
+                              <Badge colorScheme={student.graded_at ? "green" : "yellow"}>
+                                {student.graded_at ? "مقيم" : "في الانتظار"}
+                              </Badge>
+                              {student.graded_at && (
+                                <Text fontSize="xs" color={subTextColor}>
+                                  {student.total_grade}/{student.max_grade}
+                                </Text>
+                              )}
+                            </HStack>
+                          </Flex>
+                        ))}
+                      </VStack>
+              </Box>
+                  )}
+                </VStack>
+              ) : (
+                <Text color={subTextColor} fontSize="sm">لا يوجد امتحان مقالي بعد.</Text>
+              )}
+              
+              {isTeacher && !essayExam && (
+                <Button 
+                  size="sm" 
+                  colorScheme="purple" 
+                  variant="outline" 
+                  leftIcon={<Icon as={FaPlus} />} 
+                  mt={2} 
+                  onClick={() => setEssayExamModal({ isOpen: true, type: 'add', data: null })}
+                >
+                  إضافة امتحان مقالي
+                </Button>
+              )}
+            </Box>
+
             {/* قسم الامتحانات */}
             <Box w="full">
               <HStack spacing={2} mb={2} display={{ base: 'none', md: 'flex' }}>
                 <Icon as={FaGraduationCap} color="green.500" boxSize={5} />
                 <Text fontWeight="bold" color={headingColor}>امتحان المحاضرة</Text>
-              </HStack>
+            </HStack>
               <Stack direction={{ base: 'column', md: 'row' }} spacing={2} mb={2} display={{ base: 'flex', md: 'none' }}>
                 <Icon as={FaGraduationCap} color="green.500" boxSize={5} />
                 <Text fontWeight="bold" color={headingColor}>امتحان المحاضرة</Text>
               </Stack>
               
-              {/* عرض الامتحان إذا وجد */}
-              {lecture.exam && (
+            {/* عرض الامتحان إذا وجد */}
+            {lecture.exam && (
                 <HStack spacing={3} align="center" w="full" mb={2}>
-                  <Box flex={1}>
-                    <Text fontWeight="medium">{lecture.exam.title}</Text>
-                    <VStack spacing={2} mt={2} fontSize="sm" color={subTextColor} align="start">
-                     
-                       
-                      
-                       
-                    </VStack>
-                  </Box>
+                <Box flex={1}>
+                  <Text fontWeight="medium">{lecture.exam.title}</Text>
+                  <VStack spacing={2} mt={2} fontSize="sm" color={subTextColor} align="start">
+                 
+                   
+                  
+                   
+                  </VStack>
+                </Box>
                 <HStack spacing={{ base: 1, sm: 2 }} flexWrap="wrap">
                   <Link to={`/ComprehensiveExam/${lecture.exam.id}`} style={{ textDecoration: 'none', width: '100%', minWidth: { base: '120px', sm: '140px' } }}>
                     <Button
@@ -492,7 +725,7 @@ console.log(lecture)
                   )}
                 </HStack>
               </HStack>
-              )}
+            )}
               
               {/* زر إضافة امتحان إذا لم يوجد امتحان */}
               {!lecture.exam && !lectureExam && isTeacher && (
@@ -705,7 +938,143 @@ console.log(lecture)
           <Text color="red.500" fontWeight="bold" fontSize="md">يجب حل امتحانات المحاضرات السابقة لفتح هذه المحاضرة</Text>
         </Box>
       )}
+
+      {/* مودال إنشاء/تعديل الامتحان المقالي */}
+      <EssayExamModal
+        isOpen={essayExamModal.isOpen}
+        onClose={() => setEssayExamModal({ isOpen: false, type: 'add', data: null })}
+        type={essayExamModal.type}
+        data={essayExamModal.data}
+        onSubmit={essayExamModal.type === 'add' ? createEssayExam : updateEssayExam}
+        loading={essayExamModalLoading}
+      />
     </Box>
+  );
+};
+
+// مكون مودال الامتحان المقالي
+const EssayExamModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
+  const [formData, setFormData] = React.useState({
+    title: data?.title || '',
+    description: data?.description || '',
+    is_visible: data?.is_visible !== undefined ? data.is_visible : true
+  });
+
+  React.useEffect(() => {
+    if (data) {
+      setFormData({
+        title: data.title || '',
+        description: data.description || '',
+        is_visible: data.is_visible !== undefined ? data.is_visible : true
+      });
+    } else {
+      setFormData({
+        title: '',
+        description: '',
+        is_visible: true
+      });
+    }
+  }, [data, isOpen]);
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (type === 'edit' && data?.id) {
+        await onSubmit(data.id, formData);
+      } else {
+        await onSubmit(formData);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error submitting essay exam:', error);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} size="2xl" closeOnOverlayClick={!loading}>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>
+          {type === 'add' ? 'إنشاء امتحان مقالي' : 'تعديل الامتحان المقالي'}
+        </ModalHeader>
+        <ModalCloseButton isDisabled={loading} />
+        <form onSubmit={handleSubmit}>
+          <ModalBody>
+            <VStack spacing={6} align="stretch">
+              {/* عنوان الامتحان */}
+              <FormControl isRequired>
+                <FormLabel>عنوان الامتحان</FormLabel>
+                <Input
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="أدخل عنوان الامتحان"
+                  isDisabled={loading}
+                />
+              </FormControl>
+
+              {/* وصف الامتحان */}
+              <FormControl>
+                <FormLabel>وصف الامتحان (اختياري)</FormLabel>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="أدخل وصف الامتحان"
+                  rows={3}
+                  isDisabled={loading}
+                />
+              </FormControl>
+
+              {/* إظهار/إخفاء الامتحان */}
+              <FormControl>
+                <HStack spacing={4}>
+                  <FormLabel mb={0}>إظهار الامتحان للطلاب</FormLabel>
+                  <Button
+                    size="sm"
+                    colorScheme={formData.is_visible ? "green" : "gray"}
+                    variant={formData.is_visible ? "solid" : "outline"}
+                    onClick={() => setFormData({ ...formData, is_visible: !formData.is_visible })}
+                    isDisabled={loading}
+                  >
+                    {formData.is_visible ? "ظاهر" : "مخفي"}
+                  </Button>
+                </HStack>
+              </FormControl>
+
+              {/* ملاحظة حول الأسئلة */}
+              <Box p={4} bg={useColorModeValue('blue.50', 'blue.900')} borderRadius="md" border="1px solid" borderColor="blue.200">
+                <HStack spacing={3}>
+                  <Icon as={FaLightbulb} color="blue.500" boxSize={5} />
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="sm" fontWeight="medium" color="blue.700">
+                      إدارة الأسئلة
+                    </Text>
+                    <Text fontSize="xs" color="blue.600">
+                      يمكنك إضافة وإدارة أسئلة الامتحان بعد إنشاء الامتحان من خلال صفحة إدارة الامتحان
+                    </Text>
+                  </VStack>
+                </HStack>
+              </Box>
+            </VStack>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onClose} isDisabled={loading}>
+              إلغاء
+            </Button>
+            <Button
+              colorScheme="purple"
+              type="submit"
+              isLoading={loading}
+              loadingText={type === 'add' ? 'جاري الإنشاء...' : 'جاري التحديث...'}
+              isDisabled={loading}
+            >
+              {type === 'add' ? 'إنشاء الامتحان' : 'تحديث الامتحان'}
+            </Button>
+          </ModalFooter>
+        </form>
+      </ModalContent>
+    </Modal>
   );
 };
 

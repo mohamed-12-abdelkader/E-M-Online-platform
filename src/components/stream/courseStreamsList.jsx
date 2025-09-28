@@ -159,6 +159,9 @@ const CourseStreamsList = ({ courseId }) => {
                 <Text fontSize="md" fontWeight="bold">
                   {stream.title}
                 </Text>
+                <Text>
+                  {stream.id}
+                </Text>
                 <Badge
                   mt={1}
                   colorScheme={statusColor[stream.status]}

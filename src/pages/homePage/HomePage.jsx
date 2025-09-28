@@ -36,14 +36,17 @@ import {
   FaLightbulb,
   FaGift,
   FaClock,
+  FaHome,
+  FaUser,
 } from "react-icons/fa";
 import { FiExternalLink } from "react-icons/fi";
 import MyLecture from "../leacter/MyLecture";
 import MyTeacher from "../myTeacher/MyTeacher";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import UserType from "../../Hooks/auth/userType";
 import baseUrl from "../../api/baseUrl";
+import BottomNavItems from "../../components/Footer/BottomNavItems";
 
 const MotionBox = motion(Box);
 const MotionCard = motion(Card);
@@ -56,6 +59,8 @@ const HomePage = () => {
   const quickActionsDisclosure = useDisclosure({ defaultIsOpen: false });
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [userData, isAdmin, isTeacher, student] = UserType();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // إشعارات مسابقات/دوريات من الـ API
   const [competitionNotifications, setCompetitionNotifications] = useState([]);
@@ -89,6 +94,9 @@ const HomePage = () => {
         type: n.type,
         urgent: n.type === 'league',
         itemId: n.item_id,
+        imageUrl: n.image_url,
+        gradeId: n.grade_id,
+        gradeName: n.grade_name,
       }));
       setCompetitionNotifications(mapped);
     } catch (e) {
@@ -164,6 +172,16 @@ const HomePage = () => {
     onOpen();
   };
 
+  const handleNotificationAction = (notification) => {
+    if (notification.type === 'league') {
+      // Navigate to leagues page using React Router
+      navigate('/leagues');
+    } else if (notification.type === 'competition') {
+      // Navigate to competitions page using React Router
+      navigate('/competitions');
+    }
+  };
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -196,12 +214,25 @@ const HomePage = () => {
   const headingSize = useBreakpointValue({ base: "lg", md: "xl", lg: "2xl" });
   const subHeadingSize = useBreakpointValue({ base: "sm", md: "md", lg: "lg" });
 
+  const bottomNavItems = [
+    { label: "الرئيسية", href: "/home", icon: FaHome },
+    { label: "محاضرين", href: "/teachers", icon: FaChalkboardTeacher },
+    { label: "كورساتي", href: "/my_courses", icon: FaBookOpen },
+    { label: "سوشيال", href: "/social", icon: FaRocket },
+    { label: "حسابي", href: "/profile", icon: FaUser },
+  ];
+
+  const isActivePath = (href) => {
+    return location.pathname === href || location.pathname.startsWith(href + "/");
+  };
+
   return (
     <Box 
       width="100%" 
       minHeight="100vh" 
       bg={bgColor}
       py={{ base: 4, md: 6, lg: 8 }}
+      pb={{ base: "96px", md: 6, lg: 8 }}
       px={{ base: 4, md: 6, lg: 8 }}
     >
              {/* Header Section & Competition Notifications - الترحيب وإشعارات المسابقات */}
@@ -372,30 +403,73 @@ const HomePage = () => {
                         _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
                         transition="all 0.2s"
                         onClick={() => handleAnnouncementClick(notification)}
+                        borderLeft={notification.urgent ? "4px solid" : "4px solid transparent"}
+                        borderLeftColor={notification.urgent ? "red.500" : "transparent"}
                       >
                         <VStack spacing={3} align="stretch">
-                          <HStack justify="space-between" align="start">
-                            <VStack align="start" spacing={1} flex={1}>
-                              <HStack spacing={2}>
-                                <Icon 
-                                  as={notification.urgent ? FaFire : FaGift} 
-                                  color={notification.urgent ? "red.500" : "orange.500"} 
-                                  boxSize={4}
+                          <HStack justify="space-between" align="start" spacing={3}>
+                            {/* Image or Icon */}
+                            <Box
+                              w="60px"
+                              h="60px"
+                              borderRadius="xl"
+                              overflow="hidden"
+                              flexShrink={0}
+                              bg={notification.type === 'league' ? 'red.50' : 'orange.50'}
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              {notification.imageUrl ? (
+                                <img 
+                                  src={notification.imageUrl} 
+                                  alt={notification.title}
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
-                                <Text fontWeight="bold" fontSize="sm" color="gray.800">
-                                  {notification.title}
-                                </Text>
+                              ) : (
+                                <Icon 
+                                  as={notification.type === 'league' ? FaTrophy : FaGift} 
+                                  color={notification.type === 'league' ? "red.500" : "orange.500"} 
+                                  boxSize={6}
+                                />
+                              )}
+                            </Box>
+
+                            <VStack align="start" spacing={2} flex={1}>
+                              <HStack spacing={2} w="full" justify="space-between">
+                                <HStack spacing={2}>
+                                  <Icon 
+                                    as={notification.type === 'league' ? FaTrophy : FaGift} 
+                                    color={notification.type === 'league' ? "red.500" : "orange.500"} 
+                                    boxSize={4}
+                                  />
+                                  <Text fontWeight="bold" fontSize="sm" color="gray.800">
+                                    {notification.title}
+                                  </Text>
+                                </HStack>
+                                
+                                {notification.urgent && (
+                                  <Badge colorScheme="red" variant="solid" size="sm" borderRadius="full">
+                                    عاجل
+                                  </Badge>
+                                )}
                               </HStack>
-                              <Text fontSize="xs" color="gray.600" noOfLines={2}>
+                              
+                              <Text fontSize="xs" color="gray.600" noOfLines={2} lineHeight="1.4">
                                 {notification.message}
                               </Text>
+                              
+                              {notification.gradeName && (
+                                <Badge 
+                                  colorScheme={notification.type === 'league' ? "red" : "orange"} 
+                                  variant="subtle" 
+                                  size="sm"
+                                  borderRadius="full"
+                                >
+                                  {notification.gradeName}
+                                </Badge>
+                              )}
                             </VStack>
-                            
-                            {notification.urgent && (
-                              <Badge colorScheme="red" variant="solid" size="sm">
-                                عاجل
-                              </Badge>
-                            )}
                           </HStack>
                           
                           <HStack justify="space-between" fontSize="xs" color="gray.500">
@@ -405,12 +479,19 @@ const HomePage = () => {
                             </HStack>
                             <Button
                               size="xs"
-                              colorScheme="blue"
-                              variant="ghost"
+                              colorScheme={notification.type === 'league' ? "red" : "orange"}
+                              variant="solid"
                               borderRadius="full"
-                              _hover={{ bg: "blue.50" }}
+                              _hover={{ 
+                                bg: notification.type === 'league' ? "red.600" : "orange.600",
+                                transform: "scale(1.05)"
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAnnouncementClick(notification);
+                              }}
                             >
-                              عرض التفاصيل
+                              {notification.type === 'league' ? 'عرض الدوري' : 'عرض المسابقة'}
                             </Button>
                           </HStack>
                         </VStack>
@@ -494,64 +575,66 @@ const HomePage = () => {
               
           <Collapse in={isDesktop || quickActionsDisclosure.isOpen} animateOpacity style={{ overflow: 'hidden' }}>
             <Box p={6}>
-                  <div 
-              className="flex flex-wrap justify-center"
-                  >
+                  <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {mainLinks.map((link, index) => (
-                      <Link className="m-3 w-[90%] mx-auto md:w-[250px]" key={index} to={link.href}>
-                    <MotionCard
-                      variants={itemVariants}
+                      <Link className="w-full" key={index} to={link.href}>
+                        <MotionCard
+                          variants={itemVariants}
                           bg={cardBg}
-                      borderRadius="xl"
+                          borderRadius="xl"
                           shadow="md"
-                      p={5}
+                          p={5}
                           cursor="pointer"
                           border="1px solid"
                           borderColor={borderColor}
-                      _hover={{ transform: "translateY(-4px)", shadow: "xl" }}
-                      transition="all 0.3s"
-                      height="100%"
+                          _hover={{ transform: "translateY(-4px)", shadow: "xl" }}
+                          transition="all 0.3s"
+                          height="100%"
+                          display="flex"
+                          flexDirection="column"
+                          justifyContent="space-between"
+                          alignItems="center"
                         >
-                      <VStack spacing={4} align="center" height="100%">
+                          <VStack spacing={3} align="center" width="100%">
                             <Box
-                          p={4}
+                              p={4}
                               borderRadius="full"
                               bgGradient={link.gradient}
                               color="white"
-                          shadow="lg"
+                              shadow="lg"
                             >
-                          <Icon as={link.icon} boxSize={6} />
+                              <Icon as={link.icon} boxSize={6} />
                             </Box>
-                            
-                        <VStack spacing={2} align="center" flex={1}>
+
+                            <VStack spacing={2} align="center" width="100%">
                               <Text 
                                 fontWeight="bold" 
-                            fontSize="md" 
+                                fontSize="md" 
                                 color={textColor}
                                 textAlign="center"
                               >
                                 {link.name}
                               </Text>
-                              
+
                               <Text 
-                            fontSize="sm" 
+                                fontSize="sm" 
                                 color="gray.500" 
                                 textAlign="center"
                                 noOfLines={2}
-                            lineHeight="1.4"
+                                lineHeight="1.4"
                               >
                                 {link.desc}
                               </Text>
                             </VStack>
-                        
-                        <Icon 
-                          as={FaArrowRight} 
-                          color={link.color} 
-                          boxSize={4}
-                          opacity={0.7}
-                        />
+
+                            <Icon 
+                              as={FaArrowRight} 
+                              color={link.color} 
+                              boxSize={4}
+                              opacity={0.7}
+                            />
                           </VStack>
-                    </MotionCard>
+                        </MotionCard>
                       </Link>
                     ))}
                   </div>
@@ -562,6 +645,7 @@ const HomePage = () => {
 
           {/* My Teachers - محاضرينى */}
           <MotionBox
+          
   initial="hidden"
   animate="visible"
   variants={containerVariants}
@@ -598,7 +682,7 @@ const HomePage = () => {
       </HStack>
           </Box>
     
-          <Box p={6}>
+          <Box >
       <MyTeacher />
     </Box>
   </Box>
@@ -642,7 +726,7 @@ const HomePage = () => {
                 </HStack>
           </Box>
               
-          <Box p={6}>
+          <Box >
                 <MyLecture />
               </Box>
             </Box>
@@ -660,27 +744,82 @@ const HomePage = () => {
           </ModalHeader>
           <ModalBody py={6}>
             {selectedAnnouncement && (
-              <VStack spacing={4} align="stretch">
-                <Box>
-                  <Text fontWeight="bold" fontSize="lg" color="gray.800" mb={2}>
-                    {selectedAnnouncement.title}
-                  </Text>
-                  <Text color="gray.600" lineHeight="1.6">
-                    {selectedAnnouncement.message}
-                  </Text>
-                </Box>
-                
-                <HStack justify="space-between" fontSize="sm" color="gray.500">
-                  <HStack spacing={2}>
-                    <Icon as={FaClock} />
-                    <Text>{selectedAnnouncement.time}</Text>
+              <VStack spacing={6} align="stretch">
+                {/* Image Section */}
+                {selectedAnnouncement.imageUrl && (
+                  <Box
+                    w="full"
+                    h="200px"
+                    borderRadius="xl"
+                    overflow="hidden"
+                    bg={selectedAnnouncement.type === 'league' ? 'red.50' : 'orange.50'}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <img 
+                      src={selectedAnnouncement.imageUrl} 
+                      alt={selectedAnnouncement.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </Box>
+                )}
+
+                {/* Content Section */}
+                <VStack spacing={4} align="stretch">
+                  <HStack justify="space-between" align="start">
+                    <VStack align="start" spacing={2} flex={1}>
+                      <HStack spacing={2}>
+                        <Icon 
+                          as={selectedAnnouncement.type === 'league' ? FaTrophy : FaGift} 
+                          color={selectedAnnouncement.type === 'league' ? "red.500" : "orange.500"} 
+                          boxSize={5}
+                        />
+                        <Text fontWeight="bold" fontSize="xl" color="gray.800">
+                          {selectedAnnouncement.title}
+                        </Text>
+                      </HStack>
+                      
+                      <Text color="gray.600" lineHeight="1.6" fontSize="md">
+                        {selectedAnnouncement.message}
+                      </Text>
+                    </VStack>
+                    
+                    {selectedAnnouncement.urgent && (
+                      <Badge colorScheme="red" variant="solid" size="lg" borderRadius="full">
+                        عاجل
+                      </Badge>
+                    )}
                   </HStack>
-                  {selectedAnnouncement.urgent && (
-                    <Badge colorScheme="red" variant="solid">
-                      عاجل
+                  
+                  {/* Grade Badge */}
+                  {selectedAnnouncement.gradeName && (
+                    <Badge 
+                      colorScheme={selectedAnnouncement.type === 'league' ? "red" : "orange"} 
+                      variant="subtle" 
+                      size="lg"
+                      borderRadius="full"
+                      px={4}
+                      py={2}
+                      alignSelf="flex-start"
+                    >
+                      {selectedAnnouncement.gradeName}
                     </Badge>
                   )}
-                </HStack>
+                  
+                  <HStack justify="space-between" fontSize="sm" color="gray.500">
+                    <HStack spacing={2}>
+                      <Icon as={FaClock} />
+                      <Text>{selectedAnnouncement.time}</Text>
+                    </HStack>
+                    <Badge 
+                      colorScheme={selectedAnnouncement.type === 'league' ? "red" : "orange"} 
+                      variant="outline"
+                    >
+                      {selectedAnnouncement.type === 'league' ? 'دوري' : 'مسابقة'}
+                    </Badge>
+                  </HStack>
+                </VStack>
         </VStack>
             )}
           </ModalBody>
@@ -688,17 +827,27 @@ const HomePage = () => {
             <Button onClick={onClose} variant="ghost" mr={3}>
               إغلاق
             </Button>
-            <Button 
-              as={Link} 
-              to="/competitions" 
-              colorScheme="blue"
-              leftIcon={<FaTrophy />}
-            >
-              عرض المسابقات
-            </Button>
+            {selectedAnnouncement && (
+              <Button 
+                onClick={() => {
+                  onClose();
+                  handleNotificationAction(selectedAnnouncement);
+                }}
+                colorScheme={selectedAnnouncement.type === 'league' ? "red" : "orange"}
+                leftIcon={selectedAnnouncement.type === 'league' ? <FaTrophy /> : <FaGift />}
+                _hover={{ 
+                  bg: selectedAnnouncement.type === 'league' ? "red.600" : "orange.600",
+                  transform: "scale(1.05)"
+                }}
+              >
+                {selectedAnnouncement.type === 'league' ? 'عرض الدوري' : 'عرض المسابقة'}
+              </Button>
+            )}
           </ModalFooter>
         </ModalContent>
       </Modal>
+      {/* Mobile Bottom Navigation */}
+   
     </Box>
   );
 };

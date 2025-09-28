@@ -70,7 +70,7 @@ const Lectures = () => {
             <Link key={course.id} to={`/CourseDetailsPage/${course.id}`}>
            
                 <Card
-              className=" m-3 md:w-[310px]"
+              className=" m-5 md:w-[345px] md:m-2"
                   bg={cardBg}
                   border="1px solid"
                   

@@ -36,7 +36,7 @@ const MyLecture = () => {
       <Box
         position="absolute"
         top="20%"
-        right="10%"
+       
         w={{ base: "80px", sm: "120px", md: "150px" }}
         h={{ base: "80px", sm: "120px", md: "150px" }}
         bg="purple.200"
@@ -48,7 +48,7 @@ const MyLecture = () => {
       <Box
         position="absolute"
         bottom="20%"
-        left="15%"
+        
         w={{ base: "60px", sm: "80px", md: "100px" }}
         h={{ base: "60px", sm: "80px", md: "100px" }}
         bg="pink.200"

@@ -8,6 +8,7 @@ import Footer from "./components/Footer/Footer.jsx";
 import "react-toastify/dist/ReactToastify.css";
 import WhatsButton from "./components/whatsButton/WhatsButton.jsx";
 import SidebarWithHeader from "./components/navbar/Navbar.jsx";
+import BottomNavItems from "./components/Footer/BottomNavItems.jsx";
 
 const RootContent = () => {
   // Get the current location to determine the current path
@@ -33,6 +34,7 @@ const RootContent = () => {
 
   // Only display the SidebarWithHeader if the current path is not '/landing'
   const showSidebar = location.pathname !== "/landing";
+  const showBottomNav = location.pathname.toLowerCase() !== "/teacherchat";
 
   return (
     <>
@@ -40,7 +42,7 @@ const RootContent = () => {
       {showSidebar && <SidebarWithHeader />}
       <App />
       <WhatsButton />
-  
+      {showBottomNav && <BottomNavItems />}
     </>
   );
 };

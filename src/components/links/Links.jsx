@@ -24,7 +24,8 @@ import {
   MdBookmark,
   MdLogout,
   MdInventory,
-  MdHome
+  MdHome,
+  MdPublic
 } from "react-icons/md";
 
 import UserType from "../../Hooks/auth/userType";
@@ -67,6 +68,7 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
     { to: "/admin/management", Icon: MdDashboard, label: "لوحة التحكم" },
     { to: "/teamChat", Icon: MdForum, label: "دردشة الفريق" },
     { to: "/all_students", Icon: MdPeople, label: " كل الطلاب" },
+    { to: "/social", Icon: MdPublic, label: "EM Social" },
     { to: "/packages-management", Icon: MdInventory, label: "إدارة الباقات" },
     { to: "/tasks", Icon: MdAssignment, label: "المهام" },
     { to: "/question-bank-dashboard", Icon: MdLibraryBooks, label: "لوحة تحكم بنك الأسئلة" },
@@ -87,6 +89,7 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
     { to: "/Teacher_subjects", Icon: MdQuestionAnswer, label: " بنك الاسئله  " },
     { to: "/center_groups", Icon: MdGroups, label: "سيستم إدارة السنتر" },
     { to: "/TeacherChat", Icon: MdForum, label: " الرسائل " },
+    { to: "/social", Icon: MdPublic, label: "EM Social" },
   ];
 
      const studentLinks = [

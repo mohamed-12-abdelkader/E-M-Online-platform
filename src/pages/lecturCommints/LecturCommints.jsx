@@ -25,6 +25,8 @@ const LecturCommints = () => {
   const [error, setError] = React.useState(null)
   const [newComment, setNewComment] = React.useState('')
   const [submitting, setSubmitting] = React.useState(false)
+  const [lastRefresh, setLastRefresh] = React.useState(Date.now())
+  const [isRefreshing, setIsRefreshing] = React.useState(false)
   const streamAbortRef = React.useRef(null)
 
   const cardBg = useColorModeValue('white', 'gray.800')
@@ -54,8 +56,12 @@ const LecturCommints = () => {
     }
   }
 
-  const fetchComments = async () => {
-    setLoading(true)
+  const fetchComments = async (isAutoRefresh = false) => {
+    if (!isAutoRefresh) {
+      setLoading(true)
+    } else {
+      setIsRefreshing(true)
+    }
     setError(null)
     try {
       const token = localStorage.getItem('token')
@@ -63,10 +69,15 @@ const LecturCommints = () => {
         headers: { Authorization: `Bearer ${token}` }
       })
       setComments(res.data?.comments || [])
+      setLastRefresh(Date.now())
     } catch (err) {
       setError(err.response?.data?.message || 'فشل في جلب التعليقات')
     } finally {
-      setLoading(false)
+      if (!isAutoRefresh) {
+        setLoading(false)
+      } else {
+        setIsRefreshing(false)
+      }
     }
   }
 
@@ -110,6 +121,11 @@ const LecturCommints = () => {
         user_avatar: currentUser?.avatar || currentUser?.image,
       })
       setNewComment('')
+      
+      // تحديث تلقائي للتعليقات بعد إضافة تعليق جديد
+      setTimeout(() => {
+        fetchComments(true)
+      }, 1000)
     } catch (err) {
       setError(err.response?.data?.message || 'تعذّر إضافة التعليق')
     } finally {
@@ -186,6 +202,11 @@ const LecturCommints = () => {
         user_avatar: currentUser?.avatar || currentUser?.image,
       })
       clear()
+      
+      // تحديث تلقائي للتعليقات بعد إضافة رد
+      setTimeout(() => {
+        fetchComments(true)
+      }, 1000)
     } catch (err) {
       setError(err.response?.data?.message || 'تعذّر إضافة الرد')
     } finally {
@@ -206,9 +227,24 @@ const LecturCommints = () => {
           <HStack>
             <Heading size={{ base: 'md', md: 'lg' }} color={headingColor}>تعليقات المحاضرة</Heading>
             <Badge colorScheme="blue">{comments.length} تعليق</Badge>
+            {isRefreshing && (
+              <Badge colorScheme="green" variant="subtle">
+                <HStack spacing={1}>
+                  <Spinner size="xs" />
+                  <Text fontSize="xs">تحديث...</Text>
+                </HStack>
+              </Badge>
+            )}
           </HStack>
           <HStack>
-            <IconButton aria-label="تحديث" icon={<FaSync />} onClick={fetchComments} variant="outline" colorScheme="blue" />
+            <IconButton 
+              aria-label="تحديث" 
+              icon={<FaSync />} 
+              onClick={() => fetchComments()} 
+              variant="outline" 
+              colorScheme="blue"
+              isLoading={isRefreshing}
+            />
           </HStack>
         </HStack>
 

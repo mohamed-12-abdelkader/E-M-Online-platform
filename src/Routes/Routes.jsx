@@ -135,6 +135,7 @@ import UserType from "../Hooks/auth/userType";
 import ProtectedRoute from "../components/protectedRoute/ProtectedRoute";
 import ProtectedLogin from "../components/protectedRoute/ProtectedLogin";
 import Match from "../pages/league/Match";
+import EssayExam from "../pages/exam/EssayExam";
 
 
 const AppRouter = () => {
@@ -346,6 +347,7 @@ const AppRouter = () => {
           <Route path="view_exams" element={<ViewExams />} />
           <Route path="all_exams" element={<AllExams />} />
           <Route path="exam_details/:id" element={<ExamDetails />} />
+           <Route path="essay-exam/:id" element={<EssayExam/>} />
           <Route path="subject_exam/:id" element={<SubjectExam />} />
           <Route path="subject_exam/:id/review" element={<ReviewResult />} />
           <Route path="subject_exam/:id/questions" element={<ExamQuestions />} />
