@@ -9,10 +9,12 @@ import "react-toastify/dist/ReactToastify.css";
 import WhatsButton from "./components/whatsButton/WhatsButton.jsx";
 import SidebarWithHeader from "./components/navbar/Navbar.jsx";
 import BottomNavItems from "./components/Footer/BottomNavItems.jsx";
+import UserType from "./Hooks/auth/userType.js";
 
 const RootContent = () => {
   // Get the current location to determine the current path
   const location = useLocation();
+  const [userData, isAdmin, isTeacher, student] = UserType();
 
   useEffect(() => {
     const overlay = document.getElementById("overlay");
@@ -34,7 +36,8 @@ const RootContent = () => {
 
   // Only display the SidebarWithHeader if the current path is not '/landing'
   const showSidebar = location.pathname !== "/landing";
-  const showBottomNav = location.pathname.toLowerCase() !== "/teacherchat";
+  const hasUser = Boolean(userData);
+  const showBottomNav = userData && location.pathname.toLowerCase() !== "/teacherchat";
 
   return (
     <>

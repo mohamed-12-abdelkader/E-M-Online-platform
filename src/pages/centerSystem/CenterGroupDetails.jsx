@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   Box,
   VStack,
   HStack,
+  Stack,
   Heading,
   Text,
   Button,
@@ -44,19 +45,28 @@ import {
   useDisclosure,
   Image,
   Icon,
-  useBreakpointValue
+  useBreakpointValue,
+  Collapse,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton
 } from '@chakra-ui/react';
 import { BiSearch } from 'react-icons/bi';
-import { MdAdd, MdEdit, MdDelete, MdSchedule, MdPeople, MdLocationOn, MdSchool, MdAttachMoney, MdEmail, MdPhone, MdCheckCircle, MdCancel } from 'react-icons/md';
+import { MdAdd, MdDelete, MdSchedule, MdPeople, MdLocationOn, MdSchool, MdAttachMoney, MdEmail, MdPhone, MdCheckCircle, MdCancel } from 'react-icons/md';
 import { FaGraduationCap, FaClock, FaCalendarAlt, FaUsers, FaFileAlt, FaStar } from 'react-icons/fa';
 import { useGroupStudents } from '../../Hooks/centerSystem/useGroupStudents';
-import AddStudentModal from '../../components/centerSystem/AddStudentModal';
+import AddStudentDualModal from '../../components/centerSystem/AddStudentDualModal';
 import EditStudentModal from '../../components/centerSystem/EditStudentModal';
 import AddExamModal from '../../components/centerSystem/AddExamModal';
 import ExamGradesModal from '../../components/centerSystem/ExamGradesModal';
 import baseUrl from '../../api/baseUrl';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
+import AttendanceHistoryModal from '../../components/centerSystem/AttendanceHistoryModal';
 import 'react-day-picker/dist/style.css';
+import { Html5Qrcode } from 'html5-qrcode';
 
 const CenterGroupDetails = () => {
   const { id } = useParams();
@@ -65,6 +75,8 @@ const CenterGroupDetails = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddExamModalOpen, setIsAddExamModalOpen] = useState(false);
   const [isExamGradesModalOpen, setIsExamGradesModalOpen] = useState(false);
+  const [isAttendanceHistoryOpen, setIsAttendanceHistoryOpen] = useState(false);
+  const { isOpen: isCalendarOpen, onToggle: onToggleCalendar } = useDisclosure({ defaultIsOpen: false });
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [groupData, setGroupData] = useState(null);
   const [loadingGroup, setLoadingGroup] = useState(true);
@@ -73,6 +85,84 @@ const CenterGroupDetails = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [attendance, setAttendance] = useState({}); // { studentId: { 'yyyy-MM-dd': 'present' | 'absent' } }
   const [savingAttendance, setSavingAttendance] = useState(false);
+
+  // ---------- QR scanner state + helpers (ADDED) ----------
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
+  const qrScannerRef = useRef(null);
+  const [qrProcessing, setQrProcessing] = useState(false);
+
+  const startQrScanner = async () => {
+    setIsQrScannerOpen(true);
+    setQrProcessing(false);
+
+    requestAnimationFrame(async () => {
+      try {
+        const elementId = 'qr-scanner';
+
+        if (qrScannerRef.current) {
+          try { await qrScannerRef.current.stop(); } catch (e) {}
+          try { qrScannerRef.current.clear(); } catch (e) {}
+          qrScannerRef.current = null;
+        }
+
+        const html5Qr = new Html5Qrcode(elementId, { verbose: false });
+        qrScannerRef.current = html5Qr;
+
+        const devices = await Html5Qrcode.getCameras();
+        const cameraId = (devices && devices.length) ? devices[0].id : null;
+
+        await html5Qr.start(
+          cameraId,
+          { fps: 10, qrbox: { width: 300, height: 300 } },
+          async (decodedText) => {
+            if (qrProcessing) return;
+            setQrProcessing(true);
+            try {
+              await registerAttendanceByQr(decodedText, 'present');
+            } catch (err) {
+              // handled in registerAttendanceByQr
+            } finally {
+              try { await html5Qr.stop(); } catch (e) {}
+              try { html5Qr.clear(); } catch (e) {}
+              qrScannerRef.current = null;
+              setIsQrScannerOpen(false);
+              setQrProcessing(false);
+            }
+          },
+          (errorMessage) => {
+            // scan failure callback (optional logging)
+          }
+        );
+      } catch (err) {
+        console.error('QR scanner start error:', err);
+        toast({ title: 'فشل في فتح الكاميرا', description: err.message || 'تأكد من صلاحية الكاميرا', status: 'error', duration: 4000, isClosable: true });
+        setIsQrScannerOpen(false);
+        setQrProcessing(false);
+      }
+    });
+  };
+
+  const stopQrScanner = async () => {
+    try {
+      if (qrScannerRef.current) {
+        await qrScannerRef.current.stop();
+        qrScannerRef.current.clear();
+        qrScannerRef.current = null;
+      }
+    } catch (err) {
+      // ignore
+    } finally {
+      setIsQrScannerOpen(false);
+      setQrProcessing(false);
+    }
+  };
+  // ---------- end QR scanner state + helpers ----------
+  
+  // new states for "عرض الطلاب" modal
+  const [isStudentsModalOpen, setIsStudentsModalOpen] = useState(false);
+  const [modalStudents, setModalStudents] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState(null);
 
   const { students, loading, error: studentsError, fetchStudents, addStudent, deleteStudent, updateStudent } = useGroupStudents(id);
 
@@ -132,28 +222,47 @@ const CenterGroupDetails = () => {
     loadAttendanceData(dateKey);
   }, [selectedDate, id]);
 
-  // إضافة طالب
-  const handleAddStudent = async (studentData) => {
+  // إضافة طالب عبر رقم الطالب student_id
+  const handleAddStudentByCode = async (studentId) => {
     try {
-      // إعادة تحميل قائمة الطلاب بعد إضافة طالب جديد
+      await addStudent({ student_id: studentId });
       const dateKey = selectedDate.toISOString().split('T')[0];
       await fetchStudents(dateKey);
-      
       toast({
-        title: "نجح",
-        description: "تم إضافة الطالب بنجاح",
-        status: "success",
+        title: 'نجح',
+        description: 'تم إضافة الطالب بنجاح',
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
+      setIsAddModalOpen(false);
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: error.message || "حدث خطأ في إضافة الطالب",
-        status: "error",
-        duration: 3000,
+        title: 'خطأ',
+        description: error.response?.data?.message || error.message || 'حدث خطأ في إضافة الطالب',
+        status: 'error',
+        duration: 5000,
         isClosable: true,
       });
+    }
+  };
+
+  // إضافة طالب عبر الاسم
+  const handleAddStudentByName = async (payload) => {
+    try {
+      // POST to /api/study-groups/:id/students with name/phone/parent_phone
+      const token = localStorage.getItem('token');
+      await baseUrl.post(
+        `/api/study-groups/${id}/students`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
+      const dateKey = selectedDate.toISOString().split('T')[0];
+      await fetchStudents(dateKey);
+      toast({ title: 'نجح', description: 'تم إضافة الطالب بنجاح', status: 'success', duration: 3000, isClosable: true });
+      // لا نغلق المودال هنا لإتاحة إضافة أكثر من طالب بالاسم بسرعة
+    } catch (error) {
+      toast({ title: 'خطأ', description: error.response?.data?.message || error.message || 'حدث خطأ في إضافة الطالب', status: 'error', duration: 5000, isClosable: true });
     }
   };
 
@@ -203,32 +312,27 @@ const CenterGroupDetails = () => {
     }
   };
 
-  // إنشاء امتحان جديد
-  const handleExamAdded = async (examData) => {
+  // فتح المودال وجلب الطلاب من الـ API (يستخدم selectedDate)
+  const openStudentsModal = async () => {
+    setIsStudentsModalOpen(true);
+    setModalLoading(true);
+    setModalError(null);
     try {
-      toast({
-        title: "نجح",
-        description: "تم إنشاء الامتحان بنجاح",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
+      const token = localStorage.getItem('token');
+      const dateKey = selectedDate.toISOString().split('T')[0];
+      const resp = await baseUrl.get(`/api/study-groups/${id}/students?date=${dateKey}`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      // يمكن إضافة منطق إضافي هنا مثل إعادة تحميل قائمة الامتحانات
-    } catch (error) {
-      toast({
-        title: "خطأ",
-        description: error.message || "حدث خطأ في إنشاء الامتحان",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // API قد يرجع { students: [...] } أو مباشرة مصفوفة
+      const list = resp.data?.students ?? resp.data ?? [];
+      setModalStudents(list);
+    } catch (err) {
+      console.error('Error loading students for modal:', err);
+      setModalError('فشل في جلب بيانات الطلاب');
+      setModalStudents([]);
+    } finally {
+      setModalLoading(false);
     }
-  };
-
-  // فتح مودال التعديل
-  const openEditModal = (student) => {
-    setSelectedStudent(student);
-    setIsEditModalOpen(true);
   };
 
   // تصفية الطلاب
@@ -301,6 +405,61 @@ const CenterGroupDetails = () => {
     }
   };
 
+  // إضافة دالة معالج لحدث إضافة امتحان (تُمرّر للـ AddExamModal)
+  const handleExamAdded = async (exam) => {
+    // بسيطة: إظهار رسالة وتجديد القائمة (لو تحتاج منطق أوسع عدِّل هنا)
+    try {
+      toast({
+        title: 'تم إنشاء الامتحان',
+        description: 'تم إضافة الامتحان بنجاح',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      const dateKey = selectedDate.toISOString().split('T')[0];
+      await fetchStudents(dateKey);
+    } catch (err) {
+      console.error('Error in handleExamAdded:', err);
+    }
+  };
+  
+  // ---------- جديد: تسجيل الحضور عبر QR ----------
+  const registerAttendanceByQr = async (scannedText, status = 'present') => {
+    if (!scannedText) {
+      toast({ title: 'نص QR فارغ', status: 'warning', duration: 2500, isClosable: true });
+      return;
+    }
+    const dateKey = selectedDate.toISOString().split('T')[0];
+    try {
+      const token = localStorage.getItem('token');
+      const resp = await baseUrl.post(
+        `/api/study-groups/${id}/scan-qr`,
+        {
+          date: dateKey,
+          qr_data: scannedText,
+          status
+        },
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
+      // نجاح
+      toast({ title: 'تم تسجيل الحضور', description: resp.data?.message || 'تمت العملية بنجاح', status: 'success', duration: 3000, isClosable: true });
+      // تحديث البيانات محلياً
+      await fetchStudents(dateKey);
+      await loadAttendanceData(dateKey);
+      return resp.data;
+    } catch (err) {
+      console.error('QR register error:', err);
+      toast({
+        title: 'فشل تسجيل الحضور',
+        description: err.response?.data?.message || err.message || 'حدث خطأ',
+        status: 'error',
+        duration: 4000,
+        isClosable: true
+      });
+      throw err;
+    }
+  };
+
   // ألوان الثيم
   const bgColor = useColorModeValue('gray.50', 'gray.900');
   const cardBg = useColorModeValue('white', 'gray.800');
@@ -320,23 +479,7 @@ const CenterGroupDetails = () => {
     return daysString.split(',').join('، ');
   };
 
-  const getPaymentStatusColor = (status) => {
-    switch (status) {
-      case 'paid': return 'green';
-      case 'partial': return 'orange';
-      case 'unpaid': return 'red';
-      default: return 'gray';
-    }
-  };
-
-  const getPaymentStatusText = (status) => {
-    switch (status) {
-      case 'paid': return 'مدفوع';
-      case 'partial': return 'مدفوع جزئياً';
-      case 'unpaid': return 'غير مدفوع';
-      default: return 'غير محدد';
-    }
-  };
+  // تمت إزالة حالة الدفع من الجدول والبطاقات
 
   // دالة لتحديد لون الحضور
   const getAttendanceColor = (status) => {
@@ -431,63 +574,95 @@ const CenterGroupDetails = () => {
     <Box p={6} className="mt-[80px]" bg={bgColor} minH="100vh">
       <Container maxW="container.xl">
         <VStack spacing={8} align="stretch">
-          {/* Hero Section */}
-          <Box
-            bgGradient="linear(135deg, blue.400 0%, purple.500 50%, teal.400 100%)"
-            borderRadius="3xl"
-            p={8}
-            position="relative"
-            overflow="hidden"
-            _before={{
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              bg: 'rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(10px)',
-            }}
-          >
-            <VStack spacing={6} position="relative" zIndex={1}>
-              <Box
-                w="80px"
-                h="80px"
-                borderRadius="full"
-                bg="rgba(255,255,255,0.2)"
+          {/* Date Selector (Top, Collapsible) */}
+          <Card bg={cardBg} shadow="xl" borderRadius="2xl" p={4} border="1px" borderColor={borderColor}>
+            <HStack justify="space-between" align="center">
+              <Text fontWeight="bold" color={textColor}>اختر تاريخ الحضور</Text>
+              <Button variant="outline" size="sm" onClick={onToggleCalendar}>
+                {isCalendarOpen ? 'إخفاء' : 'إظهار'}
+              </Button>
+            </HStack>
+            <Collapse in={isCalendarOpen} animateOpacity>
+              <Box w="full" display="flex" justifyContent="center" alignItems="center" mt={3}>
+                <VStack w={{ base: '100%', md: '70%', lg: '50%' }} spacing={3}>
+                  <Box w="full" textAlign="center">
+                    <Text color="gray.500" fontSize={{ base: 'xs', md: 'sm' }}>
+                      يمكنك اختيار أي يوم من الشهر
+                    </Text>
+                  </Box>
+                  <Box
+                    w="full"
+                    bg={cardBg}
+                    borderRadius="2xl"
+                    boxShadow="md"
+                    p={4}
                 display="flex"
-                alignItems="center"
-                justifyContent="center"
-                backdropFilter="blur(10px)"
-              >
-                <FaGraduationCap size={40} color="white" />
+                    flexDirection="column"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    {/* رأس التقويم مع أزرار تغيير الشهر */}
+                    <HStack justify="space-between" w="full" mb={3}>
+                      <IconButton icon={<IoChevronBack />} aria-label="الشهر السابق" size="sm" variant="ghost" onClick={() => changeMonth(-1)} color={primaryColor} />
+                      <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold" color={primaryColor} bgGradient="linear(135deg, blue.100 0%, purple.100 100%)" px={4} py={2} borderRadius="xl" boxShadow="sm">
+                        {selectedDate.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' })}
+                      </Text>
+                      <IconButton icon={<IoChevronForward />} aria-label="الشهر التالي" size="sm" variant="ghost" onClick={() => changeMonth(1)} color={primaryColor} />
+                    </HStack>
+                    {/* أيام الأسبوع */}
+                    <SimpleGrid columns={7} spacing={1} w="full" mb={2}>
+                      {['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'].map((day) => (
+                        <Box key={day} textAlign="center" py={1} fontSize="xs" fontWeight="bold" color="gray.600">
+                          {day}
               </Box>
-              
-              <VStack spacing={2}>
-                <Heading size="2xl" color="white" textAlign="center" fontWeight="bold">
-                  {groupData.name}
-                </Heading>
-                <Text color="white" opacity={0.9} fontSize="lg" textAlign="center">
-                  مجموعة دراسية متخصصة
+                      ))}
+                    </SimpleGrid>
+                    {/* أيام الشهر */}
+                    <SimpleGrid columns={7} spacing={1} w="full">
+                      {getMonthDays(selectedDate).map((day, idx) => {
+                        if (!day) {
+                          return <Box key={idx} h="32px" />;
+                        }
+                        const isSelected = day.toDateString() === selectedDate.toDateString();
+                        const isToday = day.toDateString() === new Date().toDateString();
+                        return (
+                          <Button
+                            key={idx}
+                            size="sm"
+                            borderRadius="full"
+                            px={0}
+                            py={0}
+                            minW="32px"
+                            h="32px"
+                            fontWeight="bold"
+                            fontSize="xs"
+                            color={isSelected ? 'white' : isToday ? 'white' : 'gray.700'}
+                            bg={isSelected ? primaryColor : isToday ? 'orange.500' : 'gray.100'}
+                            _hover={{ bg: isSelected ? primaryColor : isToday ? 'orange.600' : 'blue.50', transform: 'scale(1.1)' }}
+                            boxShadow={isSelected ? 'md' : 'none'}
+                            onClick={() => setSelectedDate(new Date(day))}
+                            transition="all 0.2s"
+                            border={isToday && !isSelected ? '2px solid orange.400' : 'none'}
+                          >
+                            {day.getDate()}
+                          </Button>
+                        );
+                      })}
+                    </SimpleGrid>
+                    {/* التاريخ المختار */}
+                    <Box mt={3}>
+                      <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="bold" color={primaryColor} bgGradient="linear(135deg, blue.100 0%, purple.100 100%)" px={4} py={1} borderRadius="xl" boxShadow="sm" display="inline-block">
+                        {selectedDate.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </Text>
-              </VStack>
-
-              <HStack spacing={8} color="white" opacity={0.9} flexWrap="wrap" justify="center">
-                <HStack bg="rgba(255,255,255,0.1)" px={4} py={2} borderRadius="full">
-                  <FaUsers size={18} />
-                  <Text fontWeight="medium">{students?.length || 0} طالب</Text>
-                </HStack>
-                <HStack bg="rgba(255,255,255,0.1)" px={4} py={2} borderRadius="full">
-                  <FaClock size={18} />
-                  <Text fontWeight="medium">{formatTime(groupData.start_time)} - {formatTime(groupData.end_time)}</Text>
-                </HStack>
-                <HStack bg="rgba(255,255,255,0.1)" px={4} py={2} borderRadius="full">
-                  <FaCalendarAlt size={18} />
-                  <Text fontWeight="medium">{formatDays(groupData.days)}</Text>
-                </HStack>
-              </HStack>
+                    </Box>
+                  </Box>
             </VStack>
           </Box>
+            </Collapse>
+          </Card>
+
+          {/* Hero Section */}
+        
 
           {/* Stats Cards */}
           <SimpleGrid columns={{ base: 1, md: 4 }} spacing={6}>
@@ -516,6 +691,16 @@ const CenterGroupDetails = () => {
                 <StatHelpText color="gray.500" fontSize="sm">
                   حتى {formatTime(groupData.end_time)}
                 </StatHelpText>
+
+                <Button
+                mt={3}
+                size="sm"
+                colorScheme="blue"
+                onClick={openStudentsModal}
+                borderRadius="lg"
+              >
+                عرض الطلاب
+              </Button>
               </Stat>
             </Card>
 
@@ -642,15 +827,15 @@ const CenterGroupDetails = () => {
                 </InputGroup>
               </Box>
               
-              <HStack spacing={4}>
+              <HStack spacing={4} flexWrap="wrap" justify="center">
                 <Button
                   leftIcon={<MdAdd />}
                   colorScheme="blue"
-                  size="lg"
+                  size={{ base: 'md', md: 'lg' }}
                   onClick={() => setIsAddModalOpen(true)}
                   isLoading={loading}
-                  px={6}
-                  py={6}
+                  px={{ base: 4, md: 6 }}
+                  py={{ base: 4, md: 6 }}
                   borderRadius="xl"
                   shadow="lg"
                   bgGradient="linear(135deg, blue.500 0%, purple.500 100%)"
@@ -669,10 +854,10 @@ const CenterGroupDetails = () => {
                 <Button
                   leftIcon={<FaFileAlt />}
                   colorScheme="green"
-                  size="lg"
+                  size={{ base: 'md', md: 'lg' }}
                   onClick={() => setIsAddExamModalOpen(true)}
-                  px={6}
-                  py={6}
+                  px={{ base: 4, md: 6 }}
+                  py={{ base: 4, md: 6 }}
                   borderRadius="xl"
                   shadow="lg"
                   bgGradient="linear(135deg, green.500 0%, teal.500 100%)"
@@ -691,10 +876,10 @@ const CenterGroupDetails = () => {
                 <Button
                   leftIcon={<FaStar />}
                   colorScheme="purple"
-                  size="lg"
+                  size={{ base: 'md', md: 'lg' }}
                   onClick={() => setIsExamGradesModalOpen(true)}
-                  px={6}
-                  py={6}
+                  px={{ base: 4, md: 6 }}
+                  py={{ base: 4, md: 6 }}
                   borderRadius="xl"
                   shadow="lg"
                   bgGradient="linear(135deg, purple.500 0%, pink.500 100%)"
@@ -709,145 +894,32 @@ const CenterGroupDetails = () => {
                 >
                   إدارة الدرجات
                 </Button>
+
+            <Button
+                  colorScheme="orange"
+                  size={{ base: 'md', md: 'lg' }}
+                  onClick={() => setIsAttendanceHistoryOpen(true)}
+                  px={{ base: 4, md: 6 }}
+                  py={{ base: 4, md: 6 }}
+                  borderRadius="xl"
+                  shadow="lg"
+                  bgGradient="linear(135deg, orange.400 0%, yellow.400 100%)"
+              _hover={{ 
+                    transform: 'translateY(-2px)', 
+                    shadow: 'xl',
+                    bgGradient: "linear(135deg, orange.500 0%, yellow.500 100%)"
+              }}
+                  _active={{ transform: 'translateY(0)' }}
+              transition="all 0.2s"
+                  fontWeight="bold"
+            >
+                  عرض سجل الحضور
+            </Button>
               </HStack>
             </Flex>
           </Card>
 
-          {/* تقويم الشهر الكامل */}
-<Box w="full" display="flex" justifyContent="center" alignItems="center" my={2}>
-  <VStack w={{ base: '100%', md: '70%', lg: '50%' }} spacing={3}>
-    <Box w="full" textAlign="center">
-      <Text fontWeight="bold" color={primaryColor} fontSize={{ base: 'md', md: 'lg' }}>
-        اختر تاريخ الحضور
-      </Text>
-      <Text color="gray.500" fontSize={{ base: 'xs', md: 'sm' }}>
-        يمكنك اختيار أي يوم من الشهر
-      </Text>
-    </Box>
-    <Box
-      w="full"
-      bg={cardBg}
-      borderRadius="2xl"
-      boxShadow="md"
-      p={4}
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-    >
-      {/* رأس التقويم مع أزرار تغيير الشهر */}
-      <HStack justify="space-between" w="full" mb={3}>
-        <IconButton
-          icon={<IoChevronBack />}
-          aria-label="الشهر السابق"
-          size="sm"
-          variant="ghost"
-          onClick={() => changeMonth(-1)}
-          color={primaryColor}
-        />
-        <Text
-          fontSize={{ base: 'md', md: 'lg' }}
-          fontWeight="bold"
-          color={primaryColor}
-          bgGradient="linear(135deg, blue.100 0%, purple.100 100%)"
-          px={4}
-          py={2}
-          borderRadius="xl"
-          boxShadow="sm"
-        >
-          {selectedDate.toLocaleDateString('ar-EG', {
-            year: 'numeric',
-            month: 'long',
-          })}
-        </Text>
-        <IconButton
-          icon={<IoChevronForward />}
-          aria-label="الشهر التالي"
-          size="sm"
-          variant="ghost"
-          onClick={() => changeMonth(1)}
-          color={primaryColor}
-        />
-      </HStack>
-
-      {/* أيام الأسبوع */}
-      <SimpleGrid columns={7} spacing={1} w="full" mb={2}>
-        {['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'].map((day) => (
-          <Box
-            key={day}
-            textAlign="center"
-            py={1}
-            fontSize="xs"
-            fontWeight="bold"
-            color="gray.600"
-          >
-            {day}
-          </Box>
-        ))}
-      </SimpleGrid>
-
-      {/* أيام الشهر */}
-      <SimpleGrid columns={7} spacing={1} w="full">
-        {getMonthDays(selectedDate).map((day, idx) => {
-          if (!day) {
-            return <Box key={idx} h="32px" />;
-          }
-          
-          const isSelected = day.toDateString() === selectedDate.toDateString();
-          const isToday = day.toDateString() === new Date().toDateString();
-          
-          return (
-            <Button
-              key={idx}
-              size="sm"
-              borderRadius="full"
-              px={0}
-              py={0}
-              minW="32px"
-              h="32px"
-              fontWeight="bold"
-              fontSize="xs"
-              color={isSelected ? 'white' : isToday ? 'white' : 'gray.700'}
-              bg={isSelected ? primaryColor : isToday ? 'orange.500' : 'gray.100'}
-              _hover={{ 
-                bg: isSelected ? primaryColor : isToday ? 'orange.600' : 'blue.50',
-                transform: 'scale(1.1)'
-              }}
-              boxShadow={isSelected ? 'md' : 'none'}
-              onClick={() => setSelectedDate(new Date(day))}
-              transition="all 0.2s"
-              border={isToday && !isSelected ? '2px solid orange.400' : 'none'}
-            >
-              {day.getDate()}
-            </Button>
-          );
-        })}
-      </SimpleGrid>
-
-      {/* التاريخ المختار */}
-      <Box mt={3}>
-        <Text
-          fontSize={{ base: 'sm', md: 'md' }}
-          fontWeight="bold"
-          color={primaryColor}
-          bgGradient="linear(135deg, blue.100 0%, purple.100 100%)"
-          px={4}
-          py={1}
-          borderRadius="xl"
-          boxShadow="sm"
-          display="inline-block"
-        >
-          {selectedDate.toLocaleDateString('ar-EG', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </Text>
-      </Box>
-    </Box>
-  </VStack>
-          </Box>
+          {/* تقويم الشهر الكامل (نُقل للأعلى داخل Collapse) */}
 
           {/* Students Table Section */}
           {isMobile ? (
@@ -858,28 +930,41 @@ const CenterGroupDetails = () => {
                 return (
                   <Card key={s.id} w="100%" bg={cardBg} borderRadius="xl" shadow="md" border="1px" borderColor={borderColor} p={3}>
           <VStack align="stretch" spacing={3} w="100%">
-            <HStack align="center" spacing={3} w="100%">
+            <Stack direction={{ base: 'column', sm: 'row' }} align="center" spacing={3} w="100%" justify="space-between">
                           <Link to={`/group/${id}/student/${s.id}`} style={{ textDecoration: 'none' }}>
               <HStack spacing={3} cursor="pointer" _hover={{ opacity: 0.8 }} transition="opacity 0.2s">
                 <Avatar size="md" name={s.student_name} bgGradient="linear(135deg, blue.400 0%, purple.400 100%)" color="white" fontWeight="bold" shadow="xl" border="3px" borderColor="white" />
                 <VStack align="start" spacing={1}>
                   <Text fontWeight="bold" color={textColor} fontSize="md">{s.student_name}</Text>
                   <Badge colorScheme="blue" variant="subtle" px={2} py={0.5} borderRadius="full" fontSize="2xs" fontWeight="medium">ID: {s.id}</Badge>
-                  <Badge colorScheme={getPaymentStatusColor(s.payment_status)} px={2} py={0.5} borderRadius="full" fontSize="xs" fontWeight="bold" variant="solid" shadow="md">
-                    {getPaymentStatusText(s.payment_status)}
-                  </Badge>
                 </VStack>
               </HStack>
             </Link>
-              <HStack spacing={1}>
-                          <Tooltip label="تسجيل حضور" placement="top" hasArrow>
-                            <IconButton icon={<MdCheckCircle size={18} />} colorScheme="green" variant={currentStatus === 'present' ? 'solid' : 'outline'} onClick={() => handleAttendance(s.id, 'present')} aria-label="حاضر" size="sm" borderRadius="full" />
-                          </Tooltip>
-                          <Tooltip label="تسجيل غياب" placement="top" hasArrow>
-                            <IconButton icon={<MdCancel size={18} />} colorScheme="red" variant={currentStatus === 'absent' ? 'solid' : 'outline'} onClick={() => handleAttendance(s.id, 'absent')} aria-label="غائب" size="sm" borderRadius="full" />
-                          </Tooltip>
+              <HStack spacing={2} w={{ base: '100%', sm: 'auto' }} justify={{ base: 'space-between', sm: 'flex-end' }}>
+                <Button
+                  leftIcon={<MdCheckCircle />}
+                  colorScheme="green"
+                  variant={currentStatus === 'present' ? 'solid' : 'outline'}
+                  onClick={() => handleAttendance(s.id, 'present')}
+                  size={{ base: 'md', md: 'sm' }}
+                  borderRadius="full"
+                  flex={{ base: 1, sm: 'none' }}
+                >
+                  حاضر
+                </Button>
+                <Button
+                  leftIcon={<MdCancel />}
+                  colorScheme="red"
+                  variant={currentStatus === 'absent' ? 'solid' : 'outline'}
+                  onClick={() => handleAttendance(s.id, 'absent')}
+                  size={{ base: 'md', md: 'sm' }}
+                  borderRadius="full"
+                  flex={{ base: 1, sm: 'none' }}
+                >
+                  غائب
+                </Button>
               </HStack>
-            </HStack>
+            </Stack>
             <HStack spacing={2} justify="center" pt={2} borderTop="1px" borderColor="gray.200">
               <Tooltip label="عرض التفاصيل" placement="top" hasArrow>
                 <IconButton
@@ -892,9 +977,6 @@ const CenterGroupDetails = () => {
                   size="sm"
                   borderRadius="full"
                 />
-              </Tooltip>
-                          <Tooltip label="تعديل بيانات الطالب" placement="top" hasArrow>
-                            <IconButton icon={<MdEdit size={16} />} size="sm" colorScheme="blue" variant="ghost" onClick={() => openEditModal(s)} aria-label="تعديل" borderRadius="full" />
                           </Tooltip>
                           <Tooltip label="حذف الطالب" placement="top" hasArrow>
                             <IconButton icon={<MdDelete size={16} />} size="sm" colorScheme="red" variant="ghost" onClick={() => handleDeleteStudent(s.id)} aria-label="حذف" borderRadius="full" />
@@ -1000,7 +1082,6 @@ const CenterGroupDetails = () => {
                       <Thead bg={useColorModeValue('gray.50', 'gray.700')}>
                         <Tr>
                           <Th color="gray.600" fontSize="sm" py={3}>الاسم</Th>
-                          <Th color="gray.600" fontSize="sm" py={3}>حالة الدفع</Th>
                           <Th color="gray.600" fontSize="sm" py={3} textAlign="center">الحضور</Th>
                           <Th color="gray.600" fontSize="sm" py={3} textAlign="center">الإجراءات</Th>
                       </Tr>
@@ -1022,41 +1103,28 @@ const CenterGroupDetails = () => {
               </HStack>
             </Link>
                           </Td>
-                              <Td>
-                            <Badge
-                                  colorScheme={getPaymentStatusColor(s.payment_status)}
-                                  variant="subtle"
-                                  px={3}
-                                  py={1}
-                              borderRadius="full"
-                            >
-                                  {getPaymentStatusText(s.payment_status)}
-                            </Badge>
-                          </Td>
                               <Td textAlign="center">
-                                <HStack justify="center" spacing={2}>
-                                  <Tooltip label="حاضر" placement="top" hasArrow>
-                                <IconButton
-                                      icon={<MdCheckCircle size={20} />}
+                                <HStack justify="center" spacing={3}>
+                                  <Button
+                                    leftIcon={<MdCheckCircle />}
                                           colorScheme="green"
                                           variant={currentStatus === 'present' ? 'solid' : 'outline'}
                                   onClick={() => handleAttendance(s.id, 'present')}
-                                  aria-label="حاضر"
-                                      size="md"
+                                    size="sm"
                                           borderRadius="full"
-                                />
-                              </Tooltip>
-                                  <Tooltip label="غائب" placement="top" hasArrow>
-                                <IconButton
-                                      icon={<MdCancel size={20} />}
+                                  >
+                                    حاضر
+                                  </Button>
+                                  <Button
+                                    leftIcon={<MdCancel />}
                                           colorScheme="red"
                                           variant={currentStatus === 'absent' ? 'solid' : 'outline'}
                                   onClick={() => handleAttendance(s.id, 'absent')}
-                                  aria-label="غائب"
-                                      size="md"
+                                    size="sm"
                                           borderRadius="full"
-                                />
-                              </Tooltip>
+                                  >
+                                    غائب
+                                  </Button>
                             </HStack>
                           </Td>
                               <Td textAlign="center">
@@ -1069,17 +1137,6 @@ const CenterGroupDetails = () => {
                       colorScheme="teal"
                       variant="ghost"
                       aria-label="عرض التفاصيل"
-                      size="md"
-                      borderRadius="full"
-                    />
-                  </Tooltip>
-                                  <Tooltip label="تعديل الطالب" placement="top" hasArrow>
-                                    <IconButton
-                                      icon={<MdEdit size={20} />}
-                                  colorScheme="blue"
-                                  variant="ghost"
-                                  onClick={() => openEditModal(s)}
-                                  aria-label="تعديل"
                                       size="md"
                                       borderRadius="full"
                                 />
@@ -1108,28 +1165,46 @@ const CenterGroupDetails = () => {
 
               {filteredStudents.length > 0 && (
                 <Flex justify="center" mt={4} p={4} borderTop="1px" borderColor={borderColor}>
-            <Button
-              colorScheme="purple"
-              size="lg"
-              onClick={handleSaveAttendance}
-              isLoading={savingAttendance}
-              loadingText="جاري الحفظ..."
-                px={10}
-                py={6}
-              borderRadius="xl"
-                shadow="lg"
-              bgGradient="linear(135deg, purple.500 0%, pink.500 100%)"
-                _hover={{ 
-                  transform: 'translateY(-2px)', 
-                  shadow: 'xl',
+            <HStack spacing={4}>
+              <Button
+                colorScheme="orange"
+                size={{ base: 'md', md: 'lg' }}
+                onClick={startQrScanner}
+                 px={{ base: 6, md: 8 }}
+                 py={{ base: 4, md: 6 }}
+                 borderRadius="xl"
+                 shadow="lg"
+                 bgGradient="linear(135deg, orange.400 0%, yellow.400 100%)"
+                 _hover={{ transform: 'translateY(-2px)', shadow: 'xl' }}
+                 fontWeight="bold"
+               >
+                 تسجيل الحضور (QR)
+               </Button>
+
+              <Button
+                colorScheme="purple"
+                size={{ base: 'md', md: 'lg' }}
+                onClick={handleSaveAttendance}
+                isLoading={savingAttendance}
+                loadingText="جاري الحفظ..."
+                  px={{ base: 6, md: 10 }}
+                  py={{ base: 4, md: 6 }}
+                w={{ base: '100%', md: 'auto' }}
+                borderRadius="xl"
+                  shadow="lg"
+                bgGradient="linear(135deg, purple.500 0%, pink.500 100%)"
+                  _hover={{ 
+                    transform: 'translateY(-2px)', 
+                    shadow: 'xl',
                 bgGradient: "linear(135deg, purple.600 0%, pink.600 100%)"
-                }}
-                _active={{ transform: 'translateY(0)' }}
-              transition="all 0.2s"
-              fontWeight="bold"
-            >
-              حفظ الحضور
-            </Button>
+                  }}
+                  _active={{ transform: 'translateY(0)' }}
+                transition="all 0.2s"
+                fontWeight="bold"
+              >
+                حفظ الحضور
+              </Button>
+            </HStack>
             </Flex>
               )}
           </Card>
@@ -1137,11 +1212,11 @@ const CenterGroupDetails = () => {
         </VStack>
       </Container>
 
-      <AddStudentModal
+      <AddStudentDualModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAddStudent={handleAddStudent}
-        groupId={id}
+        onAddByCode={handleAddStudentByCode}
+        onAddByName={handleAddStudentByName}
         loading={loading}
       />
       
@@ -1173,6 +1248,128 @@ const CenterGroupDetails = () => {
           onEditStudent={handleEditStudent}
       />
       )}
+
+      <AttendanceHistoryModal
+        isOpen={isAttendanceHistoryOpen}
+        onClose={() => setIsAttendanceHistoryOpen(false)}
+        groupId={id}
+      />
+
+      <Modal isOpen={isStudentsModalOpen} onClose={() => setIsStudentsModalOpen(false)} size="6xl" scrollBehavior="inside">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>طلاب المجموعة - {groupData?.name || `#${id}`}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {modalLoading ? (
+              <Center py={12}>
+                <VStack>
+                  <Spinner size="xl" color={primaryColor} />
+                  <Text>جاري جلب الطلاب...</Text>
+                </VStack>
+              </Center>
+            ) : modalError ? (
+              <Alert status="error" borderRadius="md">
+                <AlertIcon />
+                <Text>{modalError}</Text>
+              </Alert>
+            ) : modalStudents.length === 0 ? (
+              <Center py={12}>
+                <Text>لا يوجد طلاب لعرضهم لهذا التاريخ.</Text>
+              </Center>
+            ) : (
+              // ===================== تعديل: شبكة بعرض عمودين + تحسين شكل الكارت =====================
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} p={4} justifyItems="center">
+                {modalStudents.map((s) => (
+                  <Card
+                    key={s.id}
+                    w={{ base: "full", md: "480px" }}
+                    maxW="480px"
+                    borderRadius="lg"
+                    shadow="lg"
+                    overflow="hidden"
+                    transition="transform 0.18s ease"
+                    _hover={{ transform: "translateY(-6px)", shadow: "2xl" }}
+                  >
+                    <CardBody p={4}>
+                      <HStack align="start" spacing={4}>
+                        <VStack align="start" spacing={2} flex="1">
+                          <HStack spacing={3}>
+                            <Avatar size="md" name={s.student_name} bg="blue.400" color="white" />
+                            <VStack align="start" spacing={0}>
+                              <Text fontWeight="bold" fontSize="lg">{s.student_name}</Text>
+                            
+                            </VStack>
+                          </HStack>
+
+                          <VStack align="start" spacing={0} mt={2} fontSize="sm" color="gray.600">
+                           
+                            <Text>الهاتف: {s.phone}</Text>
+                            {s.parent_phone && <Text>هاتف ولي الأمر: {s.parent_phone}</Text>}
+                           
+                          </VStack>
+
+                          {/* زر "عرض الملف" أُزيل بناءً على طلبك */}
+                        </VStack>
+
+                        <Box
+                          w="130px"
+                          h="130px"
+                          flexShrink={0}
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          bg="gray.50"
+                          borderRadius="md"
+                          p={2}
+                        >
+                          {s.qr_code ? (
+                            <Image
+                              src={s.qr_code}
+                              alt={`QR ${s.student_name}`}
+                              maxW="120px"
+                              maxH="120px"
+                              objectFit="contain"
+                            />
+                          ) : (
+                            <Center w="full" h="full">
+                              <Text color="gray.500" fontSize="xs">لا يوجد QR</Text>
+                            </Center>
+                          )}
+                        </Box>
+                      </HStack>
+                    </CardBody>
+                  </Card>
+                ))}
+              </SimpleGrid>
+              // =======================================================================
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* QR Scanner Modal */}
+      <Modal isOpen={isQrScannerOpen} onClose={stopQrScanner} size="xl" isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>مسح QR لتسجيل الحضور</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Center flexDirection="column" py={4}>
+              <Box id="qr-scanner" w="full" minH="320px" borderRadius="md" overflow="hidden" bg="black" />
+              <Text mt={3} color="gray.500" fontSize="sm" textAlign="center">
+                ضع QR داخل المربع. سيتم إيقاف الكاميرا عند القراءة.
+              </Text>
+              {qrProcessing && (
+                <Text mt={2} color="green.500" fontWeight="semibold">جاري معالجة الكود...</Text>
+              )}
+              <HStack mt={4}>
+                <Button onClick={stopQrScanner} colorScheme="red" variant="ghost" size="sm">إيقاف</Button>
+              </HStack>
+            </Center>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

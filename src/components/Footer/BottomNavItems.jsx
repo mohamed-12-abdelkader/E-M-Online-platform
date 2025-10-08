@@ -1,7 +1,7 @@
 import React from 'react'
 import { Box, HStack, VStack, Icon, Text, useColorModeValue } from '@chakra-ui/react'
 import { Link, useLocation } from 'react-router-dom'
-import { FaHome, FaComments, FaTrophy, FaUsers, FaUser } from 'react-icons/fa'
+import { FaHome, FaQuestionCircle, FaTrophy, FaUsers, FaUser } from 'react-icons/fa'
 
 const BottomNavItems = () => {
      const location = useLocation();
@@ -9,7 +9,7 @@ const BottomNavItems = () => {
      const isActivePath = (href) => location.pathname === href || location.pathname.startsWith(href + '/');
      const bottomNavItems = [
     { label: "الرئيسية", href: "/home", icon: FaHome },
-    { label: "المحادثات", href: "/teacherChat", icon: FaComments },
+    { label: "بنك الاسئله ", href: "/question_bank", icon: FaQuestionCircle },
     { label: "الدوري", href: "/leagues", icon: FaTrophy },
     { label: "سوشيال", href: "/social", icon: FaUsers },
    

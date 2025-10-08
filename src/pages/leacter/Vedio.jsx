@@ -98,55 +98,13 @@ const Video = () => {
   }, []);
 
   // كشف فتح أدوات المطور (تقريبي)
-  useEffect(() => {
-    const checkDevtools = () => {
-      const threshold = 170; // فرق الحجم عند فتح devtools docked
-      const opened =
-        (window.outerWidth - window.innerWidth > threshold) ||
-        (window.outerHeight - window.innerHeight > threshold);
-      devtoolsOpenRef.current = opened;
-      if (opened) {
-        setBlocked(true);
-        setBlockReason("تم التعطيل لاكتشاف أدوات المطور/تسجيل الشاشة");
-        try { playerRef.current?.pause?.(); } catch (e) {}
-      }
-    };
-    const interval = setInterval(checkDevtools, 700);
-    return () => clearInterval(interval);
-  }, []);
 
-  // حجب عند فقدان التركيز/إخفاء التبويب (تقليل التسجيل)
-  useEffect(() => {
-    const onBlur = () => { setBlocked(true); setBlockReason("تم التعطيل عند مغادرة النافذة"); try { playerRef.current?.pause?.(); } catch (e) {} };
-    const onFocus = () => { /* لا نفك الحجب هنا إلا بفحص صريح */ };
-    const onVisibility = () => { if (document.hidden) { setBlocked(true); setBlockReason("تم التعطيل عند إخفاء التبويب"); try { playerRef.current?.pause?.(); } catch (e) {} } };
-    window.addEventListener("blur", onBlur);
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      window.removeEventListener("blur", onBlur);
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, []);
 
+  
   // دالة فحص لاستئناف العرض فقط عند الأمان
-  const canResume = () => {
-    const visible = !document.hidden;
-    const focused = document.hasFocus();
-    const devtoolsClosed = !devtoolsOpenRef.current;
-    return visible && focused && devtoolsClosed;
-  };
 
-  const handleRetry = () => {
-    if (canResume()) {
-      setBlocked(false);
-      try { playerRef.current?.play?.(); } catch (e) {}
-    } else {
-      setBlocked(true);
-      setBlockReason("مازال هناك تسجيل شاشة/أدوات مطور. أوقفه أولاً.");
-    }
-  };
+
+ 
 
   if (loading) {
     return (
@@ -207,16 +165,7 @@ const Video = () => {
           )}
 
           {/* طبقة حجب كاملة */}
-          {blocked && (
-            <div className="absolute inset-0 bg-black/95 flex items-center justify-center z-50">
-              <div className="text-center px-6">
-                <div className="text-white text-sm mb-3">{blockReason}</div>
-                <button onClick={handleRetry} className="bg-white text-black text-sm px-4 py-2 rounded-md">
-                  إعادة المحاولة
-                </button>
-              </div>
-            </div>
-          )}
+        
         </div>
       </div>
       <ScrollToTop />

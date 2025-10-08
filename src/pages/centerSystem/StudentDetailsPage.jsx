@@ -51,7 +51,8 @@ import {
   Textarea,
   FormControl,
   FormLabel,
-  useDisclosure
+  useDisclosure,
+  Stack
 } from '@chakra-ui/react';
 import { FaArrowLeft, FaCalendarAlt, FaCheckCircle, FaTimesCircle, FaUser, FaPhone, FaChartLine, FaCalendarCheck, FaCalendarTimes, FaStar, FaFileAlt } from 'react-icons/fa';
 import { MdAttachMoney, MdLocationOn, MdSchool, MdAdd } from 'react-icons/md';
@@ -312,27 +313,27 @@ const StudentDetailsPage = () => {
           >
             <VStack spacing={6}>
               {/* Back Button */}
-              <HStack w="full" justify="space-between">
+              <Stack direction={{ base: 'column', md: 'row' }} w="full" justify="space-between" align="center" spacing={4}>
                 <Button
                   as={Link}
                   to={`/group_details/${groupId}`}
                   leftIcon={<FaArrowLeft />}
                   variant="ghost"
                   colorScheme="blue"
-                  size="lg"
+                  size={{ base: 'md', md: 'lg' }}
                   borderRadius="xl"
                 >
                   العودة للمجموعة
                 </Button>
                 
                 {/* Month/Year Selector */}
-                <HStack spacing={4}>
+                <HStack spacing={3} flexWrap="wrap" justify="center">
                   <Select
                     value={selectedMonth}
                     onChange={handleMonthChange}
-                    size="md"
+                    size={{ base: 'sm', md: 'md' }}
                     borderRadius="xl"
-                    w="120px"
+                    w={{ base: '120px', md: '120px' }}
                   >
                     <option value={1}>يناير</option>
                     <option value={2}>فبراير</option>
@@ -351,9 +352,9 @@ const StudentDetailsPage = () => {
                   <Select
                     value={selectedYear}
                     onChange={handleYearChange}
-                    size="md"
+                    size={{ base: 'sm', md: 'md' }}
                     borderRadius="xl"
-                    w="100px"
+                    w={{ base: '100px', md: '100px' }}
                   >
                     {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
                       <option key={year} value={year}>{year}</option>
@@ -364,7 +365,7 @@ const StudentDetailsPage = () => {
                   <Button
                     leftIcon={<MdAdd />}
                     colorScheme="purple"
-                    size="md"
+                    size={{ base: 'sm', md: 'md' }}
                     onClick={onAddGradeModalOpen}
                     borderRadius="xl"
                     bgGradient="linear(135deg, purple.500 0%, pink.500 100%)"
@@ -379,12 +380,12 @@ const StudentDetailsPage = () => {
                     إضافة درجة
                   </Button>
                 </HStack>
-              </HStack>
+              </Stack>
 
               {/* Student Info */}
-              <HStack spacing={6} w="full" justify="center">
+              <Stack direction={{ base: 'column', md: 'row' }} spacing={6} w="full" justify="center" align="center">
                 <Avatar
-                  size="2xl"
+                  size={{ base: 'xl', md: '2xl' }}
                   name={studentData.student_info.name}
                   bgGradient="linear(135deg, blue.400 0%, purple.400 100%)"
                   color="white"
@@ -394,12 +395,12 @@ const StudentDetailsPage = () => {
                   borderColor="white"
                 />
                 
-                <VStack align="start" spacing={3}>
+                <VStack align={{ base: 'center', md: 'start' }} spacing={3} maxW={{ base: 'full', md: 'auto' }}>
                   <Heading size="xl" color={textColor}>
                     {studentData.student_info.name}
                   </Heading>
                   
-                  <HStack spacing={6}>
+                  <HStack spacing={6} flexWrap="wrap" justify="center">
                     <HStack bg="blue.50" px={4} py={2} borderRadius="full">
                       <FaPhone color={primaryColor} size={16} />
                       <Text fontWeight="medium" color={textColor}>
@@ -412,7 +413,7 @@ const StudentDetailsPage = () => {
                     </Badge>
                   </HStack>
                 </VStack>
-              </HStack>
+              </Stack>
             </VStack>
           </Card>
 
@@ -575,7 +576,7 @@ const StudentDetailsPage = () => {
                     </VStack>
                   </Center>
                 ) : (
-                  <Box maxH="300px" overflowY="auto">
+                  <Box maxH="300px" overflowY="auto" overflowX="auto">
                     <Table variant="simple" size="sm">
                       <Thead bg={useColorModeValue('green.50', 'green.900')}>
                         <Tr>
@@ -639,7 +640,7 @@ const StudentDetailsPage = () => {
                     </VStack>
                   </Center>
                 ) : (
-                  <Box maxH="300px" overflowY="auto">
+                  <Box maxH="300px" overflowY="auto" overflowX="auto">
                     <Table variant="simple" size="sm">
                       <Thead bg={useColorModeValue('red.50', 'red.900')}>
                         <Tr>
@@ -780,8 +781,8 @@ const StudentDetailsPage = () => {
                    </VStack>
                  </Center>
                ) : (
-                 <Box maxH="400px" overflowY="auto">
-                   <Table variant="simple" size="md">
+                <Box maxH="400px" overflowY="auto" overflowX="auto">
+                  <Table variant="simple" size="sm">
                      <Thead bg={useColorModeValue('purple.50', 'purple.900')}>
                        <Tr>
                          <Th color="purple.700" fontSize="sm">الامتحان</Th>
