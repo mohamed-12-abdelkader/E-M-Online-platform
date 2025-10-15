@@ -157,5 +157,3 @@ const AddStudentDualModal = ({ isOpen, onClose, onAddByCode, onAddByName, loadin
 };
 
 export default AddStudentDualModal;
-
-

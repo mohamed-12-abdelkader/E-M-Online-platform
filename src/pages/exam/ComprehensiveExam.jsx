@@ -35,6 +35,13 @@ const ComprehensiveExam = () => {
   const [gradesError, setGradesError] = useState(null);
   // State للتنقل بين الأسئلة
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  // State لعرض/إخفاء الباجنيشن
+  const [showPagination, setShowPagination] = useState(false);
+  // State لإضافة الأسئلة كصور
+  const [addImageModal, setAddImageModal] = useState({ open: false });
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   // جلب درجات الطلاب
   const fetchGrades = async () => {
@@ -253,7 +260,7 @@ const ComprehensiveExam = () => {
       const token = localStorage.getItem("token");
       await baseUrl.patch(
         `/api/questions/lecture-exam-question/${qid}/answer`,
-        { correct_choice_id: cid },
+        { correct_answer: cid },
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       );
       toast({ title: "تم تحديد الإجابة الصحيحة", status: "success" });
@@ -262,8 +269,13 @@ const ComprehensiveExam = () => {
         delete copy[qid];
         return copy;
       });
-    } catch {
-      toast({ title: "فشل تحديد الإجابة", status: "error" });
+    } catch (error) {
+      console.error("Error setting correct answer:", error);
+      toast({ 
+        title: "فشل تحديد الإجابة", 
+        description: error.response?.data?.message || "حدث خطأ أثناء تحديد الإجابة الصحيحة",
+        status: "error" 
+      });
       // أعد الحالة كما كانت
       setQuestions((prev) => prev.map((q) =>
         q.id === qid
@@ -320,6 +332,151 @@ const ComprehensiveExam = () => {
       toast({ title: "فشل تسليم الامتحان", status: "error" });
     } finally {
       setSubmitLoading(false);
+    }
+  };
+
+  // فتح مودال إضافة الصور
+  const openAddImageModal = () => {
+    setSelectedImages([]);
+    setImagePreviews([]);
+    setAddImageModal({ open: true });
+  };
+
+  // إغلاق مودال إضافة الصور
+  const closeAddImageModal = () => {
+    setAddImageModal({ open: false });
+    setSelectedImages([]);
+    setImagePreviews([]);
+  };
+
+  // التعامل مع اختيار الصور
+  const handleImageSelection = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // التحقق من عدد الصور (حد أقصى 10)
+    if (files.length > 10) {
+      toast({
+        title: "خطأ",
+        description: "يمكن رفع حتى 10 صور فقط",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // التحقق من نوع الملفات
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار ملفات صورة صالحة (JPG, PNG, GIF)",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // التحقق من حجم الملفات (حد أقصى 5MB لكل صورة)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      toast({
+        title: "خطأ",
+        description: "حجم كل صورة يجب أن يكون أقل من 5MB",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setSelectedImages(files);
+    
+    // إنشاء معاينة للصور
+    const previews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews(previews);
+  };
+
+  // إزالة صورة من القائمة
+  const removeImage = (index) => {
+    const newImages = selectedImages.filter((_, i) => i !== index);
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    
+    // تحرير الذاكرة
+    URL.revokeObjectURL(imagePreviews[index]);
+    
+    setSelectedImages(newImages);
+    setImagePreviews(newPreviews);
+  };
+
+  // رفع الصور كأسئلة
+  const uploadImagesAsQuestions = async () => {
+    if (selectedImages.length === 0) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار صور أولاً",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setUploadingImages(true);
+    try {
+      const token = localStorage.getItem("token");
+      
+      const formData = new FormData();
+      formData.append('exam_id', id);
+      
+      // إضافة كل صورة
+      selectedImages.forEach((image, index) => {
+        formData.append('images', image);
+      });
+
+      const response = await baseUrl.post(
+        '/api/questions/lecture-exam-question',
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      console.log('Images uploaded successfully:', response.data);
+      
+      toast({
+        title: "تم رفع الصور بنجاح",
+        description: `تم رفع ${selectedImages.length} صورة كأسئلة`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // إعادة تحميل الأسئلة
+      await fetchQuestions();
+      
+      // إغلاق المودال
+      closeAddImageModal();
+      
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        title: "خطأ في رفع الصور",
+        description: error.response?.data?.message || "حدث خطأ أثناء رفع الصور",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setUploadingImages(false);
     }
   };
 
@@ -384,7 +541,7 @@ const ComprehensiveExam = () => {
   }
 
   return (
-    <Box maxW={{ base: "100%", sm: "90%", md: "2xl" }} mx="auto" py={{ base: 6, sm: 8, md: 10 }} px={{ base: 2, sm: 4, md: 6 }} className="mt-[80px]">
+    <Box maxW="90%" mx="auto"  px={{ base: 2, sm: 4, md: 6 }} className="mt-[20px]">
       <style>
         {`
           @keyframes pulse {
@@ -402,19 +559,17 @@ const ComprehensiveExam = () => {
         `}
       </style>
       <VStack spacing={{ base: 4, sm: 5, md: 6 }} mb={{ base: 6, sm: 7, md: 8 }}>
-        <Heading textAlign="center" color="blue.600" size={{ base: 'lg', sm: 'xl', md: '2xl' }}>
-          {isTeacher || isAdmin ? "عرض الامتحان" : "الامتحان الشامل"}
-        </Heading>
+      
         {!isTeacher && !isAdmin && student && (
           <Text color="gray.600" textAlign="center" fontSize={{ base: 'md', sm: 'lg', md: 'xl' }} px={{ base: 2, sm: 4 }}>
             أجب على جميع الأسئلة ثم اضغط على "تسليم الامتحان"
           </Text>
         )}
       </VStack>
-      {/* زر عرض درجات الطلاب للمدرس فقط */}
+      {/* أزرار المدرس */}
       {isTeacher && (
+        <HStack spacing={4} mb={{ base: 6, sm: 7, md: 8 }} justify="center" flexWrap="wrap">
           <Button 
-            mb={{ base: 6, sm: 7, md: 8 }} 
             colorScheme="green" 
             onClick={fetchGrades}
             size={{ base: 'sm', sm: 'md', md: 'lg' }}
@@ -425,8 +580,24 @@ const ComprehensiveExam = () => {
             h={{ base: '40px', sm: '44px', md: '48px' }}
             borderRadius="full"
           >
-          عرض درجات الطلاب
-        </Button>
+            عرض درجات الطلاب
+          </Button>
+          
+          <Button 
+            colorScheme="purple" 
+            onClick={openAddImageModal}
+            size={{ base: 'sm', sm: 'md', md: 'lg' }}
+            fontSize={{ base: 'sm', sm: 'md', md: 'lg' }}
+            px={{ base: 4, sm: 6, md: 8 }}
+            py={{ base: 2, sm: 3, md: 4 }}
+            minW={{ base: '160px', sm: '180px', md: '200px' }}
+            h={{ base: '40px', sm: '44px', md: '48px' }}
+            borderRadius="full"
+            leftIcon={<Icon as={AiFillStar} boxSize={{ base: 3, sm: 4, md: 5 }} />}
+          >
+            إضافة أسئلة كصور
+          </Button>
+        </HStack>
       )}
               <VStack spacing={{ base: 6, sm: 7, md: 8 }} align="stretch">
         {/* إذا الطالب سلّم الامتحان، اعرض النتيجة والأخطاء */}
@@ -666,18 +837,68 @@ const ComprehensiveExam = () => {
             </Text>
                       {/* عرض صورة السؤال إذا كانت موجودة */}
                       {q.image && (
-                        <Box mt={2} w="full">
-                          <Image 
-                            src={q.image} 
-                            alt="صورة السؤال" 
-                            borderRadius="md" 
-                            maxH={{ base: '200px', sm: '250px', md: '300px' }} 
-                            w="full"
-                            objectFit="cover"
-                            border="1px solid"
-                            borderColor="gray.200"
-                            boxShadow="sm"
-                          />
+                        <Box 
+                          mt={4} 
+                          w="full" 
+                          display="flex" 
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          <Box
+                            maxW="100%"
+                            borderRadius="xl"
+                            overflow="hidden"
+                            boxShadow="xl"
+                            border="3px solid"
+                            borderColor="blue.200"
+                            bg="white"
+                            p={2}
+                            position="relative"
+                            _hover={{
+                              transform: "scale(1.02)",
+                              boxShadow: "2xl",
+                              borderColor: "blue.300"
+                            }}
+                            transition="all 0.3s ease"
+                          >
+                            <Image 
+                              src={q.image} 
+                              alt="صورة السؤال" 
+                              borderRadius="lg"
+                              maxW="100%"
+                              maxH={{ base: '400px', sm: '500px', md: '600px', lg: '700px' }}
+                              objectFit="contain"
+                              bg="gray.50"
+                              onError={(e) => {
+                                console.log('Image load error, retrying...');
+                                // إعادة المحاولة بعد ثانية واحدة
+                                setTimeout(() => {
+                                  e.target.src = q.image + '?t=' + Date.now();
+                                }, 1000);
+                              }}
+                              onLoad={() => {
+                                console.log('Image loaded successfully');
+                              }}
+                              fallback={
+                                <Box 
+                                  w="full" 
+                                  h="200px" 
+                                  bg="gray.100" 
+                                  display="flex" 
+                                  alignItems="center" 
+                                  justifyContent="center"
+                                  borderRadius="lg"
+                                >
+                                  <VStack spacing={2}>
+                                    <Spinner size="md" color="blue.500" />
+                                    <Text color="gray.500" fontSize="sm">جاري تحميل الصورة...</Text>
+                                  </VStack>
+                                </Box>
+                              }
+                            />
+                            {/* مؤشر أن هذه صورة السؤال */}
+                          
+                          </Box>
                         </Box>
                       )}
                     </VStack>
@@ -759,6 +980,87 @@ const ComprehensiveExam = () => {
               // للطلاب: عرض سؤال واحد مع التنقل
               questions.length > 0 && (
                 <>
+                  {/* شريط التقدم المبسط */}
+                  <Box 
+                    p={{ base: 4, sm: 5, md: 6 }} 
+                    borderRadius="xl" 
+                    bg="white" 
+                    border="1px solid" 
+                    borderColor="gray.200"
+                    boxShadow="md"
+                    mb={6}
+                  >
+                    <VStack spacing={4}>
+                      {/* شريط التقدم العام */}
+                      <Box w="full">
+                        <HStack justify="space-between" mb={3}>
+                          <Text fontSize={{ base: 'lg', sm: 'xl' }} fontWeight="bold" color="blue.700">
+                            التقدم: {Object.keys(studentAnswers).length} من {questions.length}
+                          </Text>
+                          <Text fontSize={{ base: 'lg', sm: 'xl' }} fontWeight="bold" color="gray.600">
+                            السؤال {currentQuestionIndex + 1}
+                          </Text>
+                        </HStack>
+                        <Box w="full" h="12px" bg="gray.200" borderRadius="full" overflow="hidden">
+                          <Box 
+                            h="full" 
+                            bgGradient="linear(to-r, blue.400, green.400)" 
+                            borderRadius="full" 
+                            transition="width 0.5s ease"
+                            w={`${(Object.keys(studentAnswers).length / questions.length) * 100}%`}
+                          />
+                        </Box>
+                      </Box>
+
+                      {/* زر المراجعة فقط */}
+                     
+
+                      {/* الباجنيشن المبسط */}
+                      {showPagination && (
+                        <Box w="full" mt={4}>
+                          <Text fontSize="md" fontWeight="bold" color="gray.700" mb={3} textAlign="center">
+                            التنقل السريع
+                          </Text>
+                          <HStack spacing={2} flexWrap="wrap" justify="center">
+                            {questions.map((question, index) => {
+                              const isAnswered = studentAnswers[question.id];
+                              const isCurrent = currentQuestionIndex === index;
+                              return (
+                                <Button
+                                  key={index}
+                                  size="sm"
+                                  variant={isCurrent ? "solid" : isAnswered ? "outline" : "ghost"}
+                                  colorScheme={isCurrent ? "blue" : isAnswered ? "green" : "gray"}
+                                  onClick={() => goToQuestion(index)}
+                                  minW="40px"
+                                  h="40px"
+                                  borderRadius="full"
+                                  fontSize="sm"
+                                  fontWeight="bold"
+                                  position="relative"
+                                >
+                                  {index + 1}
+                                  {isAnswered && !isCurrent && (
+                                    <Box
+                                      position="absolute"
+                                      top="-2px"
+                                      right="-2px"
+                                      w="8px"
+                                      h="8px"
+                                      bg="green.500"
+                                      borderRadius="full"
+                                      border="2px solid white"
+                                    />
+                                  )}
+                                </Button>
+                              );
+                            })}
+                          </HStack>
+                        </Box>
+                      )}
+                    </VStack>
+                  </Box>
+
                   {/* السؤال الحالي */}
                   <Box
                     p={{ base: 4, sm: 5, md: 6 }}
@@ -775,18 +1077,68 @@ const ComprehensiveExam = () => {
                       
                       {/* عرض صورة السؤال إذا كانت موجودة */}
                       {questions[currentQuestionIndex].image && (
-                        <Box mt={2} w="full">
-                          <Image 
-                            src={questions[currentQuestionIndex].image} 
-                            alt="صورة السؤال" 
-                            borderRadius="md" 
-                            maxH={{ base: '200px', sm: '250px', md: '300px' }} 
-                            w="full"
-                            objectFit="cover"
-                            border="1px solid"
-                            borderColor="gray.200"
-                            boxShadow="sm"
-                          />
+                        <Box 
+                          mt={4} 
+                          w="full" 
+                          display="flex" 
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          <Box
+                            maxW="100%"
+                            borderRadius="xl"
+                            overflow="hidden"
+                            boxShadow="xl"
+                            border="3px solid"
+                            borderColor="blue.200"
+                            bg="white"
+                            p={2}
+                            position="relative"
+                            _hover={{
+                              transform: "scale(1.02)",
+                              boxShadow: "2xl",
+                              borderColor: "blue.300"
+                            }}
+                            transition="all 0.3s ease"
+                          >
+                            <Image 
+                              src={questions[currentQuestionIndex].image} 
+                              alt="صورة السؤال"
+                              borderRadius="lg"
+                              maxW="100%"
+                              maxH={{ base: '400px', sm: '500px', md: '600px', lg: '700px' }}
+                              objectFit="contain"
+                              bg="gray.50"
+                              onError={(e) => {
+                                console.log('Image load error, retrying...');
+                                // إعادة المحاولة بعد ثانية واحدة
+                                setTimeout(() => {
+                                  e.target.src = questions[currentQuestionIndex].image + '?t=' + Date.now();
+                                }, 1000);
+                              }}
+                              onLoad={() => {
+                                console.log('Image loaded successfully');
+                              }}
+                              fallback={
+                                <Box 
+                                  w="full" 
+                                  h="200px" 
+                                  bg="gray.100" 
+                                  display="flex" 
+                                  alignItems="center" 
+                                  justifyContent="center"
+                                  borderRadius="lg"
+                                >
+                                  <VStack spacing={2}>
+                                    <Spinner size="md" color="blue.500" />
+                                    <Text color="gray.500" fontSize="sm">جاري تحميل الصورة...</Text>
+                                  </VStack>
+                                </Box>
+                              }
+                            />
+                            {/* مؤشر أن هذه صورة السؤال */}
+                     
+                          </Box>
                         </Box>
                       )}
                     </VStack>
@@ -795,7 +1147,7 @@ const ComprehensiveExam = () => {
                     
                     {questions[currentQuestionIndex].choices && questions[currentQuestionIndex].choices.length > 0 ? (
                       <CheckboxGroup value={studentAnswers[questions[currentQuestionIndex].id] ? [String(studentAnswers[questions[currentQuestionIndex].id])] : []}>
-                        <Stack direction="column" spacing={3}>
+                        <HStack spacing={4} flexWrap="wrap" align="stretch">
                           {questions[currentQuestionIndex].choices.map((choice, cidx) => (
                             <Checkbox
                               key={choice.id}
@@ -804,15 +1156,71 @@ const ComprehensiveExam = () => {
                               isChecked={studentAnswers[questions[currentQuestionIndex].id] === choice.id}
                               onChange={() => handleStudentChoice(questions[currentQuestionIndex].id, choice.id)}
                               isDisabled={!!submitResult}
+                              flex="1"
+                              minW={{ base: "100%", sm: "45%", md: "30%", lg: "22%" }}
                             >
-                              <Box p={3} borderRadius="md" bg="white" border="1px solid" borderColor="gray.200" _hover={{ bg: "blue.50" }}>
-                                <Text fontSize={{ base: 'md', sm: 'lg' }} fontWeight="medium">
-                                  {String.fromCharCode(65 + cidx)}. {choice.text}
+                              <Box 
+                                p={{ base: 4, sm: 5, md: 6 }} 
+                                borderRadius="2xl" 
+                                bg="white" 
+                                border="3px solid" 
+                                borderColor={studentAnswers[questions[currentQuestionIndex].id] === choice.id ? "blue.400" : "gray.200"}
+                                _hover={{ 
+                                  bg: studentAnswers[questions[currentQuestionIndex].id] === choice.id ? "blue.50" : "gray.50", 
+                                  borderColor: studentAnswers[questions[currentQuestionIndex].id] === choice.id ? "blue.500" : "blue.300",
+                                  transform: "translateY(-3px)",
+                                  boxShadow: "xl"
+                                }}
+                                transition="all 0.3s ease"
+                                w="full"
+                                minH="100px"
+                                display="flex"
+                                alignItems="center"
+                                justifyContent="center"
+                                textAlign="center"
+                                position="relative"
+                                cursor="pointer"
+                                boxShadow={studentAnswers[questions[currentQuestionIndex].id] === choice.id ? "xl" : "md"}
+                                bgGradient={studentAnswers[questions[currentQuestionIndex].id] === choice.id ? "linear(to-br, blue.50, white)" : "linear(to-br, white, gray.50)"}
+                              >
+                                {/* مؤشر الاختيار */}
+                                {studentAnswers[questions[currentQuestionIndex].id] === choice.id && (
+                                  <Box
+                                    position="absolute"
+                                    top="8px"
+                                    right="8px"
+                                    w="24px"
+                                    h="24px"
+                                    borderRadius="full"
+                                    bg="blue.500"
+                                    color="white"
+                                    display="flex"
+                                    alignItems="center"
+                                    justifyContent="center"
+                                    fontSize="xs"
+                                    fontWeight="bold"
+                                    boxShadow="md"
+                                  >
+                                    ✓
+                                  </Box>
+                                )}
+                                
+                                <Text 
+                                  fontSize={{ base: 'md', sm: 'lg', md: 'xl' }} 
+                                  fontWeight={studentAnswers[questions[currentQuestionIndex].id] === choice.id ? "bold" : "medium"}
+                                  color={studentAnswers[questions[currentQuestionIndex].id] === choice.id ? "blue.700" : "gray.700"}
+                                  lineHeight="1.4"
+                                  px={2}
+                                >
+                                  <Text as="span" fontSize="lg" fontWeight="bold" color="blue.600" mr={2}>
+                                    {String.fromCharCode(65 + cidx)}.
+                                  </Text>
+                                  {choice.text}
                                 </Text>
                               </Box>
                             </Checkbox>
                           ))}
-                        </Stack>
+                        </HStack>
                       </CheckboxGroup>
                     ) : (
                       <Alert status="info" borderRadius="md" mt={2}>
@@ -822,131 +1230,93 @@ const ComprehensiveExam = () => {
                     )}
                   </Box>
 
-                  {/* شريط التقدم */}
+                  {/* أزرار السابق والتالي - تحت الأسئلة */}
                   <Box 
-                    p={{ base: 4, sm: 5, md: 6 }} 
-                    borderRadius="lg" 
+                    mt={6} 
+                    p={4} 
+                    borderRadius="xl" 
                     bg="white" 
                     border="1px solid" 
                     borderColor="gray.200"
                     boxShadow="md"
-                    mt={{ base: 4, sm: 5, md: 6 }}
                   >
-                    <VStack spacing={4}>
-                      {/* شريط التقدم العام */}
-                      <Box w="full">
-                        <HStack justify="space-between" mb={2}>
-                          <Text fontSize={{ base: 'sm', sm: 'md' }} fontWeight="bold" color="blue.700">
-                            التقدم العام
-                          </Text>
-                          <Text fontSize={{ base: 'sm', sm: 'md' }} fontWeight="bold" color="gray.600">
-                            {Object.keys(studentAnswers).length} من {questions.length}
-                          </Text>
-                        </HStack>
-                        <Box w="full" h="8px" bg="gray.200" borderRadius="full" overflow="hidden">
-                          <Box 
-                            h="full" 
-                            bgGradient="linear(to-r, blue.400, green.400)" 
-                            borderRadius="full" 
-                            transition="width 0.3s ease"
-                            w={`${(Object.keys(studentAnswers).length / questions.length) * 100}%`}
-                          />
-                        </Box>
-                      </Box>
-
-                      {/* إحصائيات مفصلة */}
-                      <HStack spacing={6} justify="center" flexWrap="wrap">
-                        <HStack spacing={2}>
-                          <Box w="4" h="4" bg="green.500" borderRadius="full" />
-                          <Text fontSize={{ base: 'xs', sm: 'sm' }} color="green.600" fontWeight="medium">
-                            مكتمل ({Object.keys(studentAnswers).length})
-                          </Text>
-                        </HStack>
-                        <HStack spacing={2}>
-                          <Box w="4" h="4" bg="gray.300" borderRadius="full" />
-                          <Text fontSize={{ base: 'xs', sm: 'sm' }} color="gray.600" fontWeight="medium">
-                            متبقي ({questions.length - Object.keys(studentAnswers).length})
-                          </Text>
-                        </HStack>
-                        <HStack spacing={2}>
-                          <Box w="4" h="4" bg="blue.500" borderRadius="full" />
-                          <Text fontSize={{ base: 'xs', sm: 'sm' }} color="blue.600" fontWeight="medium">
-                            الحالي ({currentQuestionIndex + 1})
-                          </Text>
-                        </HStack>
-                      </HStack>
-
-                      {/* أزرار التنقل السريع */}
-                      <Box>
-                        <Text fontSize={{ base: 'sm', sm: 'md' }} fontWeight="bold" color="gray.700" mb={3} textAlign="center">
-                          التنقل السريع
-                        </Text>
-                        <HStack spacing={2} flexWrap="wrap" justify="center">
-                          {questions.map((question, index) => {
-                            const isAnswered = studentAnswers[question.id];
-                            const isCurrent = currentQuestionIndex === index;
-                            return (
-                              <Button
-                                key={index}
-                                size={{ base: 'xs', sm: 'sm' }}
-                                variant={isCurrent ? "solid" : isAnswered ? "outline" : "ghost"}
-                                colorScheme={isCurrent ? "blue" : isAnswered ? "green" : "gray"}
-                                onClick={() => goToQuestion(index)}
-                                minW={{ base: '32px', sm: '40px' }}
-                                h={{ base: '32px', sm: '40px' }}
-                                borderRadius="full"
-                                fontSize={{ base: 'xs', sm: 'sm' }}
-                                fontWeight="bold"
-                                position="relative"
-                              >
-                                {index + 1}
-                                {isAnswered && !isCurrent && (
-                                  <Box
-                                    position="absolute"
-                                    top="-2px"
-                                    right="-2px"
-                                    w="8px"
-                                    h="8px"
-                                    bg="green.500"
-                                    borderRadius="full"
-                                    border="2px solid white"
-                                  />
-                                )}
-                              </Button>
-                            );
-                          })}
-                        </HStack>
-                      </Box>
-
-                      {/* أزرار السابق والتالي */}
-                      <HStack spacing={4} justify="center">
+                    <HStack spacing={4} justify="center" flexWrap="wrap">
+                      <Button
+                        colorScheme="blue"
+                        variant="outline"
+                        onClick={goToPreviousQuestion}
+                        isDisabled={currentQuestionIndex === 0}
+                        size={{ base: 'md', sm: 'lg' }}
+                        leftIcon={<Icon as={AiOutlineCloseCircle} boxSize={5} />}
+                        px={{ base: 6, sm: 8 }}
+                        py={{ base: 3, sm: 4 }}
+                        borderRadius="full"
+                        fontSize={{ base: 'md', sm: 'lg' }}
+                        fontWeight="bold"
+                        _hover={{
+                          transform: 'translateY(-2px)',
+                          boxShadow: 'xl',
+                          bg: 'blue.50'
+                        }}
+                        transition="all 0.2s"
+                        minW={{ base: '120px', sm: '140px' }}
+                        h={{ base: '48px', sm: '56px' }}
+                      >
+                        السابق
+                      </Button>
+                      
+                      {/* زر تسليم الامتحان - يظهر فقط عند اكتمال جميع الأسئلة */}
+                      {Object.keys(studentAnswers).length === questions.length && (
                         <Button
-                          colorScheme="blue"
-                          variant="outline"
-                          onClick={goToPreviousQuestion}
-                          isDisabled={currentQuestionIndex === 0}
-                          size={{ base: 'sm', sm: 'md' }}
-                          px={{ base: 4, sm: 6 }}
-                          py={{ base: 2, sm: 3 }}
-                          minW={{ base: '80px', sm: '100px' }}
-                          leftIcon={<Icon as={AiOutlineCloseCircle} boxSize={{ base: 3, sm: 4 }} />}
+                          colorScheme="green"
+                          onClick={handleSubmitExam}
+                          isLoading={submitLoading}
+                          size={{ base: 'md', sm: 'lg' }}
+                          leftIcon={<Icon as={AiFillCheckCircle} boxSize={5} />}
+                          px={{ base: 6, sm: 8 }}
+                          py={{ base: 3, sm: 4 }}
+                          borderRadius="full"
+                          fontSize={{ base: 'md', sm: 'lg' }}
+                          fontWeight="bold"
+                          _hover={{
+                            transform: 'translateY(-2px)',
+                            boxShadow: 'xl',
+                            bg: 'green.600'
+                          }}
+                          transition="all 0.2s"
+                          minW={{ base: '140px', sm: '160px' }}
+                          h={{ base: '48px', sm: '56px' }}
+                          bgGradient="linear(to-r, green.400, green.500)"
+                          color="white"
+                          boxShadow="lg"
                         >
-                          السابق
+                          {submitLoading ? "جاري التسليم..." : "تسليم الامتحان"}
                         </Button>
-                        <Button
-                          colorScheme="blue"
-                          onClick={goToNextQuestion}
-                          isDisabled={currentQuestionIndex === questions.length - 1}
-                          size={{ base: 'sm', sm: 'md' }}
-                          px={{ base: 4, sm: 6 }}
-                          py={{ base: 2, sm: 3 }}
-                          minW={{ base: '80px', sm: '100px' }}
-                          rightIcon={<Icon as={AiOutlineCheckCircle} boxSize={{ base: 3, sm: 4 }} />}
-                        >
-                          التالي
-                        </Button>
-                      </HStack>
-                    </VStack>
+                      )}
+                      
+                      <Button
+                        colorScheme="blue"
+                        onClick={goToNextQuestion}
+                        isDisabled={currentQuestionIndex === questions.length - 1}
+                        size={{ base: 'md', sm: 'lg' }}
+                        rightIcon={<Icon as={AiOutlineCheckCircle} boxSize={5} />}
+                        px={{ base: 6, sm: 8 }}
+                        py={{ base: 3, sm: 4 }}
+                        borderRadius="full"
+                        fontSize={{ base: 'md', sm: 'lg' }}
+                        fontWeight="bold"
+                        _hover={{
+                          transform: 'translateY(-2px)',
+                          boxShadow: 'xl',
+                          bg: 'blue.600'
+                        }}
+                        transition="all 0.2s"
+                        minW={{ base: '120px', sm: '140px' }}
+                        h={{ base: '48px', sm: '56px' }}
+                      >
+                        {currentQuestionIndex === questions.length - 1 ? "آخر سؤال" : "التالي"}
+                      </Button>
+                    </HStack>
                   </Box>
                 </>
               )
@@ -955,52 +1325,6 @@ const ComprehensiveExam = () => {
         )}
       </VStack>
 
-      {/* زر تسليم الامتحان للطالب فقط */}
-      {!isTeacher && !isAdmin && student && questions.length > 0 && !submitResult && (
-        <Box 
-          mt={{ base: 6, sm: 7, md: 8 }} 
-          p={{ base: 4, sm: 5, md: 6 }} 
-          borderRadius="xl" 
-          boxShadow="lg" 
-          bg="blue.50" 
-          border="2px solid" 
-          borderColor="blue.200"
-          textAlign="center"
-        >
-          <VStack spacing={{ base: 3, sm: 4 }}>
-            <Text fontSize={{ base: 'md', sm: 'lg', md: 'xl' }} fontWeight="bold" color="blue.700" px={{ base: 2, sm: 4 }}>
-              {Object.keys(studentAnswers).length === questions.length 
-                ? "تم الإجابة على جميع الأسئلة" 
-                : `أجب على ${questions.length - Object.keys(studentAnswers).length} سؤال متبقي`}
-            </Text>
-        <Button
-              colorScheme="green"
-              size={{ base: 'md', sm: 'lg', md: 'xl' }}
-          isLoading={submitLoading}
-          onClick={handleSubmitExam}
-          isDisabled={Object.keys(studentAnswers).length !== questions.length}
-              borderRadius="full"
-              px={{ base: 6, sm: 8, md: 10 }}
-              py={{ base: 3, sm: 4, md: 5 }}
-              fontSize={{ base: 'md', sm: 'lg', md: 'xl' }}
-              fontWeight="bold"
-              _hover={{
-                transform: 'translateY(-2px)',
-                boxShadow: 'xl',
-                bg: 'green.600'
-              }}
-              transition="all 0.2s"
-              leftIcon={<Icon as={AiFillCheckCircle} boxSize={{ base: 4, sm: 5, md: 6 }} />}
-              minW={{ base: '200px', sm: '240px', md: '280px' }}
-              h={{ base: '48px', sm: '56px', md: '64px' }}
-            >
-              {Object.keys(studentAnswers).length === questions.length 
-                ? "تسليم الامتحان" 
-                : "أكمل الإجابات أولاً"}
-        </Button>
-          </VStack>
-        </Box>
-      )}
 
       {/* عرض نتيجة التسليم */}
       {submitResult && (
@@ -1049,16 +1373,56 @@ const ComprehensiveExam = () => {
                   {imagePreview && (
                     <Box>
                       <Text fontSize={{ base: 'xs', sm: 'sm' }} color="gray.600" mb={2}>الصورة الحالية:</Text>
-                      <Image 
-                        src={imagePreview} 
-                        alt="معاينة الصورة" 
-                        borderRadius="md" 
-                        maxH={{ base: '150px', sm: '180px', md: '200px' }} 
-                        w="full"
-                        objectFit="cover"
-                        border="1px solid"
-                        borderColor="gray.200"
-                      />
+                      <Box
+                        maxW="100%"
+                        borderRadius="xl"
+                        overflow="hidden"
+                        boxShadow="lg"
+                        border="2px solid"
+                        borderColor="blue.200"
+                        bg="white"
+                        p={2}
+                        position="relative"
+                      >
+                        <Image 
+                          src={imagePreview} 
+                          alt="معاينة الصورة" 
+                          borderRadius="lg"
+                          maxW="100%"
+                          maxH={{ base: '200px', sm: '250px', md: '300px' }}
+                          objectFit="contain"
+                          bg="gray.50"
+                          fallback={
+                            <Box 
+                              w="full" 
+                              h="150px" 
+                              bg="gray.100" 
+                              display="flex" 
+                              alignItems="center" 
+                              justifyContent="center"
+                              borderRadius="lg"
+                            >
+                              <Text color="gray.500">خطأ في تحميل الصورة</Text>
+                            </Box>
+                          }
+                        />
+                        {/* مؤشر معاينة */}
+                        <Box
+                          position="absolute"
+                          top="4px"
+                          right="4px"
+                          bg="green.500"
+                          color="white"
+                          px={2}
+                          py={1}
+                          borderRadius="full"
+                          fontSize="xs"
+                          fontWeight="bold"
+                          boxShadow="md"
+                        >
+                          معاينة
+                        </Box>
+                      </Box>
                     </Box>
                   )}
                   
@@ -1156,6 +1520,169 @@ const ComprehensiveExam = () => {
             <Button 
               variant="ghost" 
               onClick={() => setDeleteModal({ open: false, qid: null })}
+              size={{ base: 'sm', sm: 'md' }}
+              fontSize={{ base: 'sm', sm: 'md' }}
+              px={{ base: 3, sm: 4 }}
+              py={{ base: 2, sm: 3 }}
+              minW={{ base: '80px', sm: '100px' }}
+            >
+              إلغاء
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Add Images Modal */}
+      <Modal isOpen={addImageModal.open} onClose={closeAddImageModal} size="xl">
+        <ModalOverlay />
+        <ModalContent mx={{ base: 2, sm: 4 }}>
+          <ModalHeader fontSize={{ base: 'md', sm: 'lg' }}>إضافة أسئلة كصور</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={6} align="stretch">
+              {/* تعليمات */}
+              <Box p={4} bg="blue.50" borderRadius="lg" border="1px solid" borderColor="blue.200">
+                <VStack spacing={2} align="start">
+                  <Text fontWeight="bold" color="blue.700" fontSize="sm">
+                    تعليمات إضافة الصور:
+                  </Text>
+                  <Text fontSize="sm" color="blue.600">
+                    • يمكن رفع حتى 10 صور كحد أقصى
+                  </Text>
+                  <Text fontSize="sm" color="blue.600">
+                    • أنواع الصور المدعومة: JPG, PNG, GIF
+                  </Text>
+                  <Text fontSize="sm" color="blue.600">
+                    • حجم كل صورة يجب أن يكون أقل من 5MB
+                  </Text>
+                </VStack>
+              </Box>
+
+              {/* رفع الملفات */}
+              <FormControl>
+                <FormLabel fontSize={{ base: 'sm', sm: 'md' }}>اختيار الصور:</FormLabel>
+                <Box
+                  p={6}
+                  border="2px dashed"
+                  borderColor="purple.300"
+                  borderRadius="lg"
+                  textAlign="center"
+                  _hover={{ borderColor: "purple.400", bg: "purple.50" }}
+                  transition="all 0.2s"
+                >
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageSelection}
+                    display="none"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload">
+                    <VStack spacing={2} cursor="pointer">
+                      <Icon as={AiFillStar} boxSize={8} color="purple.400" />
+                      <Text color="purple.600" fontWeight="medium">
+                        اضغط هنا لاختيار الصور
+                      </Text>
+                      <Text fontSize="sm" color="gray.500">
+                        أو اسحب الصور هنا
+                      </Text>
+                    </VStack>
+                  </label>
+                </Box>
+              </FormControl>
+
+              {/* معاينة الصور المختارة */}
+              {imagePreviews.length > 0 && (
+                <Box>
+                  <Text fontWeight="bold" color="gray.700" mb={3}>
+                    الصور المختارة ({imagePreviews.length}):
+                  </Text>
+                  <Box
+                    maxH="300px"
+                    overflowY="auto"
+                    p={2}
+                    border="1px solid"
+                    borderColor="gray.200"
+                    borderRadius="lg"
+                    bg="gray.50"
+                  >
+                    <VStack spacing={3} align="stretch">
+                      {imagePreviews.map((preview, index) => (
+                        <Box
+                          key={index}
+                          p={3}
+                          bg="white"
+                          borderRadius="lg"
+                          border="1px solid"
+                          borderColor="gray.200"
+                          position="relative"
+                        >
+                          <HStack spacing={3} align="start">
+                            <Image
+                              src={preview}
+                              alt={`معاينة ${index + 1}`}
+                              w="100px"
+                              h="80px"
+                              objectFit="contain"
+                              borderRadius="lg"
+                              border="2px solid"
+                              borderColor="purple.200"
+                              bg="white"
+                              boxShadow="md"
+                              _hover={{
+                                transform: "scale(1.05)",
+                                borderColor: "purple.300"
+                              }}
+                              transition="all 0.2s ease"
+                            />
+                            <VStack align="start" flex={1} spacing={1}>
+                              <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                                الصورة {index + 1}
+                              </Text>
+                              <Text fontSize="xs" color="gray.500">
+                                الحجم: {(selectedImages[index].size / 1024 / 1024).toFixed(2)} MB
+                              </Text>
+                              <Text fontSize="xs" color="gray.500">
+                                النوع: {selectedImages[index].type}
+                              </Text>
+                            </VStack>
+                            <IconButton
+                              aria-label="إزالة الصورة"
+                              size="sm"
+                              colorScheme="red"
+                              variant="ghost"
+                              onClick={() => removeImage(index)}
+                              icon={<AiFillDelete boxSize={4} />}
+                            />
+                          </HStack>
+                        </Box>
+                      ))}
+                    </VStack>
+                  </Box>
+                </Box>
+              )}
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              colorScheme="purple" 
+              mr={3} 
+              onClick={uploadImagesAsQuestions}
+              isLoading={uploadingImages}
+              isDisabled={selectedImages.length === 0}
+              size={{ base: 'sm', sm: 'md' }}
+              fontSize={{ base: 'sm', sm: 'md' }}
+              px={{ base: 4, sm: 6 }}
+              py={{ base: 2, sm: 3 }}
+              minW={{ base: '120px', sm: '140px' }}
+              leftIcon={<Icon as={AiFillStar} boxSize={4} />}
+            >
+              {uploadingImages ? "جاري الرفع..." : "رفع الصور"}
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={closeAddImageModal}
               size={{ base: 'sm', sm: 'md' }}
               fontSize={{ base: 'sm', sm: 'md' }}
               px={{ base: 3, sm: 4 }}

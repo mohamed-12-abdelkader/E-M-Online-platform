@@ -1171,7 +1171,7 @@ const CenterGroupDetails = () => {
                 size={{ base: 'md', md: 'lg' }}
                 onClick={startQrScanner}
                  px={{ base: 6, md: 8 }}
-                 py={{ base: 4, md: 6 }}
+                 py={{ base: 4, md: 6 }}                           
                  borderRadius="xl"
                  shadow="lg"
                  bgGradient="linear(135deg, orange.400 0%, yellow.400 100%)"

@@ -1051,17 +1051,38 @@ const CourseDetailsPage = () => {
   };
 
   // دالة إضافة الأسئلة بالجملة
-  const addBulkQuestions = async (examId, bulkText, examType) => {
+  const addBulkQuestions = async (examId, data, questionType, examType) => {
     try {
       setBulkQuestionsLoading(true);
-      const endpoint = examType === 'comprehensive'
-        ? `/api/course/course-exam/${examId}/bulk-questions`
-        : `/api/questions/lecture-exam/${examId}/bulk`;
-      await baseUrl.post(endpoint, {
-        bulk_text: bulkText
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      
+      if (questionType === 'text') {
+        // Handle text questions
+        const endpoint = examType === 'comprehensive'
+          ? `/api/course/course-exam/${examId}/bulk-questions`
+          : `/api/questions/lecture-exam/${examId}/bulk`;
+        await baseUrl.post(endpoint, {
+          bulk_text: data
+        }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } else {
+        // Handle image questions
+        const formData = new FormData();
+        formData.append('exam_id', examId);
+        
+        // Append each image file
+        data.forEach((file, index) => {
+          formData.append('images', file);
+        });
+        
+        await baseUrl.post('/api/questions/lecture-exam-question', formData, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          },
+        });
+      }
+      
       toast({ 
         title: 'تم إضافة الأسئلة بنجاح', 
         status: 'success', 
@@ -1159,18 +1180,88 @@ const CourseDetailsPage = () => {
 
   // مودال إضافة الأسئلة بالجملة
   const BulkQuestionsModal = ({ isOpen, onClose, examId, examTitle, onSubmit, loading }) => {
+    const [questionType, setQuestionType] = useState('text'); // 'text' or 'images'
     const [formData, setFormData] = useState({
-      bulk_text: ''
+      bulk_text: '',
+      images: []
     });
+    const [imagePreviews, setImagePreviews] = useState([]);
 
     useEffect(() => {
       console.log('BulkQuestionsModal useEffect - isOpen:', isOpen, 'examId:', examId, 'examTitle:', examTitle);
-      setFormData({ bulk_text: '' });
+      setFormData({ bulk_text: '', images: [] });
+      setImagePreviews([]);
+      setQuestionType('text');
     }, [isOpen, examId, examTitle]);
+
+    const handleImageChange = (event) => {
+      const files = Array.from(event.target.files);
+      
+      // Validate file count
+      if (files.length > 10) {
+        toast({
+          title: "خطأ في عدد الصور",
+          description: "يمكن رفع حتى 10 صور فقط",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Validate file types
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+      
+      if (invalidFiles.length > 0) {
+        toast({
+          title: "خطأ في نوع الملفات",
+          description: "يرجى اختيار ملفات صورة صحيحة (JPG, PNG, GIF)",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Validate file sizes (max 5MB each)
+      const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+      if (oversizedFiles.length > 0) {
+        toast({
+          title: "خطأ في حجم الملفات",
+          description: "حجم كل صورة يجب أن يكون أقل من 5 ميجابايت",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      setFormData(prev => ({ ...prev, images: files }));
+
+      // Create previews
+      const previews = files.map(file => URL.createObjectURL(file));
+      setImagePreviews(previews);
+    };
+
+    const removeImage = (index) => {
+      const newImages = formData.images.filter((_, i) => i !== index);
+      const newPreviews = imagePreviews.filter((_, i) => i !== index);
+      
+      // Revoke the URL to free memory
+      URL.revokeObjectURL(imagePreviews[index]);
+      
+      setFormData(prev => ({ ...prev, images: newImages }));
+      setImagePreviews(newPreviews);
+    };
 
     const handleSubmit = (e) => {
       e.preventDefault();
-      onSubmit(examId, formData.bulk_text);
+      if (questionType === 'text') {
+        onSubmit(examId, formData.bulk_text, 'text');
+      } else {
+        onSubmit(examId, formData.images, 'images');
+      }
       // لا نغلق الموديل هنا، سيتم إغلاقه بعد نجاح العملية
     };
 
@@ -1191,21 +1282,48 @@ const CourseDetailsPage = () => {
             <ModalBody>
               {console.log('Modal body content starting')}
               <VStack spacing={6} align="stretch">
+                {/* Question Type Selection */}
                 <Box>
-                  <FormLabel fontWeight="bold" mb={2}>
-                    نص الأسئلة
+                  <FormLabel fontWeight="bold" mb={3}>
+                    نوع الأسئلة
                   </FormLabel>
-                  <Text fontSize="sm" color="gray.600" mb={3}>
-                    أدخل الأسئلة بالشكل التالي:
-                  </Text>
-                  <Box 
-                    bg="gray.50" 
-                    p={4} 
-                    borderRadius="md" 
-                    border="1px solid" 
-                    borderColor="gray.200"
-                    mb={4}
-                  >
+                  <HStack spacing={4} mb={4}>
+                    <Button
+                      colorScheme={questionType === 'text' ? 'blue' : 'gray'}
+                      variant={questionType === 'text' ? 'solid' : 'outline'}
+                      onClick={() => setQuestionType('text')}
+                      leftIcon={<Icon as={FaRegFileAlt} />}
+                    >
+                      أسئلة نصية
+                    </Button>
+                    <Button
+                      colorScheme={questionType === 'images' ? 'blue' : 'gray'}
+                      variant={questionType === 'images' ? 'solid' : 'outline'}
+                      onClick={() => setQuestionType('images')}
+                      leftIcon={<Icon as={FaFilePdf} />}
+                    >
+                      أسئلة بالصور
+                    </Button>
+                  </HStack>
+                </Box>
+
+                {/* Text Questions Section */}
+                {questionType === 'text' && (
+                  <Box>
+                    <FormLabel fontWeight="bold" mb={2}>
+                      نص الأسئلة
+                    </FormLabel>
+                    <Text fontSize="sm" color="gray.600" mb={3}>
+                      أدخل الأسئلة بالشكل التالي:
+                    </Text>
+                    <Box 
+                      bg="gray.50" 
+                      p={4} 
+                      borderRadius="md" 
+                      border="1px solid" 
+                      borderColor="gray.200"
+                      mb={4}
+                    >
                     <Text fontSize="sm" fontFamily="mono" color="gray.700">
                       {`You were __________ to escape unharmed.
 A) unfortunately
@@ -1219,35 +1337,143 @@ B) have done
 C) have made
 D) has made`}
                     </Text>
+                    </Box>
+                    <Textarea
+                      value={formData.bulk_text}
+                      onChange={(e) => setFormData({ ...formData, bulk_text: e.target.value })}
+                      placeholder="أدخل الأسئلة هنا..."
+                      rows={15}
+                      fontFamily="mono"
+                      fontSize="sm"
+                      resize="vertical"
+                      isRequired
+                    />
+                  
+                    <Box>
+                      <Text fontSize="sm" color="blue.600" fontWeight="medium">
+                        ملاحظات:
+                      </Text>
+                      <VStack spacing={2} align="start" mt={2}>
+                        <Text fontSize="xs" color="gray.600">
+                          • كل سؤال يجب أن يحتوي على 4 خيارات (A, B, C, D)
+                        </Text>
+                        <Text fontSize="xs" color="gray.600">
+                          • اترك سطر فارغ بين كل سؤال
+                        </Text>
+                        <Text fontSize="xs" color="gray.600">
+                          • تأكد من صحة تنسيق الأسئلة قبل الإرسال
+                        </Text>
+                      </VStack>
+                    </Box>
                   </Box>
-                  <Textarea
-                    value={formData.bulk_text}
-                    onChange={(e) => setFormData({ ...formData, bulk_text: e.target.value })}
-                    placeholder="أدخل الأسئلة هنا..."
-                    rows={15}
-                    fontFamily="mono"
-                    fontSize="sm"
-                    resize="vertical"
-                    isRequired
-                  />
-                </Box>
-                
-                <Box>
-                  <Text fontSize="sm" color="blue.600" fontWeight="medium">
-                    ملاحظات:
-                  </Text>
-                  <VStack spacing={2} align="start" mt={2}>
-                    <Text fontSize="xs" color="gray.600">
-                      • كل سؤال يجب أن يحتوي على 4 خيارات (A, B, C, D)
+                )}
+
+                {/* Image Questions Section */}
+                {questionType === 'images' && (
+                  <Box>
+                    <FormLabel fontWeight="bold" mb={2}>
+                      رفع صور الأسئلة
+                    </FormLabel>
+                    <Text fontSize="sm" color="gray.600" mb={3}>
+                      يمكنك رفع حتى 10 صور للأسئلة
                     </Text>
-                    <Text fontSize="xs" color="gray.600">
-                      • اترك سطر فارغ بين كل سؤال
-                    </Text>
-                    <Text fontSize="xs" color="gray.600">
-                      • تأكد من صحة تنسيق الأسئلة قبل الإرسال
-                    </Text>
-                  </VStack>
-                </Box>
+                    
+                    {/* File Upload Area */}
+                    <Box
+                      border="2px dashed"
+                      borderColor="gray.300"
+                      borderRadius="lg"
+                      p={8}
+                      textAlign="center"
+                      cursor="pointer"
+                      _hover={{
+                        borderColor: "blue.400",
+                        bg: "blue.50"
+                      }}
+                      transition="all 0.2s"
+                      mb={4}
+                    >
+                      <VStack spacing={4}>
+                        <Icon as={FaFilePdf} boxSize={8} color="gray.400" />
+                        <VStack spacing={2}>
+                          <Text fontWeight="medium" color="gray.700">
+                            انقر لاختيار صور الأسئلة
+                          </Text>
+                          <Text fontSize="sm" color="gray.500">
+                            JPG, PNG, GIF حتى 5 ميجابايت لكل صورة
+                          </Text>
+                        </VStack>
+                      </VStack>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageChange}
+                        position="absolute"
+                        top={0}
+                        left={0}
+                        w="full"
+                        h="full"
+                        opacity={0}
+                        cursor="pointer"
+                      />
+                    </Box>
+
+                    {/* Image Previews */}
+                    {imagePreviews.length > 0 && (
+                      <Box>
+                        <Text fontSize="sm" fontWeight="medium" mb={3}>
+                          الصور المحددة ({imagePreviews.length}/10):
+                        </Text>
+                        <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={4}>
+                          {imagePreviews.map((preview, index) => (
+                            <Box key={index} position="relative">
+                              <Image
+                                src={preview}
+                                alt={`Preview ${index + 1}`}
+                                w="full"
+                                h="120px"
+                                objectFit="cover"
+                                borderRadius="md"
+                                border="1px solid"
+                                borderColor="gray.200"
+                              />
+                              <IconButton
+                                icon={<Icon as={FaTimes} />}
+                                aria-label="حذف الصورة"
+                                position="absolute"
+                                top={1}
+                                right={1}
+                                size="sm"
+                                colorScheme="red"
+                                variant="solid"
+                                borderRadius="full"
+                                onClick={() => removeImage(index)}
+                              />
+                            </Box>
+                          ))}
+                        </SimpleGrid>
+                      </Box>
+                    )}
+
+                    <Box>
+                      <Text fontSize="sm" color="blue.600" fontWeight="medium">
+                        ملاحظات:
+                      </Text>
+                      <VStack spacing={2} align="start" mt={2}>
+                        <Text fontSize="xs" color="gray.600">
+                          • يمكن رفع حتى 10 صور للأسئلة
+                        </Text>
+                        <Text fontSize="xs" color="gray.600">
+                          • حجم كل صورة يجب أن يكون أقل من 5 ميجابايت
+                        </Text>
+                        <Text fontSize="xs" color="gray.600">
+                          • الأنواع المدعومة: JPG, PNG, GIF
+                        </Text>
+                      </VStack>
+                    </Box>
+                  </Box>
+                )}
               </VStack>
             </ModalBody>
             <ModalFooter>
@@ -1259,9 +1485,13 @@ D) has made`}
                 type="submit" 
                 isLoading={loading}
                 loadingText="جاري إضافة الأسئلة..."
-                isDisabled={!formData.bulk_text.trim() || loading}
+                isDisabled={
+                  loading || 
+                  (questionType === 'text' && !formData.bulk_text.trim()) ||
+                  (questionType === 'images' && formData.images.length === 0)
+                }
               >
-                إضافة الأسئلة
+                {questionType === 'text' ? 'إضافة الأسئلة النصية' : 'إضافة الأسئلة بالصور'}
               </Button>
             </ModalFooter>
           </form>
@@ -2348,7 +2578,7 @@ D) has made`}
         examId={bulkQuestionsModal.examId}
         examTitle={bulkQuestionsModal.examTitle}
         examType={bulkQuestionsModal.examType}
-        onSubmit={(examId, bulkText) => addBulkQuestions(examId, bulkText, bulkQuestionsModal.examType)}
+        onSubmit={(examId, data, questionType) => addBulkQuestions(examId, data, questionType, bulkQuestionsModal.examType)}
         loading={bulkQuestionsLoading}
       />
       {console.log('BulkQuestionsModal state:', bulkQuestionsModal)}

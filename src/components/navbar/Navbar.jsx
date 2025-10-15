@@ -61,6 +61,7 @@ export default function Nav() {
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasFetched, setHasFetched] = useState(false);
+  const fetchTimeoutRef = useRef(null);
   
   // WebSocket state
   const [wsConnection, setWsConnection] = useState(null);
@@ -69,6 +70,8 @@ export default function Nav() {
   const reconnectTimeoutRef = useRef(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
+  const isFetchingRef = useRef(false);
+  const lastFetchTimeRef = useRef(0);
 
   const handleDrawerOpen = () => {
     if (!isOpen) {
@@ -77,11 +80,50 @@ export default function Nav() {
   };
 
   // Fetch notifications from API
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (forceRefresh = false) => {
+    if (!user || !token) return;
+    
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTimeRef.current;
+    
+    // Prevent requests if less than 2 seconds have passed since last fetch (unless force refresh)
+    if (!forceRefresh && timeSinceLastFetch < 2000) {
+      console.log('Too soon since last fetch, skipping...');
+      return;
+    }
+    
+    // Clear any existing timeout
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+      fetchTimeoutRef.current = null;
+    }
+    
+    // Prevent multiple simultaneous requests
+    if (isFetchingRef.current && !forceRefresh) {
+      console.log('Already fetching notifications, skipping...');
+      return;
+    }
+    
+    // Add a small delay to prevent rapid successive calls
+    if (!forceRefresh) {
+      fetchTimeoutRef.current = setTimeout(async () => {
+        lastFetchTimeRef.current = Date.now();
+        await performFetch();
+      }, 100);
+    } else {
+      lastFetchTimeRef.current = Date.now();
+      await performFetch();
+    }
+  };
+
+  const performFetch = async () => {
     if (!user || !token) return;
     
     try {
+      isFetchingRef.current = true;
       setNotificationsLoading(true);
+      
+      console.log('Fetching notifications...');
       const response = await baseUrl.get('/api/notifications/', {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -93,9 +135,11 @@ export default function Nav() {
         // Calculate unread count
         const unread = response.data.notifications.filter(notif => !notif.is_read).length;
         setUnreadCount(unread);
+        console.log(`Fetched ${response.data.notifications.length} notifications, ${unread} unread`);
       } else {
         setNotifications({ notifications: [] });
         setUnreadCount(0);
+        console.log('No notifications found');
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -112,6 +156,7 @@ export default function Nav() {
       setNotifications({ notifications: [] });
       setUnreadCount(0);
     } finally {
+      isFetchingRef.current = false;
       setNotificationsLoading(false);
       setHasFetched(true);
     }
@@ -119,7 +164,7 @@ export default function Nav() {
 
   // WebSocket connection functions
   const connectWebSocket = () => {
-    if (!user || !token || wsRef.current) return;
+    if (!user || !token || (wsRef.current && wsRef.current.readyState === WebSocket.OPEN)) return;
 
     try {
       // Get WebSocket URL from baseUrl or construct it
@@ -244,11 +289,11 @@ export default function Nav() {
   };
 
   const disconnectWebSocket = () => {
-    if (wsRef.current) {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.close(1000, 'Component unmounting');
-      wsRef.current = null;
-      setWsConnection(null);
     }
+    wsRef.current = null;
+    setWsConnection(null);
     
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
@@ -260,7 +305,8 @@ export default function Nav() {
 
   // Fetch notifications on component mount only
   useEffect(() => {
-    if (user && token && !hasFetched) {
+    if (user && token && !hasFetched && !isFetchingRef.current) {
+      console.log('Initial fetch of notifications');
       fetchNotifications();
     }
   }, [user, token, hasFetched]);
@@ -270,7 +316,10 @@ export default function Nav() {
     if (user && token) {
       // Reset reconnection attempts when user/token changes
       reconnectAttempts.current = 0;
-      connectWebSocket();
+      // Only connect if not already connected
+      if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
+        connectWebSocket();
+      }
     }
 
     return () => {
@@ -282,6 +331,11 @@ export default function Nav() {
   useEffect(() => {
     return () => {
       disconnectWebSocket();
+      // Clear any pending fetch timeout
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = null;
+      }
     };
   }, []);
 
@@ -395,6 +449,7 @@ export default function Nav() {
   // Function to mark notification as read
   const markAsRead = async (notificationId) => {
     try {
+      console.log(`Marking notification ${notificationId} as read`);
       await baseUrl.put(`/api/notifications/${notificationId}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -409,6 +464,7 @@ export default function Nav() {
       
       // Update unread count
       setUnreadCount(prev => Math.max(0, prev - 1));
+      console.log(`Notification ${notificationId} marked as read`);
     } catch (error) {
       console.error('Error marking notification as read:', error);
       
@@ -558,25 +614,7 @@ export default function Nav() {
                               </Text>
                             </VStack>
                           </HStack>
-                          <HStack spacing={2}>
-                            <Box
-                              w="10px"
-                              h="10px"
-                              borderRadius="full"
-                              bg={connectionStatus === 'connected' ? 'green.500' : 
-                                   connectionStatus === 'connecting' ? 'yellow.500' : 
-                                   connectionStatus === 'error' ? 'red.500' : 'gray.500'}
-                              title={connectionStatus === 'connected' ? 'متصل - الإشعارات فورية' : 
-                                     connectionStatus === 'connecting' ? 'جاري الاتصال...' : 
-                                     connectionStatus === 'error' ? 'خطأ في الاتصال - تحديث يدوي' : 'غير متصل - تحديث يدوي'}
-                              animation={connectionStatus === 'connected' ? 'pulse 2s infinite' : 'none'}
-                            />
-                            <Text fontSize="xs" color="gray.500" fontWeight="medium">
-                              {connectionStatus === 'connected' ? 'فوري' : 
-                               connectionStatus === 'connecting' ? 'جاري الاتصال...' : 
-                               connectionStatus === 'error' ? 'خطأ في الاتصال' : 'غير متصل'}
-                            </Text>
-                          </HStack>
+                        
                         </HStack>
                       </PopoverHeader>
                       <PopoverBody maxH='400px' overflowY='auto' p={0}>
@@ -832,8 +870,8 @@ export default function Nav() {
                             borderRadius="full"
                             px={6}
                             onClick={() => {
-                              // Refresh notifications
-                              fetchNotifications();
+                              // Refresh notifications with force refresh
+                              fetchNotifications(true);
                               // Keep popover open after refresh
                             }}
                             isLoading={notificationsLoading}
@@ -851,6 +889,8 @@ export default function Nav() {
                               onClick={() => {
                                 // Manual reconnect
                                 disconnectWebSocket();
+                                // Reset reconnection attempts
+                                reconnectAttempts.current = 0;
                                 setTimeout(() => connectWebSocket(), 100);
                                 // Keep popover open after reconnect
                               }}
