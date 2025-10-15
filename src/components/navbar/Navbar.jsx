@@ -62,14 +62,6 @@ export default function Nav() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasFetched, setHasFetched] = useState(false);
   const fetchTimeoutRef = useRef(null);
-  
-  // WebSocket state
-  const [wsConnection, setWsConnection] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState('disconnected');
-  const wsRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
-  const reconnectAttempts = useRef(0);
-  const maxReconnectAttempts = 5;
   const isFetchingRef = useRef(false);
   const lastFetchTimeRef = useRef(0);
 
@@ -162,146 +154,6 @@ export default function Nav() {
     }
   };
 
-  // WebSocket connection functions
-  const connectWebSocket = () => {
-    if (!user || !token || (wsRef.current && wsRef.current.readyState === WebSocket.OPEN)) return;
-
-    try {
-      // Get WebSocket URL from baseUrl or construct it
-      const baseURL = baseUrl.defaults.baseURL || 'http://localhost:8000';
-      // Remove trailing slash if exists and add ws path
-      const cleanBaseURL = baseURL.replace(/\/$/, '');
-      const wsUrl = cleanBaseURL.replace('http', 'ws') + '/ws/notifications/';
-      console.log('Connecting to WebSocket:', wsUrl);
-      const ws = new WebSocket(`${wsUrl}?token=${token}`);
-      
-      wsRef.current = ws;
-      setWsConnection(ws);
-
-      ws.onopen = () => {
-        console.log('WebSocket connected successfully');
-        setConnectionStatus('connected');
-        reconnectAttempts.current = 0;
-        
-        // Clear any existing reconnect timeout
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
-          reconnectTimeoutRef.current = null;
-        }
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          if (data.type === 'notification') {
-            // Add new notification to the list
-            setNotifications(prev => ({
-              ...prev,
-              notifications: [data.notification, ...prev.notifications]
-            }));
-            
-            // Update unread count
-            setUnreadCount(prev => prev + 1);
-            
-            // Show toast notification
-            toast({
-              title: data.notification.title,
-              description: data.notification.message,
-              status: 'info',
-              duration: 5000,
-              isClosable: true,
-              position: 'top-right',
-            });
-          }
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-
-      ws.onclose = (event) => {
-        console.log('WebSocket disconnected:', event.code, event.reason);
-        setConnectionStatus('disconnected');
-        wsRef.current = null;
-        setWsConnection(null);
-        
-        // Attempt to reconnect if not manually closed and not a normal closure
-        if (event.code !== 1000 && event.code !== 1001 && reconnectAttempts.current < maxReconnectAttempts) {
-          reconnectAttempts.current += 1;
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
-          
-          console.log(`Attempting to reconnect in ${delay}ms... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
-          setConnectionStatus('connecting');
-          
-          reconnectTimeoutRef.current = setTimeout(() => {
-            connectWebSocket();
-          }, delay);
-        } else if (event.code === 1006) {
-          // Abnormal closure - server might be down
-          console.log('WebSocket connection lost abnormally. Server might be down.');
-          setConnectionStatus('error');
-          
-          // Still try to reconnect after a longer delay for abnormal closure
-          if (reconnectAttempts.current < maxReconnectAttempts) {
-            reconnectAttempts.current += 1;
-            const delay = Math.min(5000 * Math.pow(2, reconnectAttempts.current), 60000);
-            
-            console.log(`Server might be down. Retrying in ${delay}ms... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
-            setConnectionStatus('connecting');
-            
-            reconnectTimeoutRef.current = setTimeout(() => {
-              connectWebSocket();
-            }, delay);
-          }
-        }
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setConnectionStatus('error');
-        
-        // Close the connection on error to trigger reconnection
-        if (wsRef.current) {
-          wsRef.current.close();
-        }
-      };
-
-    } catch (error) {
-      console.error('Error creating WebSocket connection:', error);
-      setConnectionStatus('error');
-      
-      // Attempt to reconnect after a delay if this is not the first attempt
-      if (reconnectAttempts.current < maxReconnectAttempts) {
-        reconnectAttempts.current += 1;
-        const delay = Math.min(2000 * Math.pow(2, reconnectAttempts.current), 30000);
-        
-        console.log(`WebSocket creation failed. Retrying in ${delay}ms... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
-        setConnectionStatus('connecting');
-        
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connectWebSocket();
-        }, delay);
-      } else {
-        console.log('Max reconnection attempts reached. WebSocket connection failed.');
-        setConnectionStatus('error');
-      }
-    }
-  };
-
-  const disconnectWebSocket = () => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.close(1000, 'Component unmounting');
-    }
-    wsRef.current = null;
-    setWsConnection(null);
-    
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-    
-    setConnectionStatus('disconnected');
-  };
 
   // Fetch notifications on component mount only
   useEffect(() => {
@@ -311,26 +163,9 @@ export default function Nav() {
     }
   }, [user, token, hasFetched]);
 
-  // WebSocket connection management
-  useEffect(() => {
-    if (user && token) {
-      // Reset reconnection attempts when user/token changes
-      reconnectAttempts.current = 0;
-      // Only connect if not already connected
-      if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
-        connectWebSocket();
-      }
-    }
-
-    return () => {
-      disconnectWebSocket();
-    };
-  }, [user, token]);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      disconnectWebSocket();
       // Clear any pending fetch timeout
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
@@ -338,20 +173,6 @@ export default function Nav() {
       }
     };
   }, []);
-
-  // Auto-reconnect when connection is lost
-  useEffect(() => {
-    if (connectionStatus === 'error' && reconnectAttempts.current < maxReconnectAttempts) {
-      const delay = Math.min(5000 * Math.pow(2, reconnectAttempts.current), 60000);
-      
-      console.log(`Auto-reconnecting in ${delay}ms... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
-      setConnectionStatus('connecting');
-      
-      reconnectTimeoutRef.current = setTimeout(() => {
-        connectWebSocket();
-      }, delay);
-    }
-  }, [connectionStatus]);
 
   // Function to get notification icon based on type
   const getNotificationIcon = (notification) => {
@@ -554,24 +375,6 @@ export default function Nav() {
                             {unreadCount > 99 ? '99+' : unreadCount}
                           </Badge>
                         )}
-                        {/* Connection status indicator */}
-                        <Box
-                          position="absolute"
-                          bottom="-1"
-                          right="-1"
-                          w="12px"
-                          h="12px"
-                          borderRadius="full"
-                          bg={connectionStatus === 'connected' ? 'green.500' : 
-                               connectionStatus === 'connecting' ? 'yellow.500' : 
-                               connectionStatus === 'error' ? 'red.500' : 'gray.500'}
-                          border="2px solid"
-                          borderColor="white"
-                          title={connectionStatus === 'connected' ? 'متصل - الإشعارات فورية' : 
-                                 connectionStatus === 'connecting' ? 'جاري الاتصال...' : 
-                                 connectionStatus === 'error' ? 'خطأ في الاتصال' : 'غير متصل'}
-                          animation={connectionStatus === 'connecting' ? 'pulse 1s infinite' : 'none'}
-                        />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -879,25 +682,6 @@ export default function Nav() {
                           >
                             تحديث الإشعارات
                           </Button>
-                          {connectionStatus !== 'connected' && (
-                            <Button 
-                              size='sm' 
-                              variant='outline' 
-                              colorScheme="green"
-                              borderRadius="full"
-                              px={6}
-                              onClick={() => {
-                                // Manual reconnect
-                                disconnectWebSocket();
-                                // Reset reconnection attempts
-                                reconnectAttempts.current = 0;
-                                setTimeout(() => connectWebSocket(), 100);
-                                // Keep popover open after reconnect
-                              }}
-                            >
-                              إعادة الاتصال
-                            </Button>
-                          )}
                         </HStack>
                       </PopoverFooter>
                     </PopoverContent>
