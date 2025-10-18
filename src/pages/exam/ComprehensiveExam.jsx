@@ -67,22 +67,40 @@ const ComprehensiveExam = () => {
     // eslint-disable-next-line
   }, [id]);
 
-    const fetchQuestions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const token = localStorage.getItem("token");
+  // دالة لترتيب الأسئلة عشوائياً
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem("token");
       const res = await baseUrl.get(
         `/api/questions/lecture-exam/${id}/details`,
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       );
-        setQuestions(res.data.questions || []);
-      } catch (err) {
-        setError("حدث خطأ أثناء تحميل الأسئلة");
-      } finally {
-        setLoading(false);
+      const questionsData = res.data.questions || [];
+      
+      // ترتيب الأسئلة عشوائياً للطلاب فقط
+      if (student && !isTeacher && !isAdmin) {
+        setQuestions(shuffleArray(questionsData));
+      } else {
+        // للمدرسين والإداريين: عرض الأسئلة بالترتيب الأصلي
+        setQuestions(questionsData);
       }
-    };
+    } catch (err) {
+      setError("حدث خطأ أثناء تحميل الأسئلة");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Delete question
   const handleDelete = async () => {

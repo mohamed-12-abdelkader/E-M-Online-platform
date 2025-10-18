@@ -469,10 +469,14 @@ const TeacherDashboardHome = () => {
   }, []);
 
   return (
-    <Box minH="100vh" bg={bg} p={6} dir="rtl">
-      <Container maxW="7xl" mx="auto">
+    <Box minH="100vh" bg={bg} p={{ base: 2, sm: 4, md: 6, lg: 8 }} dir="rtl">
+      <Container 
+        maxW={{ base: "100%", sm: "100%", md: "6xl", lg: "7xl", xl: "8xl" }} 
+        mx="auto"
+        px={{ base: 0, sm: 2, md: 4 }}
+      >
         <MotionVStack
-          spacing={8}
+          spacing={{ base: 4, sm: 6, md: 8, lg: 10 }}
           initial="hidden"
           animate="visible"
           variants={containerVariants}
@@ -482,19 +486,23 @@ const TeacherDashboardHome = () => {
             w="full"
             bgGradient="linear(135deg, blue.500 0%, blue.600 100%)"
             color="white"
-            borderRadius="2xl"
-            shadow="2xl"
+            borderRadius={{ base: "lg", sm: "xl", md: "2xl" }}
+            shadow={{ base: "lg", md: "2xl" }}
             overflow="hidden"
             variants={itemVariants}
           >
-            <CardBody p={8}>
-              <HStack spacing={6} align="center">
-                <Box position="relative">
+            <CardBody p={{ base: 3, sm: 4, md: 6, lg: 8 }}>
+              <VStack 
+                spacing={{ base: 3, sm: 4, md: 6 }} 
+                align={{ base: "center", lg: "flex-start" }}
+                direction={{ base: "column", lg: "row" }}
+              >
+                <Box position="relative" flexShrink={0}>
                   <Image
                     src={user.avatar}
                     alt={user.name}
-                    w="120px"
-                    h="120px"
+                    w={{ base: "70px", sm: "90px", md: "110px", lg: "120px" }}
+                    h={{ base: "70px", sm: "90px", md: "110px", lg: "120px" }}
                     borderRadius="full"
                     objectFit="cover"
                     border="4px solid"
@@ -503,10 +511,10 @@ const TeacherDashboardHome = () => {
                   />
                   <Box
                     position="absolute"
-                    bottom={2}
-                    right={2}
-                    w="30px"
-                    h="30px"
+                    bottom={1}
+                    right={1}
+                    w={{ base: "16px", sm: "20px", md: "25px", lg: "30px" }}
+                    h={{ base: "16px", sm: "20px", md: "25px", lg: "30px" }}
                     bg="green.500"
                     borderRadius="full"
                     border="3px solid"
@@ -514,44 +522,89 @@ const TeacherDashboardHome = () => {
                   />
                 </Box>
                 
-                <VStack align="flex-start" spacing={3} flex={1}>
-                  <MotionHeading size="2xl" fontWeight="bold">
+                <VStack 
+                  align={{ base: "center", lg: "flex-start" }} 
+                  spacing={{ base: 2, sm: 3, md: 4 }} 
+                  flex={1}
+                  textAlign={{ base: "center", lg: "left" }}
+                >
+                  <MotionHeading 
+                    size={{ base: "md", sm: "lg", md: "xl", lg: "2xl" }} 
+                    fontWeight="bold"
+                    textAlign={{ base: "center", lg: "left" }}
+                    lineHeight={{ base: 1.2, md: 1.3 }}
+                  >
                     مرحباً بك، {user.name}! 👋
                   </MotionHeading>
-                  <MotionText fontSize="lg" opacity={0.9}>
+                  <MotionText 
+                    fontSize={{ base: "sm", sm: "md", md: "lg" }} 
+                    opacity={0.9}
+                    textAlign={{ base: "center", lg: "left" }}
+                    lineHeight={{ base: 1.4, md: 1.5 }}
+                  >
                     أهلاً وسهلاً بك في لوحة تحكم المدرس
                   </MotionText>
-                  <HStack spacing={4}>
-                    <Badge colorScheme="blue" px={3} py={1} borderRadius="full">
-                      <Icon as={FaUser} mr={1} />
+                  <HStack 
+                    spacing={{ base: 1, sm: 2, md: 3, lg: 4 }} 
+                    flexWrap="wrap" 
+                    justify={{ base: "center", lg: "flex-start" }}
+                    gap={{ base: 2, sm: 3 }}
+                  >
+                    <Badge 
+                      colorScheme="blue" 
+                      px={{ base: 2, sm: 3, md: 4 }} 
+                      py={1} 
+                      borderRadius="full"
+                      fontSize={{ base: "xs", sm: "sm" }}
+                    >
+                      <Icon as={FaUser} mr={1} boxSize={{ base: 3, sm: 4 }} />
                       {user.role}
                     </Badge>
-                    <Badge colorScheme="green" px={3} py={1} borderRadius="full">
-                      <Icon as={FaCalendarAlt} mr={1} />
+                    <Badge 
+                      colorScheme="green" 
+                      px={{ base: 2, sm: 3, md: 4 }} 
+                      py={1} 
+                      borderRadius="full"
+                      fontSize={{ base: "xs", sm: "sm" }}
+                    >
+                      <Icon as={FaCalendarAlt} mr={1} boxSize={{ base: 3, sm: 4 }} />
                       عضو منذ 2024
                     </Badge>
                   </HStack>
                 </VStack>
-              </HStack>
+              </VStack>
             </CardBody>
           </MotionCard>
 
           {/* Quick Links Section */}
           <MotionBox w="full" variants={itemVariants}>
-            <MotionHeading size="xl" mb={6} color={headingColor} textAlign="center">
+            <MotionHeading 
+              size={{ base: "md", sm: "lg", md: "xl", lg: "2xl" }} 
+              mb={{ base: 3, sm: 4, md: 6, lg: 8 }} 
+              color={headingColor} 
+              textAlign="center"
+              fontWeight={{ base: "semibold", md: "bold" }}
+            >
               روابط سريعة
             </MotionHeading>
             <MotionGrid
-              templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }}
-              gap={6}
+              templateColumns={{ 
+                base: "1fr", 
+                sm: "repeat(2, 1fr)", 
+                md: "repeat(2, 1fr)", 
+                lg: "repeat(4, 1fr)",
+                xl: "repeat(4, 1fr)"
+              }}
+              gap={{ base: 3, sm: 4, md: 5, lg: 6 }}
               variants={containerVariants}
+              w="full"
             >
               {quickLinks.map((link) => (
-                <Link key={link.id} to={link.link} style={{ textDecoration: 'none' }}>
+                <Link key={link.id} to={link.link} style={{ textDecoration: 'none', width: '100%' }}>
                   <MotionCard
                     bg={cardBg}
-                    borderRadius="xl"
-                    shadow="lg"
+                    borderRadius={{ base: "md", sm: "lg", md: "xl" }}
+                    shadow={{ base: "sm", sm: "md", md: "lg" }}
                     variants={cardVariants}
                     whileHover="hover"
                     cursor="pointer"
@@ -563,11 +616,15 @@ const TeacherDashboardHome = () => {
                       borderColor: `${link.color}.300`
                     }}
                     transition="all 0.3s ease"
+                    minH={{ base: "120px", sm: "140px", md: "160px", lg: "180px" }}
+                    w="full"
+                    h="full"
+                    className="mx-auto"
                   >
-                    <CardBody p={6} textAlign="center">
-                      <VStack spacing={4}>
+                    <CardBody  p={{ base: 3, sm: 4, md: 5, lg: 6 }} textAlign="center" h="full">
+                      <VStack spacing={{ base: 2, sm: 3, md: 4 }} h="full" justify="center">
                         <Box
-                          p={4}
+                          p={{ base: 2, sm: 3, md: 4 }}
                           borderRadius="full"
                           bgGradient={link.gradient}
                           color="white"
@@ -576,14 +633,28 @@ const TeacherDashboardHome = () => {
                             transform: "scale(1.1)",
                             transition: "transform 0.2s ease"
                           }}
+                          w="fit-content"
+                          mx="auto"
                         >
-                          <Icon as={link.icon} boxSize={8} />
+                          <Icon as={link.icon} boxSize={{ base: 5, sm: 6, md: 7, lg: 8 }} />
                         </Box>
-                        <VStack spacing={2}>
-                          <Text fontSize="lg" fontWeight="bold" color={headingColor}>
+                        <VStack spacing={{ base: 1, sm: 2 }} flex={1} justify="center">
+                          <Text 
+                            fontSize={{ base: "sm", sm: "md", md: "lg" }} 
+                            fontWeight={{ base: "semibold", md: "bold" }} 
+                            color={headingColor}
+                            noOfLines={2}
+                            lineHeight={{ base: 1.3, md: 1.4 }}
+                          >
                             {link.title}
                           </Text>
-                          <Text color={textColor} fontSize="sm" textAlign="center">
+                          <Text 
+                            color={textColor} 
+                            fontSize={{ base: "xs", sm: "sm", md: "sm" }} 
+                            textAlign="center"
+                            noOfLines={2}
+                            lineHeight={{ base: 1.4, md: 1.5 }}
+                          >
                             {link.description}
                           </Text>
                         </VStack>
@@ -597,18 +668,31 @@ const TeacherDashboardHome = () => {
 
           {/* Courses Section */}
           <MotionBox w="full" variants={itemVariants}>
-            <HStack justify="space-between" mb={6} flexWrap="wrap" gap={4}>
-              <MotionHeading size="xl" color={headingColor}>
+            <VStack spacing={{ base: 3, sm: 4, md: 6 }} align="stretch" mb={{ base: 4, sm: 5, md: 6, lg: 8 }}>
+              <MotionHeading 
+                size={{ base: "md", sm: "lg", md: "xl", lg: "2xl" }} 
+                color={headingColor}
+                textAlign={{ base: "center",  }}
+                fontWeight={{ base: "semibold", md: "bold" }}
+              >
                 كورساتي
               </MotionHeading>
-              <HStack spacing={4} flexWrap="wrap">
+              <VStack 
+                spacing={{ base: 3, sm: 4 }} 
+                align={{ base: "stretch", lg: "flex-end" }}
+                direction={{ base: "column", lg: "row" }}
+                w="full"
+                
+              >
                 <Select
                   placeholder="كل الصفوف"
                   value={selectedGrade}
                   onChange={(e) => setSelectedGrade(e.target.value)}
-                  w="200px"
+                  w={{ base: "full", lg: "250px" }}
                   bg={cardBg}
                   borderColor={borderColor}
+                  size={{ base: "sm", sm: "md" }}
+                  borderRadius={{ base: "md", md: "lg" }}
                 >
                   {grades.map(grade => (
                     <option key={grade.id} value={grade.id}>
@@ -616,17 +700,22 @@ const TeacherDashboardHome = () => {
                     </option>
                   ))}
                 </Select>
+
                 <MotionButton
                   colorScheme="green"
                   leftIcon={<FaPlus />}
                   onClick={onOpen}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  size={{ base: "sm", sm: "md" }}
+                  w={{ base: "full", lg: "auto" }}
+                  minW={{ base: "auto", lg: "200px" }}
+                  borderRadius={{ base: "md", md: "lg" }}
                 >
                   إضافة كورس جديد
                 </MotionButton>
-              </HStack>
-            </HStack>
+              </VStack>
+            </VStack>
 
             <AnimatePresence mode="wait">
               {loading ? (
@@ -656,20 +745,31 @@ const TeacherDashboardHome = () => {
                 </MotionCenter>
               ) : (
                 <MotionGrid
-                  templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }}
-                  gap={6}
+                  templateColumns={{ 
+                    base: "1fr", 
+                    sm: "repeat(2, 1fr)", 
+                    md: "repeat(2, 1fr)", 
+                    lg: "repeat(3, 1fr)",
+                    xl: "repeat(3, 1fr)"
+                  }}
+                  gap={{ base: 3, sm: 4, md: 5, lg: 6 }}
                   variants={containerVariants}
+                  w="full"
+                  className="mb-10"
                 >
                   {filteredCourses.map((course) => (
                     <MotionCard
                       key={course.id}
                       bg={cardBg}
-                      borderRadius="xl"
-                      shadow="lg"
+                      borderRadius={{ base: "md", sm: "lg", md: "xl" }}
+                      shadow={{ base: "sm", sm: "md", md: "lg" }}
                       variants={cardVariants}
                       whileHover="hover"
                       border="1px solid"
                       borderColor={borderColor}
+                      w="full"
+                      h="full"
+                      className="mx-auto"
                     >
                       {/* Course Image */}
                       {course.avatar && (
@@ -678,40 +778,54 @@ const TeacherDashboardHome = () => {
                             src={course.avatar}
                             alt={course.title}
                             w="full"
-                            h="200px"
+                            h={{ base: "180px", sm: "180px", md: "180px", lg: "200px" }}
                             objectFit="cover"
-                            borderRadius="xl"
+                            borderRadius={{ base: "md", sm: "lg", md: "xl" }}
                           />
                           <Badge
                             position="absolute"
-                            top={3}
-                            right={3}
+                            top={1}
+                            right={1}
                             colorScheme="blue"
                             borderRadius="full"
-                            px={3}
+                            px={{ base: 1, sm: 2, md: 3 }}
                             py={1}
+                            fontSize={{ base: "2xs", sm: "xs", md: "sm" }}
                           >
                             كورس تعليمي
                           </Badge>
                         </Box>
                       )}
                       
-                      <CardHeader pb={4}>
-                        <HStack justify="space-between" align="flex-start">
-                          <VStack align="flex-start" spacing={2} flex={1}>
-                            <Heading size="md" color={headingColor} noOfLines={2}>
+                      <CardHeader pb={{ base: 2, sm: 3, md: 4 }} px={{ base: 3, sm: 4, md: 5 }}>
+                        <VStack align="flex-start" spacing={{ base: 2, sm: 3 }} w="full">
+                          <HStack justify="space-between" align="flex-start" w="full" gap={2}>
+                            <VStack align="flex-start" spacing={{ base: 1, sm: 2 }} flex={1} minW={0}>
+                              <Heading 
+                                size={{ base: "xs", sm: "sm", md: "md" }} 
+                                color={headingColor} 
+                                noOfLines={2}
+                                w="full"
+                                lineHeight={{ base: 1.3, md: 1.4 }}
+                              >
                               {course.title}
                             </Heading>
-                            <Text fontSize="sm" color={textColor} noOfLines={2}>
+                              <Text 
+                                fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
+                                color={textColor} 
+                                noOfLines={2}
+                                w="full"
+                                lineHeight={{ base: 1.4, md: 1.5 }}
+                              >
                               {course.description}
                             </Text>
                           </VStack>
-                          <HStack spacing={2}>
+                            <HStack spacing={1} flexShrink={0}>
                             <Tooltip label="تعديل الكورس">
                               <MotionIconButton
                                 icon={<FaEdit />}
                                 aria-label="تعديل"
-                                size="sm"
+                                  size="2xs"
                                 colorScheme="blue"
                                 variant="ghost"
                                 onClick={() => handleEditCourse(course)}
@@ -723,7 +837,7 @@ const TeacherDashboardHome = () => {
                               <MotionIconButton
                                 icon={<FaTrash />}
                                 aria-label="حذف"
-                                size="sm"
+                                  size="2xs"
                                 colorScheme="red"
                                 variant="ghost"
                                 onClick={() => handleDeleteCourse(course)}
@@ -733,31 +847,45 @@ const TeacherDashboardHome = () => {
                             </Tooltip>
                           </HStack>
                         </HStack>
+                        </VStack>
                       </CardHeader>
                       
-                      <CardBody pt={0}>
-                        <VStack spacing={4} align="stretch">
-                          <HStack justify="space-between">
-                            <HStack spacing={2}>
-                              <Icon as={FaCalendarAlt} color="blue.500" />
-                              <Text fontSize="sm" color={textColor}>
+                      <CardBody pt={0} px={{ base: 3, sm: 4, md: 5 }} pb={{ base: 3, sm: 4, md: 5 }}>
+                        <VStack spacing={{ base: 2, sm: 3, md: 4 }} align="stretch">
+                          <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                            <HStack spacing={1} minW={0} flex={1}>
+                              <Icon as={FaCalendarAlt} color="blue.500" boxSize={{ base: 3, sm: 3, md: 4 }} />
+                              <Text 
+                                fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
+                                color={textColor}
+                                noOfLines={1}
+                              >
                                 {new Date(course.created_at).toLocaleDateString('ar-EG')}
                               </Text>
                             </HStack>
-                            <Badge colorScheme="green" px={3} py={1} borderRadius="full">
+                            <Badge 
+                              colorScheme="green" 
+                              px={{ base: 1, sm: 2, md: 3 }} 
+                              py={1} 
+                              borderRadius="full"
+                              fontSize={{ base: "2xs", sm: "xs", md: "sm" }}
+                            >
                               {course.price} ج.م
                             </Badge>
                           </HStack>
                           
                           <Divider />
                           
-                          <HStack justify="space-between">
-                            <Link className="w-full" to={`/CourseDetailsPage/${course.id}`}>
-                            <Button colorScheme="blue" w="full">
+                          <Link to={`/CourseDetailsPage/${course.id}`} style={{ width: '100%' }}>
+                            <Button 
+                              colorScheme="blue" 
+                              w="full"
+                              size={{ base: "md", sm: "md", md: "md" }}
+                              borderRadius={{ base: "md", md: "lg" }}
+                            >
                               ادارة الكورس 
                             </Button>
                             </Link>
-                          </HStack>
                         </VStack>
                       </CardBody>
                     </MotionCard>
@@ -770,20 +898,51 @@ const TeacherDashboardHome = () => {
       </Container>
 
       {/* Create Course Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
+      <Modal 
+        isOpen={isOpen} 
+        onClose={onClose} 
+        size={{ base: "full", sm: "full", md: "lg", lg: "xl", xl: "2xl" }} 
+        isCentered
+        scrollBehavior="inside"
+      >
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(5px)" />
-        <ModalContent bg={cardBg} borderRadius="2xl" shadow="2xl">
-          <ModalHeader borderBottom="1px solid" borderColor={borderColor}>
-            <HStack spacing={3}>
-              <Icon as={FaPlus} color="green.500" boxSize={6} />
-              <Text fontWeight="bold" fontSize="lg">إضافة كورس جديد</Text>
+        <ModalContent 
+          bg={cardBg} 
+          borderRadius={{ base: "none", sm: "none", md: "xl", lg: "2xl" }} 
+          shadow={{ base: "none", md: "2xl" }}
+          m={{ base: 0, sm: 0, md: 4, lg: 6 }}
+          maxH={{ base: "100vh", sm: "100vh", md: "90vh", lg: "85vh" }}
+          maxW={{ base: "100%", sm: "100%", md: "90%", lg: "80%", xl: "70%" }}
+        >
+          <ModalHeader 
+            borderBottom="1px solid" 
+            borderColor={borderColor}
+            p={{ base: 3, sm: 4, md: 5, lg: 6 }}
+          >
+            <HStack spacing={{ base: 2, sm: 3 }}>
+              <Icon as={FaPlus} color="green.500" boxSize={{ base: 4, sm: 5, md: 6 }} />
+              <Text 
+                fontWeight="bold" 
+                fontSize={{ base: "sm", sm: "md", md: "lg", lg: "xl" }}
+              >
+                إضافة كورس جديد
+              </Text>
             </HStack>
           </ModalHeader>
           
-          <ModalBody py={6}>
-            <VStack spacing={6} align="stretch">
+          <ModalBody 
+            py={{ base: 3, sm: 4, md: 5, lg: 6 }} 
+            px={{ base: 3, sm: 4, md: 5, lg: 6 }}
+          >
+            <VStack spacing={{ base: 4, md: 6 }} align="stretch">
               <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={headingColor}>عنوان الكورس</FormLabel>
+                <FormLabel 
+                  fontWeight="bold" 
+                  color={headingColor}
+                  fontSize={{ base: "sm", md: "md" }}
+                >
+                  عنوان الكورس
+                </FormLabel>
                 <Input
                   placeholder="مثال: كورس فيزياء أولى ثانوي"
                   value={formData.title}
@@ -792,31 +951,46 @@ const TeacherDashboardHome = () => {
                   border="2px solid"
                   borderColor="gray.200"
                   _focus={{ borderColor: "green.500" }}
+                  size={{ base: "sm", md: "md" }}
                 />
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={headingColor}>وصف الكورس</FormLabel>
+                <FormLabel 
+                  fontWeight="bold" 
+                  color={headingColor}
+                  fontSize={{ base: "sm", md: "md" }}
+                >
+                  وصف الكورس
+                </FormLabel>
                 <Textarea
                   placeholder="اكتب وصفاً مفصلاً للكورس..."
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   borderRadius="xl"
-                  rows={4}
+                  rows={{ base: 3, md: 4 }}
                   border="2px solid"
                   borderColor="gray.200"
                   _focus={{ borderColor: "green.500" }}
+                  size={{ base: "sm", md: "md" }}
                 />
               </FormControl>
 
-              <HStack spacing={4}>
+              <VStack spacing={4} direction={{ base: "column", sm: "row" }}>
                 <FormControl isRequired flex={1}>
-                  <FormLabel fontWeight="bold" color={headingColor}>السعر</FormLabel>
+                  <FormLabel 
+                    fontWeight="bold" 
+                    color={headingColor}
+                    fontSize={{ base: "sm", md: "md" }}
+                  >
+                    السعر
+                  </FormLabel>
                   <NumberInput
                     value={formData.price}
                     onChange={(value) => handleInputChange('price', value)}
                     min={0}
                     max={10000}
+                    size={{ base: "sm", md: "md" }}
                   >
                     <NumberInputField
                       borderRadius="xl"
@@ -832,7 +1006,13 @@ const TeacherDashboardHome = () => {
                 </FormControl>
 
                 <FormControl isRequired flex={1}>
-                  <FormLabel fontWeight="bold" color={headingColor}>المرحلة الدراسية</FormLabel>
+                  <FormLabel 
+                    fontWeight="bold" 
+                    color={headingColor}
+                    fontSize={{ base: "sm", md: "md" }}
+                  >
+                    المرحلة الدراسية
+                  </FormLabel>
                   <Select
                     placeholder="اختر المرحلة"
                     value={formData.grade_id}
@@ -841,6 +1021,7 @@ const TeacherDashboardHome = () => {
                     border="2px solid"
                     borderColor="gray.200"
                     _focus={{ borderColor: "green.500" }}
+                    size={{ base: "sm", md: "md" }}
                   >
                     {grades.map(grade => (
                       <option key={grade.id} value={grade.id}>
@@ -849,11 +1030,17 @@ const TeacherDashboardHome = () => {
                     ))}
                   </Select>
                 </FormControl>
-              </HStack>
+              </VStack>
 
               {/* Avatar Upload Section */}
               <FormControl>
-                <FormLabel fontWeight="bold" color={headingColor}>صورة الكورس</FormLabel>
+                <FormLabel 
+                  fontWeight="bold" 
+                  color={headingColor}
+                  fontSize={{ base: "sm", md: "md" }}
+                >
+                  صورة الكورس
+                </FormLabel>
                 <VStack spacing={4} align="stretch">
                   {avatarPreview ? (
                     <Box position="relative" w="full">
@@ -861,7 +1048,7 @@ const TeacherDashboardHome = () => {
                         src={avatarPreview}
                         alt="Course Avatar Preview"
                         w="full"
-                        h="200px"
+                        h={{ base: "150px", md: "200px" }}
                         objectFit="cover"
                         borderRadius="xl"
                         border="2px solid"
@@ -884,7 +1071,7 @@ const TeacherDashboardHome = () => {
                       border="2px dashed"
                       borderColor="gray.300"
                       borderRadius="xl"
-                      p={8}
+                      p={{ base: 6, md: 8 }}
                       textAlign="center"
                       cursor="pointer"
                       _hover={{
@@ -894,12 +1081,19 @@ const TeacherDashboardHome = () => {
                       transition="all 0.2s"
                     >
                       <VStack spacing={4}>
-                        <Icon as={FaFileAlt} boxSize={8} color="gray.400" />
+                        <Icon as={FaFileAlt} boxSize={{ base: 6, md: 8 }} color="gray.400" />
                         <VStack spacing={2}>
-                          <Text fontWeight="medium" color={textColor}>
+                          <Text 
+                            fontWeight="medium" 
+                            color={textColor}
+                            fontSize={{ base: "sm", md: "md" }}
+                          >
                             انقر لاختيار صورة الكورس
                           </Text>
-                          <Text fontSize="sm" color={textColor}>
+                          <Text 
+                            fontSize={{ base: "xs", md: "sm" }} 
+                            color={textColor}
+                          >
                             PNG, JPG, JPEG حتى 5 ميجابايت
                           </Text>
                         </VStack>
@@ -922,23 +1116,39 @@ const TeacherDashboardHome = () => {
               </FormControl>
 
               <Box
-                p={4}
+                p={{ base: 3, md: 4 }}
                 bg={useColorModeValue("green.50", "green.900")}
                 borderRadius="xl"
                 border="1px solid"
                 borderColor="green.200"
               >
                 <HStack spacing={3}>
-                  <Icon as={FaFileAlt} color="green.500" />
-                  <Text fontSize="sm" color="green.700" fontWeight="medium">
+                  <Icon as={FaFileAlt} color="green.500" boxSize={{ base: 4, md: 5 }} />
+                  <Text 
+                    fontSize={{ base: "xs", md: "sm" }} 
+                    color="green.700" 
+                    fontWeight="medium"
+                  >
                     يمكنك إضافة صورة للكورس لتحسين مظهره وجذب الطلاب. الصورة اختيارية.
                   </Text>
                 </HStack>
               </Box>
             </VStack>
           </ModalBody>
-          <ModalFooter borderTop="1px solid" borderColor={borderColor}>
-            <Button variant="ghost" mr={3} onClick={onClose}>
+          <ModalFooter 
+            borderTop="1px solid" 
+            borderColor={borderColor}
+            p={{ base: 4, md: 6 }}
+            flexDirection={{ base: "column", sm: "row" }}
+            gap={{ base: 3, sm: 0 }}
+          >
+            <Button 
+              variant="ghost" 
+              mr={{ base: 0, sm: 3 }} 
+              onClick={onClose}
+              w={{ base: "full", sm: "auto" }}
+              size={{ base: "sm", md: "md" }}
+            >
               إلغاء
             </Button>
             <Button
@@ -946,6 +1156,8 @@ const TeacherDashboardHome = () => {
               onClick={handleCreateCourse}
               isLoading={formLoading}
               loadingText="جاري الإنشاء..."
+              w={{ base: "full", sm: "auto" }}
+              size={{ base: "sm", md: "md" }}
             >
               إنشاء الكورس
             </Button>
@@ -954,20 +1166,45 @@ const TeacherDashboardHome = () => {
       </Modal>
 
       {/* Edit Course Modal */}
-      <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl" isCentered>
+      <Modal 
+        isOpen={isEditOpen} 
+        onClose={onEditClose} 
+        size={{ base: "full", sm: "full", md: "lg", lg: "xl", xl: "2xl" }} 
+        isCentered
+        scrollBehavior="inside"
+      >
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(5px)" />
-        <ModalContent bg={cardBg} borderRadius="2xl" shadow="2xl">
-          <ModalHeader borderBottom="1px solid" borderColor={borderColor}>
+        <ModalContent 
+          bg={cardBg} 
+          borderRadius={{ base: "none", sm: "none", md: "xl", lg: "2xl" }} 
+          shadow={{ base: "none", md: "2xl" }}
+          m={{ base: 0, sm: 0, md: 4, lg: 6 }}
+          maxH={{ base: "100vh", sm: "100vh", md: "90vh", lg: "85vh" }}
+          maxW={{ base: "100%", sm: "100%", md: "90%", lg: "80%", xl: "70%" }}
+        >
+          <ModalHeader 
+            borderBottom="1px solid" 
+            borderColor={borderColor}
+            p={{ base: 4, md: 6 }}
+          >
             <HStack spacing={3}>
-              <Icon as={FaEdit} color="blue.500" boxSize={6} />
-              <Text fontWeight="bold" fontSize="lg">تعديل الكورس</Text>
+              <Icon as={FaEdit} color="blue.500" boxSize={{ base: 5, md: 6 }} />
+              <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }}>
+                تعديل الكورس
+              </Text>
             </HStack>
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody py={6}>
-            <VStack spacing={6} align="stretch">
+          <ModalBody py={{ base: 4, md: 6 }} px={{ base: 4, md: 6 }}>
+            <VStack spacing={{ base: 4, md: 6 }} align="stretch">
               <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={headingColor}>عنوان الكورس</FormLabel>
+                <FormLabel 
+                  fontWeight="bold" 
+                  color={headingColor}
+                  fontSize={{ base: "sm", md: "md" }}
+                >
+                  عنوان الكورس
+                </FormLabel>
                 <Input
                   placeholder="مثال: كورس فيزياء أولى ثانوي"
                   value={editData.title}
@@ -976,31 +1213,46 @@ const TeacherDashboardHome = () => {
                   border="2px solid"
                   borderColor="gray.200"
                   _focus={{ borderColor: "blue.500" }}
+                  size={{ base: "sm", md: "md" }}
                 />
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={headingColor}>وصف الكورس</FormLabel>
+                <FormLabel 
+                  fontWeight="bold" 
+                  color={headingColor}
+                  fontSize={{ base: "sm", md: "md" }}
+                >
+                  وصف الكورس
+                </FormLabel>
                 <Textarea
                   placeholder="اكتب وصفاً مفصلاً للكورس..."
                   value={editData.description}
                   onChange={(e) => handleEditChange('description', e.target.value)}
                   borderRadius="xl"
-                  rows={4}
+                  rows={{ base: 3, md: 4 }}
                   border="2px solid"
                   borderColor="gray.200"
                   _focus={{ borderColor: "blue.500" }}
+                  size={{ base: "sm", md: "md" }}
                 />
               </FormControl>
 
-              <HStack spacing={4}>
+              <VStack spacing={4} direction={{ base: "column", sm: "row" }}>
                 <FormControl isRequired flex={1}>
-                  <FormLabel fontWeight="bold" color={headingColor}>السعر</FormLabel>
+                  <FormLabel 
+                    fontWeight="bold" 
+                    color={headingColor}
+                    fontSize={{ base: "sm", md: "md" }}
+                  >
+                    السعر
+                  </FormLabel>
                   <NumberInput
                     value={editData.price}
                     onChange={(value) => handleEditChange('price', value)}
                     min={0}
                     max={10000}
+                    size={{ base: "sm", md: "md" }}
                   >
                     <NumberInputField
                       borderRadius="xl"
@@ -1016,7 +1268,13 @@ const TeacherDashboardHome = () => {
                 </FormControl>
 
                 <FormControl isRequired flex={1}>
-                  <FormLabel fontWeight="bold" color={headingColor}>المرحلة الدراسية</FormLabel>
+                  <FormLabel 
+                    fontWeight="bold" 
+                    color={headingColor}
+                    fontSize={{ base: "sm", md: "md" }}
+                  >
+                    المرحلة الدراسية
+                  </FormLabel>
                   <Select
                     placeholder="اختر المرحلة"
                     value={editData.grade_id}
@@ -1025,6 +1283,7 @@ const TeacherDashboardHome = () => {
                     border="2px solid"
                     borderColor="gray.200"
                     _focus={{ borderColor: "blue.500" }}
+                    size={{ base: "sm", md: "md" }}
                   >
                     {grades.map(grade => (
                       <option key={grade.id} value={grade.id}>
@@ -1033,11 +1292,23 @@ const TeacherDashboardHome = () => {
                     ))}
                   </Select>
                 </FormControl>
-              </HStack>
+              </VStack>
             </VStack>
           </ModalBody>
-          <ModalFooter borderTop="1px solid" borderColor={borderColor}>
-            <Button variant="ghost" mr={3} onClick={onEditClose}>
+          <ModalFooter 
+            borderTop="1px solid" 
+            borderColor={borderColor}
+            p={{ base: 4, md: 6 }}
+            flexDirection={{ base: "column", sm: "row" }}
+            gap={{ base: 3, sm: 0 }}
+          >
+            <Button 
+              variant="ghost" 
+              mr={{ base: 0, sm: 3 }} 
+              onClick={onEditClose}
+              w={{ base: "full", sm: "auto" }}
+              size={{ base: "sm", md: "md" }}
+            >
               إلغاء
             </Button>
             <Button
@@ -1045,6 +1316,8 @@ const TeacherDashboardHome = () => {
               onClick={handleUpdateCourse}
               isLoading={editLoading}
               loadingText="جاري التحديث..."
+              w={{ base: "full", sm: "auto" }}
+              size={{ base: "sm", md: "md" }}
             >
               تحديث الكورس
             </Button>
@@ -1058,28 +1331,55 @@ const TeacherDashboardHome = () => {
         leastDestructiveRef={cancelRef}
         onClose={onDeleteClose}
         isCentered
+        size={{ base: "xs", sm: "sm", md: "md", lg: "lg" }}
       >
         <AlertDialogOverlay>
-          <AlertDialogContent bg={cardBg} borderRadius="2xl">
-            <AlertDialogHeader fontSize="lg" fontWeight="bold" color={headingColor}>
+          <AlertDialogContent 
+            bg={cardBg} 
+            borderRadius={{ base: "lg", sm: "xl", md: "2xl" }}
+            m={{ base: 3, sm: 4, md: 0 }}
+            maxW={{ base: "95%", sm: "90%", md: "md", lg: "lg" }}
+          >
+            <AlertDialogHeader 
+              fontSize={{ base: "md", md: "lg" }} 
+              fontWeight="bold" 
+              color={headingColor}
+              p={{ base: 4, md: 6 }}
+            >
               تأكيد حذف الكورس
             </AlertDialogHeader>
-            <AlertDialogBody>
-              <Text color={textColor}>
+            <AlertDialogBody p={{ base: 4, md: 6 }} pt={0}>
+              <Text 
+                color={textColor}
+                fontSize={{ base: "sm", md: "md" }}
+                lineHeight={{ base: 1.5, md: 1.6 }}
+              >
                 هل أنت متأكد من حذف الكورس "{courseToDelete?.title}"؟ 
                 هذا الإجراء لا يمكن التراجع عنه.
               </Text>
             </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onDeleteClose}>
+            <AlertDialogFooter 
+              p={{ base: 4, md: 6 }}
+              pt={0}
+              flexDirection={{ base: "column", sm: "row" }}
+              gap={{ base: 3, sm: 0 }}
+            >
+              <Button 
+                ref={cancelRef} 
+                onClick={onDeleteClose}
+                w={{ base: "full", sm: "auto" }}
+                size={{ base: "sm", md: "md" }}
+              >
                 إلغاء
               </Button>
               <Button
                 colorScheme="red"
                 onClick={handleConfirmDelete}
-                ml={3}
+                ml={{ base: 0, sm: 3 }}
                 isLoading={deleteLoading}
                 loadingText="جاري الحذف..."
+                w={{ base: "full", sm: "auto" }}
+                size={{ base: "sm", md: "md" }}
               >
                 حذف
               </Button>

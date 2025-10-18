@@ -64,6 +64,7 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
+  Container,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import {
@@ -1611,7 +1612,7 @@ D) has made`}
                     
                     <div style='margin-top: 8px;'>
                       <p style='font-size: 11px; font-weight: 600; color: #4a5568; text-align: center; margin: 0; white-space: nowrap;'>
-                        01210726096 | 01032127531 | 01288781012 | 01289587761
+                        01210726096  | 01288781012 | 01111272393
                       </p>
                     </div>
                   </div>`
@@ -1779,112 +1780,252 @@ D) has made`}
   // Enhanced Loading Component
   if (courseLoading) {
     return (
-      <Box minH="100vh" bg={pageBg} dir="rtl" className="mt-[80px]">
-        <Center minH="70vh">
-          <VStack spacing={8}>
-            {/* Animated Book Icon */}
-       
-            
-            {/* Main Loading Container */}
-          <Box
-              p={{ base: 8, md: 12 }}
-              borderRadius="3xl"
-            boxShadow="2xl"
-              bgGradient="linear(to-br, blue.50, white, purple.50)"
-              border="3px solid"
-              borderColor="blue.200"
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-              minW={{ base: '90vw', md: '500px' }}
-              position="relative"
-              overflow="hidden"
+      <Box minH="100vh" bg={pageBg} dir="rtl" className="mb-[100px]">
+        {/* Loading Hero Section */}
+        <Box
+          bg="blue.500"
+          py={8}
+          px={4}
+        >
+          <Container dir="rtl" maxW="container.xl">
+            <Flex
+              direction={{ base: "column", lg: "row" }}
+              align="center"
+              justify="space-between"
+              gap={6}
             >
-              {/* Animated Background Elements */}
-              <Box
-                position="absolute"
-                top="-50%"
-                left="-50%"
-                w="200%"
-                h="200%"
-                bgGradient="linear(45deg, transparent 30%, rgba(49, 130, 206, 0.1) 50%, transparent 70%)"
-                animation="shimmer 3s ease-in-out infinite"
-                transform="rotate(45deg)"
-              />
-              
-              {/* Content */}
-              <VStack spacing={6} position="relative" zIndex={1}>
-                <Spinner 
-                  size="xl" 
-                  color="blue.500" 
-                  thickness="8px" 
-                  speed="0.8s"
-                  mb={4}
-                />
-                <VStack spacing={3}>
-                  <Text 
-                    fontSize={{ base: "xl", md: "2xl" }} 
-                    color="blue.700" 
-                    fontWeight="bold"
-                    textAlign="center"
-                  >
-              جاري تحميل تفاصيل الكورس...
-            </Text>
-                  <Text 
-                    fontSize="sm" 
-                    color="blue.600" 
-                    opacity="0.8"
-                    textAlign="center"
-                  >
-                    يرجى الانتظار قليلاً
-                  </Text>
-                </VStack>
-                
-                {/* Progress Bar */}
-                <Box w="full" maxW="300px">
-                  <Box
-                    w="full"
-                    h="4px"
-                    bg="blue.100"
-                    borderRadius="full"
-                    overflow="hidden"
-                  >
+              {/* Loading Content */}
+              <Box flex={1} w="100%">
+                <VStack align={{ base: "center", lg: "flex-start" }} spacing={6}>
+                  {/* Loading Course Title */}
+                  <Box textAlign={{ base: "center", lg: "right" }} w="full">
                     <Box
-                      h="full"
-                      bgGradient="linear(to-r, blue.400, purple.400)"
-                      borderRadius="full"
-                      animation="progress 2s ease-in-out infinite"
-                      transformOrigin="left"
+                      h={{ base: "40px", sm: "50px", md: "60px" }}
+                      w={{ base: "300px", sm: "400px", md: "500px" }}
+                      bg="whiteAlpha.300"
+                      borderRadius="lg"
+                      mb={4}
+                      mx={{ base: "auto", lg: "0" }}
                     />
+                    <Box
+                      h="40px"
+                      w="200px"
+                      bg="orange.400"
+                      borderRadius="xl"
+                      mx={{ base: "auto", lg: "0" }}
+                    />
+                  </Box>
+
+                  {/* Loading Description */}
+                  <Box 
+                    w="full" 
+                    maxW="600px"
+                    p={4}
+                    bg="whiteAlpha.200"
+                    borderRadius="xl"
+                  >
+                    <VStack spacing={2} align="stretch">
+                      <Box h="20px" w="100%" bg="whiteAlpha.300" borderRadius="md" />
+                      <Box h="20px" w="85%" bg="whiteAlpha.300" borderRadius="md" />
+                      <Box h="20px" w="70%" bg="whiteAlpha.300" borderRadius="md" />
+                      <Box h="20px" w="90%" bg="whiteAlpha.300" borderRadius="md" />
+                    </VStack>
+                  </Box>
+
+                  {/* Loading Course Info */}
+                  <div className="flex flex-wrap gap-4">
+                    <Box
+                      px={5}
+                      py={3}
+                      bg="orange.400"
+                      borderRadius="xl"
+                      display="flex"
+                      alignItems="center"
+                      gap={3}
+                    >
+                      <Box w="20px" h="20px" bg="whiteAlpha.300" borderRadius="md" />
+                      <VStack align="flex-start" spacing={0}>
+                        <Box h="16px" w="80px" bg="whiteAlpha.300" borderRadius="sm" />
+                        <Box h="24px" w="60px" bg="whiteAlpha.300" borderRadius="sm" />
+                      </VStack>
+                    </Box>
+
+                    <Box
+                      px={5}
+                      py={3}
+                      bg="whiteAlpha.200"
+                      borderRadius="xl"
+                      display="flex"
+                      alignItems="center"
+                      gap={3}
+                    >
+                      <Box w="20px" h="20px" bg="whiteAlpha.300" borderRadius="md" />
+                      <VStack align="flex-start" spacing={0}>
+                        <Box h="16px" w="60px" bg="whiteAlpha.300" borderRadius="sm" />
+                        <Box h="24px" w="40px" bg="whiteAlpha.300" borderRadius="sm" />
+                      </VStack>
+                    </Box>
+                  </div>
+
+                  {/* Loading Action Buttons */}
+                  <HStack spacing={4} justify={{ base: "center", lg: "flex-start" }}>
+                    <Box h="48px" w="150px" bg="whiteAlpha.300" borderRadius="xl" />
+                    <Box h="48px" w="120px" bg="whiteAlpha.300" borderRadius="xl" />
+                  </HStack>
+                </VStack>
+              </Box>
+
+              {/* Loading Course Image */}
+              <Box>
+                <Box
+                  width={{ base: "250px", md: "350px" }}
+                  height={{ base: "180px", md: "250px" }}
+                  bg="whiteAlpha.300"
+                  borderRadius="2xl"
+                  borderWidth="4px"
+                  borderColor="white"
+                  boxShadow="lg"
+                />
+              </Box>
+            </Flex>
+          </Container>
+        </Box>
+
+        {/* Loading Course Content */}
+        <Container maxW="container.xl" px={4} py={8}>
+          {/* Loading Tabs */}
+          <Box mb={8}>
+            <HStack spacing={4} mb={6}>
+              <Box h="40px" w="120px" bg="gray.200" borderRadius="lg" />
+              <Box h="40px" w="100px" bg="gray.200" borderRadius="lg" />
+              <Box h="40px" w="110px" bg="gray.200" borderRadius="lg" />
+              <Box h="40px" w="90px" bg="gray.200" borderRadius="lg" />
+            </HStack>
           </Box>
-                </Box>
+
+          {/* Loading Course Sections */}
+          <VStack spacing={8} align="stretch">
+            {/* Loading Lectures Section */}
+            <Box
+              p={6}
+              bg="white"
+              borderRadius="2xl"
+              boxShadow="lg"
+              border="1px solid"
+              borderColor="gray.100"
+            >
+              <VStack spacing={6} align="stretch">
+                <HStack justify="space-between" align="center">
+                  <Box h="32px" w="200px" bg="gray.200" borderRadius="md" />
+                  <Box h="40px" w="120px" bg="gray.200" borderRadius="lg" />
+                </HStack>
+                
+                <VStack spacing={4} align="stretch">
+                  {[...Array(4)].map((_, index) => (
+                    <Box
+                      key={index}
+                      p={4}
+                      bg="gray.50"
+                      borderRadius="xl"
+                      border="1px solid"
+                      borderColor="gray.100"
+                    >
+                      <HStack spacing={4}>
+                        <Box w="60px" h="60px" bg="gray.200" borderRadius="lg" />
+                        <VStack align="flex-start" spacing={2} flex={1}>
+                          <Box h="20px" w="80%" bg="gray.200" borderRadius="md" />
+                          <Box h="16px" w="60%" bg="gray.200" borderRadius="md" />
+                          <HStack spacing={4}>
+                            <Box h="16px" w="100px" bg="gray.200" borderRadius="sm" />
+                            <Box h="16px" w="80px" bg="gray.200" borderRadius="sm" />
+                          </HStack>
+                        </VStack>
+                        <Box h="40px" w="40px" bg="gray.200" borderRadius="full" />
+                      </HStack>
+                    </Box>
+                  ))}
+                </VStack>
+              </VStack>
+            </Box>
+
+            {/* Loading Teacher Info */}
+            <Box
+              p={6}
+              bg="white"
+              borderRadius="2xl"
+              boxShadow="lg"
+              border="1px solid"
+              borderColor="gray.100"
+            >
+              <VStack spacing={6} align="stretch">
+                <Box h="32px" w="180px" bg="gray.200" borderRadius="md" />
+                
+                <HStack spacing={6}>
+                  <Box w="80px" h="80px" bg="gray.200" borderRadius="full" />
+                  <VStack align="flex-start" spacing={3} flex={1}>
+                    <Box h="24px" w="200px" bg="gray.200" borderRadius="md" />
+                    <Box h="20px" w="150px" bg="gray.200" borderRadius="md" />
+                    <Box h="16px" w="250px" bg="gray.200" borderRadius="md" />
+                    <HStack spacing={3}>
+                      <Box w="32px" h="32px" bg="gray.200" borderRadius="lg" />
+                      <Box w="32px" h="32px" bg="gray.200" borderRadius="lg" />
+                      <Box w="32px" h="32px" bg="gray.200" borderRadius="lg" />
+                    </HStack>
+                  </VStack>
+                </HStack>
+              </VStack>
+            </Box>
+
+            {/* Loading Comments Section */}
+            <Box
+              p={6}
+              bg="white"
+              borderRadius="2xl"
+              boxShadow="lg"
+              border="1px solid"
+              borderColor="gray.100"
+            >
+              <VStack spacing={6} align="stretch">
+                <Box h="32px" w="160px" bg="gray.200" borderRadius="md" />
+                
+                <VStack spacing={4} align="stretch">
+                  {[...Array(3)].map((_, index) => (
+                    <Box
+                      key={index}
+                      p={4}
+                      bg="gray.50"
+                      borderRadius="xl"
+                      border="1px solid"
+                      borderColor="gray.100"
+                    >
+                      <HStack spacing={4}>
+                        <Box w="40px" h="40px" bg="gray.200" borderRadius="full" />
+                        <VStack align="flex-start" spacing={2} flex={1}>
+                          <Box h="18px" w="120px" bg="gray.200" borderRadius="md" />
+                          <Box h="16px" w="100%" bg="gray.200" borderRadius="md" />
+                          <Box h="16px" w="80%" bg="gray.200" borderRadius="md" />
+                        </VStack>
+                      </HStack>
+                    </Box>
+                  ))}
+                </VStack>
               </VStack>
             </Box>
           </VStack>
-          
-          {/* CSS Animations */}
-          <style>{`
-            @keyframes bounce {
-              0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-              40% { transform: translateY(-10px); }
-              60% { transform: translateY(-5px); }
-            }
-            @keyframes pulse {
-              0%, 100% { transform: scale(1); opacity: 0.7; }
-              50% { transform: scale(1.2); opacity: 1; }
-            }
-            @keyframes shimmer {
-              0% { transform: translateX(-100%) rotate(45deg); }
-              100% { transform: translateX(100%) rotate(45deg); }
-            }
-            @keyframes progress {
-              0% { transform: scaleX(0); }
-              50% { transform: scaleX(0.7); }
-              100% { transform: scaleX(1); }
-            }
-          `}</style>
-        </Center>
+        </Container>
+
+        {/* CSS Animations */}
+        <style>{`
+          @keyframes shimmer {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.3; }
+          }
+          .shimmer {
+            animation: shimmer 2s ease-in-out infinite;
+          }
+        `}</style>
+        <ScrollToTop/>
       </Box>
     );
   }

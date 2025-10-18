@@ -234,23 +234,8 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
               >
                 <VStack spacing={4} align={{ base: "center", lg: "flex-end" }}>
                   <HStack spacing={4} flexWrap="wrap" justify={{ base: "center", lg: "flex-start" }}>
-                    <MotionButton
-                      whileHover={{ scale: 1.05, boxShadow: "0 8px 25px rgba(0,0,0,0.3)" }}
-                      whileTap={{ scale: 0.95 }}
-                      bg="white"
-                      color="blue.700"
-                      fontWeight="bold"
-                      size={buttonSize}
-                      px={8}
-                      rounded="xl"
-                      shadow="xl"
-                      _hover={{ bg: "blue.50", transform: "translateY(-2px)" }}
-                      rightIcon={<FaPlay />}
-                    >
-                      ابدأ التعلم الآن
-                    </MotionButton>
-
-                    <Link to={`/CourseStatisticsPage/${course.id}`}>
+               
+           {isTeacher  ? <Link to={`/CourseStatisticsPage/${course.id}`}>
                       <MotionButton
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -271,7 +256,8 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                       >
                         تفاصيل الكورس
                       </MotionButton>
-                    </Link>
+                    </Link>  :null}
+                  
                   </HStack>
 
                   {/* Teacher/Admin Buttons */}

@@ -18,6 +18,7 @@ import {
   useToast,
   VStack,
   HStack,
+  Container,
 } from "@chakra-ui/react";
 import { MdCancelPresentation } from "react-icons/md";
 import { FaFileVideo, FaSearch, FaEnvelope } from "react-icons/fa";
@@ -63,9 +64,192 @@ const TeacherDetails = () => {
 
   if (loading) {
     return (
-      <Flex justify="center" align="center" minH="60vh">
-        <Spinner size="xl" color="blue.500" />
-      </Flex>
+      <Box minH="100vh" className="mb-[100px]">
+        {/* Loading Hero Section */}
+        <Box
+          bg="blue.500"
+          py={8}
+          px={4}
+        >
+          <Container dir="rtl" maxW="container.xl">
+            <Flex
+              direction={{ base: "column", lg: "row" }}
+              align="center"
+              justify="space-between"
+              gap={6}
+            >
+              {/* Loading Content */}
+              <Box flex={1} w="100%">
+                <VStack align={{ base: "center", lg: "flex-start" }} spacing={6}>
+                  {/* Loading Name */}
+                  <Box textAlign={{ base: "center", lg: "right" }} w="full">
+                    <Box
+                      h={{ base: "40px", sm: "50px", md: "60px" }}
+                      w={{ base: "200px", sm: "300px", md: "400px" }}
+                      bg="whiteAlpha.300"
+                      borderRadius="lg"
+                      mb={4}
+                      mx={{ base: "auto", lg: "0" }}
+                    />
+                    <Box
+                      h="40px"
+                      w="180px"
+                      bg="orange.400"
+                      borderRadius="xl"
+                      mx={{ base: "auto", lg: "0" }}
+                    />
+                  </Box>
+
+                  {/* Loading Description */}
+                  <Box 
+                    w="full" 
+                    maxW="600px"
+                    p={4}
+                    bg="whiteAlpha.200"
+                    borderRadius="xl"
+                  >
+                    <VStack spacing={2} align="stretch">
+                      <Box h="20px" w="100%" bg="whiteAlpha.300" borderRadius="md" />
+                      <Box h="20px" w="80%" bg="whiteAlpha.300" borderRadius="md" />
+                      <Box h="20px" w="60%" bg="whiteAlpha.300" borderRadius="md" />
+                    </VStack>
+                  </Box>
+
+                  {/* Loading Stats */}
+                  <div className="flex">
+                    <Box w="full" maxW="500px">
+                      <Flex 
+                        direction={{ base: "column", sm: "row" }} 
+                        gap={4} 
+                        w="full" 
+                        justify={{ base: "center", lg: "flex-start" }}
+                      >
+                        <Box
+                          px={5}
+                          py={3}
+                          bg="orange.400"
+                          borderRadius="xl"
+                          display="flex"
+                          alignItems="center"
+                          gap={3}
+                        >
+                          <Box w="20px" h="20px" bg="whiteAlpha.300" borderRadius="md" />
+                          <VStack align="flex-start" spacing={0}>
+                            <Box h="16px" w="60px" bg="whiteAlpha.300" borderRadius="sm" />
+                            <Box h="24px" w="40px" bg="whiteAlpha.300" borderRadius="sm" />
+                          </VStack>
+                        </Box>
+                      </Flex>
+                    </Box>
+
+                    {/* Loading WhatsApp */}
+                    <Box className="w-[130px] mx-3">
+                      <Box
+                        p={4}
+                        bg="#128C7E"
+                        borderRadius="xl"
+                      >
+                        <HStack spacing={3}>
+                          <Box
+                            p={2}
+                            bg="whiteAlpha.200"
+                            borderRadius="lg"
+                          >
+                            <Box w="20px" h="20px" bg="whiteAlpha.300" borderRadius="md" />
+                          </Box>
+                          <VStack align="flex-start" spacing={0} flex={1}>
+                            <Box h="20px" w="60px" bg="whiteAlpha.300" borderRadius="sm" />
+                          </VStack>
+                        </HStack>
+                      </Box>
+                    </Box>
+                  </div>
+
+                  {/* Loading Social Media */}
+                  <Box w="full" maxW="600px">
+                    <VStack className="flex" spacing={4} align="stretch">
+                      <Box>
+                        <Box h="20px" w="100px" bg="whiteAlpha.300" borderRadius="md" mb={3} />
+                        <HStack spacing={3}>
+                          <Box w="40px" h="40px" bg="whiteAlpha.300" borderRadius="lg" />
+                          <Box w="40px" h="40px" bg="whiteAlpha.300" borderRadius="lg" />
+                          <Box w="40px" h="40px" bg="whiteAlpha.300" borderRadius="lg" />
+                        </HStack>
+                      </Box>
+                    </VStack>
+                  </Box>
+                </VStack>
+              </Box>
+
+              {/* Loading Avatar */}
+              <Box>
+                <Box
+                  width={{ base: "200px", md: "300px" }}
+                  height={{ base: "200px", md: "300px" }}
+                  bg="whiteAlpha.300"
+                  borderRadius="full"
+                  borderWidth="6px"
+                  borderColor="white"
+                  boxShadow="lg"
+                />
+              </Box>
+            </Flex>
+          </Container>
+        </Box>
+
+        {/* Loading Courses Section */}
+        <Box className="border w-[90%] m-auto my-8 p-5 rounded-lg">
+          <Flex align="center" gap={3} mb={4}>
+            <Box w="24px" h="24px" bg="blue.300" borderRadius="md" />
+            <Box h="32px" w="200px" bg="gray.200" borderRadius="md" />
+          </Flex>
+          
+          <Box maxW="400px" mb={6}>
+            <Box h="40px" w="100%" bg="gray.200" borderRadius="md" />
+          </Box>
+
+          <div className='w-full m-auto flex justify-center md:justify-start flex-wrap gap-6'>
+            {[...Array(3)].map((_, index) => (
+              <Box
+                key={index}
+                className="w-[320px]"
+                style={{
+                  borderRadius: "20px",
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+                  background: "#fff",
+                  overflow: "hidden",
+                  border: "1px solid #f0f0f0",
+                }}
+              >
+                <Box h="200px" bg="gray.200" />
+                <Box p={6}>
+                  <VStack align="flex-start" spacing={4}>
+                    <Box w="full">
+                      <Box h="24px" w="80%" bg="gray.200" borderRadius="md" mb={2} />
+                      <Box h="20px" w="60%" bg="gray.200" borderRadius="md" />
+                    </Box>
+                    <Box w="full">
+                      <Box h="16px" w="100%" bg="gray.200" borderRadius="md" mb={1} />
+                      <Box h="16px" w="90%" bg="gray.200" borderRadius="md" mb={1} />
+                      <Box h="16px" w="70%" bg="gray.200" borderRadius="md" />
+                    </Box>
+                    <Flex justify="space-between" align="center" w="full" pt={2}>
+                      <HStack spacing={2}>
+                        <Box w="16px" h="16px" bg="gray.200" borderRadius="md" />
+                        <Box h="16px" w="80px" bg="gray.200" borderRadius="md" />
+                      </HStack>
+                      <Box h="24px" w="60px" bg="gray.200" borderRadius="md" />
+                    </Flex>
+                  </VStack>
+                </Box>
+                <Box p={6} pt={0}>
+                  <Box h="48px" w="full" bg="gray.200" borderRadius="xl" />
+                </Box>
+              </Box>
+            ))}
+          </div>
+        </Box>
+      </Box>
     );
   }
 
@@ -141,17 +325,7 @@ console.log(teacher)
           <InputLeftElement pointerEvents="none">
             <Icon as={FaSearch} color="gray.400" />
           </InputLeftElement>
-          <Input
-            placeholder="ابحث عن كورس بالوصف أو العنوان"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            bg={cardBg}
-            borderRadius="md"
-            _focus={{
-              borderColor: "blue.500",
-              boxShadow: "0 0 0 1px #3182ce",
-            }}
-          />
+     
         </InputGroup>
         {/* عرض الكورسات أو رسالة لا يوجد */}
         {filteredCourses && filteredCourses.length > 0 ? (

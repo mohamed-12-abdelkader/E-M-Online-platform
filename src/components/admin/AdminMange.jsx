@@ -183,6 +183,10 @@ const AdminMange = () => {
       grade_ids: teacher.grades ? teacher.grades.map(g => g.id.toString()) : [],
       avatar: teacher.avatar || "",
       avatarPreview: teacher.avatar ? (teacher.avatar.startsWith('http') ? teacher.avatar : `http://localhost:8000/${teacher.avatar}`) : "",
+      facebook_url: teacher.facebook_url || "",
+      youtube_url: teacher.youtube_url || "",
+      tiktok_url: teacher.tiktok_url || "",
+      whatsapp_number: teacher.whatsapp_number || "",
     });
     onEditOpen();
   };
@@ -217,6 +221,10 @@ const AdminMange = () => {
         updateData.append("description", editFormData.description);
         updateData.append("subject", editFormData.subject);
         updateData.append("grade_ids", editFormData.grade_ids.join(","));
+        updateData.append("facebook_url", editFormData.facebook_url);
+        updateData.append("youtube_url", editFormData.youtube_url);
+        updateData.append("tiktok_url", editFormData.tiktok_url);
+        updateData.append("whatsapp_number", editFormData.whatsapp_number);
         updateData.append("avatar", editFormData.avatarFile);
         headers["Content-Type"] = "multipart/form-data";
       } else {
@@ -228,6 +236,10 @@ const AdminMange = () => {
           description: editFormData.description,
           subject: editFormData.subject,
           grade_ids: editFormData.grade_ids.join(","),
+          facebook_url: editFormData.facebook_url,
+          youtube_url: editFormData.youtube_url,
+          tiktok_url: editFormData.tiktok_url,
+          whatsapp_number: editFormData.whatsapp_number,
         };
         headers["Content-Type"] = "application/json";
       }
@@ -436,7 +448,71 @@ const AdminMange = () => {
                           </Text>
                         </HStack>
                       )}
+                      {teacher.whatsapp_number && (
+                        <HStack spacing={2}>
+                          <FaPhone color="#25D366" size={14} />
+                          <Text fontSize="sm" color="gray.600">
+                            واتساب: {teacher.whatsapp_number}
+                          </Text>
+                        </HStack>
+                      )}
                     </VStack>
+
+                    {/* الروابط الاجتماعية */}
+                    {(teacher.facebook_url || teacher.youtube_url || teacher.tiktok_url) && (
+                      <VStack align="stretch" spacing={2}>
+                        <Text fontSize="xs" color="gray.500" fontWeight="bold">
+                          الروابط الاجتماعية:
+                        </Text>
+                        <HStack spacing={3} justify="center" flexWrap="wrap">
+                          {teacher.facebook_url && (
+                            <Tooltip label="فيسبوك" hasArrow>
+                              <IconButton
+                                as="a"
+                                href={teacher.facebook_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                icon={<Text fontSize="xs">📘</Text>}
+                                size="xs"
+                                colorScheme="blue"
+                                variant="outline"
+                                aria-label="فيسبوك"
+                              />
+                            </Tooltip>
+                          )}
+                          {teacher.youtube_url && (
+                            <Tooltip label="يوتيوب" hasArrow>
+                              <IconButton
+                                as="a"
+                                href={teacher.youtube_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                icon={<Text fontSize="xs">📺</Text>}
+                                size="xs"
+                                colorScheme="red"
+                                variant="outline"
+                                aria-label="يوتيوب"
+                              />
+                            </Tooltip>
+                          )}
+                          {teacher.tiktok_url && (
+                            <Tooltip label="تيك توك" hasArrow>
+                              <IconButton
+                                as="a"
+                                href={teacher.tiktok_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                icon={<Text fontSize="xs">🎵</Text>}
+                                size="xs"
+                                colorScheme="purple"
+                                variant="outline"
+                                aria-label="تيك توك"
+                              />
+                            </Tooltip>
+                          )}
+                        </HStack>
+                      </VStack>
+                    )}
 
                     {/* الوصف */}
                     {teacher.description && (
@@ -709,6 +785,58 @@ const AdminMange = () => {
                   </SimpleGrid>
                 </CheckboxGroup>
               </FormControl>
+
+              {/* الروابط الاجتماعية */}
+              <Box w="full">
+                <Heading size="md" color={textColor} mb={4}>
+                  الروابط الاجتماعية
+                </Heading>
+                <VStack spacing={4}>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="full">
+                    <FormControl>
+                      <FormLabel fontWeight="bold">رابط الفيسبوك</FormLabel>
+                      <Input
+                        value={editFormData.facebook_url || ""}
+                        onChange={(e) => handleEditInputChange("facebook_url", e.target.value)}
+                        placeholder="https://facebook.com/teacher"
+                        type="url"
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="bold">رابط اليوتيوب</FormLabel>
+                      <Input
+                        value={editFormData.youtube_url || ""}
+                        onChange={(e) => handleEditInputChange("youtube_url", e.target.value)}
+                        placeholder="https://youtube.com/teacher"
+                        type="url"
+                      />
+                    </FormControl>
+                  </SimpleGrid>
+
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="full">
+                    <FormControl>
+                      <FormLabel fontWeight="bold">رابط التيك توك</FormLabel>
+                      <Input
+                        value={editFormData.tiktok_url || ""}
+                        onChange={(e) => handleEditInputChange("tiktok_url", e.target.value)}
+                        placeholder="https://tiktok.com/@teacher"
+                        type="url"
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="bold">رقم الواتساب</FormLabel>
+                      <Input
+                        value={editFormData.whatsapp_number || ""}
+                        onChange={(e) => handleEditInputChange("whatsapp_number", e.target.value)}
+                        placeholder="01234567890"
+                        type="tel"
+                      />
+                    </FormControl>
+                  </SimpleGrid>
+                </VStack>
+              </Box>
             </VStack>
           </ModalBody>
 

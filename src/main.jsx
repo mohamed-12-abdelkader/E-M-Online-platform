@@ -45,7 +45,7 @@ const RootContent = () => {
       {showSidebar && <SidebarWithHeader />}
       <App />
       <WhatsButton />
-      {showBottomNav && <BottomNavItems />}
+     
     </>
   );
 };

@@ -538,35 +538,54 @@ const HomePage = () => {
         mb={{ base: 6, md: 8 }}
       >
         <Box
-              bg={cardBg}
-          borderRadius="2xl"
+          bg={cardBg}
+          borderRadius="xl"
           shadow="lg"
-              border="1px solid"
-              borderColor={borderColor}
-              overflow="hidden"
+          border="1px solid"
+          borderColor={borderColor}
+          overflow="hidden"
         >
           <Box
-            bgGradient="linear(135deg, blue.50, blue.100)"
-            px={6}
-            py={4}
-                borderBottom="1px solid"
-                borderColor={borderColor}
+            bg="blue.50"
+            px={{ base: 4, md: 5 }}
+            py={{ base: 4, md: 5 }}
+            borderBottom="1px solid"
+            borderColor={borderColor}
           >
             <HStack spacing={3} justify="space-between" align="center">
               <HStack spacing={3}>
-                <Icon as={FaLightbulb} color="blue.500" boxSize={6} />
-                <Heading size="md" color="blue.700">
-                      الوصول السريع
-                    </Heading>
-                  </HStack>
+                <Box
+                  p={2}
+                  borderRadius="lg"
+                  bg="blue.500"
+                  color="white"
+                  shadow="md"
+                >
+                  <Icon as={FaLightbulb} boxSize={5} />
+                </Box>
+                <VStack align="flex-start" spacing={1}>
+                  <Heading size="md" color="blue.700" fontWeight="bold">
+                    الوصول السريع
+                  </Heading>
+                  <Text fontSize="sm" color="gray.600">
+                    أدواتك المفضلة في مكان واحد
+                  </Text>
+                </VStack>
+              </HStack>
               <Button
                 display={{ base: "inline-flex", md: "none" }}
                 size="sm"
                 variant="outline"
                 colorScheme="blue"
-                borderRadius="full"
+                borderRadius="lg"
+                px={4}
                 onClick={quickActionsDisclosure.isOpen ? quickActionsDisclosure.onClose : quickActionsDisclosure.onOpen}
-                rightIcon={<FaArrowRight style={{ transform: quickActionsDisclosure.isOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }} />}
+                rightIcon={<FaArrowRight style={{ transform: quickActionsDisclosure.isOpen ? 'rotate(90deg)' : 'rotate(-90deg)', transition: 'transform 0.3s ease' }} />}
+                _hover={{
+                  bg: "blue.50",
+                  transform: "translateY(-1px)"
+                }}
+                transition="all 0.2s ease"
               >
                 {quickActionsDisclosure.isOpen ? 'إخفاء' : 'عرض'}
               </Button>
@@ -574,70 +593,96 @@ const HomePage = () => {
           </Box>
               
           <Collapse in={isDesktop || quickActionsDisclosure.isOpen} animateOpacity style={{ overflow: 'hidden' }}>
-            <Box p={6}>
-                  <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {mainLinks.map((link, index) => (
-                      <Link className="w-full" key={index} to={link.href}>
-                        <MotionCard
-                          variants={itemVariants}
-                          bg={cardBg}
+            <Box p={{ base: 4, md: 5 }}>
+              <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {mainLinks.map((link, index) => (
+                  <Link className="w-full" key={index} to={link.href}>
+                    <MotionCard
+                      variants={itemVariants}
+                      bg={cardBg}
+                      borderRadius="xl"
+                      shadow="md"
+                      p={{ base: 4, md: 5 }}
+                      cursor="pointer"
+                      border="1px solid"
+                      borderColor={borderColor}
+                      _hover={{ 
+                        transform: "translateY(-4px)", 
+                        shadow: "lg",
+                        borderColor: "blue.300"
+                      }}
+                      transition="all 0.3s ease"
+                      height="100%"
+                      display="flex"
+                      flexDirection="column"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      role="group"
+                    >
+                      <VStack spacing={4} align="center" width="100%">
+                        <Box
+                          p={4}
                           borderRadius="xl"
+                          bgGradient={link.gradient}
+                          color="white"
                           shadow="md"
-                          p={5}
-                          cursor="pointer"
-                          border="1px solid"
-                          borderColor={borderColor}
-                          _hover={{ transform: "translateY(-4px)", shadow: "xl" }}
-                          transition="all 0.3s"
-                          height="100%"
-                          display="flex"
-                          flexDirection="column"
-                          justifyContent="space-between"
-                          alignItems="center"
+                          _groupHover={{
+                            transform: "scale(1.05)",
+                            shadow: "lg"
+                          }}
+                          transition="all 0.3s ease"
                         >
-                          <VStack spacing={3} align="center" width="100%">
-                            <Box
-                              p={4}
-                              borderRadius="full"
-                              bgGradient={link.gradient}
-                              color="white"
-                              shadow="lg"
-                            >
-                              <Icon as={link.icon} boxSize={6} />
-                            </Box>
+                          <Icon as={link.icon} boxSize={6} />
+                        </Box>
 
-                            <VStack spacing={2} align="center" width="100%">
-                              <Text 
-                                fontWeight="bold" 
-                                fontSize="md" 
-                                color={textColor}
-                                textAlign="center"
-                              >
-                                {link.name}
-                              </Text>
+                        <VStack spacing={2} align="center" width="100%">
+                          <Text 
+                            fontWeight="bold" 
+                            fontSize="lg" 
+                            color={textColor}
+                            textAlign="center"
+                            _groupHover={{ color: "blue.600" }}
+                            transition="color 0.3s ease"
+                          >
+                            {link.name}
+                          </Text>
 
-                              <Text 
-                                fontSize="sm" 
-                                color="gray.500" 
-                                textAlign="center"
-                                noOfLines={2}
-                                lineHeight="1.4"
-                              >
-                                {link.desc}
-                              </Text>
-                            </VStack>
+                          <Text 
+                            fontSize="sm" 
+                            color="gray.500" 
+                            textAlign="center"
+                            noOfLines={2}
+                            lineHeight="1.4"
+                            _groupHover={{ color: "gray.600" }}
+                            transition="color 0.3s ease"
+                          >
+                            {link.desc}
+                          </Text>
+                        </VStack>
 
-                            <Icon 
-                              as={FaArrowRight} 
-                              color={link.color} 
-                              boxSize={4}
-                              opacity={0.7}
-                            />
-                          </VStack>
-                        </MotionCard>
-                      </Link>
-                    ))}
-                  </div>
+                        <Box
+                          p={2}
+                          borderRadius="lg"
+                          bg="gray.100"
+                          _groupHover={{
+                            bg: "blue.50",
+                            transform: "translateX(2px)"
+                          }}
+                          transition="all 0.3s ease"
+                        >
+                          <Icon 
+                            as={FaArrowRight} 
+                            color="blue.500" 
+                            boxSize={4}
+                            _groupHover={{ color: "blue.600" }}
+                            transition="color 0.3s ease"
+                          />
+                        </Box>
+                      </VStack>
+                    </MotionCard>
+                  </Link>
+                ))}
+              </div>
             </Box>
           </Collapse>
               </Box>

@@ -4,193 +4,259 @@ import {
   Text,
   Flex,
   Container,
-  useColorModeValue,
   Icon,
   Heading,
   VStack,
   useBreakpointValue,
   Avatar,
-  Badge
+  Badge,
+  HStack,
+  IconButton,
+  Tooltip,
+  SimpleGrid,
+  Link as ChakraLink
 } from "@chakra-ui/react";
-import { FaGraduationCap, FaBookOpen } from "react-icons/fa";
+import { 
+  FaGraduationCap, 
+  FaBookOpen, 
+  FaPhone, 
+  FaEnvelope,
+  FaFacebook,
+  FaYoutube,
+  FaTiktok,
+  FaWhatsapp
+} from "react-icons/fa";
 
 const TeacherInfo = ({ teacher, number }) => {
-  const bgGradient = useColorModeValue(
-    "linear(to-r, blue.500, blue.700)",
-    "linear(to-r, blue.600, blue.800)"
-  );
-  const headingColor = useColorModeValue("white", "white");
-
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const imageSize = useBreakpointValue({ base: "150px", md: "250px", lg: "300px" });
+  const imageSize = useBreakpointValue({ base: "200px", md: "300px" });
 
   return (
-    <Box position="relative" mb={8} >
-      {/* Hero Section */}
+    <Box position="relative" mb={8}>
+      {/* Hero Section بسيط */}
       <Box
-        position="relative"
-        bgGradient={bgGradient}
+        bg="blue.500"
         py={8}
         px={4}
-        overflow="hidden"
-        minH={isMobile ? "auto" : "450px"}
-        _before={{
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f97316' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30v4h-4v2h4v4h2v-4h4v-2h-4v-4h-2zM6 34v4h4v2h-4v4h-2v-4h-4v-2h4v-4h2zM6 4v4h-4v2h4v4h2v-4h4v-2h-4v-4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundAttachment: "fixed",
-          backgroundRepeat: "repeat",
-          zIndex: 1
-        }}
-        className="flex items-center mt-[80px]"
       >
-        {/* عناصر زخرفية مضيئة */}
-        <Box
-          position="absolute"
-          top={{ base: "-80px", md: "-120px" }}
-          right={{ base: "-80px", md: "-120px" }}
-          w={{ base: "220px", md: "320px" }}
-          h={{ base: "220px", md: "320px" }}
-          bg="orange.300"
-          borderRadius="full"
-          filter="blur(60px)"
-          opacity={0.35}
-          zIndex={1}
-          pointerEvents="none"
-        />
-        <Box
-          position="absolute"
-          bottom={{ base: "-80px", md: "-120px" }}
-          left={{ base: "-80px", md: "-120px" }}
-          w={{ base: "240px", md: "360px" }}
-          h={{ base: "240px", md: "360px" }}
-          bg="blue.300"
-          borderRadius="full"
-          filter="blur(70px)"
-          opacity={0.3}
-          zIndex={1}
-          pointerEvents="none"
-        />
-        <Container dir="rtl" maxW="container.lg" position="relative" zIndex={2}>
+        <Container dir="rtl" maxW="container.xl">
           <Flex
-            direction={{ base: "column-reverse", md: "row" }}
+            direction={{ base: "column", lg: "row" }}
             align="center"
             justify="space-between"
-            gap={8}
-            dir="rtl"
+            gap={6}
           >
-            {/* Teacher Info - يظهر على اليمين */}
-            <Box
-              flex={1}
-              w="100%"
-              display="flex"
-              justifyContent={{ base: "center", md: "flex-end" }}
-            >
-              <Box
-                dir="rtl"
-                bg="whiteAlpha.200"
-                borderWidth="1px"
-                borderColor="whiteAlpha.400"
-                boxShadow="xl"
-                backdropFilter="saturate(180%) blur(10px)"
-                rounded={{ base: "lg", md: "2xl" }}
-                p={{ base: 5, md: 8 }}
-                maxW="640px"
-                transition="all 0.3s ease"
-                _hover={{ transform: { md: "translateY(-2px)" }, boxShadow: "2xl" }}
-              >
-                <VStack align={{ base: "center", md: "flex-end" }} spacing={4}>
+            {/* معلومات المدرس */}
+            <Box flex={1} w="100%">
+              <VStack align={{ base: "center", lg: "flex-start" }} spacing={6}>
+                
+                {/* الاسم والمادة */}
+                <Box textAlign={{ base: "center", lg: "right" }} w="full">
                   <Heading
                     fontSize={{ base: "2xl", sm: "3xl", md: "4xl" }}
-                    fontWeight="extrabold"
-                    color={headingColor}
-                    lineHeight="shorter"
-                    textShadow="0 2px 12px rgba(0,0,0,0.25)"
+                    fontWeight="bold"
+                    color="white"
+                    mb={4}
                   >
                     {teacher.name}
                   </Heading>
-
-                  <Text
-                    fontSize={{ base: "md", md: "lg" }}
-                    color="whiteAlpha.900"
-                    maxW="600px"
-                    textAlign="right"
+                  
+                  <Badge
+                    bg="orange.500"
+                    color="white"
+                    px={6}
+                    py={3}
+                    borderRadius="xl"
+                    fontSize="lg"
+                    display="flex"
+                    alignItems="center"
+                    gap={3}
+                    w="fit-content"
+                    mx={{ base: "auto", lg: "0" }}
+                    fontWeight="bold"
                   >
-                    {teacher.description}
-                  </Text>
+                    <Icon as={FaGraduationCap} boxSize={5} />
+                    <Text>محاضر {teacher.subject}</Text>
+                  </Badge>
+                </Box>
 
-                  <Flex direction={{ base: "column", sm: "row" }} gap={3} w="full" justify="flex-end">
-                    <Badge
-                      colorScheme="orange"
-                      px={4}
-                      py={2}
-                      borderRadius="full"
-                      fontSize="md"
+                {/* الوصف */}
+                {teacher.description && (
+                  <Box 
+                    w="full" 
+                    maxW="600px"
+                    p={4}
+                    bg="whiteAlpha.200"
+                    borderRadius="xl"
+                  >
+                    <Text
+                      fontSize="lg"
+                      color="white"
+                      textAlign={{ base: "center", lg: "right" }}
+                      lineHeight="1.6"
+                      fontWeight="medium"
+                    >
+                      {teacher.description}
+                    </Text>
+                  </Box>
+                )}
+
+                {/* إحصائيات */}
+             
+             <div className="flex">
+                      <Box w="full" maxW="500px">
+                  <Flex 
+                    direction={{ base: "column", sm: "row" }} 
+                    gap={4} 
+                    w="full" 
+                    justify={{ base: "center", lg: "flex-start" }}
+                  >
+                    <Box
+                      px={5}
+                      py={3}
+                      bg="orange.500"
+                      borderRadius="xl"
                       display="flex"
                       alignItems="center"
-                      gap={2}
-                      bg="orange.400"
-                      color="white"
-                      boxShadow="md"
+                      gap={3}
                     >
-                      <Icon as={FaGraduationCap} />
-                      <Text>محاضر {teacher.subject}</Text>
-                    </Badge>
-
-                    <Badge
-                      colorScheme="orange"
-                      px={4}
-                      py={2}
-                      borderRadius="full"
-                      fontSize="md"
-                      display="flex"
-                      alignItems="center"
-                      gap={2}
-                      bg="whiteAlpha.300"
-                      color="white"
-                      boxShadow="md"
-                    >
-                      <Icon as={FaBookOpen} />
-                      <Text>عدد الكورسات: {number || 0}</Text>
-                    </Badge>
+                      <Icon as={FaBookOpen} boxSize={5} color="white" />
+                      <VStack align="flex-start" spacing={0}>
+                        <Text color="white" fontSize="sm" fontWeight="medium">
+                          الكورسات
+                        </Text>
+                        <Text color="white" fontSize="xl" fontWeight="bold">
+                          {number || 0}
+                        </Text>
+                      </VStack>
+                    </Box>
                   </Flex>
-                </VStack>
-              </Box>
+                       </Box>
+
+                    {/* الواتساب */}
+                    {teacher.whatsapp_number && (
+                      <ChakraLink
+                      className="w-[130px] mx-3"
+                        href={`https://wa.me/${teacher.whatsapp_number.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        _hover={{ textDecoration: "none" }}
+                      >
+                        <Box
+                          p={4}
+                          bg="#25D366"
+                          borderRadius="xl"
+                          cursor="pointer"
+                          transition="all 0.2s ease"
+                          _hover={{ bg: "#128C7E" }}
+                        >
+                          <HStack spacing={3}>
+                            <Box
+                              p={2}
+                              bg="whiteAlpha.200"
+                              borderRadius="lg"
+                            >
+                              <Icon as={FaWhatsapp} color="white" boxSize={5} />
+                            </Box>
+                            <VStack align="flex-start" spacing={0} flex={1}>
+                          
+                              <Text color="white" fontSize="lg" fontWeight="bold">
+                            مراسلة 
+                              </Text>
+                            </VStack>
+                          </HStack>
+                        </Box>
+                      </ChakraLink>
+                    )}
+             </div>
+
+                {/* معلومات الاتصال */}
+                <Box w="full" maxW="600px">
+                  <VStack className="flex" spacing={4} align="stretch">
+                 
+              
+
+                    {/* الوسائط الاجتماعية */}
+                    {(teacher.facebook_url || teacher.youtube_url || teacher.tiktok_url) && (
+                      <Box>
+                        <Text 
+                          color="white" 
+                          fontSize="md" 
+                          fontWeight="bold" 
+                          mb={3} 
+                          textAlign={{ base: "center", lg: "right" }}
+                        >
+                          تابعني على
+                        </Text>
+                        <HStack spacing={3} justify={{ base: "center", lg: "flex-start" }}>
+                          {teacher.facebook_url && (
+                            <Tooltip label="فيسبوك" hasArrow placement="top">
+                              <IconButton
+                                as={ChakraLink}
+                                href={teacher.facebook_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                icon={<FaFacebook />}
+                                size="md"
+                                borderRadius="lg"
+                                bg="#1877F2"
+                                color="white"
+                                _hover={{ bg: "#166FE5" }}
+                              />
+                            </Tooltip>
+                          )}
+                          
+                          {teacher.youtube_url && (
+                            <Tooltip label="يوتيوب" hasArrow placement="top">
+                              <IconButton
+                                as={ChakraLink}
+                                href={teacher.youtube_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                icon={<FaYoutube />}
+                                size="md"
+                                borderRadius="lg"
+                                bg="#FF0000"
+                                color="white"
+                                _hover={{ bg: "#E60000" }}
+                              />
+                            </Tooltip>
+                          )}
+                          
+                          {teacher.tiktok_url && (
+                            <Tooltip label="تيك توك" hasArrow placement="top">
+                              <IconButton
+                                as={ChakraLink}
+                                href={teacher.tiktok_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                icon={<FaTiktok />}
+                                size="md"
+                                borderRadius="lg"
+                                bg="#000000"
+                                color="white"
+                                _hover={{ bg: "#333333" }}
+                              />
+                            </Tooltip>
+                          )}
+                        </HStack>
+                      </Box>
+                    )}
+                  </VStack>
+                </Box>
+              </VStack>
             </Box>
 
-            {/* صورة المدرس - تظهر على اليسار */}
-            <Box position="relative" mb={{ base: 6, md: 0 }}>
-              <Box
-                position="absolute"
-                inset={0}
-                m="auto"
-                w={{ base: "180px", md: "260px", lg: "320px" }}
-                h={{ base: "180px", md: "260px", lg: "320px" }}
-                bg="whiteAlpha.700"
-                borderRadius="full"
-                filter="blur(20px)"
-                zIndex={1}
-              />
+            {/* صورة المدرس */}
+            <Box>
               <Avatar
                 src={teacher.avatar}
-                size="2xl"
+               
                 width={imageSize}
                 height={imageSize}
                 borderWidth="6px"
                 borderColor="white"
-                outline="6px solid"
-                outlineColor="blue.400"
-                boxShadow="2xl"
-                objectFit="cover"
-                objectPosition="center"
-                position="relative"
-                zIndex={2}
-                transition="transform 0.3s ease, box-shadow 0.3s ease"
-                _hover={{ transform: "scale(1.02)", boxShadow: "dark-lg" }}
+                boxShadow="lg"
               />
             </Box>
           </Flex>

@@ -121,7 +121,7 @@ const StudentDetailsPage = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await baseUrl.get(
-        `/api/student-grades/student/${studentId}`,
+        `//student/${studentId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
