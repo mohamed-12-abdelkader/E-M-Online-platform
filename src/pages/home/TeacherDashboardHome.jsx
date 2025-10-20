@@ -64,6 +64,8 @@ import {
   FaEye,
   FaEyeSlash,
   FaEnvelope,
+  FaImage,
+  FaTimes,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -112,8 +114,10 @@ const TeacherDashboardHome = () => {
     title: "",
     price: 0,
     description: "",
-    grade_id: ""
+    grade_id: "",
+    avatar: null
   });
+  const [editAvatarPreview, setEditAvatarPreview] = useState(null);
   const [courseToDelete, setCourseToDelete] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
@@ -297,6 +301,17 @@ const TeacherDashboardHome = () => {
     setEditData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Handle edit avatar change
+  const handleEditAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEditData(prev => ({ ...prev, avatar: file }));
+      const reader = new FileReader();
+      reader.onload = (e) => setEditAvatarPreview(e.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Create course
   const handleCreateCourse = async () => {
     if (!formData.title || !formData.price || !formData.description || !formData.grade_id) {
@@ -366,8 +381,11 @@ const TeacherDashboardHome = () => {
       title: course.title,
       price: parseFloat(course.price),
       description: course.description,
-      grade_id: course.grade_id.toString()
+      grade_id: course.grade_id.toString(),
+      avatar: null
     });
+    // عرض الصورة الحالية للكورس إذا كانت موجودة
+    setEditAvatarPreview(course.avatar || course.image || null);
     onEditOpen();
   };
 
@@ -386,8 +404,25 @@ const TeacherDashboardHome = () => {
 
     try {
       setEditLoading(true);
-      await baseUrl.put(`api/course/${editData.id}`, editData, {
-        headers: { Authorization: `Bearer ${token}` }
+      
+      const formData = new FormData();
+      formData.append('title', editData.title);
+      formData.append('price', editData.price);
+      formData.append('description', editData.description);
+      formData.append('grade_id', editData.grade_id);
+      
+      if (editData.avatar) {
+        formData.append('avatar', editData.avatar);
+      } else if (!editAvatarPreview) {
+        // إرسال إشارة لإزالة الصورة الحالية
+        formData.append('remove_avatar', 'true');
+      }
+
+      await baseUrl.put(`api/course/${editData.id}`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
       toast({
@@ -398,7 +433,8 @@ const TeacherDashboardHome = () => {
         isClosable: true,
       });
 
-      setEditData({ id: null, title: "", price: 0, description: "", grade_id: "" });
+      setEditData({ id: null, title: "", price: 0, description: "", grade_id: "", avatar: null });
+      setEditAvatarPreview(null);
       onEditClose();
       fetchCourses();
     } catch (error) {
@@ -473,7 +509,12 @@ const TeacherDashboardHome = () => {
       <Container 
         maxW={{ base: "100%", sm: "100%", md: "6xl", lg: "7xl", xl: "8xl" }} 
         mx="auto"
-        px={{ base: 0, sm: 2, md: 4 }}
+        px={{ base: 1, sm: 2, md: 2 }}
+        sx={{
+          '@media (min-width: 840px) and (max-width: 850px)': {
+            paddingInline: '4px'
+          }
+        }}
       >
         <MotionVStack
           spacing={{ base: 4, sm: 6, md: 8, lg: 10 }}
@@ -483,6 +524,7 @@ const TeacherDashboardHome = () => {
         >
           {/* Welcome Section */}
           <MotionCard
+          className="Welcome-Section"
             w="full"
             bgGradient="linear(135deg, blue.500 0%, blue.600 100%)"
             color="white"
@@ -602,6 +644,7 @@ const TeacherDashboardHome = () => {
               {quickLinks.map((link) => (
                 <Link key={link.id} to={link.link} style={{ textDecoration: 'none', width: '100%' }}>
                   <MotionCard
+                  
                     bg={cardBg}
                     borderRadius={{ base: "md", sm: "lg", md: "xl" }}
                     shadow={{ base: "sm", sm: "md", md: "lg" }}
@@ -619,7 +662,7 @@ const TeacherDashboardHome = () => {
                     minH={{ base: "120px", sm: "140px", md: "160px", lg: "180px" }}
                     w="full"
                     h="full"
-                    className="mx-auto"
+                    className="mx-auto link-div"
                   >
                     <CardBody  p={{ base: 3, sm: 4, md: 5, lg: 6 }} textAlign="center" h="full">
                       <VStack spacing={{ base: 2, sm: 3, md: 4 }} h="full" justify="center">
@@ -752,10 +795,17 @@ const TeacherDashboardHome = () => {
                     lg: "repeat(3, 1fr)",
                     xl: "repeat(3, 1fr)"
                   }}
-                  gap={{ base: 3, sm: 4, md: 5, lg: 6 }}
+                  gap={{ base: 3, sm: 3, md: 3, lg: 5 }}
                   variants={containerVariants}
                   w="full"
                   className="mb-10"
+                  justifyItems="stretch"
+                  sx={{
+                    '@media (min-width: 840px) and (max-width: 850px)': {
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '12px'
+                    }
+                  }}
                 >
                   {filteredCourses.map((course) => (
                     <MotionCard
@@ -769,7 +819,7 @@ const TeacherDashboardHome = () => {
                       borderColor={borderColor}
                       w="full"
                       h="full"
-                      className="mx-auto"
+                      className="mx-auto teacher-course"
                     >
                       {/* Course Image */}
                       {course.avatar && (
@@ -1197,6 +1247,104 @@ const TeacherDashboardHome = () => {
           <ModalCloseButton />
           <ModalBody py={{ base: 4, md: 6 }} px={{ base: 4, md: 6 }}>
             <VStack spacing={{ base: 4, md: 6 }} align="stretch">
+              {/* Avatar Upload */}
+              <FormControl>
+                <FormLabel 
+                  fontWeight="bold" 
+                  color={headingColor}
+                  fontSize={{ base: "sm", md: "md" }}
+                >
+                  صورة الكورس
+                </FormLabel>
+                <VStack spacing={4}>
+                  {/* Current Avatar Preview */}
+                  {editAvatarPreview && (
+                    <Box position="relative">
+                      <Image
+                        src={editAvatarPreview}
+                        alt="صورة الكورس الحالية"
+                        boxSize={{ base: "120px", md: "150px" }}
+                        objectFit="cover"
+                        borderRadius="xl"
+                        border="3px solid"
+                        borderColor="blue.200"
+                        shadow="lg"
+                      />
+                      <IconButton
+                        icon={<FaTimes />}
+                        size="sm"
+                        colorScheme="red"
+                        variant="solid"
+                        borderRadius="full"
+                        position="absolute"
+                        top={-2}
+                        right={-2}
+                        onClick={() => {
+                          setEditData(prev => ({ ...prev, avatar: null }));
+                          setEditAvatarPreview(null);
+                        }}
+                        aria-label="إزالة الصورة"
+                      />
+                    </Box>
+                  )}
+                  
+                  {/* Remove Current Image Button */}
+                  {editAvatarPreview && (
+                    <Button
+                      leftIcon={<FaTrash />}
+                      colorScheme="red"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditData(prev => ({ ...prev, avatar: null }));
+                        setEditAvatarPreview(null);
+                      }}
+                    >
+                      إزالة الصورة الحالية
+                    </Button>
+                  )}
+                  
+                  {/* Upload Button */}
+                  <Box>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleEditAvatarChange}
+                      display="none"
+                      id="edit-avatar-upload"
+                    />
+                    <Button
+                      as="label"
+                      htmlFor="edit-avatar-upload"
+                      leftIcon={<FaImage />}
+                      colorScheme="blue"
+                      variant="outline"
+                      size={{ base: "sm", md: "md" }}
+                      cursor="pointer"
+                      borderRadius="xl"
+                      border="2px dashed"
+                      borderColor="blue.300"
+                      _hover={{
+                        borderColor: "blue.500",
+                        bg: "blue.50"
+                      }}
+                    >
+                      {editAvatarPreview ? "تغيير الصورة" : "اختر صورة للكورس"}
+                    </Button>
+                  </Box>
+                  
+                  <Text fontSize="xs" color="gray.500" textAlign="center">
+                    الصور المقبولة: JPG, PNG, GIF (حد أقصى 5MB)
+                  </Text>
+                  
+                  {!editAvatarPreview && (
+                    <Text fontSize="sm" color="blue.600" textAlign="center" fontWeight="medium">
+                      💡 يمكنك إضافة صورة للكورس أو تغيير الصورة الحالية
+                    </Text>
+                  )}
+                </VStack>
+              </FormControl>
+
               <FormControl isRequired>
                 <FormLabel 
                   fontWeight="bold" 

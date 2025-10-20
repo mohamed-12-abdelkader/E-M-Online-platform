@@ -16,11 +16,15 @@ import {
   CardBody,
   VStack,
   HStack,
+  InputGroup,
+  InputLeftElement,
+  useColorModeValue,
 } from "@chakra-ui/react";
 
 import { MdCancelPresentation } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { FaVideo } from "react-icons/fa";
+import { BiSearch } from "react-icons/bi";
 import useGitTeacherByToken from "../../Hooks/student/GitTeacherByToken";
 
 const AllTeacherLogin = () => {
@@ -94,10 +98,7 @@ const AllTeacherLogin = () => {
         results = teachers
           .map((teacher) => ({
             teacher,
-            score: Math.max(
-              fuzzySearch(searchQuery, teacher.name),
-              teacher.id.toString() === searchQuery.trim() ? 100 : 0
-            ),
+            score: fuzzySearch(searchQuery, teacher.name),
           }))
           .filter((item) => item.score > 20)
           .sort((a, b) => b.score - a.score)
@@ -123,19 +124,48 @@ const AllTeacherLogin = () => {
           ابحث عن محاضرك
         </Heading>
 
-        <FormControl mb="4" mt="4" display="flex" gap="2">
-          <Input
-            type="text"
-            placeholder="ابحث عن محاضرك بالاسم أو كود المحاضر..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="h-[80px]"
-            style={{ borderRadius: "20px", height: "50px" }}
-          />
-          <Button onClick={handleSearchClick} colorScheme="blue">
-            بحث
-          </Button>
-        </FormControl>
+        <Box
+          mb="4"
+          mt="4"
+          p={{ base: 3, md: 4 }}
+          bg={useColorModeValue("white", "gray.800")}
+          borderRadius="xl"
+          border="1px solid"
+          borderColor={useColorModeValue("gray.200", "gray.700")}
+          boxShadow="sm"
+        >
+          <VStack align="stretch" spacing={3}>
+            <HStack spacing={2} color={useColorModeValue("gray.600", "gray.300")}>
+              <PiChalkboardTeacherBold />
+              <Text fontSize={{ base: "sm", md: "md" }}>
+                ابحث باسم المحاضر فقط. اكتب اسم المدرس الذي تريد الاشتراك معه.
+              </Text>
+            </HStack>
+            <Flex gap={2} direction={{ base: "column", sm: "row" }}>
+              <InputGroup size={{ base: "md", md: "lg" }}>
+                <InputLeftElement pointerEvents="none">
+                  <BiSearch size={18} color="#A0AEC0" />
+                </InputLeftElement>
+                <Input
+                  type="text"
+                  placeholder="اكتب اسم المحاضر..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  borderRadius="xl"
+                  height="50px"
+                  bg={useColorModeValue("gray.50", "gray.900")}
+                  border="2px solid"
+                  borderColor={useColorModeValue("gray.200", "gray.700")}
+                  _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 2px rgba(66,153,225,0.3)", bg: "white" }}
+                />
+              </InputGroup>
+              <Button onClick={handleSearchClick} colorScheme="blue" px={6} h="50px" borderRadius="xl" leftIcon={<BiSearch />}>
+                بحث
+              </Button>
+            </Flex>
+            <Text fontSize="xs" color={useColorModeValue("gray.500", "gray.400")}>مثال: "أحمد محمد"</Text>
+          </VStack>
+        </Box>
 
         <Box>
           {loading ? (
@@ -319,15 +349,11 @@ const AllTeacherLogin = () => {
             >
               <div dir="rtl" className="max-w-lg text-right space-y-5">
                 <h1 className="text-2xl font-bold leading-snug">
-                  🚀 ابحث عن محاضرك
+                  ابحث عن محاضرك
                 </h1>
-                <p className="text-lg font-medium leading-relaxed">
-                  يمكنك البحث عن محاضرك باستخدام{" "}
-                  <span className="text-blue-600 font-semibold">
-                    كود المحاضر
-                  </span>{" "}
-                  أو من خلال{" "}
-                  <span className="text-blue-600 font-semibold">اسمه</span>.
+                <p className="text-lg font-medium leading-relaxed flex items-center gap-2">
+                  <span className="text-blue-600">🔎</span>
+                  البحث متاح بالاسم فقط. اكتب اسم المدرس الذي تريد الاشتراك معه.
                 </p>
               </div>
             </section>

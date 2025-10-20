@@ -2518,7 +2518,7 @@ D) has made`}
         maxW="container.xl"
         mx="auto"
         py={{ base: 4, sm: 6, md: 16 }}
-       
+       className="lecture_container"
         gap={{ base: 4, sm: 6, md: 8 }}
       >
         <MotionBox

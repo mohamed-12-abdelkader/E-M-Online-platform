@@ -315,7 +315,7 @@ console.log(lecture)
 console.log(lecture)
   return (
     <Box
-    className="w-[100%]"
+    className="w-[100%] lecture_container"
       bg={lecture.locked && !canExpand ? useColorModeValue('gray.100','gray.800') : useColorModeValue('white', 'gray.800')}
       p={0}
       borderRadius={{ base: 'xl', md: '2xl' }}

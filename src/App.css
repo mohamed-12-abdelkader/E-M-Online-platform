@@ -272,6 +272,25 @@ body {
   .content-item {
     width: 90% !important;
   }
+  .Welcome-Section {
+    width: 100% !important;
+    margin-right: 30px !important;
+  }
+  .link-div{
+     width: 100% !important;
+    margin-right: 10px !important;
+  }
+  .teacher-course ,.teacher-card{
+     width: 340px !important;
+     margin-right: 15px !important;
+  }
+  .stu-course{
+    width: 340px !important;
+  }
+ 
+  .lecture_container{
+    margin-right: 10px !important;
+  }
 }
 
 .fixed-button {

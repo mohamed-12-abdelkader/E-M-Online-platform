@@ -32,7 +32,7 @@ const LecturesTab = ({
   onAddBulkQuestions,
   handleOpenVideo
 }) => (
-  <VStack spacing={{ base: 3, md: 4 }} align="stretch">
+  <VStack spacing={{ base: 3, md: 4 }} align="stretch" className="">
     <Flex 
       justify="space-between" 
       align="center" 

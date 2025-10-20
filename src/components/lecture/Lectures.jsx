@@ -95,9 +95,10 @@ const Lectures = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="w-full lg:w-[calc(33.333%-12px)]"
+              className="w-full teacher-course  lg:w-[calc(33.333%-12px)] "
             >
               <Card 
+              className="teacher-course"
                 bg={cardBg} 
                 borderRadius="2xl" 
                 shadow="lg" 
@@ -124,16 +125,17 @@ const Lectures = () => {
         </div>
       ) : myMonth.courses?.length > 0 ? (
         
-        <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+        <div className="flex flex-wrap  ">
           {myMonth.courses.map((course, index) => (
               <Link 
                 key={course.id}
-                className="w-full lg:w-[calc(33.333%-12px)]" 
+                className="" 
                 to={`/CourseDetailsPage/${course.id}`} 
                 style={{ textDecoration: "none" }}
               >
                 <Card
-                  className="w-full mx-auto"
+                  className=" stu-course mx-3 md:w-[340px] my-3"
+                
                   bg={cardBg}
                   border="1px solid"
                   borderColor={borderColor}

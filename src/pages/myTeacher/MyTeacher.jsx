@@ -265,17 +265,12 @@ const MyTeacher = () => {
       </Box>
 
       {teachers?.teachers?.length > 0 ? (
-        <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, md: 8 }}>
-          <Flex
-            wrap="wrap"
-            gap={{ base: 4, sm: 6, md: 8 }}
-            justify={{ base: "center", sm: "flex-start" }}
-            w="full"
-          >
+        <div className="flex flex-wrap">
+      
             {teachers.teachers.map((teacher, index) => (
-              <Link className="w-full md:w-[330px]" key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
+              <Link className="  my-3 " key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
                 <Card
-                 className="w-[100%] mx-auto md:w-[330px] m-3"
+                 className="teacher-card mx-auto md:w-[350px] md:mx-3 "
                   h="full"
                   bg={cardBg}
                   borderRadius="2xl"
@@ -424,8 +419,8 @@ const MyTeacher = () => {
                 </Card>
               </Link>
             ))}
-          </Flex>
-        </Box>
+         
+        </div>
       ) : (
         <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, md: 8 }}>
           <Center py={{ base: 12, sm: 16, md: 20 }}>

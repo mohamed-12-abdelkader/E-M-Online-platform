@@ -596,7 +596,7 @@ const HomePage = () => {
             <Box p={{ base: 4, md: 5 }}>
               <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {mainLinks.map((link, index) => (
-                  <Link className="w-full" key={index} to={link.href}>
+                  <Link className="w-full link-div" key={index} to={link.href}>
                     <MotionCard
                       variants={itemVariants}
                       bg={cardBg}
