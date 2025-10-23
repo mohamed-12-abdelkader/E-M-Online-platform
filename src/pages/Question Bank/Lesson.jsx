@@ -81,6 +81,12 @@ const Lesson = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState("");
+  const [loadingAnswerId, setLoadingAnswerId] = useState(null);
+  
+  // New states for image questions
+  const [questionType, setQuestionType] = useState("text"); // "text" or "image"
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   
   
   // Loading states
@@ -126,7 +132,7 @@ const Lesson = () => {
         return;
       }
 
-      const response = await baseUrl.get(`/api/lessons/${id}/questions`, {
+      const response = await baseUrl.get(`/api/lesson-questions/lessons/${id}/questions`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -146,7 +152,7 @@ const Lesson = () => {
     }
   };
 
-  // Create bulk questions
+  // Create bulk questions (text)
   const createBulkQuestions = async () => {
     try {
       setSubmitLoading(true);
@@ -164,12 +170,12 @@ const Lesson = () => {
       }
 
       const requestData = {
-        questions: bulkQuestions
+        bulk_text: bulkQuestions
       };
 
       console.log("Creating bulk questions with data:", requestData);
       
-      const response = await baseUrl.post(`/api/lessons/${id}/questions/bulk`, requestData, {
+      const response = await baseUrl.post(`/api/lesson-questions/lessons/${id}/questions/text`, requestData, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -210,6 +216,82 @@ const Lesson = () => {
     }
   };
 
+  // Create bulk questions with images
+  const createBulkImageQuestions = async () => {
+    try {
+      setSubmitLoading(true);
+      
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({
+          title: "خطأ",
+          description: "يجب تسجيل الدخول أولاً",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return { success: false };
+      }
+
+      if (selectedImages.length === 0) {
+        toast({
+          title: "خطأ",
+          description: "يجب اختيار صورة واحدة على الأقل",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return { success: false };
+      }
+
+      const formData = new FormData();
+      selectedImages.forEach((image, index) => {
+        formData.append('images', image);
+      });
+
+      console.log("Creating bulk image questions with files:", selectedImages.length);
+      
+      const response = await baseUrl.post(`/api/lesson-questions/lessons/${id}/questions/images`, formData, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        }
+      });
+
+      console.log("Create Bulk Image Questions API Response:", response.data);
+      
+      // تحديث البيانات مباشرة في state
+      if (response.data.success && response.data.data) {
+        const newQuestions = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
+        setQuestions(prev => [...prev, ...newQuestions]);
+      }
+      
+      toast({
+        title: "نجح",
+        description: "تم إنشاء الأسئلة بالصور بنجاح",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Error creating bulk image questions:", error);
+      
+      const errorMessage = error.response?.data?.message || "حدث خطأ في إنشاء الأسئلة بالصور";
+      toast({
+        title: "خطأ",
+        description: errorMessage,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return { success: false, error: errorMessage };
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
   // Update question
   const updateQuestion = async (formData) => {
     try {
@@ -235,7 +317,7 @@ const Lesson = () => {
 
       console.log("Updating question:", editingQuestion.id, requestData);
       
-      const response = await baseUrl.put(`api/lesson-questions/${editingQuestion.id}`, requestData, {
+      const response = await baseUrl.put(`/api/lesson-questions/questions/${editingQuestion.id}`, requestData, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -298,7 +380,7 @@ const Lesson = () => {
 
       console.log("Deleting question:", deletingQuestion.id);
       
-      const response = await baseUrl.delete(`api/lesson-questions/${deletingQuestion.id}`, {
+      const response = await baseUrl.delete(`/api/lesson-questions/questions/${deletingQuestion.id}`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -354,13 +436,16 @@ const Lesson = () => {
         return { success: false };
       }
 
+      // Find the index of the selected answer
+      const correctChoiceId = currentQuestion.options.findIndex(option => option === selectedAnswer);
+
       const requestData = {
-        correctAnswer: selectedAnswer
+        correctChoiceId: correctChoiceId
       };
 
       console.log("Setting correct answer for question:", currentQuestion.id, requestData);
       
-      const response = await baseUrl.put(`api/lesson-questions/${currentQuestion.id}/answer`, requestData, {
+      const response = await baseUrl.post(`/api/lesson-questions/questions/${currentQuestion.id}/answer`, requestData, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -373,7 +458,7 @@ const Lesson = () => {
       if (response.data.success) {
         setQuestions(prev => prev.map(q => 
           q.id === currentQuestion.id 
-            ? { ...q, correct_answer: selectedAnswer, updated_at: new Date().toISOString() }
+            ? { ...q, correct_answer: correctChoiceId, updated_at: new Date().toISOString() }
             : q
         ));
       }
@@ -486,6 +571,7 @@ const Lesson = () => {
   const setCorrectAnswerDirectly = async (questionId, answer) => {
     try {
       setAnswerLoading(true);
+      setLoadingAnswerId(questionId);
       
       const token = localStorage.getItem("token");
       if (!token) {
@@ -499,13 +585,29 @@ const Lesson = () => {
         return { success: false };
       }
 
+      // Find the question to get its options
+      const question = questions.find(q => q.id === questionId);
+      if (!question) {
+        toast({
+          title: "خطأ",
+          description: "السؤال غير موجود",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return { success: false };
+      }
+
+      // Find the index of the selected answer
+      const correctChoiceId = question.options.findIndex(option => option === answer);
+
       const requestData = {
-        correctAnswer: answer
+        correctChoiceId: correctChoiceId
       };
 
       console.log("Setting correct answer directly for question:", questionId, requestData);
       
-      const response = await baseUrl.put(`api/lesson-questions/${questionId}/answer`, requestData, {
+      const response = await baseUrl.post(`/api/lesson-questions/questions/${questionId}/answer`, requestData, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -518,7 +620,7 @@ const Lesson = () => {
       if (response.data.success) {
         setQuestions(prev => prev.map(q => 
           q.id === questionId 
-            ? { ...q, correct_answer: answer, updated_at: new Date().toISOString() }
+            ? { ...q, correct_answer: correctChoiceId, updated_at: new Date().toISOString() }
             : q
         ));
       }
@@ -546,6 +648,7 @@ const Lesson = () => {
       return { success: false, error: errorMessage };
     } finally {
       setAnswerLoading(false);
+      setLoadingAnswerId(null);
     }
   };
 
@@ -602,27 +705,81 @@ const Lesson = () => {
     setImagePreview(null);
   };
 
+  // Handle multiple images change
+  const handleMultipleImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      setSelectedImages(files);
+      
+      // Create previews for all images
+      const previews = [];
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          previews.push(reader.result);
+          if (previews.length === files.length) {
+            setImagePreviews(previews);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  // Remove specific image
+  const removeImageAtIndex = (index) => {
+    const newImages = selectedImages.filter((_, i) => i !== index);
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    setSelectedImages(newImages);
+    setImagePreviews(newPreviews);
+  };
+
+  // Clear all images
+  const clearAllImages = () => {
+    setSelectedImages([]);
+    setImagePreviews([]);
+  };
+
   // Handle form submit
   const handleBulkSubmit = async (e) => {
     e.preventDefault();
     
-    if (!bulkQuestions.trim()) {
-      toast({
-        title: "خطأ في البيانات",
-        description: "يجب ملء الأسئلة",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+    if (questionType === "text") {
+      if (!bulkQuestions.trim()) {
+        toast({
+          title: "خطأ في البيانات",
+          description: "يجب ملء الأسئلة",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
 
-    const result = await createBulkQuestions();
-    
-    if (result.success) {
-      onClose();
-      resetBulkForm();
-      // لا حاجة لـ fetchQuestionsData() بعد الآن
+      const result = await createBulkQuestions();
+      
+      if (result.success) {
+        onClose();
+        resetBulkForm();
+      }
+    } else if (questionType === "image") {
+      if (selectedImages.length === 0) {
+        toast({
+          title: "خطأ في البيانات",
+          description: "يجب اختيار صورة واحدة على الأقل",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      const result = await createBulkImageQuestions();
+      
+      if (result.success) {
+        onClose();
+        resetBulkForm();
+      }
     }
   };
 
@@ -699,6 +856,9 @@ const Lesson = () => {
   // Reset forms
   const resetBulkForm = () => {
     setBulkQuestions("");
+    setQuestionType("text");
+    setSelectedImages([]);
+    setImagePreviews([]);
   };
 
   const resetEditForm = () => {
@@ -731,7 +891,11 @@ const Lesson = () => {
   // Handle answer button click
   const handleAnswerClick = (question) => {
     setCurrentQuestion(question);
-    setSelectedAnswer(question.correct_answer || "");
+    // تحديد الإجابة بناءً على الفهرس
+    const correctAnswer = question.correct_answer !== null && question.correct_answer !== undefined 
+      ? question.options[question.correct_answer] 
+      : "";
+    setSelectedAnswer(correctAnswer);
     onAnswerOpen();
   };
 
@@ -1041,9 +1205,10 @@ const Lesson = () => {
                         src={question.image}
                         alt="صورة السؤال"
                         borderRadius="md"
-                        maxH="120px"
-                        objectFit="cover"
                         w="full"
+                        h="auto"
+                        objectFit="contain"
+                        maxH="400px"
                       />
                     </Box>
                   )}
@@ -1063,34 +1228,43 @@ const Lesson = () => {
                         الخيارات:
                       </Text>
                       <VStack spacing={2} align="stretch">
-                        {question.options.map((option, optIndex) => (
-                          <HStack 
-                            key={optIndex} 
-                            p={2} 
-                            bg={question.correct_answer === option ? "green.100" : "gray.50"} 
-                            borderRadius="md"
-                            cursor="pointer"
-                            transition="all 0.2s"
-                            _hover={{
-                              bg: question.correct_answer === option ? "green.200" : "blue.50",
-                              transform: "translateX(5px)",
-                              boxShadow: "sm"
-                            }}
-                            onClick={() => handleOptionClick(question.id, option)}
-                            position="relative"
-                          >
-                            <Text fontSize="sm" fontWeight="bold" color="blue.600" minW="20px">
-                              {String.fromCharCode(65 + optIndex)})
-                            </Text>
-                            <Text fontSize="sm" color={textColor}>
-                              {option}
-                            </Text>
-                            {question.correct_answer === option && (
-                              <Icon as={FaCheck} color="green.500" />
-                            )}
+                        {question.options.map((option, optIndex) => {
+                          const isCorrectAnswer = question.correct_answer === optIndex;
+                          const isLoading = loadingAnswerId === question.id && answerLoading;
+                          const isSelected = isLoading && question.options.findIndex(opt => opt === option) === question.options.findIndex(opt => opt === option);
                           
-                          </HStack>
-                        ))}
+                          return (
+                            <HStack 
+                              key={optIndex} 
+                              p={2} 
+                              bg={isCorrectAnswer ? "green.100" : "gray.50"} 
+                              borderRadius="md"
+                              cursor={isLoading ? "not-allowed" : "pointer"}
+                              transition="all 0.2s"
+                              opacity={isLoading ? 0.7 : 1}
+                              _hover={!isLoading ? {
+                                bg: isCorrectAnswer ? "green.200" : "blue.50",
+                                transform: "translateX(5px)",
+                                boxShadow: "sm"
+                              } : {}}
+                              onClick={!isLoading ? () => handleOptionClick(question.id, option) : undefined}
+                              position="relative"
+                            >
+                              <Text fontSize="sm" fontWeight="bold" color="blue.600" minW="20px">
+                                {String.fromCharCode(65 + optIndex)})
+                              </Text>
+                              <Text fontSize="sm" color={textColor}>
+                                {option}
+                              </Text>
+                              {isCorrectAnswer && (
+                                <Icon as={FaCheck} color="green.500" />
+                              )}
+                              {isLoading && (
+                                <Spinner size="sm" color="blue.500" />
+                              )}
+                            </HStack>
+                          );
+                        })}
                       </VStack>
                     </Box>
                     
@@ -1118,37 +1292,153 @@ const Lesson = () => {
           <ModalBody>
             <form onSubmit={handleBulkSubmit}>
               <VStack spacing={6}>
-                <Alert status="info" borderRadius="md">
-                  <AlertIcon />
-                  <Box>
-                    <AlertTitle>تنسيق الأسئلة:</AlertTitle>
-                    <AlertDescription>
-                      اكتب الأسئلة بالشكل التالي:<br/>
-                      السؤال الأول؟<br/>
-                      A) الخيار الأول<br/>
-                      B) الخيار الثاني<br/>
-                      C) الخيار الثالث<br/>
-                      D) الخيار الرابع<br/><br/>
-                      السؤال الثاني؟<br/>
-                      A) الخيار الأول<br/>
-                      B) الخيار الثاني<br/>
-                      C) الخيار الثالث<br/>
-                      D) الخيار الرابع
-                    </AlertDescription>
-                  </Box>
-                </Alert>
-                
-                <FormControl isRequired>
-                  <FormLabel>الأسئلة</FormLabel>
-                  <Textarea
-                    name="questions"
-                    value={bulkQuestions}
-                    onChange={handleBulkQuestionsChange}
-                    placeholder="اكتب الأسئلة هنا..."
-                    rows={15}
-                    size="lg"
-                  />
+                {/* Question Type Selection */}
+                <FormControl>
+                  <FormLabel fontSize="lg" fontWeight="bold">نوع الأسئلة</FormLabel>
+                  <RadioGroup value={questionType} onChange={setQuestionType}>
+                    <Stack direction="row" spacing={6}>
+                      <Radio value="text" colorScheme="blue">
+                        <HStack>
+                          <FaQuestionCircle />
+                          <Text>أسئلة نصية</Text>
+                        </HStack>
+                      </Radio>
+                      <Radio value="image" colorScheme="purple">
+                        <HStack>
+                          <FaImage />
+                          <Text>أسئلة بالصور</Text>
+                        </HStack>
+                      </Radio>
+                    </Stack>
+                  </RadioGroup>
                 </FormControl>
+
+                {questionType === "text" ? (
+                  <>
+                    <Alert status="info" borderRadius="md">
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle>تنسيق الأسئلة النصية:</AlertTitle>
+                        <AlertDescription>
+                          اكتب الأسئلة بالشكل التالي:<br/>
+                          السؤال الأول؟<br/>
+                          A) الخيار الأول<br/>
+                          B) الخيار الثاني<br/>
+                          C) الخيار الثالث<br/>
+                          D) الخيار الرابع<br/><br/>
+                          السؤال الثاني؟<br/>
+                          A) الخيار الأول<br/>
+                          B) الخيار الثاني<br/>
+                          C) الخيار الثالث<br/>
+                          D) الخيار الرابع
+                        </AlertDescription>
+                      </Box>
+                    </Alert>
+                    
+                    <FormControl isRequired>
+                      <FormLabel>الأسئلة النصية</FormLabel>
+                      <Textarea
+                        name="questions"
+                        value={bulkQuestions}
+                        onChange={handleBulkQuestionsChange}
+                        placeholder="اكتب الأسئلة هنا..."
+                        rows={15}
+                        size="lg"
+                      />
+                    </FormControl>
+                  </>
+                ) : (
+                  <>
+                    <Alert status="info" borderRadius="md">
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle>إضافة أسئلة بالصور:</AlertTitle>
+                        <AlertDescription>
+                          اختر صور الأسئلة (حتى 10 صور). سيتم إنشاء سؤال لكل صورة مع خيارات افتراضية (أ، ب، ج، د).
+                        </AlertDescription>
+                      </Box>
+                    </Alert>
+                    
+                    <FormControl>
+                      <FormLabel>صور الأسئلة</FormLabel>
+                      <VStack spacing={4} align="stretch">
+                        {imagePreviews.length > 0 ? (
+                          <SimpleGrid columns={{ base: 2, md: 3 }} spacing={4}>
+                            {imagePreviews.map((preview, index) => (
+                              <Box key={index} position="relative">
+                                <Image
+                                  src={preview}
+                                  alt={`معاينة الصورة ${index + 1}`}
+                                  borderRadius="md"
+                                  maxH="150px"
+                                  objectFit="cover"
+                                  w="full"
+                                />
+                                <IconButton
+                                  icon={<FaTimes />}
+                                  position="absolute"
+                                  top={2}
+                                  right={2}
+                                  colorScheme="red"
+                                  size="sm"
+                                  onClick={() => removeImageAtIndex(index)}
+                                  aria-label="إزالة الصورة"
+                                />
+                              </Box>
+                            ))}
+                          </SimpleGrid>
+                        ) : (
+                          <Button
+                            as="label"
+                            htmlFor="multiple-image-upload"
+                            leftIcon={<FaUpload />}
+                            variant="outline"
+                            size="lg"
+                            cursor="pointer"
+                            _hover={{ bg: "gray.50" }}
+                            h="200px"
+                            flexDirection="column"
+                            gap={2}
+                          >
+                            <Text>اختر صور الأسئلة</Text>
+                            <Text fontSize="sm" color="gray.500">حتى 10 صور</Text>
+                          </Button>
+                        )}
+                        <Input
+                          id="multiple-image-upload"
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleMultipleImagesChange}
+                          display="none"
+                        />
+                        {imagePreviews.length > 0 && (
+                          <HStack justify="center">
+                            <Button
+                              as="label"
+                              htmlFor="multiple-image-upload"
+                              leftIcon={<FaPlus />}
+                              colorScheme="blue"
+                              variant="outline"
+                              size="sm"
+                            >
+                              إضافة المزيد
+                            </Button>
+                            <Button
+                              leftIcon={<FaTimes />}
+                              colorScheme="red"
+                              variant="outline"
+                              size="sm"
+                              onClick={clearAllImages}
+                            >
+                              مسح الكل
+                            </Button>
+                          </HStack>
+                        )}
+                      </VStack>
+                    </FormControl>
+                  </>
+                )}
               </VStack>
             </form>
           </ModalBody>
@@ -1162,13 +1452,13 @@ const Lesson = () => {
                 إلغاء
               </Button>
               <Button
-                colorScheme="blue"
+                colorScheme={questionType === "text" ? "blue" : "purple"}
                 onClick={handleBulkSubmit}
                 isLoading={submitLoading}
                 loadingText="جاري الإنشاء..."
-                leftIcon={<FaPlus />}
+                leftIcon={questionType === "text" ? <FaPlus /> : <FaImage />}
               >
-                إضافة الأسئلة
+                {questionType === "text" ? "إضافة الأسئلة" : "إضافة الأسئلة بالصور"}
               </Button>
             </HStack>
           </ModalFooter>

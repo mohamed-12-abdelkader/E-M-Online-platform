@@ -723,7 +723,7 @@ export default function Nav() {
                       alt='login'
                     />
                   </Link>
-                  <Link to='/signup'>
+                  <Link to='/welcome'>
                     <img
                       src='signup2.png'
                       className='h-[60px] w-[150px]'

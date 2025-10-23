@@ -79,7 +79,7 @@ const SectionOne = () => {
             </Link>
           </motion.div>
           <motion.div whileHover={{ scale: 1.1 }}>
-            <Link to="/signup">
+            <Link to="/welcome">
               <img src="/signup2.png" alt="signup" className="rounded-md w-[150px] h-[60px]" />
             </Link>
           </motion.div>

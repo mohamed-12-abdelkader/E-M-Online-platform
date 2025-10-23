@@ -281,13 +281,15 @@ body {
     margin-right: 10px !important;
   }
   .teacher-course ,.teacher-card{
-     width: 340px !important;
+     width: 330px !important;
      margin-right: 15px !important;
   }
   .stu-course{
-    width: 340px !important;
+    width: 320px !important;
   }
- 
+ .home-page{
+  margin-right: 25px !important;
+ }
   .lecture_container{
     margin-right: 10px !important;
   }

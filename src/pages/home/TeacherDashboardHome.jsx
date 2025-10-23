@@ -505,7 +505,7 @@ const TeacherDashboardHome = () => {
   }, []);
 
   return (
-    <Box minH="100vh" bg={bg} p={{ base: 2, sm: 4, md: 6, lg: 8 }} dir="rtl">
+    <Box className="home-page" minH="100vh" bg={bg} p={{ base: 2, sm: 4, md: 6, lg: 8 }} dir="rtl">
       <Container 
         maxW={{ base: "100%", sm: "100%", md: "6xl", lg: "7xl", xl: "8xl" }} 
         mx="auto"

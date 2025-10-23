@@ -1,14 +1,11 @@
 import { Routes, Route } from "react-router-dom";
 
 // Auth & Login Components
-import Login from "../pages/login/Login";
 import SingUp from "../pages/signup/SingUp";
+import WelcomePage from "../pages/signup/WelcomePage";
 import LoginPage from "../pages/login/LoginPage";
-import TeacherLogin from "../pages/login/TeacerLogin";
-import AdminLogin from "../pages/login/AdminLogin";
 import VerifyCode from "../pages/password/VerifyCode";
 import ResetPassword from "../pages/password/ResetPassword";
-
 // Main Pages
 import Home from "../pages/home/Home";
 import HomePage from "../pages/homePage/HomePage";
@@ -113,6 +110,7 @@ import CenterGroupDetails from "../pages/centerSystem/CenterGroupDetails";
 import StudentDetails from "../components/centerSystem/StudentDetails";
 import StudentDetailsPage from "../pages/centerSystem/StudentDetailsPage";
 
+
 // Other Components
 import Code from "../pages/code/Code";
 import TeacherCode from "../pages/code/TeacherCode";
@@ -158,30 +156,11 @@ const AppRouter = () => {
             </ProtectedLogin>
           }
         />
-        <Route
-          path="/student_login"
-          element={
-            <ProtectedLogin auth={isAdmin || student || isTeacher}>
-              <Login />
-            </ProtectedLogin>
-          }
-        />
-        <Route
-          path="/teacher_login"
-          element={
-            <ProtectedLogin auth={isAdmin || student || isTeacher}>
-              <TeacherLogin />
-            </ProtectedLogin>
-          }
-        />
-        <Route
-          path="/admin_login"
-          element={
-            <ProtectedLogin auth={isAdmin || student || isTeacher}>
-              <AdminLogin />
-            </ProtectedLogin>
-          }
-        />
+
+      
+    
+        <Route path="/welcome" element={<WelcomePage />} />
+      
         <Route
           path="/signup"
           element={
@@ -372,6 +351,7 @@ const AppRouter = () => {
           <Route path="group_details/:id" element={<CenterGroupDetails />} />
           <Route path="student/:id" element={<StudentDetails />} />
           <Route path="group/:groupId/student/:studentId" element={<StudentDetailsPage />} />
+
 
           {/* Other Pages */}
           <Route path="social" element={<Social />} />

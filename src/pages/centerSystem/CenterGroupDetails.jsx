@@ -109,11 +109,43 @@ const CenterGroupDetails = () => {
         qrScannerRef.current = html5Qr;
 
         const devices = await Html5Qrcode.getCameras();
-        const cameraId = (devices && devices.length) ? devices[0].id : null;
+        
+        // تحديد الكاميرا المناسبة
+        let cameraId = null;
+        
+        if (devices && devices.length > 0) {
+          // البحث عن الكاميرا الخلفية أولاً
+          const backCamera = devices.find(device => 
+            device.label.toLowerCase().includes('back') || 
+            device.label.toLowerCase().includes('rear') ||
+            device.label.toLowerCase().includes('environment') ||
+            device.label.toLowerCase().includes('facing back')
+          );
+          
+          if (backCamera) {
+            cameraId = backCamera.id;
+            console.log('Using back camera:', backCamera.label);
+          } else {
+            // إذا لم توجد كاميرا خلفية، استخدم الكاميرا الأولى
+            cameraId = devices[0].id;
+            console.log('Using first available camera:', devices[0].label);
+          }
+        }
+
+        if (!cameraId) {
+          throw new Error('لم يتم العثور على كاميرا متاحة');
+        }
 
         await html5Qr.start(
           cameraId,
-          { fps: 10, qrbox: { width: 300, height: 300 } },
+          { 
+            fps: 10, 
+            qrbox: { width: 300, height: 300 },
+            aspectRatio: 1.0,
+            videoConstraints: {
+              facingMode: { ideal: "environment" } // يفضل الكاميرا الخلفية
+            }
+          },
           async (decodedText) => {
             if (qrProcessing) return;
             setQrProcessing(true);
@@ -135,7 +167,13 @@ const CenterGroupDetails = () => {
         );
       } catch (err) {
         console.error('QR scanner start error:', err);
-        toast({ title: 'فشل في فتح الكاميرا', description: err.message || 'تأكد من صلاحية الكاميرا', status: 'error', duration: 4000, isClosable: true });
+        toast({ 
+          title: 'فشل في فتح الكاميرا', 
+          description: err.message || 'تأكد من صلاحية الكاميرا والسماح بالوصول إليها', 
+          status: 'error', 
+          duration: 4000, 
+          isClosable: true 
+        });
         setIsQrScannerOpen(false);
         setQrProcessing(false);
       }
@@ -1084,21 +1122,21 @@ const CenterGroupDetails = () => {
                       bgGradient="linear(135deg, blue.600 0%, purple.600 100%)"
                       bgClip="text"
                     >
-                      البحث في الطلاب
-                    </Text>
+                  البحث في الطلاب
+                </Text>
                   </HStack>
-                  <InputGroup size={{ base: "md", md: "lg" }}>
-                    <Input
-                      placeholder="ابحث بالاسم أو رقم الهاتف..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                <InputGroup size={{ base: "md", md: "lg" }}>
+                  <Input
+                    placeholder="ابحث بالاسم أو رقم الهاتف..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                       bg="white"
-                      border="2px"
-                      borderColor="gray.200"
+                    border="2px"
+                    borderColor="gray.200"
                       borderRadius="2xl"
-                      _focus={{ 
+                    _focus={{ 
                         borderColor: 'blue.400', 
-                        bg: 'white',
+                      bg: 'white',
                         boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
                         transform: 'translateY(-2px)'
                       }}
@@ -1107,13 +1145,13 @@ const CenterGroupDetails = () => {
                         transform: 'translateY(-1px)',
                         boxShadow: 'lg'
                       }}
-                      fontSize={{ base: "sm", md: "md" }}
+                    fontSize={{ base: "sm", md: "md" }}
                       transition="all 0.3s ease"
-                    />
-                    <InputRightElement>
+                  />
+                  <InputRightElement>
                       <BiSearch color="blue.400" size={{ base: 18, md: 22 }} />
-                    </InputRightElement>
-                  </InputGroup>
+                  </InputRightElement>
+                </InputGroup>
                 </VStack>
               </Box>
               
@@ -1128,24 +1166,24 @@ const CenterGroupDetails = () => {
                   الإجراءات السريعة
                 </Text>
                 <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={{ base: 3, md: 4 }} w="full">
-                   <Button
+                  <Button
                         colorScheme="orange"
-                        size={{ base: 'sm', md: 'md' }}
+                    size={{ base: 'sm', md: 'md' }}
                         onClick={startQrScanner}
                         px={{ base: 4, md: 6 }}
-                        py={{ base: 3, md: 4 }}
-                        borderRadius="xl"
-                        shadow="lg"
+                    py={{ base: 3, md: 4 }}
+                    borderRadius="xl"
+                    shadow="lg"
                         bgGradient="linear(135deg, orange.400 0%, yellow.400 100%)"
                         _hover={{ transform: 'translateY(-2px)', shadow: 'xl' }}
-                        fontWeight="bold"
-                        fontSize={{ base: "xs", md: "sm" }}
+                    fontWeight="bold"
+                    fontSize={{ base: "xs", md: "sm" }}
                         flex={{ base: 1, sm: "none" }}
                         minW={{ base: "140px", sm: "auto" }}
                         leftIcon={<BiSearch />}
-                      >
+                  >
                         QR Scanner
-                      </Button>
+                  </Button>
                   <Button
                     leftIcon={<MdAdd />}
                     colorScheme="blue"
@@ -1921,7 +1959,7 @@ const CenterGroupDetails = () => {
                 textAlign="center"
                 px={2}
               >
-                ضع QR داخل المربع. سيتم إيقاف الكاميرا عند القراءة.
+                ضع QR داخل المربع. سيتم استخدام الكاميرا الخلفية تلقائياً.
               </Text>
               {qrProcessing && (
                 <Text 

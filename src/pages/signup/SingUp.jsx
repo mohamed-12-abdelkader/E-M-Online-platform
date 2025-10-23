@@ -17,17 +17,28 @@ import {
   Divider,
   Progress,
   Icon,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
-import { FiUser, FiPhone, FiLock, FiBookOpen, FiCheck } from "react-icons/fi";
+import { FiUser, FiPhone, FiLock, FiBookOpen, FiCheck, FiLogIn } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 import "react-toastify/dist/ReactToastify.css";
 import baseUrl from "../../api/baseUrl";
 
 const SignUp = () => {
+  const navigate = useNavigate();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [currentStep, setCurrentStep] = useState(0);
   const [isUniversityStudent, setIsUniversityStudent] = useState("no");
 
@@ -210,7 +221,11 @@ const SignUp = () => {
       window.location = "/";
     } catch (err) {
       console.error(err);
-      toast.error("حدث خطأ أثناء إنشاء الحساب");
+      if (err.response?.data?.message === "Phone number already registered") {
+        onOpen(); // فتح المودال
+      } else {
+        toast.error(err.response?.data?.message || "حدث خطأ أثناء إنشاء الحساب");
+      }
     } finally {
       setLoading(false);
     }
@@ -773,6 +788,88 @@ const SignUp = () => {
 
       <ScrollToTop />
       <ToastContainer position="top-center" />
+
+      {/* Modal for existing account */}
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
+        <ModalContent mx={4} borderRadius="2xl" overflow="hidden">
+          <ModalHeader textAlign="center" bg="blue.50" py={6}>
+            <VStack spacing={3}>
+              <Box
+                w="60px"
+                h="60px"
+                bgGradient="linear(135deg, #10b981 0%, #059669 100%)"
+                borderRadius="full"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Icon as={FiLogIn} w="30px" h="30px" color="white" />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" color="gray.800">
+                لديك حساب بالفعل!
+              </Text>
+            </VStack>
+          </ModalHeader>
+          
+          <ModalBody py={8}>
+            <VStack spacing={4} textAlign="center">
+              <Text fontSize="lg" color="gray.600">
+                رقم الهاتف <strong>{phone}</strong> مسجل مسبقاً في منصتنا
+              </Text>
+              <Text fontSize="md" color="gray.500">
+                يبدو أنك قمت بإنشاء حساب من قبل. قم بتسجيل الدخول باستخدام رقم الهاتف وكلمة المرور
+              </Text>
+              
+              <Box
+                bg="blue.50"
+                borderRadius="lg"
+                p={4}
+                border="1px solid"
+                borderColor="blue.200"
+                w="full"
+              >
+                <Text fontSize="sm" color="blue.700" fontWeight="medium">
+                  💡 تذكر كلمة المرور الخاصة بك؟ اضغط على "تسجيل الدخول" للمتابعة
+                </Text>
+              </Box>
+            </VStack>
+          </ModalBody>
+          
+          <ModalFooter justifyContent="center" py={6}>
+            <HStack spacing={4} w="full" maxW="300px">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                flex={1}
+                borderRadius="xl"
+                borderColor="gray.300"
+                _hover={{ borderColor: "gray.400", bg: "gray.50" }}
+              >
+                إلغاء
+              </Button>
+              <Button
+                bgGradient="linear(135deg, #10b981 0%, #059669 100%)"
+                color="white"
+                _hover={{
+                  bgGradient: "linear(135deg, #059669 0%, #047857 100%)",
+                  boxShadow: "0 10px 25px rgba(16, 185, 129, 0.4)"
+                }}
+                flex={1}
+                borderRadius="xl"
+                leftIcon={<Icon as={FiLogIn} />}
+                onClick={() => {
+                  onClose();
+                  navigate('/beautiful-login');
+                }}
+                boxShadow="0 8px 20px rgba(16, 185, 129, 0.3)"
+              >
+                تسجيل الدخول
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };
