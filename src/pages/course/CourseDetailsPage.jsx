@@ -1590,29 +1590,46 @@ D) has made`}
         tempDiv.style.background = "#fff";
         document.body.appendChild(tempDiv);
         tempDiv.innerHTML = `
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 5mm; width: 100%; height: 100%; align-content: start;">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 3mm; width: 100%; height: 100%; align-content: start;">
             ${codesToExport
               .slice(i, i + codesPerPage)
               .map(
                 (code, index) => `
-                  <div class="code" style="padding: 3mm; width: 100%; height: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); text-align: center; position: relative; overflow: hidden; background: #fff; display: flex; flex-direction: column; justify-content: space-between; min-height: 45mm;">
-                  <div style='margin-bottom: 8px; padding: 6px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
-                    <h2 style='font-size: 14px; font-weight: bold; color: #ffffff; margin: 0; text-align: center; text-shadow: 0 1px 2px rgba(0,0,0,0.3);'>
-                      ${user.name || 'اسم المستخدم'}
-                    </h2>
+                  <div class="code" style="padding: 3mm; width: 100%; height: 100%; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; position: relative; overflow: hidden; background: #fff; display: flex; flex-direction: column; justify-content: space-between; min-height: 40mm; direction: rtl;">
+                    
+                    <!-- Header with Logo and Grade -->
+                    <div style='display: flex; background-color:"#e98036" align-items: center; justify-content: space-between; margin-bottom: 3px; padding: 2px 0;'>
+                      <div style='display: flex; align-items: center;'>
+                         
+                          <div style='margin-bottom: 3px;'>
+                      <h2 style='font-size: 14px; font-weight: bold; color: #3182ce; margin: 0; text-align: center;'>
+                        ${user.name || 'عمرو علي'}
+                      </h2>
                     </div>
-                    <div style='display: flex; margin-top: 8px; justify-content: space-between; align-items: center; padding: 2px 0;'>
-                      <span style='font-size: 12px; font-weight: bold; color: #3182ce; margin-bottom: 2px;'>${course?.title || 'اسم الكورس'}</span>
-                      <span style='font-size: 12px; font-weight: bold; color: #3182ce; margin-bottom: 2px;'>${code.grade_name || ''}</span>
+                      </div>
+                      <div style='font-size: 9px; color: #3182ce; font-weight: bold;'>${code.grade_name || 'الصف الثاني الثانوي'}</div>
                     </div>
-                    <div style='display: flex; margin-top: 8px; justify-content: space-between; align-items: center; padding: 2px 0; flex-wrap: wrap;'>
-                      <span style='font-size: 14px; font-weight: bold; color: #c53030;'>كود التفعيل :</span>
-                      <span style='font-size: 14px; font-weight: bold; color: #c53030; word-break: break-all; max-width: 60%;'>${code.code}</span>
+                    <!-- QR Code and Activation Code -->
+                    <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; margin-top: 10px;'>
+                      <!-- Activation Code Section - Left -->
+                      <div style='text-align: center;'>
+                        <div style='font-size: 9px; color: #3182ce; font-weight: bold; margin-bottom: 2px;'>كود التفعيل</div>
+                        <div style='font-size: 9px; color: #3182ce; font-weight: bold;'>${code.code}</div>
+                      </div>
+                      
+                      <!-- Empty Middle Space -->
+                      <div style='flex: 1;'></div>
+                      
+                      <!-- QR Code Section - Right -->
+                      <div style='text-align: center;'>
+                        ${code.qr_code ? `<img src="${code.qr_code}" alt="QR Code" style="width: 110px; height: 110px; border: 1px solid #ddd; border-radius: 4px; background: white; padding: 2px; display: block; margin: 0 auto;" />` : '<div style="width: 50px; height: 50px; border: 1px dashed #ccc; border-radius: 4px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 8px; color: #999;">QR</div>'}
+                      </div>
                     </div>
                     
-                    <div style='margin-top: 8px;'>
-                      <p style='font-size: 11px; font-weight: 600; color: #4a5568; text-align: center; margin: 0; white-space: nowrap;'>
-                        01210726096  | 01288781012 | 01111272393
+                    <!-- Contact Numbers -->
+                    <div style='margin-top: auto; padding-top: 3px; border-top: 1px solid #e2e8f0;  height: 20px;'>
+                      <p style='font-size: 9px; font-weight: 600; color: #3182ce; text-align: center; margin: 0;'>
+                        01111272393 | 01288781012 | 01210726096
                       </p>
                     </div>
                   </div>`
@@ -2414,36 +2431,154 @@ D) has made`}
               </Box>
             ) : (
               <>
-                <Box overflowX="auto">
-                  <Table variant="simple" size="md">
-                    <Thead>
-                      <Tr>
-                        <Th>الكود</Th>
-                        <Th>الاستخدامات</Th>
-                        <Th>تاريخ الانتهاء</Th>
-                        <Th>الحالة</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {filteredCodes.map(code => (
-                        <Tr key={code.id}>
-                          <Td fontFamily="mono" fontWeight="bold">{code.code}</Td>
-                          <Td>{code.uses} / {code.max_uses}</Td>
-                          <Td>{code.expires_at ? new Date(code.expires_at).toLocaleString('ar-EG') : '-'}</Td>
-                          <Td>
-                            {code.is_expired ? (
-                              <Badge colorScheme="red">منتهي</Badge>
-                            ) : code.is_fully_used ? (
-                              <Badge colorScheme="orange">مستخدم بالكامل</Badge>
-                            ) : (
-                              <Badge colorScheme="green">فعال</Badge>
-                            )}
-                          </Td>
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                </Box>
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                  {filteredCodes.map(code => (
+                    <Box
+                      key={code.id}
+                      bg="white"
+                      borderRadius="xl"
+                      p={6}
+                      boxShadow="lg"
+                      border="1px solid"
+                      borderColor="gray.200"
+                      _hover={{
+                        transform: "translateY(-2px)",
+                        boxShadow: "xl",
+                        borderColor: "blue.300"
+                      }}
+                      transition="all 0.3s ease"
+                      position="relative"
+                      overflow="hidden"
+                    >
+                      {/* Header with gradient */}
+                      <Box
+                        bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+                        borderRadius="lg"
+                        p={4}
+                        mb={4}
+                        color="white"
+                        textAlign="center"
+                        position="relative"
+                        _before={{
+                          content: '""',
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)",
+                          borderRadius: "lg"
+                        }}
+                      >
+                        <Text fontSize="lg" fontWeight="bold" mb={1}>
+                          {user.name || 'اسم المستخدم'}
+                        </Text>
+                        <Text fontSize="sm" opacity="0.9">
+                          {course?.title || 'اسم الكورس'}
+                        </Text>
+                      </Box>
+
+                      {/* QR Code */}
+                      {code.qr_code && (
+                        <Box textAlign="center" mb={4}>
+                          <Image
+                            src={code.qr_code}
+                            alt={`QR Code for ${code.code}`}
+                            maxW="150px"
+                            maxH="150px"
+                            mx="auto"
+                            borderRadius="md"
+                            border="2px solid"
+                            borderColor="gray.100"
+                            bg="white"
+                            p={2}
+                          />
+                        </Box>
+                      )}
+
+                      {/* Code Display */}
+                      <Box
+                        bg="red.50"
+                        borderRadius="lg"
+                        p={4}
+                        mb={4}
+                        border="2px solid"
+                        borderColor="red.200"
+                        textAlign="center"
+                      >
+                        <Text fontSize="sm" color="red.600" fontWeight="bold" mb={2}>
+                          كود التفعيل:
+                        </Text>
+                        <Text
+                          fontFamily="mono"
+                          fontSize="lg"
+                          fontWeight="bold"
+                          color="red.700"
+                          wordBreak="break-all"
+                          bg="white"
+                          p={2}
+                          borderRadius="md"
+                          border="1px solid"
+                          borderColor="red.300"
+                        >
+                          {code.code}
+                        </Text>
+                      </Box>
+
+                      {/* Course Info */}
+                      <Box mb={4}>
+                        <HStack justify="space-between" mb={2}>
+                          <Text fontSize="sm" color="gray.600" fontWeight="medium">
+                            الصف:
+                          </Text>
+                          <Text fontSize="sm" fontWeight="bold" color="blue.600">
+                            {code.grade_name || 'غير محدد'}
+                          </Text>
+                        </HStack>
+                        <HStack justify="space-between" mb={2}>
+                          <Text fontSize="sm" color="gray.600" fontWeight="medium">
+                            الاستخدامات:
+                          </Text>
+                          <Text fontSize="sm" fontWeight="bold" color="purple.600">
+                            {code.uses} / {code.max_uses}
+                          </Text>
+                        </HStack>
+                        <HStack justify="space-between" mb={2}>
+                          <Text fontSize="sm" color="gray.600" fontWeight="medium">
+                            تاريخ الانتهاء:
+                          </Text>
+                          <Text fontSize="sm" fontWeight="bold" color="orange.600">
+                            {code.expires_at ? new Date(code.expires_at).toLocaleDateString('ar-EG') : 'غير محدد'}
+                          </Text>
+                        </HStack>
+                      </Box>
+
+                      {/* Status Badge */}
+                      <Box textAlign="center">
+                        {code.is_expired ? (
+                          <Badge colorScheme="red" fontSize="sm" px={3} py={1} borderRadius="full">
+                            منتهي الصلاحية
+                          </Badge>
+                        ) : code.is_fully_used ? (
+                          <Badge colorScheme="orange" fontSize="sm" px={3} py={1} borderRadius="full">
+                            مستخدم بالكامل
+                          </Badge>
+                        ) : (
+                          <Badge colorScheme="green" fontSize="sm" px={3} py={1} borderRadius="full">
+                            فعال
+                          </Badge>
+                        )}
+                      </Box>
+
+                      {/* Contact Info */}
+                      <Box mt={4} pt={4} borderTop="1px solid" borderColor="gray.200">
+                        <Text fontSize="xs" color="gray.500" textAlign="center" fontWeight="600">
+                          01210726096 | 01288781012 | 01111272393
+                        </Text>
+                      </Box>
+                    </Box>
+                  ))}
+                </SimpleGrid>
                 {/* عنصر مخفي لتصدير الأكواد ككروت PDF */}
                 <Box id="codes-pdf-export" style={{ display: "none", width: "297mm", height: "210mm", background: "#fff", position: "absolute", top: 0, left: 0, zIndex: -1, direction: "rtl" }}>
                   <div style={{
@@ -2459,13 +2594,13 @@ D) has made`}
                       <div
                         key={code.id}
                         style={{
-                          margin: '5px',
+                          margin: '3px',
                           padding: '3mm',
                           width: '100%',
                           height: '100%',
                           border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                          borderRadius: '6px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                           textAlign: 'center',
                           position: 'relative',
                           overflow: 'hidden',
@@ -2473,25 +2608,91 @@ D) has made`}
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'space-between',
-                          minHeight: '45mm',
+                          minHeight: '40mm',
+                          direction: 'rtl'
                         }}
                       >
-                        <div style={{ marginBottom: '8px', padding: '6px 10px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '6px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                          <h2 style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff', margin: '0', textAlign: 'center', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
-                            {user.name || 'اسم المستخدم'}
-                          </h2>
+                        {/* Header with Logo and Grade */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px', padding: '2px 0' }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                               <div style={{ marginBottom: '3px' }}>
+                           <h2 style={{ fontSize: '14px', fontWeight: 'bold', color: '#3182ce', margin: '0', textAlign: 'center' }}>
+                             {user.name || 'عمرو علي'}
+                           </h2>
+                         </div>
+                            </div>
+                            <div style={{ fontSize: '9px', color: '#3182ce', fontWeight: 'bold' }}>{code.grade_name || 'الصف الثاني الثانوي'}</div>
+                          </div>
+
+                        {/* Student Name */}
+                   
+
+                        {/* Registration Steps */}
+                      
+                        {/* QR Code and Activation Code */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                          {/* Activation Code Section - Left */}
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '8px', color: '#c53030', fontWeight: 'bold', marginBottom: '2px' }}>كود التفعيل</div>
+                            <div style={{ 
+                              fontSize: '10px', 
+                              color: '#c53030', 
+                              fontWeight: 'bold', 
+                              fontFamily: 'monospace', 
+                              background: '#fef2f2', 
+                              padding: '3px 4px', 
+                              borderRadius: '3px', 
+                              border: '1px solid #fecaca',
+                              display: 'inline-block'
+                            }}>
+                              {code.code}
+                            </div>
+                          </div>
+                          
+                          {/* Empty Middle Space */}
+                          <div style={{ flex: '1' }}></div>
+                          
+                          {/* QR Code Section - Right */}
+                          <div style={{ textAlign: 'center' }}>
+                            {code.qr_code ? (
+                              <img 
+                                src={code.qr_code} 
+                                alt="QR Code" 
+                                style={{ 
+                                  width: '50px', 
+                                  height: '50px', 
+                                  border: '1px solid #ddd', 
+                                  borderRadius: '4px', 
+                                  background: 'white', 
+                                  padding: '2px',
+                                  display: 'block',
+                                  margin: '0 auto'
+                                }} 
+                              />
+                            ) : (
+                              <div style={{ 
+                                width: '50px', 
+                                height: '50px', 
+                                border: '1px dashed #ccc', 
+                                borderRadius: '4px', 
+                                background: '#f9f9f9',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                margin: '0 auto',
+                                fontSize: '8px',
+                                color: '#999'
+                              }}>
+                                QR
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#3182ce', marginBottom: '2px' }}>{course?.title || 'اسم الكورس'}</span>
-                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#3182ce', marginBottom: '2px' }}>{code.grade_name || ''}</span>
-                        </div>
-                        <div style={{ display: 'flex', marginTop: '8px', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#c53030' }}>كود التفعيل :</span>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#c53030', wordBreak: 'break-all', maxWidth: '60%' }}>{code.code}</span>
-                        </div>
-                        <div style={{ marginTop: '8px' }}>
-                          <p style={{ fontSize: '11px', fontWeight: 600, color: '#4a5568', textAlign: 'center', margin: 0, whiteSpace: 'nowrap' }}>
-                            01210726096 | 01274620654 | 01288781012 | 01289587761
+                        
+                        {/* Contact Numbers */}
+                        <div style={{ marginTop: 'auto', paddingTop: '3px', borderTop: '1px solid #e2e8f0' }}>
+                          <p style={{ fontSize: '7px', fontWeight: '600', color: '#3182ce', textAlign: 'center', margin: '0' }}>
+                            01111272393 | 01288781012 | 01210726096
                           </p>
                         </div>
                       </div>

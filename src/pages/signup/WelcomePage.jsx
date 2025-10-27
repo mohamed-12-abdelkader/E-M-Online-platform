@@ -101,7 +101,7 @@ const WelcomePage = () => {
               transition={{ duration: 0.5, delay: 0.4, type: "spring", stiffness: 200 }}
               w="120px"
               h="120px"
-              bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+              bgGradient="linear(135deg, #667eea 0%, blue.500 100%)"
               borderRadius="full"
               display="flex"
               alignItems="center"
@@ -121,7 +121,7 @@ const WelcomePage = () => {
                 <Text
                   fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }}
                   fontWeight="bold"
-                  bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+                  bgGradient="linear(135deg, #667eea 0%, blue.500 100%)"
                   bgClip="text"
                   mb={4}
                 >
@@ -188,10 +188,10 @@ const WelcomePage = () => {
                     size="lg"
                     w="full"
                     h="60px"
-                    bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+                    bgGradient="linear(135deg, #667eea 0%, blue.500 100%)"
                     color="white"
                     _hover={{
-                      bgGradient: "linear(135deg, #5a6fd8 0%, #6a4190 100%)",
+                      bgGradient: "linear(135deg, #5a6fd8 0%, blue.500 100%)",
                       boxShadow: "0 10px 25px rgba(102, 126, 234, 0.4)"
                     }}
                     borderRadius="xl"

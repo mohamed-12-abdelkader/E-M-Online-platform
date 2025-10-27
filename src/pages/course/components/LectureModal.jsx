@@ -66,7 +66,7 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
       <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(5px)" /> {/* Darker, blurred overlay */}
       <ModalContent 
         dir="rtl" // RTL direction for Arabic text
-        fontFamily="'Cairo', sans-serif" // Apply Cairo font
+        fontFamily="'Changa', sans-serif"
         bg={modalBg}
         borderRadius="xl" // More rounded corners for modern look
         shadow="2xl" // Stronger shadow

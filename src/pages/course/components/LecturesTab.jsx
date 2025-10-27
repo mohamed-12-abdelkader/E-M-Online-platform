@@ -62,6 +62,7 @@ const LecturesTab = ({
       const isExpanded = expandedLecture === lecture.id && canExpand;
       return (
         <LectureCard
+        
           key={lecture.id}
           lecture={lecture}
           isTeacher={isTeacher}

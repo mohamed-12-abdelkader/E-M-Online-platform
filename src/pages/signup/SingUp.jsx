@@ -680,7 +680,7 @@ const SignUp = () => {
                 flex={1}
                 borderRadius="xl"
                 isDisabled={!validateCurrentStep()}
-                bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                bg="linear-gradient(135deg, #667eea 0%, #667eea 100%)"
                 _hover={{ 
                   bg: "linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)",
                   transform: "translateY(-1px)",
@@ -743,7 +743,7 @@ const SignUp = () => {
         </div>
 
         {/* Right side - Image */}
-        <div className="w-full lg:w-1/2 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 flex items-center justify-center p-8 relative overflow-hidden">
+        <div className="w-full lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-400 to-indigo-700 flex items-center justify-center p-8 relative overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>

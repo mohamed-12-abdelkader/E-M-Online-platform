@@ -29,14 +29,14 @@ const SectionOne = () => {
   };
 
   return (
-    <div className="bg-gradient-to-b from-white to-blue-300">
+    <div className="bg-gradient-to-b from-blue-500 to-blue-300">
 
 
     <section
       dir="rtl"
       className="relative flex flex-col md:flex-row items-center  justify-between px-6 md:px-12 py-16 md:py-24 bg-gradient-to-br from-white via-blue-50 to-blue-400 overflow-hidden"
       style={{
-        fontFamily: "'Cairo', sans-serif",
+        fontFamily: "'Changa', sans-serif",
         minHeight: "600px",
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f97316' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30v4h-4v2h4v4h2v-4h4v-2h-4v-4h-2zM6 34v4h4v2h-4v4h-2v-4h-4v-2h4v-4h2zM6 4v4h-4v2h4v4h2v-4h4v-2h-4v-4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
       }}
@@ -51,7 +51,7 @@ const SectionOne = () => {
       >
         <motion.h1
           variants={fadeInUp}
-          className="text-4xl sm:text-5xl font-bold text-gray-900"
+          className="text-4xl text-white sm:text-5xl font-bold text-gray-900"
           style={{ fontFamily: "'Tajawal', sans-serif" }}
         >
           ابدأ رحلتك التعليمية مع
@@ -65,7 +65,7 @@ const SectionOne = () => {
         </motion.h1>
         <motion.p
           variants={fadeInUp}
-          className="text-lg md:text-xl text-gray-600 leading-relaxed"
+          className="text-lg text-white md:text-xl text-gray-600 leading-relaxed"
         >
           منصة <span  style={{ fontFamily: "'Amiri', serif" }} className="font-bold text-orange-500">EM Academy</span> هي الأولى في مصر والوطن
           العربي التي تعتمد على

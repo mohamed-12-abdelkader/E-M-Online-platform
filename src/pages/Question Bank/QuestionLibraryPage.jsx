@@ -597,7 +597,7 @@ const QuestionLibraryPage = () => {
   };
 
   return (
-    <Box minH="100vh" className="mt-[50px]"  py={10} dir="rtl" fontFamily="'Cairo', sans-serif">
+    <Box minH="100vh" className="mt-[50px]"  py={10} dir="rtl" fontFamily="'Changa', sans-serif">
       {/* Header Section */}
       <Flex
         as="header"

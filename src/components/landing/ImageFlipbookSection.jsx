@@ -65,7 +65,7 @@ const ImageFlipbookSection = () => {
       p={8}
       textAlign="center"
       dir="rtl" // الاتجاه من اليمين لليسار للمحتوى العربي
-      fontFamily="'Cairo', sans-serif"
+      fontFamily="'Changa', sans-serif"
     >
       <Heading size="lg" mb={8} color={headingColor}>
         <Icon as={FaBookReader} mr={3} /> تصفح  خدماتنا 

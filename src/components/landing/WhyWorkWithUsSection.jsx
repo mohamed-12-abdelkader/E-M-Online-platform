@@ -113,7 +113,7 @@ const WhyWorkWithUsSection = () => {
       px={{ base: 6, md: 12 }}
       bg={sectionBg}
       dir="rtl"
-      fontFamily="'Cairo', sans-serif"
+      fontFamily="'Changa', sans-serif"
     >
       <MotionBox
         initial={{ opacity: 0, y: -40 }}

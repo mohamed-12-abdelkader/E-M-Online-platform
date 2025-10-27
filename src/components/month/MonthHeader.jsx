@@ -157,7 +157,7 @@ const MonthHeader = React.memo(({ image, description, noflecture, users, isTeach
     dir="rtl"
     className="relative flex flex-col md:flex-row items-center justify-between md: py-16 md:py-24 bg-gradient-to-br from-white via-blue-50 to-blue-400 "
     style={{
-      fontFamily: "'Cairo', sans-serif",
+      fontFamily: "'Changa', sans-serif",
   
       backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f97316' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30v4h-4v2h4v4h2v-4h4v-2h-4v-4h-2zM6 34v4h4v2h-4v4h-2v-4h-4v-2h4v-4h2zM6 4v4h-4v2h4v4h2v-4h4v-2h-4v-4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
       backgroundAttachment: "fixed", // لجعل النمط يظهر ثابتًا

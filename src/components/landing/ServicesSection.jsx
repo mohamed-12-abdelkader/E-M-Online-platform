@@ -52,7 +52,7 @@ const ServicesSection = () => {
     <section
       dir="rtl"
       className="py-20 "
-      style={{ fontFamily: "'Cairo', sans-serif" }}
+      style={{ fontFamily: "'Changa', sans-serif" }}
       ref={ref}
     >
       <div className="container mx-auto px-4 md:px-6">

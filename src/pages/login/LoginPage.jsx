@@ -90,6 +90,8 @@ const LoginPage = () => {
       setTimeout(() => {
         window.location.href = destination;
       }, 500);
+            window.location.reload()
+        navigate('/');
       // Redirect after 2 seconds
     
     } catch (error) {
@@ -112,8 +114,7 @@ const LoginPage = () => {
       setLoading(false);
         setTimeout(() => {
        
-        window.location.reload()
-        navigate('/');
+  
       }, 2000);
     }
   };
@@ -186,7 +187,7 @@ const LoginPage = () => {
               <Box
                 w="80px"
                 h="80px"
-                bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+                bgGradient="linear(135deg, #667eea 0%, blue.500 100%)"
                 borderRadius="full"
                 display="flex"
                 alignItems="center"
@@ -200,7 +201,7 @@ const LoginPage = () => {
               <Text
                 fontSize="2xl"
                 fontWeight="bold"
-                bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+                bgGradient="linear(135deg, #667eea 0%, blue.500 100%)"
                 bgClip="text"
                 mb={2}
               >
@@ -263,10 +264,10 @@ const LoginPage = () => {
                     type="submit"
                     size="lg"
                     w="full"
-                    bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+                    bgGradient="linear(135deg, #667eea 0%, blue.500 100%)"
                     color="white"
                     _hover={{
-                      bgGradient: "linear(135deg, #5a6fd8 0%, #6a4190 100%)",
+                      bgGradient: "linear(135deg, #5a6fd8 0%, blue.500 100%)",
                       boxShadow: "0 10px 25px rgba(102, 126, 234, 0.4)"
                     }}
                     _active={{
@@ -411,7 +412,7 @@ const LoginPage = () => {
                 <VStack spacing={3}>
                   <Button
                     as="a"
-                    href="https://wa.me/201234567890"
+                    href="https://wa.me/201111272393"
                     target="_blank"
                     rel="noopener noreferrer"
                     bg="green.500"
@@ -430,21 +431,22 @@ const LoginPage = () => {
                     borderRadius="lg"
                     transition="all 0.3s ease"
                   >
-                    واتساب: 01234567890
+                    واتساب: 01111272393
                   </Button>
-                  
                   <Button
                     as="a"
-                    href="tel:01234567890"
-                    bg="blue.500"
+                    href="https://wa.me/201288781012"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    bg="green.500"
                     color="white"
                     _hover={{
-                      bg: "blue.600",
+                      bg: "green.600",
                       transform: "translateY(-1px)",
-                      boxShadow: "0 4px 12px rgba(59, 130, 246, 0.4)"
+                      boxShadow: "0 4px 12px rgba(34, 197, 94, 0.4)"
                     }}
                     _active={{
-                      bg: "blue.700"
+                      bg: "green.700"
                     }}
                     leftIcon={<Icon as={FiPhone} />}
                     size="sm"
@@ -452,30 +454,33 @@ const LoginPage = () => {
                     borderRadius="lg"
                     transition="all 0.3s ease"
                   >
-                    هاتف: 01234567890
+                    واتساب: 01288781012
                   </Button>
-                  
                   <Button
                     as="a"
-                    href="mailto:support@platform.com"
-                    bg="purple.500"
+                    href="https://wa.me/201210726096"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    bg="green.500"
                     color="white"
                     _hover={{
-                      bg: "purple.600",
+                      bg: "green.600",
                       transform: "translateY(-1px)",
-                      boxShadow: "0 4px 12px rgba(147, 51, 234, 0.4)"
+                      boxShadow: "0 4px 12px rgba(34, 197, 94, 0.4)"
                     }}
                     _active={{
-                      bg: "purple.700"
+                      bg: "green.700"
                     }}
-                    leftIcon={<Icon as={FiMail} />}
+                    leftIcon={<Icon as={FiPhone} />}
                     size="sm"
                     w="full"
                     borderRadius="lg"
                     transition="all 0.3s ease"
                   >
-                    إيميل: support@platform.com
+                    واتساب: 01210726096
                   </Button>
+                  
+               
                 </VStack>
               </Box>
             </VStack>
