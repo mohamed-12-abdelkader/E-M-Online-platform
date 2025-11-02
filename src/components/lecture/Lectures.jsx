@@ -21,17 +21,33 @@ import {
   Divider,
   Collapse,
   useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useToast,
 } from "@chakra-ui/react";
 import { MdOutlineVideoLibrary, MdAccessTime } from "react-icons/md";
-import { FaSearch, FaPlay, FaCalendarAlt, FaStar, FaGraduationCap, FaUsers, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaSearch, FaPlay, FaCalendarAlt, FaStar, FaGraduationCap, FaUsers, FaChevronDown, FaChevronUp, FaQrcode, FaCamera } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import GitMyMonthes from "../../Hooks/student/GitMyMonthes";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Html5Qrcode } from "html5-qrcode";
+import baseUrl from "../../api/baseUrl";
 
 const Lectures = () => {
   const [myMonth, myMonthLoading] = GitMyMonthes();
   const [expandedCards, setExpandedCards] = useState({});
+  const toast = useToast();
+  const authHeader = useMemo(() => ({
+    Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+  }), []);
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
+  const [qrScanner, setQrScanner] = useState(null);
+  const [isScanning, setIsScanning] = useState(false);
 
   // Function to toggle description expansion
   const toggleDescription = (courseId) => {
@@ -40,6 +56,77 @@ const Lectures = () => {
       [courseId]: !prev[courseId]
     }));
   };
+
+  const activateCourseWithQR = async (qrData) => {
+    try {
+      const response = await baseUrl.post('api/course/scan-qr-activate', { qr_data: qrData }, { headers: authHeader });
+      if (response.data.success) {
+        toast({ title: 'تم تفعيل الكورس بنجاح', status: 'success' });
+        setTimeout(() => window.location.reload(), 1200);
+      } else {
+        toast({ title: 'لم يتم التفعيل', status: 'error' });
+      }
+    } catch (error) {
+      let errorMessage = error.response?.data?.message || 'حدث خطأ في التفعيل';
+      if (errorMessage.includes('fully used') || errorMessage.includes('مستخدم')) {
+        errorMessage = 'هذا الكود مستخدم من قبل';
+      }
+      toast({ title: errorMessage, status: 'error' });
+    }
+  };
+
+  const startQrScanner = async () => {
+    setIsScanning(true);
+    try {
+      const element = document.getElementById("qr-reader");
+      if (!element) { setIsScanning(false); return; }
+      const html5Qrcode = new Html5Qrcode("qr-reader");
+      await html5Qrcode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          setIsScanning(false);
+          html5Qrcode.stop().then(() => {
+            html5Qrcode.clear();
+            setQrScanner(null);
+            setIsQrScannerOpen(false);
+            activateCourseWithQR(decodedText);
+          }).catch(() => {
+            html5Qrcode.clear();
+            setQrScanner(null);
+            setIsQrScannerOpen(false);
+            activateCourseWithQR(decodedText);
+          });
+        },
+        () => {}
+      ).catch(() => setIsScanning(false));
+      setQrScanner(html5Qrcode);
+    } catch (e) {
+      setIsScanning(false);
+    }
+  };
+
+  const openQrScannerModal = () => setIsQrScannerOpen(true);
+  const closeQrScanner = async () => {
+    setIsScanning(false);
+    if (qrScanner) {
+      try {
+        const state = await qrScanner.getState();
+        if (state === 2) { await qrScanner.stop(); }
+        qrScanner.clear();
+      } catch {}
+      setQrScanner(null);
+    }
+    setIsQrScannerOpen(false);
+  };
+
+  useEffect(() => {
+    if (isQrScannerOpen && !qrScanner) {
+      const t = setTimeout(() => startQrScanner(), 400);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isQrScannerOpen]);
 
   // Enhanced colors for light and dark mode
   const cardBg = useColorModeValue("white", "gray.800");
@@ -52,39 +139,29 @@ const Lectures = () => {
   const gradientBg = useColorModeValue("linear(to-br, blue.50, purple.50)", "linear(to-br, gray.700, gray.800)");
 
   return (
-    <Container maxW="7xl" pb={8}>
+    <Container maxW="7xl" >
       <Box w="100%">
-        {/* Page Title */}
-        <Box textAlign="center" mb={12}>
-          <motion.div
-            
-          >
-            <Heading 
-              as="h1" 
-              size="3xl" 
-              mb={6} 
-             
-             
-             
-              fontWeight="extrabold"
-              
-              position="relative"
-            
-            >
-              دوراتي المسجلة 📚
-            </Heading>
-            <Text 
-              color={subTextColor} 
-              fontSize="xl" 
-              maxW="700px" 
-              mx="auto"
-              lineHeight="tall"
-              fontWeight="medium"
-            >
-              استكشف دوراتك المسجلة وتابع تقدمك في التعلم معنا
-            </Text>
-          </motion.div>
+        {/* QR Activation - Simple Card */}
+        <Box
+          bg="blue.100"
+          borderRadius="2xl"
+          p={{ base: 4, md: 5 }}
+          border="1px solid"
+          borderColor={borderColor}
+       
+          textAlign="center"
+        >
+          <VStack spacing={3}>
+            <Icon as={FaQrcode} w={10} h={10} color="blue.600" />
+            <Heading size="md" color="blue.700">تفعيل كورس جديد</Heading>
+            <Text fontSize="sm" color={subTextColor}>قم بمسح QR Code لتفعيل الكورس فوراً</Text>
+            <Button onClick={openQrScannerModal} colorScheme="blue" leftIcon={<FaCamera />} size="md" borderRadius="full">
+              مسح QR Code
+            </Button>
+          </VStack>
         </Box>
+        {/* Page Title */}
+    
 
         {/* Display Courses */}
         {myMonthLoading ? (
@@ -125,16 +202,22 @@ const Lectures = () => {
         </div>
       ) : myMonth.courses?.length > 0 ? (
         
-        <div className="flex flex-wrap  ">
+        <div >
+              <Box textAlign="center" mb={12}>
+      
+        </Box>
+          <div className="flex flex-wrap  ">
+
+          
           {myMonth.courses.map((course, index) => (
               <Link 
                 key={course.id}
-                className="" 
+                className="w-full md:w-[330px] mx-3" 
                 to={`/CourseDetailsPage/${course.id}`} 
                 style={{ textDecoration: "none" }}
               >
                 <Card
-                  className=" stu-course mx-3 md:w-[340px] my-3"
+                  className=" stu-course  md:w-[340px] my-3"
                 
                   bg={cardBg}
                   border="1px solid"
@@ -348,10 +431,11 @@ const Lectures = () => {
                 </Link>
           
           ))}
+          </div>
         </div>
       ) : (
         // No courses message
-        <Center py={{ base: 12, sm: 16, md: 20 }} flexDirection="column">
+        <Center flexDirection="column">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -365,65 +449,60 @@ const Lectures = () => {
               borderColor={borderColor}
               boxShadow="xl"
               textAlign="center"
-              maxW="600px"
+             
             >
-              <Icon 
-                as={MdOutlineVideoLibrary} 
-                boxSize={{ base: 20, md: 24 }} 
-                color="blue.400" 
-                mb={6}
-                filter="drop-shadow(0 4px 8px rgba(0,0,0,0.1))"
-              />
+            
               <VStack spacing={6} align="center">
                 <Heading
                   size={{ base: "xl", sm: "2xl" }}
-                  color={textColor}
-                  bgGradient={useColorModeValue("linear(to-r, blue.400, purple.500)", "linear(to-r, blue.300, purple.400)")}
-                  bgClip="text"
+                  color="blue.500"
+                 
                   fontWeight="bold"
                 >
                   🚀 لم تقم بالاشتراك في أي كورسات بعد!
-                </Heading>
-
-                <Text
-                  fontSize={{ base: "lg", sm: "xl" }}
-                  color={subTextColor}
-                  lineHeight="tall"
-                  maxW="500px"
-                >
-                  بمجرد الاشتراك في أي كورسات سوف تظهر في هذا القسم. انطلق واكتشف
-                  المزيد من الفرص التعليمية المذهلة!
-                </Text>
-                
-                <Button
-                  colorScheme="blue"
-                  size="xl"
-                  leftIcon={<FaSearch />}
-                  bgGradient="linear(to-r, blue.500, purple.500)"
-                  _hover={{
-                    bgGradient: "linear(to-r, blue.600, purple.600)",
-                    transform: "translateY(-2px)",
-                    boxShadow: "xl"
-                  }}
-                  _active={{
-                    transform: "translateY(0px)"
-                  }}
-                  transition="all 0.2s ease"
-                  borderRadius="xl"
-                  px={8}
-                  py={6}
-                  fontSize="lg"
-                  fontWeight="bold"
-                  boxShadow="lg"
-                >
-                  تصفح الكورسات المتاحة
-                </Button>
+                </Heading>          
               </VStack>
             </Box>
           </motion.div>
         </Center>
       )}
       </Box>
+
+      {/* QR Scanner Modal */}
+      <Modal 
+        isOpen={isQrScannerOpen} 
+        onClose={closeQrScanner} 
+        isCentered 
+        size="xl"
+        closeOnOverlayClick={false}
+        closeOnEsc={true}
+      >
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
+        <ModalContent mx={4} borderRadius="2xl" overflow="hidden">
+          <ModalHeader textAlign="center" bg="blue.50" py={6}>
+            <VStack spacing={2}>
+              <Box w="54px" h="54px" bg="blue.500" borderRadius="full" display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FaQrcode} w="28px" h="28px" color="white" />
+              </Box>
+              <Text fontSize="lg" fontWeight="bold" color="blue.800">تفعيل كورس جديد</Text>
+              <Text fontSize="sm" color="blue.600">ضع QR Code داخل الإطار</Text>
+            </VStack>
+          </ModalHeader>
+          <ModalBody py={8}>
+            <VStack spacing={4} textAlign="center">
+              <Box position="relative" w="100%" h="360px" borderRadius="lg" overflow="hidden" border="2px solid" borderColor="blue.200" bg="gray.100">
+                <div id="qr-reader" style={{ width: "100%", height: "100%", position: "relative" }} />
+                {isScanning && (
+                  <Box position="absolute" top="50%" left="0" right="0" height="3px" bg="linear-gradient(90deg, transparent, #2563eb, transparent)" transform="translateY(-50%)" animation="scanning 2s linear infinite" zIndex={10} pointerEvents="none" />
+                )}
+              </Box>
+            </VStack>
+          </ModalBody>
+          <ModalFooter justifyContent="center" py={6}>
+            <Button onClick={closeQrScanner} variant="ghost">إلغاء</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Container>
   );
 };

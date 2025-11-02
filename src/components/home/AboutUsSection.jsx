@@ -30,12 +30,12 @@ const  AboutUsSection = () => {
           <Box w={{ base: "100%", md: "50%" }} textAlign="right">
             <Flex align="center" gap={2} mb={6}>
               <FaRocket className="text-blue-600" />
-              <Text as="h2" fontSize="4xl" fontWeight="bold" fontFamily="Tajawal">
+              <Text as="h2" fontSize="4xl" color="blue.500" fontWeight="bold" fontFamily="Tajawal">
                 عن EM Online
               </Text>
             </Flex>
             <Box className="space-y-6">
-              <Text fontSize="lg" leading="relaxed">
+              <Text fontSize="lg"  leading="relaxed">
                 منصة <Text as="span" fontWeight="semibold" color="blue.600">"EM Online"</Text> هي وجهتك المثالية للتعلم الإلكتروني بطريقة مبتكرة وسهلة. نحن هنا لنقدم لك تجربة تعليمية متكاملة تجمع بين المحتوى التعليمي المتميز والتقنيات الحديثة.
               </Text>
               <Flex align="center" gap={2}>

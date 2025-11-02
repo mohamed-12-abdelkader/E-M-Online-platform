@@ -526,7 +526,7 @@ const TeacherDashboardHome = () => {
           <MotionCard
           className="Welcome-Section"
             w="full"
-            bgGradient="linear(135deg, blue.500 0%, blue.600 100%)"
+            bgGradient="linear(135deg, blue.300 0%, blue.600 100%)"
             color="white"
             borderRadius={{ base: "lg", sm: "xl", md: "2xl" }}
             shadow={{ base: "lg", md: "2xl" }}
@@ -623,7 +623,7 @@ const TeacherDashboardHome = () => {
             <MotionHeading 
               size={{ base: "md", sm: "lg", md: "xl", lg: "2xl" }} 
               mb={{ base: 3, sm: 4, md: 6, lg: 8 }} 
-              color={headingColor} 
+              color="blue.500" 
               textAlign="center"
               fontWeight={{ base: "semibold", md: "bold" }}
             >
@@ -685,7 +685,7 @@ const TeacherDashboardHome = () => {
                           <Text 
                             fontSize={{ base: "sm", sm: "md", md: "lg" }} 
                             fontWeight={{ base: "semibold", md: "bold" }} 
-                            color={headingColor}
+                            color="blue.500"
                             noOfLines={2}
                             lineHeight={{ base: 1.3, md: 1.4 }}
                           >
@@ -714,7 +714,7 @@ const TeacherDashboardHome = () => {
             <VStack spacing={{ base: 3, sm: 4, md: 6 }} align="stretch" mb={{ base: 4, sm: 5, md: 6, lg: 8 }}>
               <MotionHeading 
                 size={{ base: "md", sm: "lg", md: "xl", lg: "2xl" }} 
-                color={headingColor}
+                color="blue.500"
                 textAlign={{ base: "center",  }}
                 fontWeight={{ base: "semibold", md: "bold" }}
               >
@@ -745,7 +745,7 @@ const TeacherDashboardHome = () => {
                 </Select>
 
                 <MotionButton
-                  colorScheme="green"
+                  colorScheme="blue"
                   leftIcon={<FaPlus />}
                   onClick={onOpen}
                   whileHover={{ scale: 1.05 }}
@@ -853,7 +853,7 @@ const TeacherDashboardHome = () => {
                             <VStack align="flex-start" spacing={{ base: 1, sm: 2 }} flex={1} minW={0}>
                               <Heading 
                                 size={{ base: "xs", sm: "sm", md: "md" }} 
-                                color={headingColor} 
+                                color="blue.500"
                                 noOfLines={2}
                                 w="full"
                                 lineHeight={{ base: 1.3, md: 1.4 }}
@@ -914,7 +914,7 @@ const TeacherDashboardHome = () => {
                               </Text>
                             </HStack>
                             <Badge 
-                              colorScheme="green" 
+                              colorScheme="blue" 
                               px={{ base: 1, sm: 2, md: 3 }} 
                               py={1} 
                               borderRadius="full"
@@ -970,7 +970,7 @@ const TeacherDashboardHome = () => {
             p={{ base: 3, sm: 4, md: 5, lg: 6 }}
           >
             <HStack spacing={{ base: 2, sm: 3 }}>
-              <Icon as={FaPlus} color="green.500" boxSize={{ base: 4, sm: 5, md: 6 }} />
+              <Icon as={FaPlus} color="blue.500" boxSize={{ base: 4, sm: 5, md: 6 }} />
               <Text 
                 fontWeight="bold" 
                 fontSize={{ base: "sm", sm: "md", md: "lg", lg: "xl" }}

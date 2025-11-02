@@ -51,10 +51,10 @@ const SectionTwo = () => {
 
   return (
     <Box w="full" py={20} px={6} className="" textAlign="center">
-      <Heading fontSize={{ base: "3xl", md: "4xl" }} fontWeight="bold" color={textColor} mb={4}>
+      <Heading fontSize={{ base: "3xl", md: "4xl" }} fontWeight="bold" color="blue.500" mb={4}>
         خدماتنا التعليمية 📚
       </Heading>
-      <Text fontSize="lg" color={descriptionColor} mb={10}>
+      <Text fontSize="lg" color="blue.500" mb={10}>
         اكتشف أفضل الدورات التعليمية والدروس الخاصة مع خبراء التعليم.
       </Text>
 
@@ -90,7 +90,7 @@ const SectionTwo = () => {
                 <Icon as={service.icon} boxSize={10} color="white" />
               </Box>
             </Flex>
-            <Heading fontSize="xl" fontWeight="bold" color={textColor} mb={3}>
+            <Heading fontSize="xl" fontWeight="bold" color="blue.500" mb={3}>
               {service.name}
             </Heading>
             <Text fontSize="md" color={descriptionColor}>

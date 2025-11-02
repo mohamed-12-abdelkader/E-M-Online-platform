@@ -22,6 +22,16 @@ import {
   HStack,
   Card,
   Collapse,
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  Checkbox,
+  Spinner,
+  useToast,
+  NumberInput,
+  NumberInputField,
+  Center,
 } from "@chakra-ui/react";
 import {
   FaChalkboardTeacher,
@@ -40,6 +50,7 @@ import {
   FaUser,
   FaQrcode,
   FaCamera,
+  FaGamepad,
 } from "react-icons/fa";
 import { FiExternalLink } from "react-icons/fi";
 import MyLecture from "../leacter/MyLecture";
@@ -50,6 +61,8 @@ import UserType from "../../Hooks/auth/userType";
 import baseUrl from "../../api/baseUrl";
 import BottomNavItems from "../../components/Footer/BottomNavItems";
 import { Html5Qrcode } from "html5-qrcode";
+import { io } from 'socket.io-client';
+import { useRef } from "react";
 
 const MotionBox = motion(Box);
 const MotionCard = motion(Card);
@@ -67,10 +80,12 @@ const scanningAnimation = `
 `;
 
 const HomePage = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
   const notificationsLoading = false;
   const notifications = { notifications: [] };
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const invitationModal = useDisclosure();
   const quickActionsDisclosure = useDisclosure({ defaultIsOpen: false });
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [userData, isAdmin, isTeacher, student] = UserType();
@@ -91,6 +106,11 @@ const HomePage = () => {
   const authHeader = useMemo(() => ({
     Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
   }), []);
+  const toast = useToast();
+
+  // Game invitation state (for receiving invitations)
+  const [latestInvitation, setLatestInvitation] = useState(null);
+  const socketRef = useRef(null);
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return "";
@@ -263,6 +283,271 @@ const HomePage = () => {
     fetchGradeFeed();
   }, [authHeader]);
 
+  // Fetch latest game invitation (initial load only, real-time updates come from WebSocket)
+  const fetchLatestInvitation = async () => {
+    try {
+      const res = await baseUrl.get('/api/game/invitations/latest', { headers: authHeader });
+      if (res?.data?.success && res?.data?.data) {
+        const invitation = res.data.data;
+        setLatestInvitation(invitation);
+        
+        // Open modal if invitation is pending (only on initial load)
+        if (invitation.status === 'pending') {
+          const now = new Date();
+          const expiresAt = new Date(invitation.expiresAt);
+          const timeDiff = expiresAt.getTime() - now.getTime();
+          if (timeDiff > 0 || Math.abs(timeDiff) < 86400000) {
+            setTimeout(() => {
+              invitationModal.onOpen();
+            }, 300);
+          }
+        }
+      } else {
+        // No invitation found
+        setLatestInvitation(null);
+      }
+    } catch (e) {
+      // Silent fail - no invitation or error
+      setLatestInvitation(null);
+    }
+  };
+
+  // Handle accept invitation
+  const handleAcceptInvitation = async () => {
+    if (!latestInvitation) return;
+    try {
+      const res = await baseUrl.post(`/api/game/accept/${latestInvitation.id}`, {}, { headers: authHeader });
+      if (res?.data?.success) {
+        toast({ title: 'تم قبول الدعوة!', status: 'success' });
+        invitationModal.onClose();
+        setLatestInvitation(null);
+        // Navigate to game or start game logic here
+      } else {
+        toast({ title: res?.data?.message || 'فشل قبول الدعوة', status: 'error' });
+      }
+    } catch (e) {
+      const errorMsg = e.response?.data?.message || 'فشل قبول الدعوة';
+      toast({ title: errorMsg, status: 'error' });
+    }
+  };
+
+  // Handle reject invitation
+  const handleRejectInvitation = async () => {
+    if (!latestInvitation) return;
+    try {
+      const res = await baseUrl.post(`/api/game/reject/${latestInvitation.id}`, {}, { headers: authHeader });
+      if (res?.data?.success) {
+        toast({ title: 'تم رفض الدعوة', status: 'info' });
+        invitationModal.onClose();
+        setLatestInvitation(null);
+      } else {
+        toast({ title: res?.data?.message || 'فشل رفض الدعوة', status: 'error' });
+      }
+    } catch (e) {
+      const errorMsg = e.response?.data?.message || 'فشل رفض الدعوة';
+      toast({ title: errorMsg, status: 'error' });
+    }
+  };
+
+  // Fetch invitation on mount
+  useEffect(() => {
+    fetchLatestInvitation();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authHeader]);
+
+  // Setup WebSocket for real-time updates (Primary method)
+  useEffect(() => {
+    // Real-time invitation handler - processes invitation data and opens modal if needed
+    const processNewInvitation = (invitation) => {
+      if (!invitation) return;
+      
+      console.log('📨 Processing new invitation:', invitation);
+      setLatestInvitation(invitation);
+      
+      // Open modal immediately if invitation is pending and valid
+      if (invitation.status === 'pending') {
+        const now = new Date();
+        const expiresAt = new Date(invitation.expiresAt);
+        const timeDiff = expiresAt.getTime() - now.getTime();
+        
+        // Open modal if not expired (or if date seems wrong, allow it for testing)
+        if (timeDiff > 0 || Math.abs(timeDiff) < 86400000) {
+          console.log('🎯 Opening invitation modal immediately');
+          // Use requestAnimationFrame to ensure DOM is ready
+          requestAnimationFrame(() => {
+            invitationModal.onOpen();
+          });
+        }
+      }
+    };
+
+    const tokenOnly = (localStorage.getItem('Authorization') || '').replace(/^Bearer\s+/i, '') || localStorage.getItem('token');
+    let socketEndpoint;
+    try {
+      socketEndpoint = new URL(baseUrl.defaults.baseURL || window.location.origin).origin;
+    } catch {
+      socketEndpoint = window.location.origin;
+    }
+
+    const socket = io(socketEndpoint, {
+      path: '/socket.io',
+      withCredentials: true,
+      auth: tokenOnly ? { token: tokenOnly } : {},
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: Infinity,
+      timeout: 20000,
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('✅ WebSocket connected for game invitations, Socket ID:', socket.id);
+      // Join a room for game invitations (if backend supports rooms)
+      if (user?.id) {
+        socket.emit('game:join-room', { userId: user?.id });
+        console.log('📤 Emitted join-room for user:', user?.id);
+      }
+      // Also try alternative room join events
+      socket.emit('join', `user-${user?.id}`);
+      socket.emit('subscribe', { type: 'game-invitations', userId: user?.id });
+      
+      // Fetch latest invitation immediately after connection to ensure we have current state
+      fetchLatestInvitation();
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('❌ WebSocket disconnected:', reason);
+    });
+
+    socket.on('connect_error', (e) => {
+      console.error('❌ WebSocket connection error:', e);
+    });
+
+    socket.on('reconnect', (attemptNumber) => {
+      console.log('🔄 WebSocket reconnected after', attemptNumber, 'attempts');
+      if (user?.id) {
+        socket.emit('game:join-room', { userId: user?.id });
+      }
+    });
+
+    // Catch-all listener: Listen to ALL events for debugging (Socket.IO feature)
+    // This will catch ANY event sent from the backend
+    const catchAllHandler = (eventName, ...args) => {
+      const payload = args[0];
+      // Log ALL events to help debug
+      console.log(`🔍 [ALL EVENTS] WebSocket event [${eventName}]:`, payload);
+      console.log(`📊 Event type:`, typeof payload, Array.isArray(payload) ? 'Array' : 'Object');
+      
+      // Check if this looks like an invitation event
+      if (payload && (
+        payload.invitation || 
+        payload.data || 
+        (payload.id && (payload.status || payload.inviterName || payload.lessonNames || payload.inviterId)) ||
+        payload.status === 'pending' ||
+        (typeof payload === 'object' && payload.inviterName) ||
+        (typeof payload === 'object' && payload.lessonIds)
+      )) {
+        console.log('🎯 ✅✅✅ DETECTED INVITATION DATA in event:', eventName);
+        handleInvitationEvent(payload, eventName);
+      }
+    };
+    
+    // Use socket.onAny to catch ALL events (Socket.IO built-in method)
+    if (socket.onAny) {
+      socket.onAny(catchAllHandler);
+      console.log('👂 Listening to ALL WebSocket events via onAny');
+    } else {
+      console.warn('⚠️ socket.onAny is not available');
+    }
+
+    // Handler function for all invitation events
+    const handleInvitationEvent = (payload, eventName = 'unknown') => {
+      console.log(`📥 Received invitation event [${eventName}]:`, payload);
+      console.log('📋 Full payload structure:', JSON.stringify(payload, null, 2));
+      
+      let invitation = null;
+      // Try different payload structures
+      if (payload?.invitation) {
+        invitation = payload.invitation;
+      } else if (payload?.data?.invitation) {
+        invitation = payload.data.invitation;
+      } else if (payload?.data && typeof payload.data === 'object' && !Array.isArray(payload.data)) {
+        // If data is the invitation object
+        invitation = payload.data;
+      } else if (payload?.id && (payload.status || payload.inviterName || payload.lessonNames || payload.inviterId)) {
+        // If payload is the invitation itself
+        invitation = payload;
+      }
+      
+      if (invitation) {
+        console.log('✅ Valid invitation found:', invitation);
+        processNewInvitation(invitation);
+      } else {
+        console.log('⚠️ Could not extract invitation from payload');
+        console.log('🔍 Payload keys:', Object.keys(payload || {}));
+        // Try to fetch from API as fallback if WebSocket event structure is unexpected
+        setTimeout(() => {
+          fetchLatestInvitation();
+        }, 1000);
+      }
+    };
+
+    // Listen to ALL possible event names from backend
+    const eventNames = [
+      'game:invitation-received',
+      'game:new-invitation',
+      'game:invitation',
+      'game:invitation-created',
+      'invitation:new',
+      'invitation:received',
+      'invitation:created',
+      'game:invite-received',
+      'invite:received',
+      'new:invitation',
+      'invitation',
+      'game:invitation-latest',
+      'game:new-invite',
+    ];
+
+    // Register all event listeners
+    eventNames.forEach(eventName => {
+      socket.on(eventName, (payload) => handleInvitationEvent(payload, eventName));
+    });
+
+    // Listen for invitation status updates
+    socket.on('game:invitation-updated', (payload) => {
+      console.log('🔄 Invitation updated:', payload);
+      if (payload?.invitation || payload?.data) {
+        setLatestInvitation(payload.invitation || payload.data);
+      }
+    });
+
+    // Cleanup
+    return () => {
+      if (socket.offAny && catchAllHandler) {
+        socket.offAny(catchAllHandler);
+      }
+      eventNames.forEach(eventName => {
+        socket.off(eventName);
+      });
+      socket.off('game:invitation-updated');
+      socket.disconnect();
+    };
+  }, [invitationModal, user?.id]);
+
+  // Note: SSE would require backend support and token in query params or cookies
+  // Since backend already uses WebSocket (Socket.IO), we rely on WebSocket only
+
+  // Debug: manually test modal (remove in production)
+  useEffect(() => {
+    if (latestInvitation && invitationModal.isOpen) {
+      console.log('Modal is open with invitation:', latestInvitation);
+    }
+  }, [latestInvitation, invitationModal.isOpen]);
+
+
   // بدء Scanner عندما يفتح الـ Modal
   useEffect(() => {
     if (isQrScannerOpen && !qrScanner) {
@@ -410,187 +695,49 @@ const HomePage = () => {
         px={{ base: 4, md: 6, lg: 8 }}
       >
       {/* Notification Bar */}
-      {showNotificationBar && competitionNotifications.length > 0 && (
-        <MotionBox
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -50 }}
-          mb={6}
-        >
-          <VStack spacing={3}>
-            {competitionNotifications.slice(0, 3).map((notification, index) => (
-              <Box
-                key={notification.id}
-                bgGradient={notification.type === 'league' ? "linear(135deg, red.400, red.500)" : "linear(135deg, orange.400, orange.500)"}
-                borderRadius="xl"
-                p={4}
-                position="relative"
-                overflow="hidden"
-                boxShadow={notification.type === 'league' ? "0 10px 25px rgba(239, 68, 68, 0.3)" : "0 10px 25px rgba(251, 146, 60, 0.3)"}
-                w="100%"
-                cursor="pointer"
-                onClick={() => handleAnnouncementClick(notification)}
-                _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
-                transition="all 0.2s"
-              >
-                {/* Background Pattern */}
-                <Box position="absolute" top={-10} right={-10} opacity={0.1}>
-                  <Icon as={notification.type === 'league' ? FaTrophy : FaGift} w={24} h={24} color="white" />
-                </Box>
-
-                <HStack justify="space-between" align="center" color="white">
-                  <HStack spacing={3} flex={1}>
-                    <Icon as={notification.type === 'league' ? FaTrophy : FaGift} boxSize={5} />
-                    <VStack align="start" spacing={1} flex={1}>
-                      <HStack spacing={2} align="center">
-                        <Text fontWeight="bold" fontSize="md">
-                          {notification.title}
-                        </Text>
-                        {notification.urgent && (
-                          <Badge colorScheme="white" variant="solid" size="sm" borderRadius="full" bg="whiteAlpha.20">
-                            عاجل
-                          </Badge>
-                        )}
-                      </HStack>
-                      <Text fontSize="sm" opacity={0.9} noOfLines={2}>
-                        {notification.message}
-                      </Text>
-                      {notification.gradeName && (
-                        <Badge 
-                          colorScheme="white" 
-                          variant="outline" 
-                          size="sm"
-                          borderRadius="full"
-                          bg="whiteAlpha.10"
-                        >
-                          {notification.gradeName}
-                        </Badge>
-                      )}
-                    </VStack>
-                  </HStack>
-                  
-                  <HStack spacing={2}>
-                    <Button
-                      size="sm"
-                      colorScheme="white"
-                      variant="outline"
-                      borderRadius="full"
-                      _hover={{ bg: "whiteAlpha.20" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAnnouncementClick(notification);
-                      }}
-                    >
-                      {notification.type === 'league' ? 'عرض الدوري' : 'عرض المسابقة'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      color="white"
-                      _hover={{ bg: "whiteAlpha.20" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowNotificationBar(false);
-                      }}
-                      borderRadius="full"
-                    >
-                      ✕
-                    </Button>
-                  </HStack>
-                </HStack>
-              </Box>
-            ))}
-            
-            {/* زر عرض المزيد */}
-            {competitionNotifications.length > 3 && (
-              <Button
-                as={Link}
-                to="/competitions"
-                size="md"
-                colorScheme="orange"
-                variant="outline"
-                borderRadius="full"
-                _hover={{ bg: "orange.50" }}
-                rightIcon={<FaArrowRight />}
-                w="100%"
-              >
-                عرض جميع الإشعارات ({competitionNotifications.length})
-              </Button>
-            )}
-          </VStack>
-        </MotionBox>
-      )}
+   
              {/* Header Section & Competition Notifications - الترحيب وإشعارات المسابقات */}
        <MotionBox
          initial="hidden"
          animate="visible"
          variants={containerVariants}
-         mb={{ base: 6, md: 8 }}
+         mb={{ base: 5, md: 6 }}
        >
-         <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
+        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4}>
       {/* Header Section - الترحيب */}
-             <Box
-               bgGradient="linear(135deg, blue.500, blue.600)"
-               borderRadius="3xl"
-               p={{ base: 4, md: 6, lg: 8 }}
+           <Box
+           bgGradient={"linear(135deg, blue.400, blue.600)"}
+             
+              borderRadius="2xl"
+             p={{ base: 4, md: 5 }}
           position="relative"
           overflow="hidden"
-               boxShadow="0 20px 40px rgba(59, 130, 246, 0.3)"
-               height="100%"
+              boxShadow="sm"
+              height="100%"
                display="flex"
                flexDirection="column"
         >
-          {/* Background Elements */}
-             <Box position="absolute" top={-20} right={-20} opacity={0.1}>
-               <Icon as={FaGraduationCap} w={32} h={32} color="white" />
-          </Box>
-             <Box position="absolute" bottom={-20} left={-20} opacity={0.1}>
-               <Icon as={FaRocket} w={24} h={24} color="white" />
-          </Box>
-
                            <VStack 
                 align={{ base: "center", lg: "flex-start" }} 
-                spacing={{ base: 3, md: 4 }} 
+                spacing={{ base: 3, md: 3 }} 
                 color="white"
                 height="100%"
             justify="space-between"
               >
                 <VStack spacing={{ base: 3, md: 4 }} align={{ base: "center", lg: "flex-start" }}>
-              <Badge
-                bg="whiteAlpha.20"
-                color="white"
-                    px={4}
-                    py={2}
-                borderRadius="full"
-                    fontSize="sm"
-                fontWeight="semibold"
-                backdropFilter="blur(10px)"
-                    border="1px solid"
-                    borderColor="whiteAlpha.30"
-              >
-                🎓 منصة التعلم الذكية
-              </Badge>
+          
               
               <Heading
-                size={headingSize}
+                size={{ base: "md", md: "lg" }}
                 fontWeight="extrabold"
                     textAlign={{ base: "center", lg: "right" }}
-                textShadow="0 4px 8px rgba(0,0,0,0.3)"
+                textShadow="0 2px 4px rgba(0,0,0,0.2)"
                     lineHeight={1.2}
               >
-                    مرحباً {user.name} ! 🚀
+                    مرحباً {user?.name || user?.fname || "المستخدم"} ! 🚀
               </Heading>
               
-              <Text
-                fontSize={subHeadingSize}
-                fontWeight="medium"
-                    textAlign={{ base: "center", lg: "right" }}
-                    maxW="500px"
-                    lineHeight={1.6}
-                    opacity={0.9}
-              >
-                استكشف عالم التعلم الرقمي مع أفضل المحاضرين واحصل على تجربة تعليمية فريدة
-              </Text>
+
             </VStack>
 
                 <VStack spacing={2} align="center">
@@ -599,245 +746,135 @@ const HomePage = () => {
                     fontSize={{ base: "md", md: "lg" }} 
                   textShadow="0 2px 4px rgba(0,0,0,0.3)" 
                 >
-                  {user.fname} {user.lname}
+                  {user?.fname || ""} {user?.lname || ""}
                 </Text>
                 
-                  <Text fontSize="sm" opacity={0.8}>
-                  كود الطالب: {user?.id}
+                <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }} opacity={0.8}>
+                  كود الطالب: {user?.id || "غير متاح"}
                 </Text>
                 
-                <Badge
-                    colorScheme="orange"
-                  variant="solid"
-                  borderRadius="full"
-                    px={3}
-                    py={1}
-                    bg="orange.500"
-                    fontSize="xs"
-                >
-                  طالب نشط ⭐
-                </Badge>
+               
               </VStack>
               </VStack>
            </Box>
 
-           {/* QR Code Activation Button */}
-           <Box
-             bgGradient="linear(135deg, orange.500, orange.600)"
-             borderRadius="3xl"
-             p={{ base: 4, md: 6, lg: 8 }}
-             position="relative"
-             overflow="hidden"
-             boxShadow="0 20px 40px rgba(255, 140, 0, 0.3)"
-             height="100%"
-             display="flex"
-             flexDirection="column"
-             justifyContent="center"
-             alignItems="center"
-           >
-             {/* Background Elements */}
-             <Box position="absolute" top={-20} right={-20} opacity={0.1}>
-               <Icon as={FaQrcode} w={32} h={32} color="white" />
-             </Box>
-             <Box position="absolute" bottom={-20} left={-20} opacity={0.1}>
-               <Icon as={FaCamera} w={24} h={24} color="white" />
-             </Box>
+           {/* Competition Notifications Section */}
+           {competitionNotifications.length > 0 && (
+             <VStack spacing={3} align="stretch" height="100%">
+               {competitionNotifications.slice(0, 2).map((notification) => (
+                 <Box
+                   key={notification.id}
+                   bgGradient={notification.type === 'league' ? "linear(135deg, blue.400, blue.600)" : "linear(135deg, blue.600, blue.400)"}
+                   borderRadius="xl"
+                   p={4}
+                   position="relative"
+                   overflow="hidden"
+                   w="100%"
+                   cursor="pointer"
+                   onClick={() => handleAnnouncementClick(notification)}
+                   _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
+                   transition="all 0.2s"
+                 >
+                   {/* Background Pattern */}
+                   <Box position="absolute" top={-10} right={-10} opacity={0.1}>
+                     <Icon as={notification.type === 'league' ? FaTrophy : FaGift} w={24} h={24} color="white" />
+                   </Box>
 
-             <VStack spacing={4} color="white" textAlign="center">
-               <Icon as={FaQrcode} w={16} h={16} />
+                   <HStack justify="space-between" align="center" color="white">
+                     <HStack spacing={3} flex={1}>
+                       <Icon as={notification.type === 'league' ? FaTrophy : FaGift} boxSize={5} />
+                       <VStack align="start" spacing={1} flex={1}>
+                         <HStack spacing={2} align="center">
+                           <Text fontWeight="bold" fontSize="md" noOfLines={1}>
+                             {notification.title}
+                           </Text>
+                           {notification.urgent && (
+                             <Badge colorScheme="white" variant="solid" size="sm" borderRadius="full" bg="whiteAlpha.20">
+                               عاجل
+                             </Badge>
+                           )}
+                         </HStack>
+                       </VStack>
+                     </HStack>
+                     
+                     <HStack spacing={2}>
+                       <Button
+                         size="sm"
+                         colorScheme="white"
+                         variant="outline"
+                         borderRadius="full"
+                         _hover={{ bg: "whiteAlpha.20" }}
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           handleAnnouncementClick(notification);
+                         }}
+                       >
+                         {notification.type === 'league' ? 'عرض الدوري' : 'عرض المسابقة'}
+                       </Button>
+                     </HStack>
+                   </HStack>
+                 </Box>
+               ))}
                
-               <Heading size="lg" fontWeight="bold" textShadow="0 4px 8px rgba(0,0,0,0.3)">
-                 تفعيل كورس جديد
-               </Heading>
-               
-               <Text fontSize="md" opacity={0.9} maxW="300px" lineHeight={1.6}>
-                 قم بمسح QR Code الخاص بكورسك الجديد لتفعيله فوراً
-               </Text>
-               
-               <Button
-                 onClick={openQrScannerModal}
-                 bg="white"
-                 color="orange.600"
-                 size="lg"
-                 borderRadius="full"
-                 px={8}
-                 py={6}
-                 fontWeight="bold"
-                 _hover={{
-                   bg: "orange.50",
-                   transform: "translateY(-2px)",
-                   boxShadow: "0 8px 25px rgba(255, 140, 0, 0.4)"
-                 }}
-                 leftIcon={<FaCamera />}
-                 boxShadow="0 4px 15px rgba(255, 140, 0, 0.3)"
-               >
-                 مسح QR Code
-               </Button>
+               {competitionNotifications.length > 2 && (
+                 <Button
+                   as={Link}
+                   to="/competitions"
+                   size="md"
+                   colorScheme="blue"
+                   variant="outline"
+                   borderRadius="full"
+                   _hover={{ bg: "blue.50" }}
+                   rightIcon={<FaArrowRight />}
+                   w="100%"
+                 >
+                   عرض جميع الإشعارات ({competitionNotifications.length})
+                 </Button>
+               )}
              </VStack>
-           </Box>
+           )}
+
          </SimpleGrid>
        </MotionBox>
 
-      
-
-          {/* Quick Actions - الوصول السريع */}
-            <MotionBox
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
+        <MotionBox
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
         mb={{ base: 6, md: 8 }}
-      >
-        <Box
-          bg={cardBg}
-          borderRadius="xl"
-          shadow="lg"
-          border="1px solid"
-          borderColor={borderColor}
-          overflow="hidden"
-        >
-          <Box
-            bg="blue.50"
-            px={{ base: 4, md: 5 }}
-            py={{ base: 4, md: 5 }}
-            borderBottom="1px solid"
-            borderColor={borderColor}
           >
-            <HStack spacing={3} justify="space-between" align="center">
-              <HStack spacing={3}>
-                <Box
-                  p={2}
-                  borderRadius="lg"
-                  bg="blue.500"
-                  color="white"
-                  shadow="md"
-                >
-                  <Icon as={FaLightbulb} boxSize={5} />
-                </Box>
-                <VStack align="flex-start" spacing={1}>
-                  <Heading size="md" color="blue.700" fontWeight="bold">
-                    الوصول السريع
+            <Box
+              bg={cardBg}
+          borderRadius="2xl"
+          shadow="lg"
+              border="1px solid"
+              borderColor={borderColor}
+              overflow="hidden"
+            >
+          <Box
+            bgGradient={"linear(135deg, blue.300, blue.600)"}
+            px={6}
+            py={4}
+                borderBottom="1px solid"
+                borderColor={borderColor}
+          >
+            <HStack spacing={3}>
+              <Icon as={FaBookOpen} color="white" boxSize={6} />
+              <Heading size="md" color="white">
+                    كورساتي
                   </Heading>
-                  <Text fontSize="sm" color="gray.600">
-                    أدواتك المفضلة في مكان واحد
-                  </Text>
-                </VStack>
-              </HStack>
-              <Button
-                display={{ base: "inline-flex", md: "none" }}
-                size="sm"
-                variant="outline"
-                colorScheme="blue"
-                borderRadius="lg"
-                px={4}
-                onClick={quickActionsDisclosure.isOpen ? quickActionsDisclosure.onClose : quickActionsDisclosure.onOpen}
-                rightIcon={<FaArrowRight style={{ transform: quickActionsDisclosure.isOpen ? 'rotate(90deg)' : 'rotate(-90deg)', transition: 'transform 0.3s ease' }} />}
-                _hover={{
-                  bg: "blue.50",
-                  transform: "translateY(-1px)"
-                }}
-                transition="all 0.2s ease"
-              >
-                {quickActionsDisclosure.isOpen ? 'إخفاء' : 'عرض'}
-              </Button>
-            </HStack>
+               
+                </HStack>
           </Box>
               
-          <Collapse in={isDesktop || quickActionsDisclosure.isOpen} animateOpacity style={{ overflow: 'hidden' }}>
-            <Box p={{ base: 4, md: 5 }}>
-              <div className="grid grid-cols-1 min-[450px]:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mainLinks.map((link, index) => (
-                  <Link className="w-full link-div" key={index} to={link.href}>
-                    <MotionCard
-                      variants={itemVariants}
-                      bg={cardBg}
-                      borderRadius="xl"
-                      shadow="md"
-                      p={{ base: 4, md: 5 }}
-                      cursor="pointer"
-                      border="1px solid"
-                      borderColor={borderColor}
-                      _hover={{ 
-                        transform: "translateY(-4px)", 
-                        shadow: "lg",
-                        borderColor: "blue.300"
-                      }}
-                      transition="all 0.3s ease"
-                      height="100%"
-                      display="flex"
-                      flexDirection="column"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      role="group"
-                    >
-                      <VStack spacing={4} align="center" width="100%">
-                        <Box
-                          p={4}
-                          borderRadius="xl"
-                          bgGradient={link.gradient}
-                          color="white"
-                          shadow="md"
-                          _groupHover={{
-                            transform: "scale(1.05)",
-                            shadow: "lg"
-                          }}
-                          transition="all 0.3s ease"
-                        >
-                          <Icon as={link.icon} boxSize={6} />
-                        </Box>
-
-                        <VStack spacing={2} align="center" width="100%">
-                          <Text 
-                            fontWeight="bold" 
-                            fontSize="lg" 
-                            color={textColor}
-                            textAlign="center"
-                            _groupHover={{ color: "blue.600" }}
-                            transition="color 0.3s ease"
-                          >
-                            {link.name}
-                          </Text>
-
-                          <Text 
-                            fontSize="sm" 
-                            color="gray.500" 
-                            textAlign="center"
-                            noOfLines={2}
-                            lineHeight="1.4"
-                            _groupHover={{ color: "gray.600" }}
-                            transition="color 0.3s ease"
-                          >
-                            {link.desc}
-                          </Text>
-                        </VStack>
-
-                        <Box
-                          p={2}
-                          borderRadius="lg"
-                          bg="gray.100"
-                          _groupHover={{
-                            bg: "blue.50",
-                            transform: "translateX(2px)"
-                          }}
-                          transition="all 0.3s ease"
-                        >
-                          <Icon 
-                            as={FaArrowRight} 
-                            color="blue.500" 
-                            boxSize={4}
-                            _groupHover={{ color: "blue.600" }}
-                            transition="color 0.3s ease"
-                          />
-                        </Box>
-                      </VStack>
-                    </MotionCard>
-                  </Link>
-                ))}
-              </div>
-            </Box>
-          </Collapse>
+          <Box >
+                <MyLecture />
               </Box>
-            </MotionBox>
+            </Box>
+          </MotionBox>
 
+
+       
           {/* My Teachers - محاضرينى */}
           <MotionBox
           
@@ -855,25 +892,18 @@ const HomePage = () => {
     overflow="hidden"
         >
           <Box
-            bgGradient="linear(135deg, orange.50, orange.100)"
+            bgGradient={"linear(135deg, blue.300, blue.600)"}
             px={6}
             py={4}
       borderBottom="1px solid"
       borderColor={borderColor}
           >
             <HStack spacing={3}>
-              <Icon as={FaChalkboardTeacher} color="orange.500" boxSize={6} />
-              <Heading size="md" color="orange.700">
+              <Icon as={FaChalkboardTeacher} color="white" boxSize={6} />
+              <Heading size="md" color="white">
           محاضرينى
         </Heading>
-        <Badge 
-                colorScheme="orange" 
-                variant="solid" 
-          borderRadius="full" 
-                bg="orange.500"
-        >
-          مميز
-        </Badge>
+      
       </HStack>
           </Box>
     
@@ -884,49 +914,7 @@ const HomePage = () => {
 </MotionBox>
 
           {/* My Lectures - كورساتي */}
-          <MotionBox
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-        mb={{ base: 6, md: 8 }}
-          >
-            <Box
-              bg={cardBg}
-          borderRadius="2xl"
-          shadow="lg"
-              border="1px solid"
-              borderColor={borderColor}
-              overflow="hidden"
-            >
-          <Box
-            bgGradient="linear(135deg, blue.50, blue.100)"
-            px={6}
-            py={4}
-                borderBottom="1px solid"
-                borderColor={borderColor}
-          >
-            <HStack spacing={3}>
-              <Icon as={FaBookOpen} color="blue.500" boxSize={6} />
-              <Heading size="md" color="blue.700">
-                    كورساتي
-                  </Heading>
-                  <Badge 
-                    colorScheme="blue" 
-                variant="solid" 
-                    borderRadius="full" 
-                bg="blue.500"
-                  >
-                    نشط
-                  </Badge>
-                </HStack>
-          </Box>
-              
-          <Box >
-                <MyLecture />
-              </Box>
-            </Box>
-          </MotionBox>
-
+        
       {/* Notification Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="md">
         <ModalOverlay />
@@ -967,7 +955,7 @@ const HomePage = () => {
                       <HStack spacing={2}>
                         <Icon 
                           as={selectedAnnouncement.type === 'league' ? FaTrophy : FaGift} 
-                          color={selectedAnnouncement.type === 'league' ? "red.500" : "orange.500"} 
+                          color={selectedAnnouncement.type === 'league' ? "blue.500" : "blue.500"} 
                           boxSize={5}
                         />
                         <Text fontWeight="bold" fontSize="xl" color="gray.800">
@@ -990,7 +978,7 @@ const HomePage = () => {
                   {/* Grade Badge */}
                   {selectedAnnouncement.gradeName && (
                     <Badge 
-                      colorScheme={selectedAnnouncement.type === 'league' ? "red" : "orange"} 
+                      colorScheme={selectedAnnouncement.type === 'league' ? "blue" : "blue"} 
                       variant="subtle" 
                       size="lg"
                       borderRadius="full"
@@ -1008,7 +996,7 @@ const HomePage = () => {
                       <Text>{selectedAnnouncement.time}</Text>
                     </HStack>
                     <Badge 
-                      colorScheme={selectedAnnouncement.type === 'league' ? "red" : "orange"} 
+                      colorScheme={selectedAnnouncement.type === 'league' ? "blue" : "blue"} 
                       variant="outline"
                     >
                       {selectedAnnouncement.type === 'league' ? 'دوري' : 'مسابقة'}
@@ -1028,7 +1016,7 @@ const HomePage = () => {
                   onClose();
                   handleNotificationAction(selectedAnnouncement);
                 }}
-                colorScheme={selectedAnnouncement.type === 'league' ? "red" : "orange"}
+                colorScheme={selectedAnnouncement.type === 'league' ? "blue" : "blue"}
                 leftIcon={selectedAnnouncement.type === 'league' ? <FaTrophy /> : <FaGift />}
                 _hover={{ 
                   bg: selectedAnnouncement.type === 'league' ? "red.600" : "orange.600",
@@ -1038,6 +1026,131 @@ const HomePage = () => {
                 {selectedAnnouncement.type === 'league' ? 'عرض الدوري' : 'عرض المسابقة'}
               </Button>
             )}
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+
+      {/* Game Invitation Modal */}
+      <Modal isOpen={invitationModal.isOpen} onClose={invitationModal.onClose} isCentered size="lg">
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
+        <ModalContent mx={4} borderRadius="2xl" overflow="hidden">
+          <ModalHeader  bgGradient={"linear(135deg, blue.300, blue.600)"} py={6}>
+            <HStack spacing={3}>
+              <Box
+                w="54px"
+                h="54px"
+                bg="whiteAlpha.200"
+                borderRadius="full"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Icon as={FaTrophy} w="26px" h="26px" color="white" />
+              </Box>
+              <VStack align="start" spacing={0}>
+                <Heading size="md" color="white">دعوة للتحدي 🎮</Heading>
+                <Text fontSize="sm" color="whiteAlpha.900">لديك دعوة جديدة من صديقك</Text>
+              </VStack>
+            </HStack>
+          </ModalHeader>
+          <ModalBody bg="white" py={6}>
+            {latestInvitation ? (
+              <VStack spacing={4} align="stretch">
+                {/* Inviter Info */}
+                <Box bg="blue.50" borderRadius="lg" p={4} border="1px solid" borderColor="purple.100">
+                  <HStack spacing={3}>
+                    <Avatar name={latestInvitation.inviterName} size="md" bg="blue.500" />
+                    <VStack align="start" spacing={1} flex={1}>
+                      <Text fontWeight="bold" color="purple.800" fontSize="lg">
+                        {latestInvitation.inviterName}
+                      </Text>
+                      <Text fontSize="sm" color="purple.600">
+                        يدعوك للعب معه! 🚀
+                      </Text>
+                    </VStack>
+                  </HStack>
+                </Box>
+
+                {/* Lessons */}
+                <Box>
+                  <Text fontWeight="semibold" mb={3} color="gray.700">الدروس المختارة:</Text>
+                  <VStack spacing={2} align="stretch">
+                    {latestInvitation.lessonNames.map((lesson) => (
+                      <HStack
+                        key={lesson.id}
+                        bg="blue.50"
+                        p={3}
+                        borderRadius="md"
+                        border="1px solid"
+                        borderColor="blue.100"
+                        justify="space-between"
+                      >
+                        <HStack spacing={2}>
+                          <Icon as={FaBookOpen} color="blue.600" boxSize={4} />
+                          <Text fontWeight="medium" color="blue.800">{lesson.name}</Text>
+                        </HStack>
+                      </HStack>
+                    ))}
+                  </VStack>
+                </Box>
+
+                {/* Game Details */}
+                <SimpleGrid columns={2} spacing={4}>
+                  <Box bg="gray.50" p={3} borderRadius="md" textAlign="center">
+                    <Text fontSize="xs" color="gray.600" mb={1}>عدد الأسئلة</Text>
+                    <Text fontWeight="bold" color="gray.800" fontSize="lg">{latestInvitation.questionsCount}</Text>
+                  </Box>
+                  <Box bg="gray.50" p={3} borderRadius="md" textAlign="center">
+                    <Text fontSize="xs" color="gray.600" mb={1}>ينتهي في</Text>
+                    <Text fontWeight="bold" color="gray.800" fontSize="sm" noOfLines={1}>
+                      {new Date(latestInvitation.expiresAt).toLocaleTimeString('ar-EG', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </Text>
+                  </Box>
+                </SimpleGrid>
+              </VStack>
+            ) : (
+              <Center py={8}>
+                <VStack spacing={4}>
+                  <Icon as={FaTrophy} boxSize={12} color="gray.400" />
+                  <Text color="gray.600" fontSize="lg">لا توجد دعوة حالياً</Text>
+                  <Text color="gray.500" fontSize="sm" textAlign="center">
+                    سيتم عرض الدعوات الجديدة تلقائياً عند وصولها
+                  </Text>
+                </VStack>
+              </Center>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <HStack w="full" justify="space-between" spacing={3}>
+              <Button
+                onClick={handleRejectInvitation}
+                variant="outline"
+                colorScheme="red"
+                flex={1}
+                borderRadius="xl"
+                size="md"
+                fontWeight="semibold"
+              >
+                رفض
+              </Button>
+              <Button
+                onClick={handleAcceptInvitation}
+                bgGradient="linear(135deg, blue.500, blue.600)"
+               
+                color="white"
+                flex={1}
+                borderRadius="xl"
+                leftIcon={<FaTrophy />}
+                fontWeight="bold"
+                size="md"
+              >
+                قبول الدعوة
+              </Button>
+            </HStack>
           </ModalFooter>
         </ModalContent>
       </Modal>

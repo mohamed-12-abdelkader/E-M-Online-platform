@@ -739,7 +739,7 @@ export default function Nav() {
       {/* شريط تقدم التمرير */}
       <motion.div
         style={{ scaleX }}
-        className="fixed left-0 top-[80px] h-1 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500 origin-left z-[999]"
+        className="fixed left-0 top-[80px] h-1 w-full bg-blue-500 origin-left z-[999]"
       />
     </>
   );

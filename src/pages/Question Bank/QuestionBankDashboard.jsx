@@ -149,8 +149,10 @@ const QuestionBankDashboard = () => {
       });
       
       console.log("Question Banks API Response:", response.data);
-      // البيانات تأتي في response.data.data.question_banks
-      const banks = response.data.data?.question_banks || [];
+      // البيانات تأتي في response.data.data مباشرة كـ array
+      const banks = Array.isArray(response.data.data) 
+        ? response.data.data 
+        : response.data.data?.question_banks || [];
       console.log("Extracted banks:", banks);
       console.log("Banks type:", typeof banks);
       console.log("Is array:", Array.isArray(banks));

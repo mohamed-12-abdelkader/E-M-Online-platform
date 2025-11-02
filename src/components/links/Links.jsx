@@ -27,7 +27,7 @@ import {
   MdHome,
   MdPublic
 } from "react-icons/md";
-
+import { FaFistRaised  } from "react-icons/fa";
 import UserType from "../../Hooks/auth/userType";
 import { NavLink } from "react-router-dom";
 
@@ -94,6 +94,7 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
 
      const studentLinks = [
     { to: "/profile", Icon: MdPerson, label: "الملف الشخصي" },
+    { to: "/challenge_EM_Academy", Icon: FaFistRaised , label: "تحدي EM Academy" },
     { to: "/exam_grades", Icon: MdGrading, label: "درجات الامتحانات" },
     { to: "/teachers", Icon: MdSearch, label: "ابحث عن محاضرك" },
     { to: "/my-teachers", Icon: MdPeople, label: "محاضرينى" },

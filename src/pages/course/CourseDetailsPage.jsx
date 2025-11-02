@@ -65,6 +65,7 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   Container,
+  Switch,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import {
@@ -102,6 +103,7 @@ import {
   FaTimes,
   FaCheck,
   FaFilm, // For no data component
+  FaCog, // For settings
 } from "react-icons/fa";
 import baseUrl from "../../api/baseUrl";
 import UserType from "../../Hooks/auth/userType";
@@ -996,24 +998,55 @@ const CourseDetailsPage = () => {
     setDeleteDialog({ isOpen: false, type: '', id: null, title: '' });
   };
 
-  // 2. دوال API للامتحان
+  // 2. دوال API للامتحان محسنة
   const createExam = async (lectureId, data) => {
     try {
       setExamActionLoading(true);
-      await baseUrl.post(`/api/course/lecture/${lectureId}/exam`, {
+      
+      // تحضير البيانات للإرسال
+      const examData = {
         title: data.title,
         total_grade: data.total_grade,
-        duration: data.duration
-      }, {
+        duration: data.duration,
+        is_visible: data.is_visible,
+        lock_next_lectures: data.lock_next_lectures,
+        show_answers_immediately: data.show_answers_immediately,
+        show_answers_after_hours: data.show_answers_after_hours
+      };
+
+      // إضافة التواريخ إذا تم تحديدها
+      if (data.show_at) {
+        examData.show_at = new Date(data.show_at).toISOString();
+      }
+      if (data.hide_at) {
+        examData.hide_at = new Date(data.hide_at).toISOString();
+      }
+
+      await baseUrl.post(`/api/course/lecture/${lectureId}/exam`, examData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast({ title: 'تم إضافة الامتحان بنجاح', status: 'success', duration: 3000, isClosable: true });
+      
+      toast({ 
+        title: 'تم إضافة الامتحان بنجاح', 
+        description: `تم إنشاء امتحان "${data.title}" بنجاح`,
+        status: 'success', 
+        duration: 4000, 
+        isClosable: true 
+      });
+      
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
       setExamModal({ isOpen: false, type: 'add', data: null });
     } catch (error) {
-      toast({ title: 'خطأ في إضافة الامتحان', description: error.response?.data?.message || 'حدث خطأ غير متوقع', status: 'error', duration: 3000, isClosable: true });
+      console.error('Error creating exam:', error);
+      toast({ 
+        title: 'خطأ في إضافة الامتحان', 
+        description: error.response?.data?.message || 'حدث خطأ غير متوقع', 
+        status: 'error', 
+        duration: 4000, 
+        isClosable: true 
+      });
     } finally {
       setExamActionLoading(false);
     }
@@ -1021,16 +1054,51 @@ const CourseDetailsPage = () => {
   const updateExam = async (examId, data) => {
     try {
       setExamActionLoading(true);
-      await baseUrl.patch(`api/course/lecture/exam/${examId}`, data, {
+      
+      // تحضير البيانات للإرسال
+      const examData = {
+        title: data.title,
+        total_grade: data.total_grade,
+        duration: data.duration,
+        is_visible: data.is_visible,
+        lock_next_lectures: data.lock_next_lectures,
+        show_answers_immediately: data.show_answers_immediately,
+        show_answers_after_hours: data.show_answers_after_hours
+      };
+
+      // إضافة التواريخ إذا تم تحديدها
+      if (data.show_at) {
+        examData.show_at = new Date(data.show_at).toISOString();
+      }
+      if (data.hide_at) {
+        examData.hide_at = new Date(data.hide_at).toISOString();
+      }
+
+      await baseUrl.patch(`api/course/lecture/exam/${examId}`, examData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast({ title: 'تم تعديل الامتحان بنجاح', status: 'success', duration: 3000, isClosable: true });
+      
+      toast({ 
+        title: 'تم تعديل الامتحان بنجاح', 
+        description: `تم تحديث امتحان "${data.title}" بنجاح`,
+        status: 'success', 
+        duration: 4000, 
+        isClosable: true 
+      });
+      
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
       setExamModal({ isOpen: false, type: 'edit', data: null });
     } catch (error) {
-      toast({ title: 'خطأ في تعديل الامتحان', description: error.response?.data?.message || 'حدث خطأ غير متوقع', status: 'error', duration: 3000, isClosable: true });
+      console.error('Error updating exam:', error);
+      toast({ 
+        title: 'خطأ في تعديل الامتحان', 
+        description: error.response?.data?.message || 'حدث خطأ غير متوقع', 
+        status: 'error', 
+        duration: 4000, 
+        isClosable: true 
+      });
     } finally {
       setExamActionLoading(false);
     }
@@ -1107,71 +1175,674 @@ const CourseDetailsPage = () => {
     }
   };
 
-  // 3. مودال إضافة/تعديل امتحان
+  // 3. مودال إضافة/تعديل امتحان محسن
   const ExamModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
     const [formData, setFormData] = useState({
       title: data?.title || '',
-      total_grade: data?.total_grade || 10,
-      duration: data?.duration || 30,
+      total_grade: data?.total_grade || 100,
+      duration: data?.duration || 60,
+      is_visible: data?.is_visible ?? true,
+      show_at: data?.show_at || '',
+      hide_at: data?.hide_at || '',
+      lock_next_lectures: data?.lock_next_lectures ?? true,
+      show_answers_immediately: data?.show_answers_immediately ?? false,
+      show_answers_after_hours: data?.show_answers_after_hours || 24,
     });
+
     useEffect(() => {
-      if (data) setFormData({
-        title: data.title || '',
-        total_grade: data.total_grade || 10,
-        duration: data.duration || 30,
-      });
-    }, [data]);
+      if (data) {
+        setFormData({
+          title: data.title || '',
+          total_grade: data.total_grade || 100,
+          duration: data.duration || 60,
+          is_visible: data.is_visible ?? true,
+          show_at: data.show_at || '',
+          hide_at: data.hide_at || '',
+          lock_next_lectures: data.lock_next_lectures ?? true,
+          show_answers_immediately: data.show_answers_immediately ?? false,
+          show_answers_after_hours: data.show_answers_after_hours || 24,
+        });
+      } else {
+        // إعادة تعيين القيم الافتراضية عند إضافة امتحان جديد
+        setFormData({
+          title: '',
+          total_grade: 100,
+          duration: 60,
+          is_visible: true,
+          show_at: '',
+          hide_at: '',
+          lock_next_lectures: true,
+          show_answers_immediately: false,
+          show_answers_after_hours: 24,
+        });
+      }
+    }, [data, isOpen]);
+
     const handleSubmit = (e) => {
       e.preventDefault();
       if (type === 'edit') onSubmit(data.id, formData);
       else onSubmit(formData);
-      // لا نغلق الموديل هنا، سيتم إغلاقه بعد نجاح العملية
     };
+
     return (
-      <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{type === 'add' ? 'إضافة امتحان' : 'تعديل الامتحان'}</ModalHeader>
-          <ModalCloseButton isDisabled={loading} />
+      <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading} size="4xl">
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
+        <ModalContent 
+          borderRadius="3xl" 
+          boxShadow="0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+          border="1px solid"
+          borderColor="blue.200"
+          overflow="hidden"
+          bg="white"
+          _dark={{ bg: "gray.800", borderColor: "blue.700" }}
+        >
+          <ModalHeader 
+            display="flex" 
+            alignItems="center" 
+            fontWeight="bold" 
+            fontSize="2xl" 
+            color="white"
+            bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+            borderRadius="3xl 3xl 0 0"
+            py={8}
+            px={8}
+            position="relative"
+            _before={{
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%)",
+              zIndex: -1
+            }}
+          >
+            <Box 
+              p={3} 
+              bg="rgba(255, 255, 255, 0.2)" 
+              borderRadius="xl" 
+              mr={4}
+              boxShadow="0 4px 12px rgba(0, 0, 0, 0.15)"
+            >
+              <Icon as={FaGraduationCap} boxSize={6} />
+            </Box>
+            <VStack align="start" spacing={1}>
+              <Text fontSize="2xl" fontWeight="bold">
+                {type === 'add' ? 'إضافة امتحان جديد' : 'تعديل الامتحان'}
+              </Text>
+              <Text fontSize="sm" opacity="0.9" fontWeight="normal">
+                {type === 'add' ? 'إنشاء امتحان محاضرة جديد مع إعدادات متقدمة' : 'تعديل إعدادات الامتحان'}
+              </Text>
+            </VStack>
+          </ModalHeader>
+          <ModalCloseButton 
+            isDisabled={loading}
+            color="white"
+            bg="rgba(255, 255, 255, 0.2)"
+            borderRadius="full"
+            size="lg"
+            _hover={{ bg: "rgba(255, 255, 255, 0.3)" }}
+            top={6}
+            right={6}
+          />
           <form onSubmit={handleSubmit}>
-            <ModalBody>
-              <VStack spacing={4}>
-                <FormControl isRequired>
-                  <FormLabel>عنوان الامتحان</FormLabel>
-                  <Input 
-                    value={formData.title} 
-                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="أدخل عنوان الامتحان"
-                    isDisabled={loading}
-                  />
-                </FormControl>
-                <FormControl isRequired>
-                  <FormLabel>الدرجة الكلية</FormLabel>
-                  <Input 
-                    type="number" 
-                    value={formData.total_grade} 
-                    onChange={e => setFormData({ ...formData, total_grade: parseInt(e.target.value) })}
-                    placeholder="أدخل الدرجة الكلية"
-                    min={1}
-                    isDisabled={loading}
-                  />
-                </FormControl>
-                <FormControl isRequired>
-                  <FormLabel>مدة الامتحان (بالدقائق)</FormLabel>
-                  <Input 
-                    type="number" 
-                    value={formData.duration} 
-                    onChange={e => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-                    placeholder="أدخل مدة الامتحان بالدقائق"
-                    min={1}
-                    isDisabled={loading}
-                  />
-                </FormControl>
+            <ModalBody py={10} px={8} bg="gray.50" _dark={{ bg: "gray.700" }}>
+              <VStack spacing={8} align="stretch">
+                {/* عنوان الامتحان */}
+                <Box 
+                  p={6} 
+                  bg="white" 
+                  borderRadius="2xl" 
+                  boxShadow="0 4px 12px rgba(0, 0, 0, 0.05)"
+                  border="1px solid"
+                  borderColor="gray.100"
+                  _dark={{ bg: "gray.800", borderColor: "gray.600" }}
+                >
+                  <FormControl isRequired>
+                    <FormLabel 
+                      display="flex" 
+                      alignItems="center" 
+                      gap={3} 
+                      fontWeight="bold" 
+                      color="gray.700"
+                      fontSize="lg"
+                      mb={4}
+                      _dark={{ color: "gray.200" }}
+                    >
+                      <Box 
+                        p={2} 
+                        bg="blue.100" 
+                        borderRadius="lg"
+                        _dark={{ bg: "blue.900" }}
+                      >
+                        <Icon as={FaRegFileAlt} color="blue.600" boxSize={5} />
+                      </Box>
+                      عنوان الامتحان
+                    </FormLabel>
+                    <Input 
+                      value={formData.title} 
+                      onChange={e => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="أدخل عنوان الامتحان"
+                      isDisabled={loading}
+                      borderRadius="xl"
+                      border="2px solid"
+                      borderColor="gray.200"
+                      _focus={{ 
+                        borderColor: "blue.400", 
+                        boxShadow: "0 0 0 3px rgba(66, 153, 225, 0.1)",
+                        bg: "blue.50"
+                      }}
+                      _dark={{
+                        borderColor: "gray.600",
+                        bg: "gray.700",
+                        _focus: {
+                          borderColor: "blue.400",
+                          bg: "blue.900"
+                        }
+                      }}
+                      size="lg"
+                      fontSize="lg"
+                      py={6}
+                    />
+                  </FormControl>
+                </Box>
+
+                {/* الدرجة الكلية ومدة الامتحان */}
+                <Box 
+                  p={6} 
+                  bg="white" 
+                  borderRadius="2xl" 
+                  boxShadow="0 4px 12px rgba(0, 0, 0, 0.05)"
+                  border="1px solid"
+                  borderColor="gray.100"
+                  _dark={{ bg: "gray.800", borderColor: "gray.600" }}
+                >
+                  <HStack spacing={6}>
+                    <FormControl isRequired flex={1}>
+                      <FormLabel 
+                        display="flex" 
+                        alignItems="center" 
+                        gap={3} 
+                        fontWeight="bold" 
+                        color="gray.700"
+                        fontSize="lg"
+                        mb={4}
+                        _dark={{ color: "gray.200" }}
+                      >
+                        <Box 
+                          p={2} 
+                          bg="yellow.100" 
+                          borderRadius="lg"
+                          _dark={{ bg: "yellow.900" }}
+                        >
+                          <Icon as={FaStar} color="yellow.600" boxSize={5} />
+                        </Box>
+                        الدرجة الكلية
+                      </FormLabel>
+                      <Input 
+                        type="number" 
+                        value={formData.total_grade} 
+                        onChange={e => setFormData({ ...formData, total_grade: parseInt(e.target.value) })}
+                        placeholder="100"
+                        min={1}
+                        max={1000}
+                        isDisabled={loading}
+                        borderRadius="xl"
+                        border="2px solid"
+                        borderColor="gray.200"
+                        _focus={{ 
+                          borderColor: "yellow.400", 
+                          boxShadow: "0 0 0 3px rgba(236, 201, 75, 0.1)",
+                          bg: "yellow.50"
+                        }}
+                        _dark={{
+                          borderColor: "gray.600",
+                          bg: "gray.700",
+                          _focus: {
+                            borderColor: "yellow.400",
+                            bg: "yellow.900"
+                          }
+                        }}
+                        size="lg"
+                        fontSize="lg"
+                        py={6}
+                      />
+                    </FormControl>
+                    <FormControl isRequired flex={1}>
+                      <FormLabel 
+                        display="flex" 
+                        alignItems="center" 
+                        gap={3} 
+                        fontWeight="bold" 
+                        color="gray.700"
+                        fontSize="lg"
+                        mb={4}
+                        _dark={{ color: "gray.200" }}
+                      >
+                        <Box 
+                          p={2} 
+                          bg="green.100" 
+                          borderRadius="lg"
+                          _dark={{ bg: "green.900" }}
+                        >
+                          <Icon as={FaClock} color="green.600" boxSize={5} />
+                        </Box>
+                        المدة (بالدقائق)
+                      </FormLabel>
+                      <Input 
+                        type="number" 
+                        value={formData.duration} 
+                        onChange={e => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+                        placeholder="60"
+                        min={1}
+                        max={300}
+                        isDisabled={loading}
+                        borderRadius="xl"
+                        border="2px solid"
+                        borderColor="gray.200"
+                        _focus={{ 
+                          borderColor: "green.400", 
+                          boxShadow: "0 0 0 3px rgba(56, 178, 172, 0.1)",
+                          bg: "green.50"
+                        }}
+                        _dark={{
+                          borderColor: "gray.600",
+                          bg: "gray.700",
+                          _focus: {
+                            borderColor: "green.400",
+                            bg: "green.900"
+                          }
+                        }}
+                        size="lg"
+                        fontSize="lg"
+                        py={6}
+                      />
+                    </FormControl>
+                  </HStack>
+                </Box>
+
+                {/* تواريخ الظهور والإخفاء */}
+                <Box 
+                  p={6} 
+                  bg="white" 
+                  borderRadius="2xl" 
+                  boxShadow="0 4px 12px rgba(0, 0, 0, 0.05)"
+                  border="1px solid"
+                  borderColor="gray.100"
+                  _dark={{ bg: "gray.800", borderColor: "gray.600" }}
+                >
+                  <HStack spacing={6}>
+                    <FormControl flex={1}>
+                      <FormLabel 
+                        display="flex" 
+                        alignItems="center" 
+                        gap={3} 
+                        fontWeight="bold" 
+                        color="gray.700"
+                        fontSize="lg"
+                        mb={4}
+                        _dark={{ color: "gray.200" }}
+                      >
+                        <Box 
+                          p={2} 
+                          bg="purple.100" 
+                          borderRadius="lg"
+                          _dark={{ bg: "purple.900" }}
+                        >
+                          <Icon as={FaCalendarAlt} color="purple.600" boxSize={5} />
+                        </Box>
+                        تاريخ الظهور
+                      </FormLabel>
+                      <Input 
+                        type="datetime-local" 
+                        value={formData.show_at} 
+                        onChange={e => setFormData({ ...formData, show_at: e.target.value })}
+                        isDisabled={loading}
+                        borderRadius="xl"
+                        border="2px solid"
+                        borderColor="gray.200"
+                        _focus={{ 
+                          borderColor: "purple.400", 
+                          boxShadow: "0 0 0 3px rgba(147, 51, 234, 0.1)",
+                          bg: "purple.50"
+                        }}
+                        _dark={{
+                          borderColor: "gray.600",
+                          bg: "gray.700",
+                          _focus: {
+                            borderColor: "purple.400",
+                            bg: "purple.900"
+                          }
+                        }}
+                        size="lg"
+                        fontSize="lg"
+                        py={6}
+                      />
+                    </FormControl>
+                    <FormControl flex={1}>
+                      <FormLabel 
+                        display="flex" 
+                        alignItems="center" 
+                        gap={3} 
+                        fontWeight="bold" 
+                        color="gray.700"
+                        fontSize="lg"
+                        mb={4}
+                        _dark={{ color: "gray.200" }}
+                      >
+                        <Box 
+                          p={2} 
+                          bg="red.100" 
+                          borderRadius="lg"
+                          _dark={{ bg: "red.900" }}
+                        >
+                          <Icon as={FaCalendarAlt} color="red.600" boxSize={5} />
+                        </Box>
+                        تاريخ الإخفاء
+                      </FormLabel>
+                      <Input 
+                        type="datetime-local" 
+                        value={formData.hide_at} 
+                        onChange={e => setFormData({ ...formData, hide_at: e.target.value })}
+                        isDisabled={loading}
+                        borderRadius="xl"
+                        border="2px solid"
+                        borderColor="gray.200"
+                        _focus={{ 
+                          borderColor: "red.400", 
+                          boxShadow: "0 0 0 3px rgba(239, 68, 68, 0.1)",
+                          bg: "red.50"
+                        }}
+                        _dark={{
+                          borderColor: "gray.600",
+                          bg: "gray.700",
+                          _focus: {
+                            borderColor: "red.400",
+                            bg: "red.900"
+                          }
+                        }}
+                        size="lg"
+                        fontSize="lg"
+                        py={6}
+                      />
+                    </FormControl>
+                  </HStack>
+                </Box>
+
+                {/* إعدادات الإجابات */}
+                <Box 
+                  p={8} 
+                  bg="linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%)" 
+                  borderRadius="2xl" 
+                  border="2px solid" 
+                  borderColor="green.200"
+                  boxShadow="0 8px 25px rgba(56, 178, 172, 0.1)"
+                  _dark={{ 
+                    bg: "linear-gradient(135deg, #1a202c 0%, #2d3748 100%)",
+                    borderColor: "green.700"
+                  }}
+                >
+                  <HStack spacing={4} mb={6}>
+                    <Box 
+                      p={3} 
+                      bg="green.100" 
+                      borderRadius="xl"
+                      _dark={{ bg: "green.900" }}
+                    >
+                      <Icon as={FaLightbulb} color="green.600" boxSize={6} />
+                    </Box>
+                    <VStack align="start" spacing={1}>
+                      <Text fontSize="xl" fontWeight="bold" color="green.700" _dark={{ color: "green.300" }}>
+                        إعدادات عرض الإجابات
+                      </Text>
+                      <Text fontSize="sm" color="green.600" _dark={{ color: "green.400" }}>
+                        تحكم في كيفية ومتى يتم عرض الإجابات للطلاب
+                      </Text>
+                    </VStack>
+                  </HStack>
+                  <VStack spacing={6} align="stretch">
+                    <Box 
+                      p={6} 
+                      bg="white" 
+                      borderRadius="xl" 
+                      border="1px solid" 
+                      borderColor="green.200"
+                      _dark={{ bg: "gray.800", borderColor: "green.700" }}
+                    >
+                      <HStack justify="space-between" align="center">
+                        <VStack align="start" spacing={2}>
+                          <Text fontWeight="bold" color="gray.700" fontSize="lg" _dark={{ color: "gray.200" }}>
+                            إظهار الإجابات فوراً
+                          </Text>
+                          <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
+                            عرض الإجابات مباشرة بعد انتهاء الامتحان
+                          </Text>
+                        </VStack>
+                        <Switch 
+                          isChecked={formData.show_answers_immediately}
+                          onChange={e => setFormData({ ...formData, show_answers_immediately: e.target.checked })}
+                          colorScheme="green"
+                          size="lg"
+                          isDisabled={loading}
+                        />
+                      </HStack>
+                    </Box>
+                    
+                    {!formData.show_answers_immediately && (
+                      <Box 
+                        p={6} 
+                        bg="white" 
+                        borderRadius="xl" 
+                        border="1px solid" 
+                        borderColor="green.200"
+                        _dark={{ bg: "gray.800", borderColor: "green.700" }}
+                      >
+                        <FormControl>
+                          <FormLabel 
+                            display="flex" 
+                            alignItems="center" 
+                            gap={3} 
+                            fontWeight="bold" 
+                            color="gray.700"
+                            fontSize="lg"
+                            mb={4}
+                            _dark={{ color: "gray.200" }}
+                          >
+                            <Box 
+                              p={2} 
+                              bg="orange.100" 
+                              borderRadius="lg"
+                              _dark={{ bg: "orange.900" }}
+                            >
+                              <Icon as={FaClock} color="orange.600" boxSize={5} />
+                            </Box>
+                            إظهار الإجابات بعد (ساعات)
+                          </FormLabel>
+                          <Input 
+                            type="number" 
+                            value={formData.show_answers_after_hours} 
+                            onChange={e => setFormData({ ...formData, show_answers_after_hours: parseInt(e.target.value) })}
+                            placeholder="24"
+                            min={1}
+                            max={168}
+                            isDisabled={loading}
+                            borderRadius="xl"
+                            border="2px solid"
+                            borderColor="gray.200"
+                            _focus={{ 
+                              borderColor: "orange.400", 
+                              boxShadow: "0 0 0 3px rgba(237, 137, 54, 0.1)",
+                              bg: "orange.50"
+                            }}
+                            _dark={{
+                              borderColor: "gray.600",
+                              bg: "gray.700",
+                              _focus: {
+                                borderColor: "orange.400",
+                                bg: "orange.900"
+                              }
+                            }}
+                            size="lg"
+                            fontSize="lg"
+                            py={6}
+                          />
+                        </FormControl>
+                      </Box>
+                    )}
+                  </VStack>
+                </Box>
+
+                {/* إعدادات إضافية */}
+                <Box 
+                  p={8} 
+                  bg="linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%)" 
+                  borderRadius="2xl" 
+                  border="2px solid" 
+                  borderColor="blue.200"
+                  boxShadow="0 8px 25px rgba(66, 153, 225, 0.1)"
+                  _dark={{ 
+                    bg: "linear-gradient(135deg, #1a202c 0%, #2d3748 100%)",
+                    borderColor: "blue.700"
+                  }}
+                >
+                  <HStack spacing={4} mb={6}>
+                    <Box 
+                      p={3} 
+                      bg="blue.100" 
+                      borderRadius="xl"
+                      _dark={{ bg: "blue.900" }}
+                    >
+                      <Icon as={FaCog} color="blue.600" boxSize={6} />
+                    </Box>
+                    <VStack align="start" spacing={1}>
+                      <Text fontSize="xl" fontWeight="bold" color="blue.700" _dark={{ color: "blue.300" }}>
+                        إعدادات إضافية
+                      </Text>
+                      <Text fontSize="sm" color="blue.600" _dark={{ color: "blue.400" }}>
+                        تحكم في رؤية الامتحان وسلوك المحاضرات
+                      </Text>
+                    </VStack>
+                  </HStack>
+                  <VStack spacing={6} align="stretch">
+                    <Box 
+                      p={6} 
+                      bg="white" 
+                      borderRadius="xl" 
+                      border="1px solid" 
+                      borderColor="blue.200"
+                      _dark={{ bg: "gray.800", borderColor: "blue.700" }}
+                    >
+                      <HStack justify="space-between" align="center">
+                        <VStack align="start" spacing={2}>
+                          <Text fontWeight="bold" color="gray.700" fontSize="lg" _dark={{ color: "gray.200" }}>
+                            إظهار الامتحان
+                          </Text>
+                          <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
+                            جعل الامتحان مرئياً للطلاب
+                          </Text>
+                        </VStack>
+                        <Switch 
+                          isChecked={formData.is_visible}
+                          onChange={e => setFormData({ ...formData, is_visible: e.target.checked })}
+                          colorScheme="blue"
+                          size="lg"
+                          isDisabled={loading}
+                        />
+                      </HStack>
+                    </Box>
+                    
+                    <Box 
+                      p={6} 
+                      bg="white" 
+                      borderRadius="xl" 
+                      border="1px solid" 
+                      borderColor="blue.200"
+                      _dark={{ bg: "gray.800", borderColor: "blue.700" }}
+                    >
+                      <HStack justify="space-between" align="center">
+                        <VStack align="start" spacing={2}>
+                          <Text fontWeight="bold" color="gray.700" fontSize="lg" _dark={{ color: "gray.200" }}>
+                            قفل المحاضرات التالية
+                          </Text>
+                          <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
+                            منع الوصول للمحاضرات التالية حتى اجتياز الامتحان
+                          </Text>
+                        </VStack>
+                        <Switch 
+                          isChecked={formData.lock_next_lectures}
+                          onChange={e => setFormData({ ...formData, lock_next_lectures: e.target.checked })}
+                          colorScheme="red"
+                          size="lg"
+                          isDisabled={loading}
+                        />
+                      </HStack>
+                    </Box>
+                  </VStack>
+                </Box>
               </VStack>
             </ModalBody>
-            <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onClose} isDisabled={loading}>إلغاء</Button>
-              <Button colorScheme="blue" type="submit" isLoading={loading} loadingText={type === 'add' ? 'جاري الإضافة...' : 'جاري التعديل...'}>{type === 'add' ? 'إضافة' : 'تعديل'}</Button>
+
+            <ModalFooter 
+              py={8} 
+              px={8}
+              bg="linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)" 
+              borderRadius="0 0 3xl 3xl"
+              borderTop="1px solid"
+              borderColor="gray.200"
+              _dark={{ 
+                bg: "linear-gradient(135deg, #2d3748 0%, #4a5568 100%)",
+                borderColor: "gray.600"
+              }}
+            >
+              <HStack spacing={6} w="full" justify="flex-end">
+                <Button 
+                  variant="outline" 
+                  colorScheme="red" 
+                  onClick={onClose} 
+                  isDisabled={loading}
+                  leftIcon={<Icon as={FaTimes} />}
+                  borderRadius="xl"
+                  size="lg"
+                  px={10}
+                  py={6}
+                  fontSize="lg"
+                  fontWeight="bold"
+                  _hover={{ 
+                    transform: 'translateY(-2px)', 
+                    boxShadow: 'lg',
+                    bg: 'red.50'
+                  }}
+                  transition="all 0.2s"
+                  _dark={{
+                    _hover: { bg: 'red.900' }
+                  }}
+                >
+                  إلغاء
+                </Button>
+                <Button 
+                  colorScheme="blue" 
+                  type="submit" 
+                  isLoading={loading}
+                  loadingText={type === 'add' ? 'جاري الإضافة...' : 'جاري التعديل...'}
+                  leftIcon={!loading ? <Icon as={FaCheck} /> : undefined}
+                  borderRadius="xl"
+                  size="lg"
+                  px={10}
+                  py={6}
+                  fontSize="lg"
+                  fontWeight="bold"
+                  bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                  _hover={{ 
+                    transform: 'translateY(-2px)', 
+                    boxShadow: '0 10px 25px rgba(102, 126, 234, 0.3)',
+                    bg: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
+                  }}
+                  transition="all 0.2s"
+                >
+                  {type === 'add' ? 'إضافة الامتحان' : 'تعديل الامتحان'}
+                </Button>
+              </HStack>
             </ModalFooter>
           </form>
         </ModalContent>
@@ -2937,14 +3608,19 @@ D) has made`}
             <Flex align="center" spacing={3}>
               <Icon as={FaUserGraduate} color="blue.500" mr={3} />
               <Text>قائمة الطلاب المشتركين في الكورس</Text>
+              {!enrollmentsLoading && (
+                <Badge colorScheme="blue" fontSize="md" px={3} py={1} borderRadius="full" ml={2}>
+                  {enrollments.length} طالب
+                </Badge>
+              )}
             </Flex>
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {/* حقل البحث في الطلاب */}
             {enrollments.length > 0 && (
-              <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="green.50">
-                <Text fontWeight="bold" mb={3} color="green.700">البحث في الطلاب:</Text>
+              <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="blue.500">
+                <Text fontWeight="bold" mb={3} color="white">البحث في الطلاب:</Text>
                 <InputGroup>
                   <InputLeftElement>
                     <Icon as={FaSearch} color="green.500" />

@@ -134,6 +134,7 @@ import ProtectedRoute from "../components/protectedRoute/ProtectedRoute";
 import ProtectedLogin from "../components/protectedRoute/ProtectedLogin";
 import Match from "../pages/league/Match";
 import EssayExam from "../pages/exam/EssayExam";
+import ChallengeEMAcademy from "../pages/challengeEMAcademy/ChallengeEMAcademy";
 
 
 const AppRouter = () => {
@@ -281,6 +282,7 @@ const AppRouter = () => {
           {/* Profile & Settings */}
           <Route path="profile" element={<Profile />} />
           <Route path="wallet" element={<Wallet />} />
+          <Route path="challenge_EM_Academy" element={<ChallengeEMAcademy />} />
 
           {/* Teachers */}
           <Route path="teachers" element={<AllTeacherLogin />} />

@@ -46,7 +46,7 @@ const LecturesTab = ({
       {isTeacher && (
         <Button
           size={{ base: 'sm', md: 'md' }}
-          colorScheme="green"
+          colorScheme="blue"
           leftIcon={<Icon as={FaPlus} />}
           borderRadius="full"
           onClick={handleAddLecture}

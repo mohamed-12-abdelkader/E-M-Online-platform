@@ -249,6 +249,7 @@ const TeacherDetails = () => {
             ))}
           </div>
         </Box>
+             <ScrollToTop />
       </Box>
     );
   }

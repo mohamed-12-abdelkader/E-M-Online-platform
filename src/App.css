@@ -225,13 +225,17 @@ body {
     display: block !important;
   }
   .teacher-card {
-    width: 100% !important;
+    width:  100% !important
   }
   .manth-content {
     display: block !important;
   }
   .chakra-card {
     width: 90% !important;
+  }
+  .stu-course{
+    width: 100% !important;
+    
   }
 }
 

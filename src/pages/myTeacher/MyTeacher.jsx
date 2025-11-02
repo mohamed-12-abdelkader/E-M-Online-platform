@@ -64,52 +64,13 @@ const MyTeacher = () => {
   return (
     <Box 
       w="100%" 
-      minH="100vh" 
-      bgGradient={useColorModeValue(
-        "linear(to-br, gray.50, blue.50, purple.50)", 
-        "linear(to-br, gray.900, blue.900, purple.900)"
-      )} 
+    
       py={8}
       position="relative"
       overflow="hidden"
     >
       {/* CSS Animations */}
-      <style>
-        {`
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-          }
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-          }
-          @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-          }
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes slideInFromLeft {
-            from { opacity: 0; transform: translateX(-50px); }
-            to { opacity: 1; transform: translateX(0); }
-          }
-          @keyframes slideInFromRight {
-            from { opacity: 0; transform: translateX(50px); }
-            to { opacity: 1; transform: translateX(0); }
-          }
-          @keyframes cardSlideUp {
-            from { opacity: 0; transform: translateY(50px) scale(0.9); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-          }
-          @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-          }
-        `}
-      </style>
+      
       
       {/* Background Pattern */}
       <Box
@@ -169,108 +130,34 @@ const MyTeacher = () => {
       </Modal>
       
       {/* Header Section */}
-      <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, md: 8 }} position="relative" zIndex={1}>
+     
+
+      {teachers?.teachers?.length > 0 ? (
+        <div >
+           <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, md: 8 }} position="relative" zIndex={1}>
         <VStack spacing={{ base: 6, sm: 8, md: 10 }} mb={{ base: 12, sm: 16, md: 20 }}>
           <VStack spacing={6} textAlign="center" position="relative">
-            {/* Floating Elements */}
-            <Box
-              position="absolute"
-              top="-20px"
-              left="10%"
-              w="60px"
-              h="60px"
-              borderRadius="full"
-              bgGradient="linear(45deg, blue.200, blue.300)"
-              opacity={0.4}
-              animation="float 6s ease-in-out infinite"
-              _hover={{
-                animation: "pulse 1s ease-in-out infinite"
-              }}
-            />
-            <Box
-              position="absolute"
-              top="-10px"
-              right="15%"
-              w="40px"
-              h="40px"
-              borderRadius="full"
-              bgGradient="linear(45deg, purple.200, purple.300)"
-              opacity={0.5}
-              animation="float 4s ease-in-out infinite reverse"
-              _hover={{
-                animation: "pulse 1s ease-in-out infinite"
-              }}
-            />
-            <Box
-              position="absolute"
-              bottom="-30px"
-              left="20%"
-              w="50px"
-              h="50px"
-              borderRadius="full"
-              bgGradient="linear(45deg, green.200, green.300)"
-              opacity={0.4}
-              animation="float 5s ease-in-out infinite"
-              _hover={{
-                animation: "pulse 1s ease-in-out infinite"
-              }}
-            />
-            <Box
-              position="absolute"
-              top="50%"
-              right="5%"
-              w="30px"
-              h="30px"
-              borderRadius="full"
-              bgGradient="linear(45deg, pink.200, pink.300)"
-              opacity={0.3}
-              animation="float 7s ease-in-out infinite"
-              _hover={{
-                animation: "pulse 1s ease-in-out infinite"
-              }}
-            />
-            <Box
-              position="absolute"
-              bottom="20%"
-              right="25%"
-              w="35px"
-              h="35px"
-              borderRadius="full"
-              bgGradient="linear(45deg, teal.200, teal.300)"
-              opacity={0.3}
-              animation="float 8s ease-in-out infinite reverse"
-              _hover={{
-                animation: "pulse 1s ease-in-out infinite"
-              }}
-            />
-            
             <VStack spacing={4}>
               <Heading
                 size={{ base: "2xl", sm: "3xl", md: "4xl" }}
                 fontWeight="black"
-               
+               color="blue.500"
                 textAlign="center"        
                
               >
                 🎓 محاضروك المفضلون
-              </Heading>
-              
-          
-              
-              {/* Stats */}
-            
+              </Heading> 
             </VStack>
           </VStack>
         </VStack>
       </Box>
+      <div className="flex flex-wrap">
 
-      {teachers?.teachers?.length > 0 ? (
-        <div className="flex flex-wrap">
       
             {teachers.teachers.map((teacher, index) => (
-              <Link className="  my-3 " key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
+              <Link className="w-full w-[340px] md:  m-3 " key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
                 <Card
-                 className="teacher-card mx-auto md:w-[350px] md:mx-3 "
+                 className=" w-full mx-auto md:w-[340px] md:mx-3 "
                   h="full"
                   bg={cardBg}
                   borderRadius="2xl"
@@ -419,37 +306,24 @@ const MyTeacher = () => {
                 </Card>
               </Link>
             ))}
-         
+         </div>
         </div>
       ) : (
         <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, md: 8 }}>
-          <Center py={{ base: 12, sm: 16, md: 20 }}>
+          <Center >
             <VStack spacing={{ base: 8, sm: 10, md: 12 }} align="center" w="100%" textAlign="center">
               <VStack spacing={{ base: 6, sm: 8 }} align="center" w="100%">
                 {/* Empty State Icon */}
-                <Box
-                  w={{ base: "120px", sm: "140px", md: "160px" }}
-                  h={{ base: "120px", sm: "140px", md: "160px" }}
-                  borderRadius="full"
-                  bgGradient="linear(to-br, blue.100, purple.100)"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  boxShadow="xl"
-                  border="4px solid"
-                  borderColor="blue.200"
-                >
-                  <Text fontSize={{ base: "4xl", sm: "5xl", md: "6xl" }}>🎓</Text>
-                </Box>
+               
 
                 <VStack spacing={4}>
                   <Heading
                     size={{ base: "xl", sm: "2xl", md: "3xl" }}
-                    color={textColor}
+                    color="blue.500"
                     textAlign="center"
                     lineHeight="1.2"
-                    bgGradient="linear(to-r, blue.600, purple.600)"
-                    bgClip="text"
+                  
+                 
                     fontWeight="bold"
                   >
                     🚀 ابدأ رحلتك التعليمية!
@@ -462,52 +336,18 @@ const MyTeacher = () => {
                     lineHeight="1.6"
                     maxW={{ base: "400px", sm: "600px", md: "700px" }}
                   >
-                    لم تقم بالاشتراك مع أي محاضرين بعد. ابدأ رحلتك التعليمية واكتشف أفضل المحاضرين في منصتنا!
+                    لم تقم بالاشتراك مع أي محاضرين بعد. ابحث عن محاضرك من خلال اسمه !
                   </Text>
                 </VStack>
 
                 <VStack spacing={6} w="full" maxW="500px">
-                  <HStack spacing={4} flexWrap="wrap" justify="center">
-                    <Badge 
-                      colorScheme="blue" 
-                      variant="subtle" 
-                      px={4} 
-                      py={2} 
-                      borderRadius="full"
-                      fontSize="md"
-                      fontWeight="bold"
-                    >
-                      🔍 كود المحاضر
-                    </Badge>
-                    <Badge 
-                      colorScheme="purple" 
-                      variant="subtle" 
-                      px={4} 
-                      py={2} 
-                      borderRadius="full"
-                      fontSize="md"
-                      fontWeight="bold"
-                    >
-                      👤 اسم المحاضر
-                    </Badge>
-                    <Badge 
-                      colorScheme="green" 
-                      variant="subtle" 
-                      px={4} 
-                      py={2} 
-                      borderRadius="full"
-                      fontSize="md"
-                      fontWeight="bold"
-                    >
-                      📚 التخصص
-                    </Badge>
-                  </HStack>
+               
 
                   <Link to="/teachers">
                     <Button
                       size={{ base: "lg", sm: "xl" }}
                       colorScheme="blue"
-                      bgGradient="linear(to-r, blue.500, purple.500)"
+                      bgGradient="blue.500"
                       color="white"
                       px={{ base: 8, sm: 10, md: 12 }}
                       py={{ base: 4, sm: 5, md: 6 }}

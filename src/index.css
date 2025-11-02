@@ -121,3 +121,51 @@ body {
   z-index: 9999;
   display: none;
 }
+
+/* تخصيص لون شريط التمرير */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3b82f6; /* blue-500 */
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb; /* blue-600 */
+}
+
+/* للوضع المظلم */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: #374151; /* gray-700 */
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #3b82f6; /* blue-500 */
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2563eb; /* blue-600 */
+  }
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 #f1f1f1; /* thumb track */
+}
+
+@media (prefers-color-scheme: dark) {
+  * {
+    scrollbar-color: #3b82f6 #374151; /* thumb track */
+  }
+}
