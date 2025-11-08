@@ -53,7 +53,7 @@ import {
   FaGamepad,
 } from "react-icons/fa";
 import { FiExternalLink } from "react-icons/fi";
-import MyLecture from "../leacter/MyLecture";
+
 import MyTeacher from "../myTeacher/MyTeacher";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -63,6 +63,7 @@ import BottomNavItems from "../../components/Footer/BottomNavItems";
 import { Html5Qrcode } from "html5-qrcode";
 import { io } from 'socket.io-client';
 import { useRef } from "react";
+import MyCourses from "../../components/courses/MyCourses";
 
 const MotionBox = motion(Box);
 const MotionCard = motion(Card);
@@ -189,29 +190,29 @@ const HomePage = () => {
             qrbox: { width: 250, height: 250 }
           },
           (decodedText, decodedResult) => {
-            // تم قراءة QR Code بنجاح
+          // تم قراءة QR Code بنجاح
             console.log("QR Code scanned:", decodedText);
-            setIsScanning(false);
+          setIsScanning(false);
             html5Qrcode.stop().then(() => {
               html5Qrcode.clear();
               setQrScanner(null);
-              setIsQrScannerOpen(false);
-              activateCourseWithQR(decodedText);
+          setIsQrScannerOpen(false);
+          activateCourseWithQR(decodedText);
             }).catch(() => {
               html5Qrcode.clear();
               setQrScanner(null);
               setIsQrScannerOpen(false);
               activateCourseWithQR(decodedText);
             });
-          },
+        },
           (errorMessage) => {
             // خطأ في القراءة - لا نعرضه للمستخدم
-          }
+        }
         ).catch((err) => {
           console.error("Error starting camera:", err);
           setIsScanning(false);
         });
-        
+      
         setQrScanner(html5Qrcode);
       } catch (err) {
         console.error("Camera permission error:", err);
@@ -238,8 +239,8 @@ const HomePage = () => {
         if (state === 2) { // Html5QrcodeState.SCANNING
           await qrScanner.stop();
         }
-        qrScanner.clear();
-        setQrScanner(null);
+      qrScanner.clear();
+      setQrScanner(null);
       } catch (error) {
         console.error("Error clearing scanner:", error);
         try {
@@ -697,7 +698,7 @@ const HomePage = () => {
       {/* Notification Bar */}
    
              {/* Header Section & Competition Notifications - الترحيب وإشعارات المسابقات */}
-       <MotionBox
+        <MotionBox
          initial="hidden"
          animate="visible"
          variants={containerVariants}
@@ -762,119 +763,119 @@ const HomePage = () => {
            {competitionNotifications.length > 0 && (
              <VStack spacing={3} align="stretch" height="100%">
                {competitionNotifications.slice(0, 2).map((notification) => (
-                 <Box
-                   key={notification.id}
+              <Box
+                key={notification.id}
                    bgGradient={notification.type === 'league' ? "linear(135deg, blue.400, blue.600)" : "linear(135deg, blue.600, blue.400)"}
-                   borderRadius="xl"
-                   p={4}
-                   position="relative"
-                   overflow="hidden"
-                   w="100%"
-                   cursor="pointer"
-                   onClick={() => handleAnnouncementClick(notification)}
-                   _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
-                   transition="all 0.2s"
-                 >
-                   {/* Background Pattern */}
-                   <Box position="absolute" top={-10} right={-10} opacity={0.1}>
-                     <Icon as={notification.type === 'league' ? FaTrophy : FaGift} w={24} h={24} color="white" />
-                   </Box>
+                borderRadius="xl"
+                p={4}
+                position="relative"
+                overflow="hidden"
+                w="100%"
+                cursor="pointer"
+                onClick={() => handleAnnouncementClick(notification)}
+                _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
+                transition="all 0.2s"
+              >
+                {/* Background Pattern */}
+                <Box position="absolute" top={-10} right={-10} opacity={0.1}>
+                  <Icon as={notification.type === 'league' ? FaTrophy : FaGift} w={24} h={24} color="white" />
+                </Box>
 
-                   <HStack justify="space-between" align="center" color="white">
-                     <HStack spacing={3} flex={1}>
-                       <Icon as={notification.type === 'league' ? FaTrophy : FaGift} boxSize={5} />
-                       <VStack align="start" spacing={1} flex={1}>
-                         <HStack spacing={2} align="center">
+                <HStack justify="space-between" align="center" color="white">
+                  <HStack spacing={3} flex={1}>
+                    <Icon as={notification.type === 'league' ? FaTrophy : FaGift} boxSize={5} />
+                    <VStack align="start" spacing={1} flex={1}>
+                      <HStack spacing={2} align="center">
                            <Text fontWeight="bold" fontSize="md" noOfLines={1}>
-                             {notification.title}
-                           </Text>
-                           {notification.urgent && (
-                             <Badge colorScheme="white" variant="solid" size="sm" borderRadius="full" bg="whiteAlpha.20">
-                               عاجل
-                             </Badge>
-                           )}
-                         </HStack>
-                       </VStack>
-                     </HStack>
-                     
-                     <HStack spacing={2}>
-                       <Button
-                         size="sm"
-                         colorScheme="white"
-                         variant="outline"
-                         borderRadius="full"
-                         _hover={{ bg: "whiteAlpha.20" }}
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           handleAnnouncementClick(notification);
-                         }}
-                       >
-                         {notification.type === 'league' ? 'عرض الدوري' : 'عرض المسابقة'}
-                       </Button>
-                     </HStack>
-                   </HStack>
-                 </Box>
-               ))}
-               
+                          {notification.title}
+                        </Text>
+                        {notification.urgent && (
+                          <Badge colorScheme="white" variant="solid" size="sm" borderRadius="full" bg="whiteAlpha.20">
+                            عاجل
+                          </Badge>
+                        )}
+                      </HStack>
+                    </VStack>
+                  </HStack>
+                  
+                  <HStack spacing={2}>
+                    <Button
+                      size="sm"
+                      colorScheme="white"
+                      variant="outline"
+                      borderRadius="full"
+                      _hover={{ bg: "whiteAlpha.20" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAnnouncementClick(notification);
+                      }}
+                    >
+                      {notification.type === 'league' ? 'عرض الدوري' : 'عرض المسابقة'}
+                    </Button>
+                  </HStack>
+                </HStack>
+              </Box>
+            ))}
+            
                {competitionNotifications.length > 2 && (
-                 <Button
-                   as={Link}
-                   to="/competitions"
-                   size="md"
+              <Button
+                as={Link}
+                to="/competitions"
+                size="md"
                    colorScheme="blue"
-                   variant="outline"
-                   borderRadius="full"
+                variant="outline"
+                borderRadius="full"
                    _hover={{ bg: "blue.50" }}
-                   rightIcon={<FaArrowRight />}
-                   w="100%"
-                 >
-                   عرض جميع الإشعارات ({competitionNotifications.length})
-                 </Button>
-               )}
-             </VStack>
-           )}
+                rightIcon={<FaArrowRight />}
+                w="100%"
+              >
+                عرض جميع الإشعارات ({competitionNotifications.length})
+              </Button>
+            )}
+          </VStack>
+      )}
 
          </SimpleGrid>
        </MotionBox>
 
-        <MotionBox
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
+            <MotionBox
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
         mb={{ base: 6, md: 8 }}
-          >
-            <Box
-              bg={cardBg}
+      >
+        <Box
+          bg={cardBg}
           borderRadius="2xl"
           shadow="lg"
-              border="1px solid"
-              borderColor={borderColor}
-              overflow="hidden"
-            >
+          border="1px solid"
+          borderColor={borderColor}
+          overflow="hidden"
+        >
           <Box
             bgGradient={"linear(135deg, blue.300, blue.600)"}
             px={6}
             py={4}
-                borderBottom="1px solid"
-                borderColor={borderColor}
+            borderBottom="1px solid"
+            borderColor={borderColor}
           >
-            <HStack spacing={3}>
+              <HStack spacing={3}>
               <Icon as={FaBookOpen} color="white" boxSize={6} />
               <Heading size="md" color="white">
                     كورساتي
                   </Heading>
                
-                </HStack>
+            </HStack>
           </Box>
               
           <Box >
-                <MyLecture />
+              <MyCourses/>
+                        </Box>
               </Box>
-            </Box>
-          </MotionBox>
+            </MotionBox>
 
 
-       
+
           {/* My Teachers - محاضرينى */}
           <MotionBox
           
@@ -914,7 +915,7 @@ const HomePage = () => {
 </MotionBox>
 
           {/* My Lectures - كورساتي */}
-        
+
       {/* Notification Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="md">
         <ModalOverlay />

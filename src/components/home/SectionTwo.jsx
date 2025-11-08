@@ -48,12 +48,17 @@ const SectionTwo = () => {
       color: "orange.500",
     },
   ];
-
+ const fadeInUp = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+  };
   return (
-    <Box w="full" py={20} px={6} className="" textAlign="center">
-      <Heading fontSize={{ base: "3xl", md: "4xl" }} fontWeight="bold" color="blue.500" mb={4}>
-        خدماتنا التعليمية 📚
-      </Heading>
+    <Box w="full" py={10} px={6} className="" textAlign="center">
+      <motion.h1
+              variants={fadeInUp}
+              className="text-6xl my-3 text-orange-500 sm:text-5xl lg:text-7xl font-extrabold leading-tight">
+        خدماتنا التعليمية 
+      </motion.h1>
       <Text fontSize="lg" color="blue.500" mb={10}>
         اكتشف أفضل الدورات التعليمية والدروس الخاصة مع خبراء التعليم.
       </Text>

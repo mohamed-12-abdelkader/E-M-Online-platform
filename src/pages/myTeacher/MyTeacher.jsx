@@ -26,7 +26,8 @@ import {
   ModalFooter,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-import { FaVideo, FaSearch } from "react-icons/fa";
+import { FaVideo, FaSearch, FaChalkboardTeacher, FaBookOpen, FaUsers } from "react-icons/fa";
+import { motion } from "framer-motion";
 import useGitMyTeacher from "../../Hooks/student/useGitMyTeacher";
 
 
@@ -155,7 +156,7 @@ const MyTeacher = () => {
 
       
             {teachers.teachers.map((teacher, index) => (
-              <Link className="w-full w-[340px] md:  m-3 " key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
+              <Link className="w-full  md:w-[340px]  m-3 " key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
                 <Card
                  className=" w-full mx-auto md:w-[340px] md:mx-3 "
                   h="full"
@@ -309,70 +310,169 @@ const MyTeacher = () => {
          </div>
         </div>
       ) : (
-        <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, md: 8 }}>
-          <Center >
-            <VStack spacing={{ base: 8, sm: 10, md: 12 }} align="center" w="100%" textAlign="center">
-              <VStack spacing={{ base: 6, sm: 8 }} align="center" w="100%">
-                {/* Empty State Icon */}
-               
-
-                <VStack spacing={4}>
-                  <Heading
-                    size={{ base: "xl", sm: "2xl", md: "3xl" }}
-                    color="blue.500"
-                    textAlign="center"
-                    lineHeight="1.2"
-                  
-                 
-                    fontWeight="bold"
-                  >
-                    🚀 ابدأ رحلتك التعليمية!
-                  </Heading>
-
-                  <Text
-                    fontSize={{ base: "lg", sm: "xl", md: "2xl" }}
-                    color={subTextColor}
-                    textAlign="center"
-                    lineHeight="1.6"
-                    maxW={{ base: "400px", sm: "600px", md: "700px" }}
-                  >
-                    لم تقم بالاشتراك مع أي محاضرين بعد. ابحث عن محاضرك من خلال اسمه !
-                  </Text>
-                </VStack>
-
-                <VStack spacing={6} w="full" maxW="500px">
-               
-
-                  <Link to="/teachers">
-                    <Button
-                      size={{ base: "lg", sm: "xl" }}
-                      colorScheme="blue"
-                      bgGradient="blue.500"
-                      color="white"
-                      px={{ base: 8, sm: 10, md: 12 }}
-                      py={{ base: 4, sm: 5, md: 6 }}
-                      borderRadius="2xl"
-                      fontWeight="bold"
-                      fontSize={{ base: "lg", sm: "xl", md: "2xl" }}
-                      h={{ base: "56px", sm: "64px", md: "72px" }}
-                      leftIcon={<Icon as={FaSearch} boxSize={{ base: 6, sm: 7, md: 8 }} />}
-                      _hover={{
-                        transform: "translateY(-4px)",
-                        boxShadow: "0 20px 40px rgba(59, 130, 246, 0.4)",
-                        bgGradient: "linear(to-r, blue.600, purple.600)",
-                      }}
-                      _active={{
-                        transform: "translateY(-2px)",
-                      }}
-                      transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+        <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, md: 8 }} py={12}>
+          <Center flexDirection="column">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              style={{ width: "100%" }}
+            >
+              <Box
+                p={{ base: 8, md: 12 }}
+                borderRadius="3xl"
+                bgGradient={useColorModeValue(
+                  "linear(to-br, blue.50, blue.50, blue.50)",
+                  "linear(to-br, gray.800, gray.700, gray.800)"
+                )}
+                border="2px solid"
+                borderColor={useColorModeValue("blue.200", "gray.600")}
+                boxShadow="2xl"
+                textAlign="center"
+                position="relative"
+                overflow="hidden"
+              >
+                {/* Decorative background elements */}
+                <Box
+                  position="absolute"
+                  top="-50px"
+                  right="-50px"
+                  w="200px"
+                  h="200px"
+                  bg="blue.200"
+                  borderRadius="full"
+                  opacity={0.1}
+                />
+                <Box
+                  position="absolute"
+                  bottom="-50px"
+                  left="-50px"
+                  w="150px"
+                  h="150px"
+                  bg="purple.200"
+                  borderRadius="full"
+                  opacity={0.1}
+                />
+                
+                <VStack spacing={8} align="center" position="relative" zIndex={1}>
+                  {/* Icon/Image Section */}
+                  <Box position="relative" mb={4}>
+                    <Box
+                      w={{ base: "120px", md: "160px" }}
+                      h={{ base: "120px", md: "160px" }}
+                      borderRadius="full"
+                      bgGradient="linear(135deg, blue.400, blue.600, blue.300)"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
                       boxShadow="xl"
+                      position="relative"
+                      _before={{
+                        content: '""',
+                        position: "absolute",
+                        top: "-10px",
+                        left: "-10px",
+                        right: "-10px",
+                        bottom: "-10px",
+                        borderRadius: "full",
+                        bg: "blue.200",
+                        opacity: 0.3,
+                        filter: "blur(20px)",
+                      }}
                     >
-                      🔍 ابحث عن محاضرك
-                    </Button>
-                  </Link>
+                      <Icon
+                        as={FaChalkboardTeacher}
+                        boxSize={{ base: "60px", md: "80px" }}
+                        color="white"
+                        filter="drop-shadow(0 4px 8px rgba(0,0,0,0.2))"
+                      />
+                    </Box>
+                    {/* Floating decoration */}
+                    <motion.div
+                      style={{
+                        position: "absolute",
+                        top: "-20px",
+                        right: "-20px",
+                      }}
+                      animate={{
+                        y: [0, -10, 0],
+                        rotate: [0, 5, -5, 0],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <Box
+                        w="60px"
+                        h="60px"
+                        bg="orange.400"
+                        borderRadius="full"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        boxShadow="lg"
+                      >
+                        <Icon as={FaSearch} boxSize="30px" color="yellow.700" />
+                      </Box>
+                    </motion.div>
+                  </Box>
+
+                  {/* Text Content */}
+                  <VStack spacing={4} align="center">
+                    <Heading
+                      size={{ base: "lg", md: "xl" }}
+                      color="blue.500"
+                      fontWeight="bold"
+                      lineHeight="shorter"
+                    >
+                      لم تقم بالاشتراك مع أي محاضرين بعد! 👨‍🏫
+                    </Heading>
+                    
+                    <Text
+                      fontSize={{ base: "md", md: "lg" }}
+                      color={useColorModeValue("gray.600", "gray.300")}
+                      maxW="400px"
+                      lineHeight="tall"
+                    >
+                      ابدأ رحلتك التعليمية الآن! ابحث عن محاضرك المفضل واشترك معه لتحصل على أفضل تجربة تعليمية
+                    </Text>
+                  </VStack>
+
+                  {/* Action Button */}
+                  <Button
+                    as={Link}
+                    to="/teachers"
+                    size="lg"
+                    colorScheme="blue"
+                    bgGradient="linear(135deg, blue.400, blue.600)"
+                    color="white"
+                    borderRadius="xl"
+                    px={8}
+                    py={6}
+                    fontSize="md"
+                    fontWeight="bold"
+                    boxShadow="lg"
+                    _hover={{
+                      bgGradient: "linear(135deg, blue.600, purple.600)",
+                      transform: "translateY(-2px)",
+                      boxShadow: "xl",
+                    }}
+                    _active={{
+                      transform: "translateY(0px)",
+                    }}
+                    transition="all 0.2s ease"
+                    leftIcon={<Icon as={FaSearch} />}
+                    rightIcon={<Icon as={FaChalkboardTeacher} />}
+                  >
+                    ابحث عن محاضرك
+                  </Button>
+
+                
                 </VStack>
-              </VStack>
-            </VStack>
+              </Box>
+            </motion.div>
           </Center>
         </Box>
       )}

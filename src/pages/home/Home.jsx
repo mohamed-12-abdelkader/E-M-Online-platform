@@ -7,10 +7,9 @@ import HomeLogin from "../homeLogin/HomeLogin";
 import Footer from "../../components/home/Footer";
 import SectionTwo from "../../components/home/SectionTwo";
 import SectionThree from "../../components/home/SectionThree";
-import SectionFour from "../../components/home/SectionFour";
-import { motion } from "framer-motion";
+
 import AboutUsSection from "../../components/home/AboutUsSection";
-import BookFlipGallery from "../../components/home/BookFlipGallery";
+
 const Home = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
   const navigate = useNavigate(); // استخدام useNavigate للتوجيه

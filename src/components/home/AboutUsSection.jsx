@@ -1,6 +1,6 @@
 import { Box, Flex, Text, Image } from "@chakra-ui/react";
 import { FaGraduationCap, FaUserTie, FaRocket } from "react-icons/fa";
-
+import { motion, useInView } from "framer-motion";
 const  AboutUsSection = () => {
   return (
     <Box as="section"  py={16} >
@@ -30,9 +30,11 @@ const  AboutUsSection = () => {
           <Box w={{ base: "100%", md: "50%" }} textAlign="right">
             <Flex align="center" gap={2} mb={6}>
               <FaRocket className="text-blue-600" />
-              <Text as="h2" fontSize="4xl" color="blue.500" fontWeight="bold" fontFamily="Tajawal">
-                عن EM Online
-              </Text>
+              <motion.h1
+             
+              className="text-6xl big-font  my-3 text-orange-500 sm:text-5xl lg:text-7xl font-extrabold leading-tight">
+                 EM Online
+              </motion.h1>
             </Flex>
             <Box className="space-y-6">
               <Text fontSize="lg"  leading="relaxed">

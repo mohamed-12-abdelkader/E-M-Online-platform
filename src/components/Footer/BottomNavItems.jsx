@@ -17,6 +17,7 @@ const BottomNavItems = () => {
   return (
     <div>
        <Box
+       
         display={{ base: "block", md: "none" }}
         position="fixed"
         bottom={0}

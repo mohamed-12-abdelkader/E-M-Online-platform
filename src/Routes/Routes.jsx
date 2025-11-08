@@ -28,32 +28,17 @@ import PackagesManagement from "../components/admin/PackagesManagement";
 import AdminStreamsList from "../components/stream/adminList";
 
 // Teacher Components
-import CreateLecture from "../components/admin/teacher/CreateLecture";
-import AddVideo from "../components/admin/teacher/AddVideo";
-import CreateGroup from "../components/admin/teacher/CreateGroup";
-import AddStudent from "../components/admin/teacher/AddStudent";
-import AddExam from "../components/admin/teacher/AddExam";
-import AddQuestion from "../components/admin/teacher/AddQuestion";
-import AddPdf from "../components/admin/teacher/AddPdf";
-import AddMonth from "../components/admin/teacher/AddMonth";
-import AddLectureToMonth from "../components/admin/teacher/AddLectureToMonth";
-import CreateCode from "../components/admin/teacher/CreateCode";
-import AllResult from "../components/admin/teacher/AllResult";
-import StudentResult from "../components/admin/teacher/StudentResult";
 
 // Student Components
 import Profile from "../pages/profile/Profile";
 import Wallet from "../pages/wallet/Wallet";
 import TeacherWallet from "../pages/wallet/TeacherWallet";
 import TeacherDetails from "../pages/teacher/TeacherDetails";
-import MyLecture from "../pages/leacter/MyLecture";
-import LecturDetails from "../pages/leacter/LecturDetails";
+
 import Vedio from "../pages/leacter/Vedio";
-import MyGroups from "../pages/groups/MyGroups";
-import Groups from "../pages/groups/Groups";
-import GroupDetails from "../pages/groups/GroupDetails";
+
 import AllTeacherLogin from "../components/teacher/AllTeacherLogin";
-import FreeCourses from "../components/home/FreeCourses";
+
 import MyTeacher from "../pages/myTeacher/MyTeacher";
 import SuggestedTeachers from "../pages/suggested-teachers/SuggestedTeachers";
 
@@ -63,18 +48,7 @@ import ExamTeacher from "../pages/exam/ExamTeacher";
 import ComprehensiveExam from "../pages/exam/ComprehensiveExam";
 import ExamGrades from "../pages/exam/ExamGrades";
 import PlatformExams from "../pages/PlatformExams/PlatformExams";
-import CreateExams from "../pages/monthlyExams/CreateExams";
-import ViewExams from "../pages/monthlyExams/ViewExams";
-import ShowGrades from "../pages/monthlyExams/ShowGrades";
-import ExamContent from "../pages/monthlyExams/ExamContent";
-import ExamDetails from "../pages/monthlyExams/ExamDetails";
-import AllExams from "../pages/monthlyExams/AllExams";
-import AddSExam from "../pages/monthlyExams/AddSExam";
-import MonthlyExams from "../pages/monthlyExams/MonthlyExams";
-import AddSubQuestions from "../pages/monthlyExams/AddSubQuestions";
-import SubjectExam from "../pages/monthlyExams/SubjectExam";
-import ExamQuestions from "../pages/monthlyExams/ExamQuestions";
-import ReviewResult from "../pages/monthlyExams/ReviewResult";
+
 
 // Question Bank Components
 import QuestionBank from "../pages/Question Bank/QuestionBank";
@@ -114,7 +88,7 @@ import StudentDetailsPage from "../pages/centerSystem/StudentDetailsPage";
 // Other Components
 import Code from "../pages/code/Code";
 import TeacherCode from "../pages/code/TeacherCode";
-import Month from "../pages/month/Month";
+
 import StudentStats from "../pages/myStatistics/MyStatistics";
 import AllUsers from "../pages/allUsers/AllUsers";
 import TasksPage from "../pages/tasks/TasksPage";
@@ -240,20 +214,7 @@ const AppRouter = () => {
           </Route>
           
           {/* Teacher Routes */}
-          <Route element={<ProtectedRoute auth={isTeacher} />}>
-            <Route path="create_lecture" element={<CreateLecture />} />
-            <Route path="add_video" element={<AddVideo />} />
-            <Route path="add_month" element={<AddMonth />} />
-            <Route path="add_lecture_month" element={<AddLectureToMonth />} />
-            <Route path="create_group" element={<CreateGroup />} />
-            <Route path="add_student" element={<AddStudent />} />
-            <Route path="add_pdf" element={<AddPdf />} />
-            <Route path="create_codee" element={<CreateCode />} />
-            <Route path="add_question" element={<AddQuestion />} />
-            <Route path="result/" element={<AllResult />}>
-              <Route path="all_result/:resId" element={<StudentResult />} />
-            </Route>
-          </Route>
+         
         </Route>
 
         {/* Main App Routes */}
@@ -291,17 +252,14 @@ const AppRouter = () => {
           <Route path="teacher/:id" element={<TeacherDetails />} />
 
           {/* Courses */}
-          <Route path="my_courses" element={<MyLecture />} />
-          <Route path="free_courses" element={<FreeCourses />} />
-          <Route path="lecture/:id" element={<LecturDetails />} />
-          <Route path="month/:id/" element={<Month />} />
+         
+          
+        
+          
           <Route path="video/:videoId" element={<Vedio />} />
 
           {/* Groups */}
-          <Route path="my_groups" element={<MyGroups />}>
-            <Route path="group/:id" element={<Groups />} />
-          </Route>
-          <Route path="group/:id" element={<GroupDetails />} />
+        
 
           {/* Competitions */}
           <Route path="competitions" element={<Competitions />} />
@@ -322,18 +280,13 @@ const AppRouter = () => {
 
           {/* Exams */}
           <Route path="Platform_exams" element={<PlatformExams />} />
-          <Route path="exam_content/:id" element={<ExamContent />} />
-          <Route path="create_exam" element={<CreateExams />} />
-          <Route path="add_sup_questions" element={<AddSubQuestions />} />
-          <Route path="view_exams" element={<ViewExams />} />
-          <Route path="all_exams" element={<AllExams />} />
-          <Route path="exam_details/:id" element={<ExamDetails />} />
+          
+         
            <Route path="essay-exam/:id" element={<EssayExam/>} />
-          <Route path="subject_exam/:id" element={<SubjectExam />} />
-          <Route path="subject_exam/:id/review" element={<ReviewResult />} />
-          <Route path="subject_exam/:id/questions" element={<ExamQuestions />} />
-          <Route path="monthly_exam/:id" element={<MonthlyExams />} />
-          <Route path="monthly_exam/:id/show_grades" element={<ShowGrades />} />
+        
+         
+          
+        
           <Route path="exam/:examId" element={<Exam />} />
           <Route path="exam_grades" element={<ExamGrades />} />
           <Route path="ComprehensiveExam/:id" element={<ComprehensiveExam />} />
@@ -371,7 +324,7 @@ const AppRouter = () => {
           {/* Admin/Teacher Competition Management */}
           <Route path="create_comp" element={<CreateComp />} />
           <Route path="allComps" element={<AllComps />} />
-          <Route path="add_sub_exam" element={<AddSExam />} />
+          
         </Route>
 
         {/* Teacher Specific Routes */}
@@ -388,13 +341,13 @@ const AppRouter = () => {
         <Route element={<ProtectedRoute auth={student} />}>
           <Route path="studentStats" element={<StudentStats />} />
           <Route path="course_statistics" element={<CourseStatistics />} />
-          <Route path="my_lecture" element={<MyLecture />} />
+        
         </Route>
 
         {/* Shared Routes */}
         <Route element={<ProtectedRoute auth={isTeacher || student} />}>
-          <Route path="lecture/:id" element={<LecturDetails />} />
-          <Route path="month/:id/" element={<Month />} />
+       
+          
           <Route path="video/:videoId" element={<Vedio />} />
         </Route>
       </Routes>

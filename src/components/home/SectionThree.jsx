@@ -1,6 +1,6 @@
 import { Box, Flex, Heading, Text, useColorModeValue, Icon } from "@chakra-ui/react";
 import { FaQuestionCircle, FaVideo, FaUniversity, FaBookOpen } from "react-icons/fa";
-
+import { motion, useInView } from "framer-motion";
 const SectionThree = () => {
   const bgGradient = useColorModeValue(
     "linear(to-br, #f0f4ff, #e5e8ff)",
@@ -50,10 +50,10 @@ const SectionThree = () => {
   ];
 
   return (
-    <Box w="full" py={20} px={6}    textAlign="center" mb={10}>
-      <Heading  fontSize={{ base: "3xl", md: "4xl" }} fontWeight="bold" color="blue.500" mb={4}>
+    <Box w="full" py={10} px={6}    textAlign="center" mb={10}>
+      <motion.h1    className="text-6xl my-3 text-orange-400 sm:text-5xl lg:text-7xl font-extrabold leading-tight">
         خدماتنا التعليمية 📚
-      </Heading>
+      </motion.h1 >
       <Text fontSize="lg" color="blue.500" mb={10}>
         اكتشف أفضل الدورات التعليمية والدروس الخاصة مع خبراء التعليم.
       </Text>

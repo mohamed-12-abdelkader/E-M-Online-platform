@@ -6,7 +6,8 @@ import {
 } from "@chakra-ui/react";
 import {
   FaPlayCircle, FaLock, FaEdit, FaTrash, FaPlus, FaGraduationCap, FaRegPaperPlane, FaVideo, FaFilePdf, FaLightbulb, FaClock, FaBookOpen, FaStar,
-  FaAngleDown, FaAngleUp, FaEye, FaEyeSlash, FaCalendar, FaTag, FaComments, FaUsers, FaRegComment
+  FaAngleDown, FaAngleUp, FaEye, FaEyeSlash, FaCalendar, FaTag, FaComments, FaUsers, FaRegComment,
+  FaChevronLeft
 } from "react-icons/fa";
 import baseUrl from "../../../api/baseUrl";
 import { Link } from "react-router-dom";
@@ -481,148 +482,311 @@ console.log(lecture)
       <Collapse in={isExpanded} animateOpacity>
         <Box px={6} py={4} bg={itemBg} borderBottomRadius="2xl">
           <Tabs index={activeTab} onChange={setActiveTab} variant="enclosed" colorScheme="gray" size="lg">
-            <TabList mb={8} flexWrap="wrap" bg={useColorModeValue('white', 'gray.800')} borderRadius="2xl" p={2} boxShadow="lg" border="1px solid" borderColor={useColorModeValue('gray.200', 'gray.600')}>
-              <Tab 
-                fontSize={{ base: 'sm', md: 'md' }} 
-                fontWeight="bold"
-                borderRadius="xl"
-                _selected={{ 
-                  bg: 'red.500', 
-                  color: 'white',
-                  boxShadow: 'xl',
-                  transform: 'translateY(-2px)',
-                  border: '2px solid',
-                  borderColor: 'red.300'
-                }}
-                _hover={{ 
-                  bg: 'red.50', 
-                  color: 'red.600',
-                  transform: 'translateY(-1px)',
-                  boxShadow: 'md'
-                }}
-                transition="all 0.3s ease"
-                px={6}
-                py={4}
-                mx={1}
-                border="1px solid"
-                borderColor="transparent"
-              >
-                <Icon as={FaVideo} mr={3} boxSize={5} />
-                الفيديوهات
-              </Tab>
-              <Tab 
-                fontSize={{ base: 'sm', md: 'md' }} 
-                fontWeight="bold"
-                borderRadius="xl"
-                _selected={{ 
-                  bg: 'blue.500', 
-                  color: 'white',
-                  boxShadow: 'xl',
-                  transform: 'translateY(-2px)',
-                  border: '2px solid',
-                  borderColor: 'blue.300'
-                }}
-                _hover={{ 
-                  bg: 'blue.50', 
-                  color: 'blue.600',
-                  transform: 'translateY(-1px)',
-                  boxShadow: 'md'
-                }}
-                transition="all 0.3s ease"
-                px={6}
-                py={4}
-                mx={1}
-                border="1px solid"
-                borderColor="transparent"
-              >
-                <Icon as={FaFilePdf} mr={3} boxSize={5} />
-                الملفات
-              </Tab>
-              <Tab 
-                fontSize={{ base: 'sm', md: 'md' }} 
-                fontWeight="bold"
-                borderRadius="xl"
-                _selected={{ 
-                  bg: 'green.500', 
-                  color: 'white',
-                  boxShadow: 'xl',
-                  transform: 'translateY(-2px)',
-                  border: '2px solid',
-                  borderColor: 'green.300'
-                }}
-                _hover={{ 
-                  bg: 'green.50', 
-                  color: 'green.600',
-                  transform: 'translateY(-1px)',
-                  boxShadow: 'md'
-                }}
-                transition="all 0.3s ease"
-                px={6}
-                py={4}
-                mx={1}
-                border="1px solid"
-                borderColor="transparent"
-              >
-                <Icon as={FaGraduationCap} mr={3} boxSize={5} />
-                امتحان المحاضرة
-              </Tab>
-              <Tab 
-                fontSize={{ base: 'sm', md: 'md' }} 
-                fontWeight="bold"
-                borderRadius="xl"
-                _selected={{ 
-                  bg: 'purple.500', 
-                  color: 'white',
-                  boxShadow: 'xl',
-                  transform: 'translateY(-2px)',
-                  border: '2px solid',
-                  borderColor: 'purple.300'
-                }}
-                _hover={{ 
-                  bg: 'purple.50', 
-                  color: 'purple.600',
-                  transform: 'translateY(-1px)',
-                  boxShadow: 'md'
-                }}
-                transition="all 0.3s ease"
-                px={6}
-                py={4}
-                mx={1}
-                border="1px solid"
-                borderColor="transparent"
-              >
-                <Icon as={FaRegPaperPlane} mr={3} boxSize={5} />
-                الامتحانات المقالية
-              </Tab>
-              <Tab 
-                fontSize={{ base: 'sm', md: 'md' }} 
-                fontWeight="bold"
-                borderRadius="xl"
-                _selected={{ 
-                  bg: 'orange.500', 
-                  color: 'white',
-                  boxShadow: 'xl',
-                  transform: 'translateY(-2px)',
-                  border: '2px solid',
-                  borderColor: 'orange.300'
-                }}
-                _hover={{ 
-                  bg: 'orange.50', 
-                  color: 'orange.600',
-                  transform: 'translateY(-1px)',
-                  boxShadow: 'md'
-                }}
-                transition="all 0.3s ease"
-                px={6}
-                py={4}
-                mx={1}
-                border="1px solid"
-                borderColor="transparent"
-              >
-                <Icon as={FaComments} mr={3} boxSize={5} />
-                المناقشة
-              </Tab>
-            </TabList>
+            <TabList 
+  mb={8}
+  display="flex"
+  flexDirection="column"
+  gap={3}
+  bg="transparent"
+  p={0}
+>
+
+  {/* تبويب الفيديوهات */}
+  <Tab 
+    display="flex"
+    alignItems="center"
+    justifyContent="flex-start"
+    bg={useColorModeValue('white', 'gray.800')}
+    borderRadius="2xl"
+    p={4}
+    boxShadow="xl"
+    border="2px solid"
+    borderColor={useColorModeValue('gray.100', 'gray.700')}
+    fontSize="lg"
+    fontWeight="bold"
+    transition="all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
+    _selected={{ 
+      bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: 'white',
+      boxShadow: '2xl',
+      transform: 'scale(1.02) translateX(8px)',
+      borderColor: 'transparent',
+      position: 'relative',
+      _after: {
+        content: '""',
+        position: 'absolute',
+        right: 0,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: '4px',
+        height: '70%',
+        bg: 'white',
+        borderRadius: 'full'
+      }
+    }}
+    _hover={{ 
+      transform: 'translateX(4px)',
+      boxShadow: '2xl',
+      borderColor: useColorModeValue('blue.200', 'blue.600')
+    }}
+    _active={{
+      transform: 'scale(0.98)'
+    }}
+  >
+    <Icon 
+      as={FaVideo} 
+      mr={4} 
+      boxSize={6}
+      color={useColorModeValue('red.500', 'red.300')}
+    />
+    <Box flex="1" textAlign="right">
+      الفيديوهات
+    </Box>
+    <Icon 
+      as={FaChevronLeft} 
+      ml={2}
+      boxSize={4}
+      opacity={0.6}
+    />
+  </Tab>
+
+  {/* تبويب الملفات */}
+  <Tab 
+    display="flex"
+    alignItems="center"
+    justifyContent="flex-start"
+    bg={useColorModeValue('white', 'gray.800')}
+    borderRadius="2xl"
+    p={4}
+    boxShadow="xl"
+    border="2px solid"
+    borderColor={useColorModeValue('gray.100', 'gray.700')}
+    fontSize="lg"
+    fontWeight="bold"
+    transition="all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
+    _selected={{ 
+      bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      color: 'white',
+      boxShadow: '2xl',
+      transform: 'scale(1.02) translateX(8px)',
+      borderColor: 'transparent',
+      position: 'relative',
+      _after: {
+        content: '""',
+        position: 'absolute',
+        right: 0,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: '4px',
+        height: '70%',
+        bg: 'white',
+        borderRadius: 'full'
+      }
+    }}
+    _hover={{ 
+      transform: 'translateX(4px)',
+      boxShadow: '2xl',
+      borderColor: useColorModeValue('purple.200', 'purple.600')
+    }}
+    _active={{
+      transform: 'scale(0.98)'
+    }}
+  >
+    <Icon 
+      as={FaFilePdf} 
+      mr={4} 
+      boxSize={6}
+      color={useColorModeValue('blue.500', 'blue.300')}
+    />
+    <Box flex="1" textAlign="right">
+      الملفات
+    </Box>
+    <Icon 
+      as={FaChevronLeft} 
+      ml={2}
+      boxSize={4}
+      opacity={0.6}
+    />
+  </Tab>
+
+  {/* تبويب امتحان المحاضرة */}
+  <Tab 
+    display="flex"
+    alignItems="center"
+    justifyContent="flex-start"
+    bg={useColorModeValue('white', 'gray.800')}
+    borderRadius="2xl"
+    p={4}
+    boxShadow="xl"
+    border="2px solid"
+    borderColor={useColorModeValue('gray.100', 'gray.700')}
+    fontSize="lg"
+    fontWeight="bold"
+    transition="all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
+    _selected={{ 
+      bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      color: 'white',
+      boxShadow: '2xl',
+      transform: 'scale(1.02) translateX(8px)',
+      borderColor: 'transparent',
+      position: 'relative',
+      _after: {
+        content: '""',
+        position: 'absolute',
+        right: 0,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: '4px',
+        height: '70%',
+        bg: 'white',
+        borderRadius: 'full'
+      }
+    }}
+    _hover={{ 
+      transform: 'translateX(4px)',
+      boxShadow: '2xl',
+      borderColor: useColorModeValue('cyan.200', 'cyan.600')
+    }}
+    _active={{
+      transform: 'scale(0.98)'
+    }}
+  >
+    <Icon 
+      as={FaGraduationCap} 
+      mr={4} 
+      boxSize={6}
+      color={useColorModeValue('green.500', 'green.300')}
+    />
+    <Box flex="1" textAlign="right">
+      امتحان المحاضرة
+    </Box>
+    <Icon 
+      as={FaChevronLeft} 
+      ml={2}
+      boxSize={4}
+      opacity={0.6}
+    />
+  </Tab>
+
+  {/* تبويب الامتحانات المقالية */}
+  <Tab 
+    display="flex"
+    alignItems="center"
+    justifyContent="flex-start"
+    bg={useColorModeValue('white', 'gray.800')}
+    borderRadius="2xl"
+    p={4}
+    boxShadow="xl"
+    border="2px solid"
+    borderColor={useColorModeValue('gray.100', 'gray.700')}
+    fontSize="lg"
+    fontWeight="bold"
+    transition="all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
+    _selected={{ 
+      bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      color: 'white',
+      boxShadow: '2xl',
+      transform: 'scale(1.02) translateX(8px)',
+      borderColor: 'transparent',
+      position: 'relative',
+      _after: {
+        content: '""',
+        position: 'absolute',
+        right: 0,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: '4px',
+        height: '70%',
+        bg: 'white',
+        borderRadius: 'full'
+      }
+    }}
+    _hover={{ 
+      transform: 'translateX(4px)',
+      boxShadow: '2xl',
+      borderColor: useColorModeValue('green.200', 'green.600')
+    }}
+    _active={{
+      transform: 'scale(0.98)'
+    }}
+  >
+    <Icon 
+      as={FaRegPaperPlane} 
+      mr={4} 
+      boxSize={6}
+      color={useColorModeValue('purple.500', 'purple.300')}
+    />
+    <Box flex="1" textAlign="right">
+      الامتحانات المقالية
+    </Box>
+    <Icon 
+      as={FaChevronLeft} 
+      ml={2}
+      boxSize={4}
+      opacity={0.6}
+    />
+  </Tab>
+
+  {/* تبويب المناقشة */}
+  <Tab 
+    display="flex"
+    alignItems="center"
+    justifyContent="flex-start"
+    bg={useColorModeValue('white', 'gray.800')}
+    borderRadius="2xl"
+    p={4}
+    boxShadow="xl"
+    border="2px solid"
+    borderColor={useColorModeValue('gray.100', 'gray.700')}
+    fontSize="lg"
+    fontWeight="bold"
+    transition="all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
+    _selected={{ 
+      bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      color: 'white',
+      boxShadow: '2xl',
+      transform: 'scale(1.02) translateX(8px)',
+      borderColor: 'transparent',
+      position: 'relative',
+      _after: {
+        content: '""',
+        position: 'absolute',
+        right: 0,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: '4px',
+        height: '70%',
+        bg: 'white',
+        borderRadius: 'full'
+      }
+    }}
+    _hover={{ 
+      transform: 'translateX(4px)',
+      boxShadow: '2xl',
+      borderColor: useColorModeValue('orange.200', 'orange.600')
+    }}
+    _active={{
+      transform: 'scale(0.98)'
+    }}
+  >
+    <Icon 
+      as={FaComments} 
+      mr={4} 
+      boxSize={6}
+      color={useColorModeValue('orange.500', 'orange.300')}
+    />
+    <Box flex="1" textAlign="right">
+      المناقشة
+    </Box>
+    <Icon 
+      as={FaChevronLeft} 
+      ml={2}
+      boxSize={4}
+      opacity={0.6}
+    />
+  </Tab>
+
+</TabList>
 
             <TabPanels>
               {/* تاب الفيديوهات */}
@@ -632,10 +796,10 @@ console.log(lecture)
                     lecture.videos.map((video, idx) => (
                       <Flex key={video.id} align="center" p={3} bg={useColorModeValue('gray.50','gray.600')} borderRadius="md" w="full" _hover={{ bg: useColorModeValue('gray.100','gray.500'), boxShadow: 'sm' }}>
                         <Icon as={FaPlayCircle} color="red.400" boxSize={5} mr={3} />
-                        <VStack align="start" spacing={1} flex={1}>
+                    <VStack align="start" spacing={1} flex={1}>
                           <Text fontSize="md" fontWeight="medium">{video.title}</Text>
                           <Text fontSize="sm" color={subTextColor}>فيديو تعليمي</Text>
-                        </VStack>
+                    </VStack>
                         <HStack spacing={2}>
                           <Link to={`/video/${video.id}`}>
                             <Button 
@@ -648,45 +812,45 @@ console.log(lecture)
                             </Button>
                           </Link>
                           {isTeacher && (
-                            <>
+                        <>
                               <Tooltip label="تعديل الفيديو">
-                                <IconButton 
+                            <IconButton 
                                   size="sm" 
                                   icon={<Icon as={FaEdit} />} 
-                                  colorScheme="blue" 
-                                  variant="ghost" 
+                              colorScheme="blue" 
+                              variant="ghost" 
                                   onClick={() => handleEditVideo(video, lecture.id)} 
-                                />
-                              </Tooltip>
+                            />
+                          </Tooltip>
                               <Tooltip label="حذف الفيديو">
-                                <IconButton 
+                            <IconButton 
                                   size="sm" 
-                                  icon={<Icon as={FaTrash} />} 
-                                  colorScheme="red" 
-                                  variant="ghost" 
+                              icon={<Icon as={FaTrash} />} 
+                              colorScheme="red" 
+                              variant="ghost" 
                                   onClick={() => handleDeleteVideo(video.id, video.title)} 
-                                />
-                              </Tooltip>
-                            </>
+                            />
+                          </Tooltip>
+                        </>
                           )}
                         </HStack>
                       </Flex>
                     ))
-                  ) : (
+                      ) : (
                     <Box textAlign="center" w="full" py={8}>
                       <Icon as={FaVideo} color="gray.400" boxSize={12} mb={3} />
                       <Text color={subTextColor} fontSize="md">لا يوجد فيديوهات بعد</Text>
                       {isTeacher && (
-                        <Button 
+                          <Button 
                           size="md" 
                           colorScheme="green" 
                           variant="outline" 
                           leftIcon={<Icon as={FaPlus} />} 
                           mt={4} 
                           onClick={() => handleAddVideo(lecture.id)}
-                        >
+                          >
                           إضافة فيديو
-                        </Button>
+                          </Button>
                       )}
                     </Box>
                   )}
@@ -703,7 +867,7 @@ console.log(lecture)
                       إضافة فيديو جديد
                     </Button>
                   )}
-                </VStack>
+                            </VStack>
               </TabPanel>
 
               {/* تاب الملفات */}
@@ -765,15 +929,15 @@ console.log(lecture)
                                 />
                               </Tooltip>
                             </>
-                          )}
-                        </HStack>
-                      </Flex>
+                              )}
+                            </HStack>
+                          </Flex>
                     ))
                   ) : (
                     <Box textAlign="center" w="full" py={16} bg={useColorModeValue('blue.50','blue.900')} borderRadius="2xl" border="3px dashed" borderColor={useColorModeValue('blue.200','blue.700')} boxShadow="lg">
                       <Box p={6} bg="blue.100" borderRadius="3xl" w="fit-content" mx="auto" mb={6} boxShadow="xl">
                         <Icon as={FaFilePdf} color="blue.500" boxSize={20} />
-                      </Box>
+              </Box>
                       <Text color={headingColor} fontSize="2xl" fontWeight="bold" mb={3}>لا يوجد ملفات مرفقة بعد</Text>
                       <Text color={subTextColor} fontSize="lg" mb={8} fontWeight="medium">أضف ملفات تعليمية للمحاضرة</Text>
                       {isTeacher && (
@@ -795,24 +959,24 @@ console.log(lecture)
                         </Button>
                       )}
                     </Box>
-                  )}
-                  
+              )}
+              
                   {isTeacher && lecture.files && lecture.files.length > 0 && (
-                    <Button 
+                <Button 
                       size="lg" 
                       colorScheme="blue" 
-                      variant="outline" 
-                      leftIcon={<Icon as={FaPlus} />} 
+                  variant="outline" 
+                  leftIcon={<Icon as={FaPlus} />} 
                       mt={4} 
                       borderRadius="full"
                       px={8}
                       _hover={{ bg: 'blue.50', transform: 'translateY(-2px)' }}
                       transition="all 0.2s"
                       onClick={() => handleAddFile(lecture.id)}
-                    >
+                >
                       إضافة ملف جديد
-                    </Button>
-                  )}
+                </Button>
+              )}
                 </VStack>
               </TabPanel>
 
@@ -832,104 +996,104 @@ console.log(lecture)
                         <Badge colorScheme={lecture.exam.is_visible ? "green" : "yellow"} size="xl" px={6} py={3} borderRadius="2xl" fontSize="lg" fontWeight="bold">
                           {lecture.exam.is_visible ? "ظاهر" : "مخفي"}
                         </Badge>
-                      </HStack>
+            </HStack>
                       
                       <HStack spacing={4} flexWrap="wrap">
                         <Link to={`/ComprehensiveExam/${lecture.exam.id}`} style={{ textDecoration: 'none', flex: 1 }}>
-                          <Button
+                    <Button
                             size="xl"
-                            colorScheme="blue"
-                            variant="solid"
+                        colorScheme="blue"
+                      variant="solid"
                             leftIcon={<Icon as={FaEye} />}
                             borderRadius="2xl"
                             w="full"
-                            _hover={{
+                      _hover={{
                               transform: 'translateY(-3px)',
                               boxShadow: '2xl',
-                              bg: 'blue.600'
-                            }}
+                        bg: 'blue.600'
+                      }}
                             transition="all 0.3s ease"
-                            fontWeight="bold"
+                      fontWeight="bold"
                             px={10}
                             py={8}
                             boxShadow="xl"
-                          >
-                            {isTeacher || isAdmin ? "عرض الامتحان" : "ابدأ الامتحان"}
-                          </Button>
-                        </Link>
+                    >
+                      {isTeacher || isAdmin ? "عرض الامتحان" : "ابدأ الامتحان"}
+                    </Button>
+                    </Link>
                         
-                        {isTeacher && (
-                          <>
-                            <Tooltip label={lecture.exam.is_visible ? "إخفاء الامتحان" : "إظهار الامتحان"} hasArrow>
-                              <IconButton
+                  {isTeacher && (
+                    <>
+                      <Tooltip label={lecture.exam.is_visible ? "إخفاء الامتحان" : "إظهار الامتحان"} hasArrow>
+                        <IconButton
                                 size="xl"
                                 icon={<Icon as={lecture.exam.is_visible ? FaEye : FaEyeSlash} />}
-                                colorScheme={lecture.exam.is_visible ? "green" : "yellow"}
+                          colorScheme={lecture.exam.is_visible ? "green" : "yellow"}
                                 variant="solid"
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  try {
-                                    const token = localStorage.getItem("token");
-                                    await baseUrl.patch(`/api/course/lecture/exam/${lecture.exam.id}/visibility`, {
-                                      is_visible: !lecture.exam.is_visible
-                                    }, {
-                                      headers: { Authorization: `Bearer ${token}` },
-                                    });
-                                    lecture.exam.is_visible = !lecture.exam.is_visible;
-                                    window.location.reload();
-                                  } catch (error) {
-                                    console.error("Error toggling exam visibility:", error);
-                                  }
-                                }}
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            try {
+                              const token = localStorage.getItem("token");
+                              await baseUrl.patch(`/api/course/lecture/exam/${lecture.exam.id}/visibility`, {
+                                is_visible: !lecture.exam.is_visible
+                              }, {
+                                headers: { Authorization: `Bearer ${token}` },
+                              });
+                              lecture.exam.is_visible = !lecture.exam.is_visible;
+                              window.location.reload();
+                            } catch (error) {
+                              console.error("Error toggling exam visibility:", error);
+                            }
+                          }}
                                 borderRadius="2xl"
                                 _hover={{ transform: 'scale(1.1)', boxShadow: 'xl' }}
                                 transition="all 0.3s ease"
                                 boxShadow="lg"
-                              />
-                            </Tooltip>
-                            <Tooltip label="إضافة أسئلة للامتحان" hasArrow>
-                              <IconButton
+                        />
+                      </Tooltip>
+                      <Tooltip label="إضافة أسئلة للامتحان" hasArrow>
+                        <IconButton
                                 size="xl"
                                 icon={<Icon as={FaPlus} />}
-                                colorScheme="green"
+                          colorScheme="green"
                                 variant="solid"
-                                onClick={() => onAddBulkQuestions && onAddBulkQuestions(lecture.exam.id, lecture.exam.title, 'lecture')}
+                          onClick={() => onAddBulkQuestions && onAddBulkQuestions(lecture.exam.id, lecture.exam.title, 'lecture')}
                                 borderRadius="2xl"
                                 _hover={{ transform: 'scale(1.1)', boxShadow: 'xl' }}
                                 transition="all 0.3s ease"
                                 boxShadow="lg"
-                              />
-                            </Tooltip>
-                            <Tooltip label="تعديل الامتحان" hasArrow>
-                              <IconButton
+                        />
+                      </Tooltip>
+                      <Tooltip label="تعديل الامتحان" hasArrow>
+                        <IconButton
                                 size="xl"
                                 icon={<Icon as={FaEdit} />}
-                                colorScheme="blue"
+                          colorScheme="blue"
                                 variant="solid"
-                                onClick={() => setExamModal && setExamModal({ isOpen: true, type: 'edit', lectureId: lecture.id, data: lecture.exam })}
+                          onClick={() => setExamModal && setExamModal({ isOpen: true, type: 'edit', lectureId: lecture.id, data: lecture.exam })}
                                 borderRadius="2xl"
                                 _hover={{ transform: 'scale(1.1)', boxShadow: 'xl' }}
                                 transition="all 0.3s ease"
                                 boxShadow="lg"
-                              />
-                            </Tooltip>
-                            <Tooltip label="حذف الامتحان" hasArrow>
-                              <IconButton
+                        />
+                      </Tooltip>
+                      <Tooltip label="حذف الامتحان" hasArrow>
+                        <IconButton
                                 size="xl"
                                 icon={<Icon as={FaTrash} />}
-                                colorScheme="red"
+                          colorScheme="red"
                                 variant="solid"
-                                onClick={() => setDeleteExamDialog && setDeleteExamDialog({ isOpen: true, examId: lecture.exam.id, title: lecture.exam.title })}
+                          onClick={() => setDeleteExamDialog && setDeleteExamDialog({ isOpen: true, examId: lecture.exam.id, title: lecture.exam.title })}
                                 borderRadius="2xl"
                                 _hover={{ transform: 'scale(1.1)', boxShadow: 'xl' }}
                                 transition="all 0.3s ease"
                                 boxShadow="lg"
-                              />
-                            </Tooltip>
-                          </>
-                        )}
-                      </HStack>
+                        />
+                      </Tooltip>
+                    </>
+                  )}
+                </HStack>
                     </Box>
                   ) : (
                     <Box textAlign="center" w="full" py={16} bg={useColorModeValue('green.50','green.900')} borderRadius="2xl" border="3px dashed" borderColor={useColorModeValue('green.200','green.700')} boxShadow="lg">
@@ -939,11 +1103,11 @@ console.log(lecture)
                       <Text color={headingColor} fontSize="2xl" fontWeight="bold" mb={3}>لا يوجد امتحان لهذه المحاضرة بعد</Text>
                       <Text color={subTextColor} fontSize="lg" mb={8} fontWeight="medium">أضف امتحان للمحاضرة لتقييم الطلاب</Text>
                       {isTeacher && (
-                        <Button 
+                <Button 
                           size="xl" 
-                          colorScheme="green" 
+                  colorScheme="green" 
                           variant="solid" 
-                          leftIcon={<Icon as={FaPlus} />} 
+                  leftIcon={<Icon as={FaPlus} />} 
                           borderRadius="2xl"
                           px={12}
                           py={8}
@@ -951,19 +1115,19 @@ console.log(lecture)
                           transition="all 0.3s ease"
                           fontWeight="bold"
                           boxShadow="xl"
-                          onClick={() => setExamModal({ 
-                            isOpen: true, 
-                            type: 'add', 
-                            lectureId: lecture.id, 
-                            data: null,
-                            onSave: handleAddLectureExam
-                          })} 
-                          isLoading={examActionLoading}
-                        >
-                          إضافة امتحان
-                        </Button>
-                      )}
-                    </Box>
+                  onClick={() => setExamModal({ 
+                    isOpen: true, 
+                    type: 'add', 
+                    lectureId: lecture.id, 
+                    data: null,
+                    onSave: handleAddLectureExam
+                  })} 
+                  isLoading={examActionLoading}
+                >
+                  إضافة امتحان
+                </Button>
+              )}
+            </Box>
                   )}
                 </VStack>
               </TabPanel>
@@ -993,13 +1157,13 @@ console.log(lecture)
                         <Badge colorScheme={essayExam.is_visible ? "green" : "yellow"} size="lg" px={4} py={2} borderRadius="full">
                           {essayExam.is_visible ? "ظاهر" : "مخفي"}
                         </Badge>
-                      </HStack>
+              </HStack>
                       
                       <HStack spacing={3} flexWrap="wrap">
                         {isTeacher ? (
                           <>
                             <Tooltip label="عرض التسليمات">
-                              <Button 
+                      <Button 
                                 size="lg" 
                                 colorScheme="blue" 
                                 variant="solid"
@@ -1026,7 +1190,7 @@ console.log(lecture)
                               <IconButton 
                                 size="lg" 
                                 icon={<Icon as={FaTrash} />} 
-                                colorScheme="red" 
+                        colorScheme="red" 
                                 variant="solid" 
                                 borderRadius="full"
                                 onClick={() => deleteEssayExam(essayExam.id)}
@@ -1047,8 +1211,8 @@ console.log(lecture)
                               fontWeight="bold"
                             >
                               ابدأ الامتحان
-                            </Button>
-                          </Link>
+                      </Button>
+                        </Link>
                         )}
                       </HStack>
                       
@@ -1069,7 +1233,7 @@ console.log(lecture)
                                   <Text fontSize="sm" color={subTextColor}>
                                     {student.answered_questions}/{student.total_questions} أسئلة
                                   </Text>
-                                </VStack>
+                </VStack>
                                 <HStack spacing={3}>
                                   <Badge colorScheme={student.graded_at ? "green" : "yellow"} size="lg" px={3} py={1} borderRadius="full">
                                     {student.graded_at ? "مقيم" : "في الانتظار"}
@@ -1079,10 +1243,10 @@ console.log(lecture)
                                       {student.total_grade}/{student.max_grade}
                                     </Text>
                                   )}
-                                </HStack>
-                              </Flex>
-                            ))}
-                          </VStack>
+              </HStack>
+                    </Flex>
+                  ))}
+                </VStack>
                         </Box>
                       )}
                     </Box>
@@ -1093,7 +1257,7 @@ console.log(lecture)
                       </Box>
                       <Text color={subTextColor} fontSize="lg" fontWeight="medium" mb={2}>لا يوجد امتحان مقالي بعد</Text>
                       <Text color={subTextColor} fontSize="sm" mb={6}>أضف امتحان مقالي للمحاضرة</Text>
-                      {isTeacher && (
+              {isTeacher && (
                         <Button 
                           size="lg" 
                           colorScheme="purple" 
@@ -1107,8 +1271,8 @@ console.log(lecture)
                         >
                           إضافة امتحان مقالي
                         </Button>
-                      )}
-                    </Box>
+              )}
+            </Box>
                   )}
                 </VStack>
               </TabPanel>
@@ -1124,73 +1288,73 @@ console.log(lecture)
                       <VStack align="start" spacing={2} flex={1}>
                         <Text fontSize="xl" fontWeight="bold" color={headingColor}>مناقشة المحاضرة</Text>
                         <Text fontSize="md" color={subTextColor}>
-                          شارك في النقاش مع زملائك حول هذه المحاضرة
-                        </Text>
+                    شارك في النقاش مع زملائك حول هذه المحاضرة
+                  </Text>
                       </VStack>
-                      {commentsStats.recent > 0 && (
+                    {commentsStats.recent > 0 && (
                         <VStack spacing={1} align="center">
                           <Text fontSize="2xl" fontWeight="bold" color="green.600">
-                            {commentsStats.recent}
-                          </Text>
+                          {commentsStats.recent}
+                        </Text>
                           <Text fontSize="sm" color={subTextColor}>جديدة</Text>
-                        </VStack>
-                      )}
-                    </HStack>
-                    
+                      </VStack>
+                    )}
+              </HStack>
+              
                     <HStack spacing={3} flexWrap="wrap">
-                      <Link to={`/lectur_commints/${lecture.id}`} style={{ textDecoration: 'none', flex: 1 }}>
-                        <Button
+                <Link to={`/lectur_commints/${lecture.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                  <Button
                           size="lg"
-                          colorScheme="orange"
-                          variant="solid"
-                          leftIcon={<Icon as={FaRegComment} />}
-                          borderRadius="full"
-                          w="full"
-                          _hover={{
-                            transform: 'translateY(-2px)',
-                            boxShadow: 'lg',
-                            bg: 'orange.600'
-                          }}
-                          transition="all 0.2s"
-                          fontWeight="bold"
+                    colorScheme="orange"
+                    variant="solid"
+                    leftIcon={<Icon as={FaRegComment} />}
+                    borderRadius="full"
+                    w="full"
+                    _hover={{
+                      transform: 'translateY(-2px)',
+                      boxShadow: 'lg',
+                      bg: 'orange.600'
+                    }}
+                    transition="all 0.2s"
+                    fontWeight="bold"
                           px={8}
-                        >
-                          {commentsStats.total > 0 ? "عرض التعليقات" : "ابدأ النقاش"}
-                        </Button>
-                      </Link>
-                      
-                      {commentsStats.total > 0 && (
-                        <Link to={`/lectur_commints/${lecture.id}`} style={{ textDecoration: 'none' }}>
-                          <Button
+                  >
+                    {commentsStats.total > 0 ? "عرض التعليقات" : "ابدأ النقاش"}
+                  </Button>
+                </Link>
+                
+                {commentsStats.total > 0 && (
+                  <Link to={`/lectur_commints/${lecture.id}`} style={{ textDecoration: 'none' }}>
+                    <Button
                             size="lg"
-                            colorScheme="orange"
-                            variant="outline"
-                            leftIcon={<Icon as={FaUsers} />}
-                            borderRadius="full"
+                      colorScheme="orange"
+                      variant="outline"
+                      leftIcon={<Icon as={FaUsers} />}
+                      borderRadius="full"
                             px={8}
-                            _hover={{
-                              transform: 'translateY(-2px)',
-                              boxShadow: 'md',
-                              bg: 'orange.50'
-                            }}
-                            transition="all 0.2s"
+                      _hover={{
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'md',
+                        bg: 'orange.50'
+                      }}
+                      transition="all 0.2s"
                             fontWeight="bold"
-                          >
-                            المشاركون
-                          </Button>
-                        </Link>
-                      )}
-                    </HStack>
-                    
-                    {commentsStats.total === 0 && (
-                      <Box
+                    >
+                      المشاركون
+                    </Button>
+                  </Link>
+                )}
+              </HStack>
+              
+              {commentsStats.total === 0 && (
+                <Box
                         mt={6}
                         p={6}
                         bg={useColorModeValue('orange.100', 'orange.700')}
                         borderRadius="xl"
-                        border="1px solid"
+                  border="1px solid"
                         borderColor="orange.300"
-                      >
+                >
                         <HStack spacing={4}>
                           <Box p={3} bg="orange.200" borderRadius="lg">
                             <Icon as={FaLightbulb} color="orange.600" boxSize={6} />
@@ -1198,16 +1362,16 @@ console.log(lecture)
                           <VStack align="start" spacing={2}>
                             <Text fontSize="lg" fontWeight="bold" color="orange.700">
                               اسأل سؤالك عن المحاضرة
-                            </Text>
+                      </Text>
                             <Text fontSize="md" color="orange.600">
-                              شارك استفساراتك أو ملاحظاتك مع زملائك
-                            </Text>
-                          </VStack>
-                        </HStack>
-                      </Box>
-                    )}
-                  </Box>
-                </VStack>
+                        شارك استفساراتك أو ملاحظاتك مع زملائك
+                      </Text>
+                    </VStack>
+                  </HStack>
+                </Box>
+              )}
+            </Box>
+          </VStack>
               </TabPanel>
             </TabPanels>
           </Tabs>

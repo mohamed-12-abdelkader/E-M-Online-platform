@@ -88,10 +88,10 @@ const LoginPage = () => {
       const redirectTarget = params.get("redirect");
       const destination = redirectTarget && redirectTarget.startsWith("/") ? redirectTarget : "/";
       setTimeout(() => {
-        window.location.href = destination;
-      }, 500);
-            window.location.reload()
-        navigate('/');
+       window.location.reload()
+        navigate('/home');
+      }, 1000);
+      
       // Redirect after 2 seconds
     
     } catch (error) {
@@ -120,8 +120,9 @@ const LoginPage = () => {
   };
   return (
     <Box
-    className="mt-[100px]"
+    className="mt-[100px] "
       minH="100vh"
+    
       bgGradient="linear(to-br, blue.50, indigo.100, purple.50)"
       display="flex"
       alignItems="center"
@@ -142,13 +143,13 @@ const LoginPage = () => {
       />
 
       <Box
-        maxW="md"
-        w="full"
+       className="w-[90%] mx-auto"
         position="relative"
         zIndex="1"
       >
         {/* Main Login Card */}
         <Box
+        
           bg="white"
           borderRadius="3xl"
           p={8}
@@ -161,6 +162,7 @@ const LoginPage = () => {
         >
           {/* Decorative Elements */}
           <Box
+          
             position="absolute"
             top="-30px"
             right="-30px"
@@ -171,6 +173,7 @@ const LoginPage = () => {
             opacity="0.1"
           />
           <Box
+          
             position="absolute"
             bottom="-20px"
             left="-20px"
@@ -181,9 +184,9 @@ const LoginPage = () => {
             opacity="0.1"
           />
 
-          <VStack spacing={8} align="stretch">
+          <VStack spacing={8} align="stretch" >
             {/* Header */}
-            <Box textAlign="center">
+            <Box textAlign="center" >
               <Box
                 w="80px"
                 h="80px"
