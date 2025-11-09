@@ -96,10 +96,13 @@ const MyCourses = () => {
           apiMessage?.includes('غير صالح')) {
         setSessionExpired(true);
         setError(null);
+        // Set courses to empty array so component shows "no courses" message
+        setCourses([]);
       } else {
+        // For other errors, set courses to empty array and show error
         setError(apiMessage || 'حدث خطأ في تحميل الكورسات');
+        setCourses([]);
       }
-      setCourses([]);
     } finally {
       setLoading(false);
     }
@@ -292,7 +295,8 @@ const MyCourses = () => {
     );
   }
 
-  if (error) {
+  // إذا كان هناك خطأ ولكن ليس بسبب انتهاء الجلسة، نعرض رسالة الخطأ
+  if (error && !sessionExpired) {
     return (
       <Center py={20}>
         <VStack spacing={4}>
@@ -417,7 +421,7 @@ const MyCourses = () => {
       </Flex>
 
       {/* Courses Grid */}
-      {courses.length > 0 ? (
+      {Array.isArray(courses) && courses.length > 0 ? (
         <div className="flex flex-wrap  ">
           {courses.map((course) => (
                   <Link 
