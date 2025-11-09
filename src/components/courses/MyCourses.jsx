@@ -33,6 +33,8 @@ import {
   FaCamera,
   FaGraduationCap,
   FaUsers,
+  FaChevronUp,
+  FaChevronDown,
 } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -50,7 +52,8 @@ const MyCourses = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [activationResult, setActivationResult] = useState(null);
   const [expandedCards, setExpandedCards] = useState({}); 
-    const buttonColorScheme = useColorModeValue("blue", "teal");
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const buttonColorScheme = useColorModeValue("blue", "teal");
   const authHeader = useMemo(() => ({
     Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
   }), []);
@@ -70,6 +73,7 @@ const MyCourses = () => {
     try {
       setLoading(true);
       setError(null);
+      setSessionExpired(false);
       const response = await baseUrl.get('api/course/my-enrollments', {
         headers: authHeader,
       });
@@ -81,11 +85,34 @@ const MyCourses = () => {
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
-      setError('حدث خطأ في تحميل الكورسات');
+      const apiMessage = error?.response?.data?.message;
+      
+      // Check if token expired (from interceptor or direct error)
+      if (error.sessionExpired ||
+          apiMessage === "Session expired or replaced" || 
+          error?.response?.status === 401 ||
+          apiMessage?.includes('expired') ||
+          apiMessage?.includes('انتهت') ||
+          apiMessage?.includes('غير صالح')) {
+        setSessionExpired(true);
+        setError(null);
+      } else {
+        setError(apiMessage || 'حدث خطأ في تحميل الكورسات');
+      }
       setCourses([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForceLogout = () => {
+    try {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("examAnswers");
+      localStorage.removeItem("examTimeLeft");
+    } catch (e) {}
+    window.location.href = "/login";
   };
 
   useEffect(() => {
@@ -281,6 +308,28 @@ const MyCourses = () => {
 
   return (
     <Box w="100%" py={8} px={{ base: 4, md: 6, lg: 8 }}>
+      {/* Session Expired Modal */}
+      <Modal isOpen={sessionExpired} onClose={() => {}} isCentered closeOnOverlayClick={false} closeOnEsc={false}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader textAlign="center">انتهاء الجلسة</ModalHeader>
+          <ModalBody>
+            <Text textAlign="center" color={subTextColor}>
+              لقد انتهت جلستك أو تم استبدالها. يجب تسجيل الدخول مرة أخرى.
+            </Text>
+            <Text textAlign="center" color={subTextColor} mt={2}>
+              سجّل دخولك باستخدام رقم الهاتف وكلمة المرور التي قمت بالتسجيل بهما من قبل.
+              إذا كنت قد نسيت كلمة المرور، يُرجى التواصل مع الدعم الفني لاستعادتها.
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="red" w="full" onClick={handleForceLogout}>
+              تسجيل الدخول مرة أخرى
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       {/* Header Section */}
       <Flex
         direction={{ base: 'column', md: 'row' }}
