@@ -115,10 +115,17 @@ const AdminMange = () => {
   // جلب الصفوف الدراسية
   const fetchGrades = async () => {
     try {
-      const response = await baseUrl.get("/api/user/grades");
+      const response = await baseUrl.get("/api/users/grades");
       setGrades(response.data.grades || []);
     } catch (error) {
       console.error("Error fetching grades:", error);
+      toast({
+        title: "خطأ",
+        description: "فشل في جلب الصفوف الدراسية",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -174,13 +181,18 @@ const AdminMange = () => {
   // فتح modal التعديل
   const openEditModal = (teacher) => {
     setSelectedTeacher(teacher);
+    // تحويل الصفوف المحددة إلى array من IDs كـ strings
+    const selectedGradeIds = teacher.grades && Array.isArray(teacher.grades) 
+      ? teacher.grades.map(g => g.id.toString()) 
+      : [];
+    
     setEditFormData({
       name: teacher.name,
       email: teacher.email,
       phone: teacher.phone || "",
       description: teacher.description || "",
       subject: teacher.subject,
-      grade_ids: teacher.grades ? teacher.grades.map(g => g.id.toString()) : [],
+      grade_ids: selectedGradeIds,
       avatar: teacher.avatar || "",
       avatarPreview: teacher.avatar ? (teacher.avatar.startsWith('http') ? teacher.avatar : `http://localhost:8000/${teacher.avatar}`) : "",
       facebook_url: teacher.facebook_url || "",
@@ -207,44 +219,52 @@ const AdminMange = () => {
       setEditLoading(true);
       const token = localStorage.getItem("token");
 
+      // التأكد من أن grade_ids هو array وتحويله من strings إلى numbers
+      const gradeIds = Array.isArray(editFormData.grade_ids) 
+        ? editFormData.grade_ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id))
+        : [];
+
       let updateData;
       let headers = {
         Authorization: `Bearer ${token}`,
       };
 
       if (editFormData.avatarFile) {
-        // رفع صورة جديدة
+        // رفع صورة جديدة - FormData
         updateData = new FormData();
         updateData.append("name", editFormData.name);
         updateData.append("email", editFormData.email);
-        updateData.append("phone", editFormData.phone);
-        updateData.append("description", editFormData.description);
+        updateData.append("phone", editFormData.phone || "");
+        updateData.append("description", editFormData.description || "");
         updateData.append("subject", editFormData.subject);
-        updateData.append("grade_ids", editFormData.grade_ids.join(","));
-        updateData.append("facebook_url", editFormData.facebook_url);
-        updateData.append("youtube_url", editFormData.youtube_url);
-        updateData.append("tiktok_url", editFormData.tiktok_url);
-        updateData.append("whatsapp_number", editFormData.whatsapp_number);
+        // إرسال grade_ids كـ JSON string في FormData (لأن FormData لا يدعم arrays مباشرة)
+        if (gradeIds.length > 0) {
+          updateData.append("grade_ids", JSON.stringify(gradeIds));
+        }
+        updateData.append("facebook_url", editFormData.facebook_url || "");
+        updateData.append("youtube_url", editFormData.youtube_url || "");
+        updateData.append("tiktok_url", editFormData.tiktok_url || "");
+        updateData.append("whatsapp_number", editFormData.whatsapp_number || "");
         updateData.append("avatar", editFormData.avatarFile);
         headers["Content-Type"] = "multipart/form-data";
       } else {
-        // بدون صورة جديدة
+        // بدون صورة جديدة - JSON
         updateData = {
           name: editFormData.name,
           email: editFormData.email,
-          phone: editFormData.phone,
-          description: editFormData.description,
+          phone: editFormData.phone || "",
+          description: editFormData.description || "",
           subject: editFormData.subject,
-          grade_ids: editFormData.grade_ids.join(","),
-          facebook_url: editFormData.facebook_url,
-          youtube_url: editFormData.youtube_url,
-          tiktok_url: editFormData.tiktok_url,
-          whatsapp_number: editFormData.whatsapp_number,
+          grade_ids: gradeIds, // إرسال كـ array من numbers
+          facebook_url: editFormData.facebook_url || "",
+          youtube_url: editFormData.youtube_url || "",
+          tiktok_url: editFormData.tiktok_url || "",
+          whatsapp_number: editFormData.whatsapp_number || "",
         };
         headers["Content-Type"] = "application/json";
       }
 
-      await baseUrl.put(`/api/teacher/${selectedTeacher.id}`, updateData, {
+      await baseUrl.put(`/api/users/teachers/${selectedTeacher.id}`, updateData, {
         headers,
       });
 
@@ -257,18 +277,31 @@ const AdminMange = () => {
       });
 
       // تحديث البيانات في القائمة
+      const updatedGradeIds = Array.isArray(editFormData.grade_ids) 
+        ? editFormData.grade_ids 
+        : [];
+      const updatedGrades = updatedGradeIds
+        .map((id) => grades.find((g) => g.id.toString() === id))
+        .filter(Boolean);
+
       setTeachers((prev) =>
         prev.map((teacher) =>
           teacher.id === selectedTeacher.id
             ? {
                 ...teacher,
-                ...editFormData,
+                name: editFormData.name,
+                email: editFormData.email,
+                phone: editFormData.phone,
+                description: editFormData.description,
+                subject: editFormData.subject,
                 avatar: editFormData.avatarPreview
                   ? editFormData.avatarPreview
                   : teacher.avatar,
-                grades: editFormData.grade_ids
-                  .map((id) => grades.find((g) => g.id.toString() === id))
-                  .filter(Boolean),
+                facebook_url: editFormData.facebook_url,
+                youtube_url: editFormData.youtube_url,
+                tiktok_url: editFormData.tiktok_url,
+                whatsapp_number: editFormData.whatsapp_number,
+                grades: updatedGrades,
               }
             : teacher
         )
@@ -768,20 +801,29 @@ const AdminMange = () => {
 
               <FormControl>
                 <FormLabel fontWeight="bold">الصفوف الدراسية</FormLabel>
+                <Text fontSize="sm" color="gray.500" mb={2}>
+                  اختر الصفوف الدراسية التي يدرسها المدرس
+                </Text>
                 <CheckboxGroup
-                  value={editFormData.grade_ids || []}
+                  value={Array.isArray(editFormData.grade_ids) ? editFormData.grade_ids : []}
                   onChange={(values) => handleEditInputChange("grade_ids", values)}
                 >
                   <SimpleGrid columns={{ base: 2, md: 3 }} spacing={3}>
-                    {grades.map((grade) => (
-                      <Checkbox
-                        key={grade.id}
-                        value={grade.id.toString()}
-                        colorScheme="blue"
-                      >
-                        {grade.name}
-                      </Checkbox>
-                    ))}
+                    {grades.length > 0 ? (
+                      grades.map((grade) => (
+                        <Checkbox
+                          key={grade.id}
+                          value={grade.id.toString()}
+                          colorScheme="blue"
+                        >
+                          {grade.name}
+                        </Checkbox>
+                      ))
+                    ) : (
+                      <Text fontSize="sm" color="gray.500">
+                        جاري تحميل الصفوف...
+                      </Text>
+                    )}
                   </SimpleGrid>
                 </CheckboxGroup>
               </FormControl>

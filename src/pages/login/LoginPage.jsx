@@ -30,6 +30,11 @@ import "react-toastify/dist/ReactToastify.css";
 const LoginPage = () => {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { 
+    isOpen: isSupportOpen, 
+    onOpen: onSupportOpen, 
+    onClose: onSupportClose 
+  } = useDisclosure();
   const [identifier, setIdentifier] = useState("");
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
@@ -96,14 +101,12 @@ const LoginPage = () => {
     
     } catch (error) {
       console.error('Login error:', error);
+      // فتح مودال الخطأ تلقائياً
+      onOpen();
+      
       if (error.response) {
         if (error.response.data.msg === "You must login from the same device") {
           toast.error("لقد تجاوزت الحد المسموح لك من الاجهزة");
-        } else if (error.response.data.msg === "Invalid username or password" || 
-                   error.response.data.message?.includes("Invalid credentials") ||
-                   error.response.data.message?.includes("User not found") ||
-                   error.response.data.message?.includes("Wrong password")) {
-          onOpen(); // فتح المودال عند خطأ في البيانات
         } else {
           toast.error(error.response.data.msg || "حدث خطأ أثناء تسجيل الدخول");
         }
@@ -118,6 +121,7 @@ const LoginPage = () => {
       }, 2000);
     }
   };
+
   return (
     <Box
     className="mt-[100px] "
@@ -490,35 +494,186 @@ const LoginPage = () => {
           </ModalBody>
           
           <ModalFooter justifyContent="center" py={6}>
-            <HStack spacing={4} w="full" maxW="300px">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                flex={1}
-                borderRadius="xl"
-                borderColor="gray.300"
-                _hover={{ borderColor: "gray.400", bg: "gray.50" }}
+            <VStack spacing={3} w="full">
+              <HStack spacing={4} w="full" maxW="300px">
+                <Button
+                  variant="outline"
+                  onClick={onClose}
+                  flex={1}
+                  borderRadius="xl"
+                  borderColor="gray.300"
+                  _hover={{ borderColor: "gray.400", bg: "gray.50" }}
+                >
+                  إعادة المحاولة
+                </Button>
+                <Button
+                  bgGradient="linear(135deg, #10b981 0%, #059669 100%)"
+                  color="white"
+                  _hover={{
+                    bgGradient: "linear(135deg, #059669 0%, #047857 100%)",
+                    boxShadow: "0 10px 25px rgba(16, 185, 129, 0.4)"
+                  }}
+                  flex={1}
+                  borderRadius="xl"
+                  onClick={() => {
+                    onClose();
+                    navigate('/signup');
+                  }}
+                  boxShadow="0 8px 20px rgba(16, 185, 129, 0.3)"
+                >
+                  إنشاء حساب جديد
+                </Button>
+              </HStack>
+            </VStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Support Modal */}
+      <Modal isOpen={isSupportOpen} onClose={onSupportClose} isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
+        <ModalContent mx={4} borderRadius="2xl" overflow="hidden">
+          <ModalHeader textAlign="center" bg="red.50" py={6}>
+            <VStack spacing={3}>
+              <Box
+                w="60px"
+                h="60px"
+                bgGradient="linear(135deg, #ef4444 0%, #dc2626 100%)"
+                borderRadius="full"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
               >
-                إعادة المحاولة
-              </Button>
-              <Button
-                bgGradient="linear(135deg, #10b981 0%, #059669 100%)"
-                color="white"
-                _hover={{
-                  bgGradient: "linear(135deg, #059669 0%, #047857 100%)",
-                  boxShadow: "0 10px 25px rgba(16, 185, 129, 0.4)"
-                }}
-                flex={1}
-                borderRadius="xl"
-                onClick={() => {
-                  onClose();
-                  navigate('/signup');
-                }}
-                boxShadow="0 8px 20px rgba(16, 185, 129, 0.3)"
+                <Icon as={FiPhone} w="30px" h="30px" color="white" />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" color="red.800">
+                تواصل مع الدعم الفني
+              </Text>
+            </VStack>
+          </ModalHeader>
+          
+          <ModalBody py={8}>
+            <VStack spacing={4} textAlign="center">
+              <Text fontSize="lg" color="gray.600">
+                لم نتمكن من تغيير كلمة المرور تلقائياً
+              </Text>
+              <Text fontSize="md" color="gray.500">
+                يرجى التواصل مع الدعم الفني لمساعدتك في استعادة حسابك
+              </Text>
+              
+              <Box
+                bg="green.50"
+                borderRadius="lg"
+                p={4}
+                border="1px solid"
+                borderColor="green.200"
+                w="full"
               >
-                إنشاء حساب جديد
-              </Button>
-            </HStack>
+                <Text fontSize="sm" color="green.700" fontWeight="medium" mb={3}>
+                  📞 تواصل مع الدعم الفني:
+                </Text>
+                <VStack spacing={3}>
+                  <Button
+                    as="a"
+                    href="https://wa.me/201111272393"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    bg="green.500"
+                    color="white"
+                    _hover={{
+                      bg: "green.600",
+                      transform: "translateY(-1px)",
+                      boxShadow: "0 4px 12px rgba(34, 197, 94, 0.4)"
+                    }}
+                    _active={{
+                      bg: "green.700"
+                    }}
+                    leftIcon={<Icon as={FiPhone} />}
+                    size="md"
+                    w="full"
+                    borderRadius="lg"
+                    transition="all 0.3s ease"
+                  >
+                    واتساب: 01111272393
+                  </Button>
+                  <Button
+                    as="a"
+                    href="https://wa.me/201288781012"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    bg="green.500"
+                    color="white"
+                    _hover={{
+                      bg: "green.600",
+                      transform: "translateY(-1px)",
+                      boxShadow: "0 4px 12px rgba(34, 197, 94, 0.4)"
+                    }}
+                    _active={{
+                      bg: "green.700"
+                    }}
+                    leftIcon={<Icon as={FiPhone} />}
+                    size="md"
+                    w="full"
+                    borderRadius="lg"
+                    transition="all 0.3s ease"
+                  >
+                    واتساب: 01288781012
+                  </Button>
+                  <Button
+                    as="a"
+                    href="https://wa.me/201210726096"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    bg="green.500"
+                    color="white"
+                    _hover={{
+                      bg: "green.600",
+                      transform: "translateY(-1px)",
+                      boxShadow: "0 4px 12px rgba(34, 197, 94, 0.4)"
+                    }}
+                    _active={{
+                      bg: "green.700"
+                    }}
+                    leftIcon={<Icon as={FiPhone} />}
+                    size="md"
+                    w="full"
+                    borderRadius="lg"
+                    transition="all 0.3s ease"
+                  >
+                    واتساب: 01210726096
+                  </Button>
+                </VStack>
+              </Box>
+
+              <Box
+                bg="blue.50"
+                borderRadius="lg"
+                p={4}
+                border="1px solid"
+                borderColor="blue.200"
+                w="full"
+              >
+                <Text fontSize="sm" color="blue.700" fontWeight="medium" mb={2}>
+                  💡 معلومات مهمة:
+                </Text>
+                <Text fontSize="sm" color="blue.600" textAlign="right">
+                  عند التواصل مع الدعم الفني، يرجى إخبارهم برقم هاتفك المسجل في المنصة
+                </Text>
+              </Box>
+            </VStack>
+          </ModalBody>
+          
+          <ModalFooter justifyContent="center" py={6}>
+            <Button
+              variant="outline"
+              onClick={onSupportClose}
+              borderRadius="xl"
+              borderColor="gray.300"
+              _hover={{ borderColor: "gray.400", bg: "gray.50" }}
+              px={8}
+            >
+              إغلاق
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

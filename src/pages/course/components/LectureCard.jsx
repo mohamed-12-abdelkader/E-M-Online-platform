@@ -481,312 +481,204 @@ console.log(lecture)
       {/* تفاصيل المحاضرة */}
       <Collapse in={isExpanded} animateOpacity>
         <Box px={6} py={4} bg={itemBg} borderBottomRadius="2xl">
-          <Tabs index={activeTab} onChange={setActiveTab} variant="enclosed" colorScheme="gray" size="lg">
+          <Tabs index={activeTab} onChange={setActiveTab} variant="unstyled" size="md">
             <TabList 
-  mb={8}
-  display="flex"
-  flexDirection="column"
-  gap={3}
-  bg="transparent"
-  p={0}
->
+              mb={4}
+              display="flex"
+              flexDirection="row"
+              flexWrap="wrap"
+              gap={2}
+              bg="transparent"
+              p={0}
+              borderBottom="1px solid"
+              borderColor={useColorModeValue('gray.200', 'gray.600')}
+            >
+              {/* تبويب الفيديوهات */}
+              <Tab 
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bg="transparent"
+                borderRadius="md"
+                px={3}
+                py={2}
+                borderBottom="3px solid"
+                borderColor={activeTab === 0 ? 'red.500' : 'transparent'}
+                fontSize="sm"
+                fontWeight="medium"
+                color={activeTab === 0 ? 'red.600' : useColorModeValue('gray.600', 'gray.400')}
+                transition="all 0.2s"
+                _hover={{ 
+                  color: 'red.500',
+                  bg: useColorModeValue('red.50', 'red.900')
+                }}
+                _selected={{ 
+                  color: 'red.600',
+                  fontWeight: 'semibold',
+                  borderColor: 'red.500'
+                }}
+              >
+                <HStack spacing={2}>
+                  <Icon 
+                    as={FaVideo} 
+                    boxSize={4}
+                    color={activeTab === 0 ? 'red.500' : useColorModeValue('gray.500', 'gray.400')}
+                  />
+                  <Text>الفيديوهات</Text>
+                  {lecture.videos && lecture.videos.length > 0 && (
+                    <Badge 
+                      colorScheme="red" 
+                      borderRadius="sm" 
+                      px={1.5}
+                      py={0.5}
+                      fontSize="xs"
+                    >
+                      {lecture.videos.length}
+                    </Badge>
+                  )}
+                </HStack>
+              </Tab>
 
-  {/* تبويب الفيديوهات */}
-  <Tab 
-    display="flex"
-    alignItems="center"
-    justifyContent="flex-start"
-    bg={useColorModeValue('white', 'gray.800')}
-    borderRadius="2xl"
-    p={4}
-    boxShadow="xl"
-    border="2px solid"
-    borderColor={useColorModeValue('gray.100', 'gray.700')}
-    fontSize="lg"
-    fontWeight="bold"
-    transition="all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
-    _selected={{ 
-      bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      color: 'white',
-      boxShadow: '2xl',
-      transform: 'scale(1.02) translateX(8px)',
-      borderColor: 'transparent',
-      position: 'relative',
-      _after: {
-        content: '""',
-        position: 'absolute',
-        right: 0,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        width: '4px',
-        height: '70%',
-        bg: 'white',
-        borderRadius: 'full'
-      }
-    }}
-    _hover={{ 
-      transform: 'translateX(4px)',
-      boxShadow: '2xl',
-      borderColor: useColorModeValue('blue.200', 'blue.600')
-    }}
-    _active={{
-      transform: 'scale(0.98)'
-    }}
-  >
-    <Icon 
-      as={FaVideo} 
-      mr={4} 
-      boxSize={6}
-      color={useColorModeValue('red.500', 'red.300')}
-    />
-    <Box flex="1" textAlign="right">
-      الفيديوهات
-    </Box>
-    <Icon 
-      as={FaChevronLeft} 
-      ml={2}
-      boxSize={4}
-      opacity={0.6}
-    />
-  </Tab>
+              {/* تبويب الملفات */}
+              <Tab 
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bg="transparent"
+                borderRadius="md"
+                px={3}
+                py={2}
+                borderBottom="3px solid"
+                borderColor={activeTab === 1 ? 'blue.500' : 'transparent'}
+                fontSize="sm"
+                fontWeight="medium"
+                color={activeTab === 1 ? 'blue.600' : useColorModeValue('gray.600', 'gray.400')}
+                transition="all 0.2s"
+                _hover={{ 
+                  color: 'blue.500',
+                  bg: useColorModeValue('blue.50', 'blue.900')
+                }}
+                _selected={{ 
+                  color: 'blue.600',
+                  fontWeight: 'semibold',
+                  borderColor: 'blue.500'
+                }}
+              >
+                <HStack spacing={2}>
+                  <Icon 
+                    as={FaFilePdf} 
+                    boxSize={4}
+                    color={activeTab === 1 ? 'blue.500' : useColorModeValue('gray.500', 'gray.400')}
+                  />
+                  <Text>الملفات</Text>
+                  {lecture.files && lecture.files.length > 0 && (
+                    <Badge 
+                      colorScheme="blue" 
+                      borderRadius="sm" 
+                      px={1.5}
+                      py={0.5}
+                      fontSize="xs"
+                    >
+                      {lecture.files.length}
+                    </Badge>
+                  )}
+                </HStack>
+              </Tab>
 
-  {/* تبويب الملفات */}
-  <Tab 
-    display="flex"
-    alignItems="center"
-    justifyContent="flex-start"
-    bg={useColorModeValue('white', 'gray.800')}
-    borderRadius="2xl"
-    p={4}
-    boxShadow="xl"
-    border="2px solid"
-    borderColor={useColorModeValue('gray.100', 'gray.700')}
-    fontSize="lg"
-    fontWeight="bold"
-    transition="all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
-    _selected={{ 
-      bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-      color: 'white',
-      boxShadow: '2xl',
-      transform: 'scale(1.02) translateX(8px)',
-      borderColor: 'transparent',
-      position: 'relative',
-      _after: {
-        content: '""',
-        position: 'absolute',
-        right: 0,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        width: '4px',
-        height: '70%',
-        bg: 'white',
-        borderRadius: 'full'
-      }
-    }}
-    _hover={{ 
-      transform: 'translateX(4px)',
-      boxShadow: '2xl',
-      borderColor: useColorModeValue('purple.200', 'purple.600')
-    }}
-    _active={{
-      transform: 'scale(0.98)'
-    }}
-  >
-    <Icon 
-      as={FaFilePdf} 
-      mr={4} 
-      boxSize={6}
-      color={useColorModeValue('blue.500', 'blue.300')}
-    />
-    <Box flex="1" textAlign="right">
-      الملفات
-    </Box>
-    <Icon 
-      as={FaChevronLeft} 
-      ml={2}
-      boxSize={4}
-      opacity={0.6}
-    />
-  </Tab>
+              {/* تبويب امتحان المحاضرة */}
+              <Tab 
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bg="transparent"
+                borderRadius="md"
+                px={3}
+                py={2}
+                borderBottom="3px solid"
+                borderColor={activeTab === 2 ? 'green.500' : 'transparent'}
+                fontSize="sm"
+                fontWeight="medium"
+                color={activeTab === 2 ? 'green.600' : useColorModeValue('gray.600', 'gray.400')}
+                transition="all 0.2s"
+                _hover={{ 
+                  color: 'green.500',
+                  bg: useColorModeValue('green.50', 'green.900')
+                }}
+                _selected={{ 
+                  color: 'green.600',
+                  fontWeight: 'semibold',
+                  borderColor: 'green.500'
+                }}
+              >
+                <HStack spacing={2}>
+                  <Icon 
+                    as={FaGraduationCap} 
+                    boxSize={4}
+                    color={activeTab === 2 ? 'green.500' : useColorModeValue('gray.500', 'gray.400')}
+                  />
+                  <Text>امتحان المحاضرة</Text>
+                  {lecture.exam && (
+                    <Badge 
+                      colorScheme={lecture.exam.is_visible ? "green" : "yellow"} 
+                      borderRadius="sm" 
+                      px={1.5}
+                      py={0.5}
+                      fontSize="xs"
+                    >
+                      {lecture.exam.is_visible ? 'نشط' : 'مخفي'}
+                    </Badge>
+                  )}
+                </HStack>
+              </Tab>
 
-  {/* تبويب امتحان المحاضرة */}
-  <Tab 
-    display="flex"
-    alignItems="center"
-    justifyContent="flex-start"
-    bg={useColorModeValue('white', 'gray.800')}
-    borderRadius="2xl"
-    p={4}
-    boxShadow="xl"
-    border="2px solid"
-    borderColor={useColorModeValue('gray.100', 'gray.700')}
-    fontSize="lg"
-    fontWeight="bold"
-    transition="all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
-    _selected={{ 
-      bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-      color: 'white',
-      boxShadow: '2xl',
-      transform: 'scale(1.02) translateX(8px)',
-      borderColor: 'transparent',
-      position: 'relative',
-      _after: {
-        content: '""',
-        position: 'absolute',
-        right: 0,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        width: '4px',
-        height: '70%',
-        bg: 'white',
-        borderRadius: 'full'
-      }
-    }}
-    _hover={{ 
-      transform: 'translateX(4px)',
-      boxShadow: '2xl',
-      borderColor: useColorModeValue('cyan.200', 'cyan.600')
-    }}
-    _active={{
-      transform: 'scale(0.98)'
-    }}
-  >
-    <Icon 
-      as={FaGraduationCap} 
-      mr={4} 
-      boxSize={6}
-      color={useColorModeValue('green.500', 'green.300')}
-    />
-    <Box flex="1" textAlign="right">
-      امتحان المحاضرة
-    </Box>
-    <Icon 
-      as={FaChevronLeft} 
-      ml={2}
-      boxSize={4}
-      opacity={0.6}
-    />
-  </Tab>
-
-  {/* تبويب الامتحانات المقالية */}
-  <Tab 
-    display="flex"
-    alignItems="center"
-    justifyContent="flex-start"
-    bg={useColorModeValue('white', 'gray.800')}
-    borderRadius="2xl"
-    p={4}
-    boxShadow="xl"
-    border="2px solid"
-    borderColor={useColorModeValue('gray.100', 'gray.700')}
-    fontSize="lg"
-    fontWeight="bold"
-    transition="all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
-    _selected={{ 
-      bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-      color: 'white',
-      boxShadow: '2xl',
-      transform: 'scale(1.02) translateX(8px)',
-      borderColor: 'transparent',
-      position: 'relative',
-      _after: {
-        content: '""',
-        position: 'absolute',
-        right: 0,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        width: '4px',
-        height: '70%',
-        bg: 'white',
-        borderRadius: 'full'
-      }
-    }}
-    _hover={{ 
-      transform: 'translateX(4px)',
-      boxShadow: '2xl',
-      borderColor: useColorModeValue('green.200', 'green.600')
-    }}
-    _active={{
-      transform: 'scale(0.98)'
-    }}
-  >
-    <Icon 
-      as={FaRegPaperPlane} 
-      mr={4} 
-      boxSize={6}
-      color={useColorModeValue('purple.500', 'purple.300')}
-    />
-    <Box flex="1" textAlign="right">
-      الامتحانات المقالية
-    </Box>
-    <Icon 
-      as={FaChevronLeft} 
-      ml={2}
-      boxSize={4}
-      opacity={0.6}
-    />
-  </Tab>
-
-  {/* تبويب المناقشة */}
-  <Tab 
-    display="flex"
-    alignItems="center"
-    justifyContent="flex-start"
-    bg={useColorModeValue('white', 'gray.800')}
-    borderRadius="2xl"
-    p={4}
-    boxShadow="xl"
-    border="2px solid"
-    borderColor={useColorModeValue('gray.100', 'gray.700')}
-    fontSize="lg"
-    fontWeight="bold"
-    transition="all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
-    _selected={{ 
-      bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-      color: 'white',
-      boxShadow: '2xl',
-      transform: 'scale(1.02) translateX(8px)',
-      borderColor: 'transparent',
-      position: 'relative',
-      _after: {
-        content: '""',
-        position: 'absolute',
-        right: 0,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        width: '4px',
-        height: '70%',
-        bg: 'white',
-        borderRadius: 'full'
-      }
-    }}
-    _hover={{ 
-      transform: 'translateX(4px)',
-      boxShadow: '2xl',
-      borderColor: useColorModeValue('orange.200', 'orange.600')
-    }}
-    _active={{
-      transform: 'scale(0.98)'
-    }}
-  >
-    <Icon 
-      as={FaComments} 
-      mr={4} 
-      boxSize={6}
-      color={useColorModeValue('orange.500', 'orange.300')}
-    />
-    <Box flex="1" textAlign="right">
-      المناقشة
-    </Box>
-    <Icon 
-      as={FaChevronLeft} 
-      ml={2}
-      boxSize={4}
-      opacity={0.6}
-    />
-  </Tab>
-
-</TabList>
+              {/* تبويب الامتحانات المقالية */}
+             
+              {/* تبويب المناقشة */}
+              <Tab 
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bg="transparent"
+                borderRadius="md"
+                px={3}
+                py={2}
+                borderBottom="3px solid"
+                borderColor={activeTab === 4 ? 'orange.500' : 'transparent'}
+                fontSize="sm"
+                fontWeight="medium"
+                color={activeTab === 4 ? 'orange.600' : useColorModeValue('gray.600', 'gray.400')}
+                transition="all 0.2s"
+                _hover={{ 
+                  color: 'orange.500',
+                  bg: useColorModeValue('orange.50', 'orange.900')
+                }}
+                _selected={{ 
+                  color: 'orange.600',
+                  fontWeight: 'semibold',
+                  borderColor: 'orange.500'
+                }}
+              >
+                <HStack spacing={2}>
+                  <Icon 
+                    as={FaComments} 
+                    boxSize={4}
+                    color={activeTab === 4 ? 'orange.500' : useColorModeValue('gray.500', 'gray.400')}
+                  />
+                  <Text>المناقشة</Text>
+                  {commentsStats.total > 0 && (
+                    <Badge 
+                      colorScheme="orange" 
+                      borderRadius="sm" 
+                      px={1.5}
+                      py={0.5}
+                      fontSize="xs"
+                    >
+                      {commentsStats.total}
+                    </Badge>
+                  )}
+                </HStack>
+              </Tab>
+            </TabList>
 
             <TabPanels>
               {/* تاب الفيديوهات */}

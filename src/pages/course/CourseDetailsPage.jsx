@@ -2285,7 +2285,7 @@ D) has made`}
                       <!-- Activation Code Section - Left -->
                       <div style='text-align: center;'>
                         <div style='font-size: 9px; color: #3182ce; font-weight: bold; margin-bottom: 2px;'>كود التفعيل</div>
-                        <div style='font-size: 9px; color: #3182ce; font-weight: bold;'>${code.code}</div>
+                        <div style='font-size: 15px; color: red; font-weight: bold;'>${code.code}</div>
                       </div>
                       
                       <!-- Empty Middle Space -->

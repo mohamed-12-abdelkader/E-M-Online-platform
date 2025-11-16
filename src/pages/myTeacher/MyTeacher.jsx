@@ -173,9 +173,9 @@ const MyTeacher = () => {
 
       
             {teachersList.map((teacher, index) => (
-              <Link className="w-full  md:w-[340px]  m-3 " key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
+              <Link className="w-[90%] md:w-[340px] m-3 " key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
                 <Card
-                 className=" w-full mx-auto md:w-[340px] md:mx-3 "
+                 className=" w-[90%] mx-auto md:w-[340px] md:mx-3 "
                   h="full"
                   bg={cardBg}
                   borderRadius="2xl"

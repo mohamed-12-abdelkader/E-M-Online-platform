@@ -25,7 +25,8 @@ import {
   MdLogout,
   MdInventory,
   MdHome,
-  MdPublic
+  MdPublic,
+  MdSchedule
 } from "react-icons/md";
 import { FaFistRaised  } from "react-icons/fa";
 import UserType from "../../Hooks/auth/userType";
@@ -96,6 +97,7 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
     { to: "/profile", Icon: MdPerson, label: "الملف الشخصي" },
     { to: "/challenge_EM_Academy", Icon: FaFistRaised , label: "تحدي EM Academy" },
     { to: "/exam_grades", Icon: MdGrading, label: "درجات الامتحانات" },
+    { to: "/lectures_taple", Icon: MdSchedule, label: " جدول المحاضرات" },
     { to: "/teachers", Icon: MdSearch, label: "ابحث عن محاضرك" },
     { to: "/my-teachers", Icon: MdPeople, label: "محاضرينى" },
     { to: "/view_exams", Icon: MdAssessment, label: "امتحانات المنصة" },

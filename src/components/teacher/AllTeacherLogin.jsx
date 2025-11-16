@@ -178,13 +178,12 @@ const AllTeacherLogin = () => {
           ) : searchClicked ? (
             searchResults.length > 0 ? (
               <div
-                className="flex justify-start flex-wrap gap-6"
-                style={{ width: "fit-content" }}
+                className="flex justify-center md:justify-start flex-wrap gap-6 w-full"
               >
                 {searchResults.map((teacher) => (
                   <Link key={teacher.id} to={`/teacher/${teacher.id}`}>
                     <Card
-                      className="w-[350px]"
+                      className="w-[100%] mx-auto md:w-[350px]"
                       style={{
                         borderRadius: "20px",
                         boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",

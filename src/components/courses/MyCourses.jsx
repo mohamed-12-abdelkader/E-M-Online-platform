@@ -357,67 +357,68 @@ const MyCourses = () => {
 
         {/* QR Activation Button */}
         <Box
-          as="button"
-          onClick={openQrScannerModal}
-          bgGradient="linear(to-r, blue.500, blue.600)"
-          color="white"
-          borderRadius="2xl"
-          px={{ base: 6, md: 8 }}
-          py={{ base: 4, md: 5 }}
-          boxShadow="xl"
-          _hover={{
-            bgGradient: 'linear(to-r, blue.600, blue.700)',
-            transform: 'translateY(-3px)',
-            shadow: '2xl',
-          }}
-          transition="all 0.3s"
-          border="2px solid"
-          borderColor="blue.400"
-          position="relative"
-          overflow="hidden"
-        >
-          {/* Background Animation */}
-          <Box
-            position="absolute"
-            top="0"
-            left="-100%"
-            w="100%"
-            h="100%"
-            bgGradient="linear(to-r, transparent, rgba(255,255,255,0.2), transparent)"
-            transition="left 0.5s"
-            _hover={{ left: '100%' }}
-          />
-          
-          <HStack spacing={3} position="relative" zIndex={1}>
-            <Box
-              bg="whiteAlpha.200"
-              borderRadius="lg"
-              p={2}
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Icon as={FaCamera} boxSize={{ base: 5, md: 6 }} />
-            </Box>
-            <VStack align="flex-start" spacing={0}>
-              <Text
-                fontSize={{ base: 'md', md: 'lg' }}
-                fontWeight="bold"
-                lineHeight="shorter"
+                as="button"
+                onClick={openQrScannerModal}
+                bgGradient="linear(to-r, blue.500, blue.600)"
+                color="white"
+                borderRadius="2xl"
+                px={8}
+                py={5}
+                boxShadow="xl"
+                _hover={{
+                  bgGradient: 'linear(to-r, blue.600, blue.700)',
+                  transform: 'translateY(-3px)',
+                  shadow: '2xl',
+                }}
+                transition="all 0.3s"
+                border="2px solid"
+                borderColor="blue.400"
+                position="relative"
+                overflow="hidden"
+                mt={4}
               >
-                📱 امسح QR Code
-              </Text>
-              <Text
-                fontSize={{ base: 'xs', md: 'sm' }}
-                opacity={0.9}
-                fontWeight="medium"
-              >
-                لتفعيل كورس جديد
-              </Text>
-            </VStack>
-            <Icon as={FaQrcode} boxSize={{ base: 5, md: 6 }} opacity={0.8} />
-          </HStack>
-        </Box>
+                {/* Background Animation */}
+                <Box
+                  position="absolute"
+                  top="0"
+                  left="-100%"
+                  w="100%"
+                  h="100%"
+                  bgGradient="linear(to-r, transparent, rgba(255,255,255,0.2), transparent)"
+                  transition="left 0.5s"
+                  _hover={{ left: '100%' }}
+                />
+                
+                <HStack spacing={4} position="relative" zIndex={1}>
+                  <Box
+                    bg="whiteAlpha.200"
+                    borderRadius="lg"
+                    p={3}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Icon as={FaCamera} boxSize={6} />
+                  </Box>
+                  <VStack align="flex-start" spacing={1}>
+                    <Text
+                      fontSize="xl"
+                      fontWeight="bold"
+                      lineHeight="shorter"
+                    >
+                      📱 امسح QR Code الآن
+                    </Text>
+                    <Text
+                      fontSize="sm"
+                      opacity={0.9}
+                      fontWeight="medium"
+                    >
+                      لتفعيل كورس جديد وبدء التعلم
+                    </Text>
+                  </VStack>
+                  <Icon as={FaQrcode} boxSize={7} opacity={0.8} />
+                </HStack>
+              </Box>
       </Flex>
 
       {/* Courses Grid */}
@@ -667,69 +668,7 @@ const MyCourses = () => {
               <Text color={subTextColor} textAlign="center" maxW="400px" fontSize={{ base: 'sm', md: 'md' }}>
                 ابدأ رحلتك التعليمية الآن! قم بمسح QR Code لتفعيل كورس جديد
               </Text>
-              <Box
-                as="button"
-                onClick={openQrScannerModal}
-                bgGradient="linear(to-r, blue.500, blue.600)"
-                color="white"
-                borderRadius="2xl"
-                px={8}
-                py={5}
-                boxShadow="xl"
-                _hover={{
-                  bgGradient: 'linear(to-r, blue.600, blue.700)',
-                  transform: 'translateY(-3px)',
-                  shadow: '2xl',
-                }}
-                transition="all 0.3s"
-                border="2px solid"
-                borderColor="blue.400"
-                position="relative"
-                overflow="hidden"
-                mt={4}
-              >
-                {/* Background Animation */}
-                <Box
-                  position="absolute"
-                  top="0"
-                  left="-100%"
-                  w="100%"
-                  h="100%"
-                  bgGradient="linear(to-r, transparent, rgba(255,255,255,0.2), transparent)"
-                  transition="left 0.5s"
-                  _hover={{ left: '100%' }}
-                />
-                
-                <HStack spacing={4} position="relative" zIndex={1}>
-                  <Box
-                    bg="whiteAlpha.200"
-                    borderRadius="lg"
-                    p={3}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    <Icon as={FaCamera} boxSize={6} />
-                  </Box>
-                  <VStack align="flex-start" spacing={1}>
-                    <Text
-                      fontSize="xl"
-                      fontWeight="bold"
-                      lineHeight="shorter"
-                    >
-                      📱 امسح QR Code الآن
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      opacity={0.9}
-                      fontWeight="medium"
-                    >
-                      لتفعيل كورس جديد وبدء التعلم
-                    </Text>
-                  </VStack>
-                  <Icon as={FaQrcode} boxSize={7} opacity={0.8} />
-                </HStack>
-              </Box>
+            
             </VStack>
           </VStack>
         </Center>

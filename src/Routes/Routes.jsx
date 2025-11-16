@@ -109,6 +109,7 @@ import ProtectedLogin from "../components/protectedRoute/ProtectedLogin";
 import Match from "../pages/league/Match";
 import EssayExam from "../pages/exam/EssayExam";
 import ChallengeEMAcademy from "../pages/challengeEMAcademy/ChallengeEMAcademy";
+import LecturesTaple from "../pages/lecturesTaple/LecturesTaple";
 
 
 const AppRouter = () => {
@@ -250,6 +251,7 @@ const AppRouter = () => {
           <Route path="suggested-teachers" element={<SuggestedTeachers />} />
           <Route path="my-teachers" element={<MyTeacher />} />
           <Route path="teacher/:id" element={<TeacherDetails />} />
+          <Route path="lectures_taple" element={<LecturesTaple />} />
 
           {/* Courses */}
          

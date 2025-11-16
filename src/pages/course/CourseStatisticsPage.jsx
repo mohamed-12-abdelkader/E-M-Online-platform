@@ -18,7 +18,9 @@ import {
   Button,
   Spinner,
   Input,
-  Tooltip,
+  Card,
+  CardBody,
+  Avatar,
 } from "@chakra-ui/react";
 import {
   FaUsers,
@@ -30,6 +32,8 @@ import {
   FaBookOpen,
   FaFileAlt,
   FaUser,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
@@ -37,145 +41,22 @@ import baseUrl from "../../api/baseUrl";
 
 const MotionBox = motion(Box);
 
-// مكون فرعي لعرض قسم المحاضرات
-const LectureSection = ({ watchedCount, totalLectures, notWatchedLectures, accentColor, failColor }) => {
-  const [showDetails, setShowDetails] = useState(false);
-  const completionPercentage = (watchedCount / totalLectures) * 100;
-
-  return (
-    <Box>
-      <HStack justify="space-between" mb={2}>
-        <HStack spacing={2}>
-          <Icon as={FaBookOpen} color={accentColor} />
-          <Text fontWeight="bold" fontSize="sm">المحاضرات</Text>
-        </HStack>
-        <Button size="xs" variant="ghost" onClick={() => setShowDetails(!showDetails)}>
-          {showDetails ? "إخفاء" : "إظهار"} التفاصيل
-        </Button>
-      </HStack>
-      <Progress value={completionPercentage} size="sm" colorScheme="blue" mb={2} />
-      <HStack spacing={3}>
-        <Tooltip label={`${watchedCount} من ${totalLectures} محاضرة مشاهدة`}>
-          <Badge colorScheme="green">
-            <FaCheckCircle style={{ marginLeft: 4 }} /> مشاهدة: {watchedCount}
-          </Badge>
-        </Tooltip>
-        <Tooltip label={`${notWatchedLectures.length} محاضرة غير مشاهدة`}>
-          <Badge colorScheme="red">
-            <FaTimesCircle style={{ marginLeft: 4 }} /> غير مشاهدة: {notWatchedLectures.length}
-          </Badge>
-        </Tooltip>
-      </HStack>
-      <Collapse in={showDetails} animateOpacity>
-        {notWatchedLectures.length > 0 && (
-          <Box mt={2}>
-            <Text color={failColor} fontSize="xs" fontWeight="bold">
-              المحاضرات غير المشاهدة:
-            </Text>
-            <HStack spacing={2} flexWrap="wrap" mt={1}>
-              {notWatchedLectures.map((lecId) => (
-                <Badge key={lecId} colorScheme="red" fontSize="xs">
-                  <FaBookOpen style={{ marginLeft: 2 }} /> محاضرة {lecId}
-                </Badge>
-              ))}
-            </HStack>
-          </Box>
-        )}
-      </Collapse>
-    </Box>
-  );
-};
-
-// مكون فرعي لعرض قسم الامتحانات
-const ExamSection = ({ examsSolved, examsNotSolved, title, icon, successColor, failColor }) => {
-  const [showDetails, setShowDetails] = useState(false);
-  const totalExams = examsSolved.length + examsNotSolved.length;
-  const completionPercentage = totalExams > 0 ? (examsSolved.length / totalExams) * 100 : 0;
-
-  return (
-    <Box>
-      <HStack justify="space-between" mb={2}>
-        <HStack spacing={2}>
-          <Icon as={icon} color={successColor} />
-          <Text fontWeight="bold" fontSize="sm">{title}</Text>
-        </HStack>
-        <Button size="xs" variant="ghost" onClick={() => setShowDetails(!showDetails)}>
-          {showDetails ? "إخفاء" : "إظهار"} التفاصيل
-        </Button>
-      </HStack>
-      <Progress value={completionPercentage} size="sm" colorScheme="green" mb={2} />
-      <HStack spacing={3}>
-        <Tooltip label={`${examsSolved.length} امتحانات محلولة`}>
-          <Badge colorScheme="green">
-            <FaCheckCircle style={{ marginLeft: 4 }} /> محلولة: {examsSolved.length}
-          </Badge>
-        </Tooltip>
-        <Tooltip label={`${examsNotSolved.length} امتحانات غير محلولة`}>
-          <Badge colorScheme="red">
-            <FaTimesCircle style={{ marginLeft: 4 }} /> غير محلولة: {examsNotSolved.length}
-          </Badge>
-        </Tooltip>
-      </HStack>
-      <Collapse in={showDetails} animateOpacity>
-        {examsNotSolved.length > 0 && (
-          <Box mt={2}>
-            <Text color={failColor} fontSize="xs" fontWeight="bold">
-              {title} غير محلولة:
-            </Text>
-            <VStack align="start" spacing={1} mt={1}>
-              {examsNotSolved.map((ex) => (
-                <Badge key={ex.exam_id} colorScheme="red" fontSize="xs">
-                  <FaFileAlt style={{ marginLeft: 2 }} /> {ex.title || `امتحان ${ex.exam_id}`}
-                </Badge>
-              ))}
-            </VStack>
-          </Box>
-        )}
-        {examsSolved.length > 0 && (
-          <Box mt={2}>
-            <Text color={successColor} fontSize="xs" fontWeight="bold">
-              {title} محلولة:
-            </Text>
-            <VStack align="start" spacing={1} mt={1}>
-              {examsSolved.map((ex) => (
-                <Badge key={ex.exam_id} colorScheme="green" fontSize="xs">
-                  <FaFileAlt style={{ marginLeft: 2 }} /> امتحان {ex.exam_id}{" "}
-                  {ex.total_grade ? `(درجة: ${ex.total_grade})` : ""}
-                </Badge>
-              ))}
-            </VStack>
-          </Box>
-        )}
-      </Collapse>
-    </Box>
-  );
-};
-
 const CourseStatisticsPage = () => {
   const { id } = useParams();
   
-  // State management
   const [progressData, setProgressData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [lectures, setLectures] = useState([]);
-  const [exams, setExams] = useState([]);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedStudent, setExpandedStudent] = useState(null);
 
-  // الألوان المتكيفة
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
-  const headingColor = useColorModeValue("blue.600", "blue.200");
-  const textColor = useColorModeValue("gray.600", "gray.300");
-  const subTextColor = useColorModeValue("gray.500", "gray.400");
-  const accentColor = useColorModeValue("blue.600", "blue.300");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const successColor = useColorModeValue("green.500", "green.300");
-  const failColor = useColorModeValue("red.400", "red.300");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const subTextColor = useColorModeValue("gray.600", "gray.400");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
 
-  // Fetch progress data
   const fetchProgress = useCallback(async () => {
     try {
       setLoading(true);
@@ -193,280 +74,411 @@ const CourseStatisticsPage = () => {
     }
   }, [id]);
 
-  // Fetch lectures data
-  const fetchLectures = useCallback(async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await baseUrl.get(`api/course/${id}/lectures`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setLectures(response.data.lectures || []);
-    } catch (err) {
-      console.error("Error fetching lectures:", err);
-    }
-  }, [id]);
-
-  // Fetch exams data
-  const fetchExams = useCallback(async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await baseUrl.get(`api/course/${id}/course-exams`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setExams(response.data.exams || []);
-    } catch (err) {
-      console.error("Error fetching exams:", err);
-    }
-  }, [id]);
-
   useEffect(() => {
     if (id) {
       fetchProgress();
-      fetchLectures();
-      fetchExams();
     }
-  }, [id, fetchProgress, fetchLectures, fetchExams]);
+  }, [id, fetchProgress]);
 
-  // تصفية الطلاب
   const filteredStudents = progressData?.students_details
     ?.filter((student) => {
-      if (filter === "completed") return student.watched_count === progressData.total_lectures;
-      if (filter === "incomplete") return student.watched_count < progressData.total_lectures;
+      const watchedCount = student.watched_lectures_count || 0;
+      const totalLectures = student.total_lectures || progressData.course_stats?.total_lectures || 0;
+      if (filter === "completed") return watchedCount === totalLectures;
+      if (filter === "incomplete") return watchedCount < totalLectures;
       return true;
     })
     ?.filter((student) =>
-      student.name.toLowerCase().includes(searchQuery.toLowerCase())
+      student.name?.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
-  // Framer Motion variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10, scale: 0.98 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
-  };
-
-  // مكون بطاقة الإحصائيات العامة
-  const StatCard = ({ title, value, icon, color }) => (
-    <MotionBox
-      variants={itemVariants}
-      p={3}
-      bg={cardBg}
-      borderRadius="md"
-      boxShadow="sm"
-      border="1px solid"
-      borderColor={borderColor}
-      textAlign="center"
-      height="full"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-    >
-      <Icon as={icon} w={6} h={6} color={color} mb={1} />
-      <Text fontSize="sm" fontWeight="semibold" color={subTextColor}>
-        {title}
-      </Text>
-      <Heading size="md" fontWeight="bold" color={headingColor}>
-        {value.toLocaleString()}
-      </Heading>
-    </MotionBox>
-  );
-
-  return (
-    <Box minH="100vh" className="mt-[40px]" bg={bgColor} py={{ base: 4, md: 8 }} dir="rtl">
-      {/* Header Section */}
-      <Flex
-        as="header"
-        align="center"
-        justify="center"
-        bg={useColorModeValue("blue.600", "gray.800")}
-        color="white"
-        py={{ base: 4, md: 6 }}
-        mb={{ base: 4, md: 8 }}
-        boxShadow="md"
-        textAlign="center"
-        px={{ base: 2, md: 4 }}
-      >
-        <VStack spacing={{ base: 1, md: 2 }}>
-          <Icon as={FaChartBar} w={{ base: 8, md: 10 }} h={{ base: 8, md: 10 }} />
-          <Heading as="h1" size={{ base: "md", md: "lg" }} fontWeight="bold">
-            إحصائيات تقدم الطلاب
-          </Heading>
-          <Text fontSize={{ base: "sm", md: "md" }}>نظرة تفصيلية على تقدم الطلاب في الكورس</Text>
+  if (loading) {
+    return (
+      <Flex justify="center" align="center" minH="100vh" bg={bgColor}>
+        <VStack spacing={4}>
+          <Spinner size="xl" color="blue.500" thickness="4px" />
+          <Text color={subTextColor}>جاري تحميل البيانات...</Text>
         </VStack>
       </Flex>
+    );
+  }
 
-      <Container maxW="6xl" px={{ base: 2, sm: 4, md: 6 }}>
-        {loading ? (
-          <Flex justify="center" py={20}>
-            <Spinner size="xl" color="blue.500" />
-            <Text mr={4}>جاري تحميل البيانات...</Text>
-          </Flex>
-        ) : error ? (
-          <Box py={20} textAlign="center">
-            <Text color="red.500">{error}</Text>
-          </Box>
-        ) : progressData ? (
-          <VStack spacing={{ base: 4, md: 6 }} align="stretch">
-            {/* إحصائيات عامة */}
+  if (error) {
+    return (
+      <Flex justify="center" align="center" minH="100vh" bg={bgColor}>
+        <VStack spacing={4}>
+          <Icon as={FaTimesCircle} boxSize={12} color="red.500" />
+          <Text color="red.500" fontSize="lg">{error}</Text>
+          <Button onClick={fetchProgress} colorScheme="blue">إعادة المحاولة</Button>
+        </VStack>
+      </Flex>
+    );
+  }
+
+  if (!progressData) return null;
+
+  return (
+    <Box minH="100vh" bg={bgColor} py={8} dir="rtl">
+      <Container maxW="7xl">
+        {/* Header */}
+        <Box mb={8}>
+          <HStack spacing={4} mb={6}>
             <Box
-              bg={cardBg}
-              p={{ base: 3, md: 5 }}
-              borderRadius={{ base: 'lg', md: 'xl' }}
+              p={3}
+              bgGradient="linear(to-br, blue.500, blue.600)"
+              borderRadius="xl"
               boxShadow="lg"
-              border="1px solid"
-              borderColor={borderColor}
             >
-              <Heading size={{ base: "sm", md: "md" }} color={headingColor} mb={{ base: 3, md: 4 }}>
-                <FaChartBar style={{ display: "inline", marginLeft: 8 }} /> إحصائيات عامة
-              </Heading>
-              <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 5 }} spacing={{ base: 3, md: 3 }} gap={{ base: 2, md: 3 }}>
-                <StatCard
-                  title="عدد الطلاب"
-                  value={progressData.course_stats?.total_students}
-                  icon={FaUsers}
-                  color={accentColor}
-                />
-                <StatCard
-                  title="عدد المحاضرات"
-                  value={progressData.course_stats?.total_lectures}
-                  icon={FaBookOpen}
-                  color="purple.500"
-                />
-                <StatCard
-                  title="عدد الفيديوهات"
-                  value={progressData.course_stats?.total_videos}
-                  icon={FaEye}
-                  color="teal.500"
-                />
-                <StatCard
-                  title="امتحانات المحاضرة"
-                  value={progressData.course_stats?.total_lecture_exams}
-                  icon={FaFileAlt}
-                  color="orange.500"
-                />
-                <StatCard
-                  title="امتحانات الكورس"
-                  value={progressData.course_stats?.total_course_exams}
-                  icon={FaGraduationCap}
-                  color="green.500"
-                />
-              </SimpleGrid>
-              <Text color={successColor} fontWeight="bold" mt={4}>
-                <FaCheckCircle style={{ marginLeft: 4 }} /> عدد الطلاب الذين أكملوا الكورس:{" "}
-                {progressData.completed_students}
-              </Text>
+              <Icon as={FaChartBar} boxSize={8} color="white" />
             </Box>
-
-            {/* فلترة وبحث */}
-            <VStack spacing={{ base: 2, md: 4 }} align="stretch">
-              <HStack spacing={{ base: 2, md: 4 }} flexWrap="wrap">
-                <Select
-                  w={{ base: '100%', sm: '200px' }}
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  bg={cardBg}
-                  borderColor={borderColor}
-                  size={{ base: 'sm', md: 'md' }}
-                >
-                  <option value="all">الكل</option>
-                  <option value="completed">مكتمل</option>
-                  <option value="incomplete">غير مكتمل</option>
-                </Select>
-                <Input
-                  placeholder="ابحث باسم الطالب..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  bg={cardBg}
-                  borderColor={borderColor}
-                  size={{ base: 'sm', md: 'md' }}
-                  flex="1"
-                  minW={{ base: '100%', sm: '200px' }}
-                />
-              </HStack>
+            <VStack align="flex-start" spacing={1}>
+              <Heading size="xl" color={textColor} fontWeight="bold">
+                إحصائيات تقدم الطلاب
+              </Heading>
+              <Text color={subTextColor} fontSize="md">
+                نظرة شاملة على أداء الطلاب في الكورس
+              </Text>
             </VStack>
+          </HStack>
 
-            {/* قائمة الطلاب */}
-            {filteredStudents.length === 0 ? (
-              <Box py={{ base: 10, md: 20 }} textAlign="center">
-                <Text color="gray.500" fontSize={{ base: 'sm', md: 'md' }}>لا يوجد طلاب مطابقين.</Text>
-              </Box>
-            ) : (
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 4, md: 4 }} gap={{ base: 3, md: 4 }}>
-                {filteredStudents.map((student) => (
-                  <MotionBox
-                    key={student.id}
-                    variants={itemVariants}
-                    bg={cardBg}
-                    p={{ base: 3, md: 4 }}
-                    borderRadius={{ base: 'lg', md: 'xl' }}
-                    boxShadow="md"
-                    border="1px solid"
-                    borderColor={borderColor}
-                  >
-                    <VStack align="stretch" spacing={{ base: 2, md: 3 }}>
-                      <HStack justify="space-between" flexWrap="wrap" gap={2}>
-                        <HStack spacing={{ base: 2, md: 3 }} flexWrap="wrap">
-                          <Icon as={FaUser} color={accentColor} />
-                          <Text fontWeight="bold" fontSize={{ base: 'sm', md: 'md' }} color={headingColor}>
-                            {student.name}
-                          </Text>
-                          <Badge colorScheme="blue" fontSize={{ base: 'xs', md: 'sm' }}>ID: {student.id}</Badge>
+          {/* Stats Cards */}
+          <SimpleGrid columns={{ base: 2, md: 5 }} spacing={4}>
+            <Card bg={cardBg} borderRadius="xl" boxShadow="md" border="1px solid" borderColor={borderColor}>
+              <CardBody p={4}>
+                <VStack spacing={2}>
+                  <Icon as={FaUsers} boxSize={6} color="blue.500" />
+                  <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                    {progressData.course_stats?.total_students || 0}
+                  </Text>
+                  <Text fontSize="sm" color={subTextColor}>الطلاب</Text>
+                </VStack>
+              </CardBody>
+            </Card>
+            <Card bg={cardBg} borderRadius="xl" boxShadow="md" border="1px solid" borderColor={borderColor}>
+              <CardBody p={4}>
+                <VStack spacing={2}>
+                  <Icon as={FaBookOpen} boxSize={6} color="purple.500" />
+                  <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                    {progressData.course_stats?.total_lectures || 0}
+                  </Text>
+                  <Text fontSize="sm" color={subTextColor}>المحاضرات</Text>
+                </VStack>
+              </CardBody>
+            </Card>
+            <Card bg={cardBg} borderRadius="xl" boxShadow="md" border="1px solid" borderColor={borderColor}>
+              <CardBody p={4}>
+                <VStack spacing={2}>
+                  <Icon as={FaEye} boxSize={6} color="teal.500" />
+                  <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                    {progressData.course_stats?.total_videos || 0}
+                  </Text>
+                  <Text fontSize="sm" color={subTextColor}>الفيديوهات</Text>
+                </VStack>
+              </CardBody>
+            </Card>
+            <Card bg="green.50" borderRadius="xl" boxShadow="md" border="2px solid" borderColor="green.300">
+              <CardBody p={4}>
+                <VStack spacing={2}>
+                  <Icon as={FaCheckCircle} boxSize={6} color="green.600" />
+                  <Text fontSize="2xl" fontWeight="bold" color="green.700">
+                    {progressData.completed_students || 0}
+                  </Text>
+                  <Text fontSize="sm" color="green.600" fontWeight="medium">مكتملين</Text>
+                </VStack>
+              </CardBody>
+            </Card>
+            <Card bg={cardBg} borderRadius="xl" boxShadow="md" border="1px solid" borderColor={borderColor}>
+              <CardBody p={4}>
+                <VStack spacing={2}>
+                  <Icon as={FaFileAlt} boxSize={6} color="orange.500" />
+                  <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                    {(progressData.course_stats?.total_lecture_exams || 0) + (progressData.course_stats?.total_course_exams || 0)}
+                  </Text>
+                  <Text fontSize="sm" color={subTextColor}>الامتحانات</Text>
+                </VStack>
+              </CardBody>
+            </Card>
+          </SimpleGrid>
+        </Box>
+
+        {/* Filters */}
+        <HStack spacing={4} mb={6} flexWrap="wrap">
+          <Select
+            w={{ base: '100%', sm: '200px' }}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            bg={cardBg}
+            borderColor={borderColor}
+            borderRadius="lg"
+          >
+            <option value="all">الكل</option>
+            <option value="completed">مكتمل</option>
+            <option value="incomplete">غير مكتمل</option>
+          </Select>
+          <Input
+            placeholder="ابحث باسم الطالب..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            bg={cardBg}
+            borderColor={borderColor}
+            borderRadius="lg"
+            flex="1"
+            minW={{ base: '100%', sm: '250px' }}
+          />
+        </HStack>
+
+        {/* Students List */}
+        {filteredStudents.length === 0 ? (
+          <Card bg={cardBg} borderRadius="xl" boxShadow="md">
+            <CardBody py={12}>
+              <VStack spacing={4}>
+                <Icon as={FaUsers} boxSize={16} color="gray.400" />
+                <Text color={subTextColor} fontSize="lg">لا يوجد طلاب مطابقين</Text>
+              </VStack>
+            </CardBody>
+          </Card>
+        ) : (
+          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
+            {filteredStudents.map((student) => {
+              const watchedCount = student.watched_lectures_count || 0;
+              const totalLectures = student.total_lectures || progressData.course_stats?.total_lectures || 0;
+              const completionPercentage = student.lectures_completion_percentage || 0;
+              const solvedExams = (student.solved_lecture_exams || []).length + (student.solved_course_exams || []).length;
+              const pendingExams = (student.not_solved_lecture_exams || []).length + (student.not_solved_course_exams || []).length;
+
+              return (
+                <Card
+                  key={student.id}
+                  bg={cardBg}
+                  borderRadius="xl"
+                  boxShadow="lg"
+                  border="1px solid"
+                  borderColor={borderColor}
+                  overflow="hidden"
+                  _hover={{ boxShadow: "xl", transform: "translateY(-2px)" }}
+                  transition="all 0.3s"
+                >
+                  <CardBody p={6}>
+                    <VStack align="stretch" spacing={4}>
+                      {/* Student Header */}
+                      <HStack justify="space-between">
+                        <HStack spacing={3}>
+                          <Avatar
+                            name={student.name}
+                            bg="blue.500"
+                            color="white"
+                            size="md"
+                            fontWeight="bold"
+                          />
+                          <VStack align="flex-start" spacing={0}>
+                            <Text fontWeight="bold" fontSize="lg" color={textColor}>
+                              {student.name}
+                            </Text>
+                            {student.email && (
+                              <Text fontSize="sm" color={subTextColor}>{student.email}</Text>
+                            )}
+                          </VStack>
                         </HStack>
-                        <Button
-                          size={{ base: 'xs', md: 'sm' }}
-                          variant="ghost"
-                          onClick={() =>
-                            setExpandedStudent(expandedStudent === student.id ? null : student.id)
-                          }
-                          fontSize={{ base: 'xs', md: 'sm' }}
+                        <Badge
+                          colorScheme={completionPercentage === 100 ? "green" : completionPercentage >= 50 ? "blue" : "orange"}
+                          fontSize="sm"
+                          px={3}
+                          py={1}
+                          borderRadius="full"
                         >
-                          {expandedStudent === student.id ? "إخفاء" : "إظهار"} التفاصيل
-                        </Button>
+                          {completionPercentage.toFixed(0)}%
+                        </Badge>
                       </HStack>
-                    <Collapse in={expandedStudent === student.id} animateOpacity>
-                      <VStack align="stretch" spacing={{ base: 3, md: 4 }}>
-                        {/* قسم المحاضرات */}
-                        <LectureSection
-                          watchedCount={student.watched_count}
-                          totalLectures={progressData.total_lectures}
-                          notWatchedLectures={student.not_watched_lectures}
-                          accentColor={accentColor}
-                          failColor={failColor}
+
+                      <Divider />
+
+                      {/* Quick Stats */}
+                      <SimpleGrid columns={2} spacing={3}>
+                        <Box p={3} bg="blue.50" borderRadius="lg">
+                          <Text fontSize="xs" color="blue.600" mb={1}>المحاضرات</Text>
+                          <Text fontSize="xl" fontWeight="bold" color="blue.700">
+                            {watchedCount}/{totalLectures}
+                          </Text>
+                        </Box>
+                        <Box p={3} bg="purple.50" borderRadius="lg">
+                          <Text fontSize="xs" color="purple.600" mb={1}>الامتحانات</Text>
+                          <Text fontSize="xl" fontWeight="bold" color="purple.700">
+                            {solvedExams}/{solvedExams + pendingExams}
+                          </Text>
+                        </Box>
+                      </SimpleGrid>
+
+                      {/* Progress Bar */}
+                      <Box>
+                        <HStack justify="space-between" mb={2}>
+                          <Text fontSize="sm" fontWeight="medium" color={textColor}>تقدم المحاضرات</Text>
+                          <Text fontSize="sm" color={subTextColor}>{completionPercentage.toFixed(0)}%</Text>
+                        </HStack>
+                        <Progress
+                          value={completionPercentage}
+                          size="lg"
+                          colorScheme={completionPercentage === 100 ? "green" : "blue"}
+                          borderRadius="full"
                         />
-                        <Divider />
-                        {/* قسم امتحانات المحاضرة */}
-                        <ExamSection
-                          examsSolved={student.lecture_exams_solved}
-                          examsNotSolved={student.lecture_exams_not_solved}
-                          title="امتحانات المحاضرة"
-                          icon={FaFileAlt}
-                          successColor={successColor}
-                          failColor={failColor}
-                        />
-                        <Divider />
-                        {/* قسم امتحانات الكورس */}
-                        <ExamSection
-                          examsSolved={student.course_exams_solved}
-                          examsNotSolved={student.course_exams_not_solved}
-                          title="امتحانات الكورس"
-                          icon={FaGraduationCap}
-                          successColor={successColor}
-                          failColor={failColor}
-                        />
-                      </VStack>
-                    </Collapse>
-                  </VStack>
-                </MotionBox>
-                ))}
-              </SimpleGrid>
-            )}
-          </VStack>
-        ) : null}
+                      </Box>
+
+                      {/* Expand Button */}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setExpandedStudent(expandedStudent === student.id ? null : student.id)}
+                        rightIcon={expandedStudent === student.id ? <FaChevronUp /> : <FaChevronDown />}
+                        w="full"
+                      >
+                        {expandedStudent === student.id ? "إخفاء التفاصيل" : "عرض التفاصيل"}
+                      </Button>
+
+                      {/* Details */}
+                      <Collapse in={expandedStudent === student.id} animateOpacity>
+                        <VStack align="stretch" spacing={4} pt={4} borderTop="1px solid" borderColor={borderColor}>
+                          {/* Watched Lectures */}
+                          {(student.watched_lectures || []).length > 0 && (
+                            <Box>
+                              <HStack spacing={2} mb={3}>
+                                <Icon as={FaCheckCircle} color="green.500" />
+                                <Text fontWeight="bold" fontSize="sm" color="green.700">
+                                  المحاضرات المشاهدة ({(student.watched_lectures || []).length})
+                                </Text>
+                              </HStack>
+                              <VStack align="stretch" spacing={2}>
+                                {(student.watched_lectures || []).slice(0, 3).map((lecture) => (
+                                  <Box
+                                    key={lecture.id}
+                                    p={2}
+                                    bg="green.50"
+                                    borderRadius="md"
+                                    borderLeft="3px solid"
+                                    borderLeftColor="green.500"
+                                  >
+                                    <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
+                                      #{lecture.position} - {lecture.title}
+                                    </Text>
+                                    <HStack spacing={2} mt={1} fontSize="xs" color="gray.600">
+                                      <Text>فيديوهات: {lecture.watched_videos || 0}/{lecture.total_videos || 0}</Text>
+                                      {lecture.is_watched && (
+                                        <Badge colorScheme="green" fontSize="2xs">مكتملة</Badge>
+                                      )}
+                                    </HStack>
+                                  </Box>
+                                ))}
+                                {(student.watched_lectures || []).length > 3 && (
+                                  <Text fontSize="xs" color={subTextColor} textAlign="center">
+                                    + {(student.watched_lectures || []).length - 3} محاضرة أخرى
+                                  </Text>
+                                )}
+                              </VStack>
+                            </Box>
+                          )}
+
+                          {/* Not Watched Lectures */}
+                          {(student.not_watched_lectures || []).length > 0 && (
+                            <Box>
+                              <HStack spacing={2} mb={3}>
+                                <Icon as={FaTimesCircle} color="red.500" />
+                                <Text fontWeight="bold" fontSize="sm" color="red.700">
+                                  المحاضرات المتراكمة ({(student.not_watched_lectures || []).length})
+                                </Text>
+                              </HStack>
+                              <VStack align="stretch" spacing={2}>
+                                {(student.not_watched_lectures || []).slice(0, 3).map((lecture) => (
+                                  <Box
+                                    key={lecture.id}
+                                    p={2}
+                                    bg="red.50"
+                                    borderRadius="md"
+                                    borderLeft="3px solid"
+                                    borderLeftColor="red.500"
+                                  >
+                                    <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
+                                      #{lecture.position} - {lecture.title}
+                                    </Text>
+                                    <Text fontSize="xs" color="red.600" mt={1}>
+                                      متبقي: {lecture.remaining_videos || 0} فيديو
+                                    </Text>
+                                  </Box>
+                                ))}
+                                {(student.not_watched_lectures || []).length > 3 && (
+                                  <Text fontSize="xs" color={subTextColor} textAlign="center">
+                                    + {(student.not_watched_lectures || []).length - 3} محاضرة أخرى
+                                  </Text>
+                                )}
+                              </VStack>
+                            </Box>
+                          )}
+
+                          {/* Solved Exams */}
+                          {solvedExams > 0 && (
+                            <Box>
+                              <HStack spacing={2} mb={3}>
+                                <Icon as={FaCheckCircle} color="green.500" />
+                                <Text fontWeight="bold" fontSize="sm" color="green.700">
+                                  الامتحانات المحلولة ({solvedExams})
+                                </Text>
+                              </HStack>
+                              <VStack align="stretch" spacing={2}>
+                                {[...(student.solved_lecture_exams || []), ...(student.solved_course_exams || [])].slice(0, 3).map((exam) => (
+                                  <Box
+                                    key={exam.id}
+                                    p={2}
+                                    bg="green.50"
+                                    borderRadius="md"
+                                    borderLeft="3px solid"
+                                    borderLeftColor="green.500"
+                                  >
+                                    <Text fontSize="sm" fontWeight="medium" noOfLines={1}>{exam.title}</Text>
+                                    <HStack spacing={2} mt={1} fontSize="xs">
+                                      <Badge colorScheme={exam.passed ? "green" : "red"} fontSize="2xs">
+                                        {exam.passed ? "نجح" : "رسب"}
+                                      </Badge>
+                                      <Text color="gray.600">
+                                        {exam.grade || 0}/{exam.total_grade || 100}
+                                      </Text>
+                                    </HStack>
+                                  </Box>
+                                ))}
+                              </VStack>
+                            </Box>
+                          )}
+
+                          {/* Pending Exams */}
+                          {pendingExams > 0 && (
+                            <Box>
+                              <HStack spacing={2} mb={3}>
+                                <Icon as={FaTimesCircle} color="red.500" />
+                                <Text fontWeight="bold" fontSize="sm" color="red.700">
+                                  الامتحانات المتراكمة ({pendingExams})
+                                </Text>
+                              </HStack>
+                              <VStack align="stretch" spacing={2}>
+                                {[...(student.not_solved_lecture_exams || []), ...(student.not_solved_course_exams || [])].slice(0, 3).map((exam) => (
+                                  <Box
+                                    key={exam.id}
+                                    p={2}
+                                    bg="red.50"
+                                    borderRadius="md"
+                                    borderLeft="3px solid"
+                                    borderLeftColor="red.500"
+                                  >
+                                    <Text fontSize="sm" fontWeight="medium" noOfLines={1}>{exam.title}</Text>
+                                  </Box>
+                                ))}
+                              </VStack>
+                            </Box>
+                          )}
+                        </VStack>
+                      </Collapse>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </SimpleGrid>
+        )}
       </Container>
     </Box>
   );

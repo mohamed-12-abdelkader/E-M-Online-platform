@@ -6,7 +6,7 @@ import {
   Icon
 } from "@chakra-ui/react";
 // استبدال أيقونات chakra-ui بأيقونات react-icons
-import { AiFillEdit, AiFillDelete, AiFillCheckCircle, AiOutlineCheckCircle, AiOutlineCloseCircle, AiFillStar } from "react-icons/ai";
+import { AiFillEdit, AiFillDelete, AiFillCheckCircle, AiOutlineCheckCircle, AiOutlineCloseCircle, AiFillStar, AiFillPicture } from "react-icons/ai";
 import { CircularProgress, CircularProgressLabel } from "@chakra-ui/react";
 import baseUrl from "../../api/baseUrl";
 import { useParams } from "react-router-dom";
@@ -42,6 +42,11 @@ const ComprehensiveExam = () => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  // State لإضافة صورة لسؤال محدد
+  const [addQuestionImageModal, setAddQuestionImageModal] = useState({ open: false, questionId: null });
+  const [selectedQuestionImage, setSelectedQuestionImage] = useState(null);
+  const [questionImagePreview, setQuestionImagePreview] = useState('');
+  const [uploadingQuestionImage, setUploadingQuestionImage] = useState(false);
 
   // جلب درجات الطلاب
   const fetchGrades = async () => {
@@ -498,6 +503,122 @@ const ComprehensiveExam = () => {
     }
   };
 
+  // فتح مودال إضافة صورة لسؤال محدد
+  const openAddQuestionImageModal = (questionId) => {
+    setAddQuestionImageModal({ open: true, questionId });
+    setSelectedQuestionImage(null);
+    setQuestionImagePreview('');
+  };
+
+  // إغلاق مودال إضافة صورة لسؤال محدد
+  const closeAddQuestionImageModal = () => {
+    setAddQuestionImageModal({ open: false, questionId: null });
+    setSelectedQuestionImage(null);
+    setQuestionImagePreview('');
+  };
+
+  // التعامل مع اختيار صورة لسؤال محدد
+  const handleQuestionImageSelection = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // التحقق من نوع الملف
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: "خطأ",
+          description: "يرجى اختيار ملف صورة صالح (JPG, PNG, GIF)",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // التحقق من حجم الملف (حد أقصى 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        toast({
+          title: "خطأ",
+          description: "حجم الصورة يجب أن يكون أقل من 5MB",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      setSelectedQuestionImage(file);
+      
+      // إنشاء معاينة للصورة
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setQuestionImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // رفع صورة لسؤال محدد
+  const uploadQuestionImage = async () => {
+    if (!selectedQuestionImage || !addQuestionImageModal.questionId) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار صورة أولاً",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setUploadingQuestionImage(true);
+    try {
+      const token = localStorage.getItem("token");
+      
+      const formData = new FormData();
+      formData.append('image', selectedQuestionImage);
+
+      const response = await baseUrl.patch(
+        `/api/questions/lecture-exam-question/${addQuestionImageModal.questionId}`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      console.log('Question image uploaded successfully:', response.data);
+      
+      toast({
+        title: "تم رفع الصورة بنجاح",
+        description: "تم إضافة الصورة للسؤال بنجاح",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // إعادة تحميل الأسئلة
+      await fetchQuestions();
+      
+      // إغلاق المودال
+      closeAddQuestionImageModal();
+      
+    } catch (error) {
+      console.error('Error uploading question image:', error);
+      toast({
+        title: "خطأ في رفع الصورة",
+        description: error.response?.data?.message || "حدث خطأ أثناء رفع الصورة",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setUploadingQuestionImage(false);
+    }
+  };
+
   if (loading) {
     return (
       <Center minH="60vh">
@@ -762,14 +883,77 @@ const ComprehensiveExam = () => {
 
                         <VStack spacing={4} align="stretch">
                           {/* نص السؤال */}
-                          <Text 
-                            fontWeight="bold" 
-                            color="orange.800" 
-                            fontSize={{ base: 'md', sm: 'lg' }}
-                            lineHeight="1.5"
-                          >
-                            {wq.questionText}
-                          </Text>
+                          {wq.questionText && (
+                            <Text 
+                              fontWeight="bold" 
+                              color="orange.800" 
+                              fontSize={{ base: 'md', sm: 'lg' }}
+                              lineHeight="1.5"
+                            >
+                              {wq.questionText}
+                            </Text>
+                          )}
+
+                          {/* صورة السؤال */}
+                          {wq.questionImage && (
+                            <Box 
+                              w="full" 
+                              display="flex" 
+                              justifyContent="center"
+                              alignItems="center"
+                              mt={wq.questionText ? 2 : 0}
+                            >
+                              <Box
+                                maxW="100%"
+                                borderRadius="xl"
+                                overflow="hidden"
+                                boxShadow="xl"
+                                border="3px solid"
+                                borderColor="orange.300"
+                                bg="white"
+                                p={2}
+                                position="relative"
+                                _hover={{
+                                  transform: "scale(1.02)",
+                                  boxShadow: "2xl",
+                                  borderColor: "orange.400"
+                                }}
+                                transition="all 0.3s ease"
+                              >
+                                <Image 
+                                  src={wq.questionImage} 
+                                  alt="صورة السؤال" 
+                                  borderRadius="lg"
+                                  maxW="100%"
+                                  maxH={{ base: '400px', sm: '500px', md: '600px' }}
+                                  objectFit="contain"
+                                  bg="gray.50"
+                                  onError={(e) => {
+                                    console.log('Image load error, retrying...');
+                                    setTimeout(() => {
+                                      e.target.src = wq.questionImage + '?t=' + Date.now();
+                                    }, 1000);
+                                  }}
+                                  fallback={
+                                    <Box 
+                                      w="full" 
+                                      h="200px" 
+                                      bg="gray.100" 
+                                      display="flex" 
+                                      alignItems="center" 
+                                      justifyContent="center"
+                                      borderRadius="lg"
+                                    >
+                                      <VStack spacing={2}>
+                                        <Spinner size="md" color="orange.500" />
+                                        <Text color="gray.500" fontSize="sm">جاري تحميل الصورة...</Text>
+                                      </VStack>
+                                    </Box>
+                                  }
+                                />
+                              </Box>
+                            </Box>
+                          )}
 
                           {/* الإجابات */}
                           <VStack spacing={3} align="stretch">
@@ -921,6 +1105,15 @@ const ComprehensiveExam = () => {
                       )}
                     </VStack>
                     <HStack spacing={{ base: 1, sm: 2 }}>
+                      <IconButton
+                        aria-label="إضافة صورة"
+                        size={{ base: 'xs', sm: 'sm' }}
+                        colorScheme="purple"
+                        onClick={() => openAddQuestionImageModal(q.id)}
+                        minW={{ base: '28px', sm: '32px' }}
+                        h={{ base: '28px', sm: '32px' }}
+                        icon={<AiFillPicture boxSize={{ base: 3, sm: 4 }} />}
+                      />
                       <IconButton
                         aria-label="تعديل"
                         size={{ base: 'xs', sm: 'sm' }}
@@ -1701,6 +1894,123 @@ const ComprehensiveExam = () => {
             <Button 
               variant="ghost" 
               onClick={closeAddImageModal}
+              size={{ base: 'sm', sm: 'md' }}
+              fontSize={{ base: 'sm', sm: 'md' }}
+              px={{ base: 3, sm: 4 }}
+              py={{ base: 2, sm: 3 }}
+              minW={{ base: '80px', sm: '100px' }}
+            >
+              إلغاء
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Add Question Image Modal */}
+      <Modal isOpen={addQuestionImageModal.open} onClose={closeAddQuestionImageModal} size="md">
+        <ModalOverlay />
+        <ModalContent mx={{ base: 2, sm: 4 }}>
+          <ModalHeader fontSize={{ base: 'md', sm: 'lg' }}>إضافة صورة للسؤال</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={6} align="stretch">
+              {/* تعليمات */}
+              <Box p={4} bg="purple.50" borderRadius="lg" border="1px solid" borderColor="purple.200">
+                <VStack spacing={2} align="start">
+                  <Text fontWeight="bold" color="purple.700" fontSize="sm">
+                    تعليمات إضافة الصورة:
+                  </Text>
+                  <Text fontSize="sm" color="purple.600">
+                    • أنواع الصور المدعومة: JPG, PNG, GIF
+                  </Text>
+                  <Text fontSize="sm" color="purple.600">
+                    • حجم الصورة يجب أن يكون أقل من 5MB
+                  </Text>
+                </VStack>
+              </Box>
+
+              {/* معاينة الصورة المختارة */}
+              {questionImagePreview && (
+                <Box>
+                  <Text fontWeight="bold" color="gray.700" mb={3}>
+                    معاينة الصورة:
+                  </Text>
+                  <Box
+                    maxW="100%"
+                    borderRadius="xl"
+                    overflow="hidden"
+                    boxShadow="lg"
+                    border="2px solid"
+                    borderColor="purple.200"
+                    bg="white"
+                    p={2}
+                  >
+                    <Image 
+                      src={questionImagePreview} 
+                      alt="معاينة الصورة" 
+                      borderRadius="lg"
+                      maxW="100%"
+                      maxH="300px"
+                      objectFit="contain"
+                      bg="gray.50"
+                    />
+                  </Box>
+                </Box>
+              )}
+
+              {/* رفع الملف */}
+              <FormControl>
+                <FormLabel fontSize={{ base: 'sm', sm: 'md' }}>اختيار الصورة:</FormLabel>
+                <Box
+                  p={6}
+                  border="2px dashed"
+                  borderColor="purple.300"
+                  borderRadius="lg"
+                  textAlign="center"
+                  _hover={{ borderColor: "purple.400", bg: "purple.50" }}
+                  transition="all 0.2s"
+                >
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleQuestionImageSelection}
+                    display="none"
+                    id="question-image-upload"
+                  />
+                  <label htmlFor="question-image-upload">
+                    <VStack spacing={2} cursor="pointer">
+                      <Icon as={AiFillPicture} boxSize={8} color="purple.400" />
+                      <Text color="purple.600" fontWeight="medium">
+                        اضغط هنا لاختيار الصورة
+                      </Text>
+                      <Text fontSize="sm" color="gray.500">
+                        أو اسحب الصورة هنا
+                      </Text>
+                    </VStack>
+                  </label>
+                </Box>
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              colorScheme="purple" 
+              mr={3} 
+              onClick={uploadQuestionImage}
+              isLoading={uploadingQuestionImage}
+              isDisabled={!selectedQuestionImage}
+              size={{ base: 'sm', sm: 'md' }}
+              fontSize={{ base: 'sm', sm: 'md' }}
+              px={{ base: 4, sm: 6 }}
+              py={{ base: 2, sm: 3 }}
+              minW={{ base: '120px', sm: '140px' }}
+              leftIcon={<Icon as={AiFillPicture} boxSize={4} />}
+            >
+              {uploadingQuestionImage ? "جاري الرفع..." : "رفع الصورة"}
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={closeAddQuestionImageModal}
               size={{ base: 'sm', sm: 'md' }}
               fontSize={{ base: 'sm', sm: 'md' }}
               px={{ base: 3, sm: 4 }}
