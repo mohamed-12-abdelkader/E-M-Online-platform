@@ -238,7 +238,7 @@ const Sidebar = ({ groups, onSelectGroup, activeGroupId }) => {
                     placeholder="ابحث عن محادثة..."
                     borderRadius="full"
                     bg={useColorModeValue('gray.50','gray.700')}
-                    border="1px solid"
+                    border="1px solid"  
                     borderColor={useColorModeValue('gray.200','gray.600')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}

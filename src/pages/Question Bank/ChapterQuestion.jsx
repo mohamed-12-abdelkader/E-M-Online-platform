@@ -102,6 +102,32 @@ const ChapterQuestion = () => {
   const textColor = useColorModeValue("gray.600", "gray.300");
   const hoverBg = useColorModeValue("blue.50", "gray.600");
   const borderColor = useColorModeValue("gray.200", "gray.600");
+  
+  // Colors for light/dark mode with blue.500 as primary
+  const pageBg = useColorModeValue("blue.50", "gray.900");
+  const cardBackground = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("blue.100", "blue.900");
+  const cardHoverBorder = useColorModeValue("blue.300", "blue.700");
+  const textPrimary = useColorModeValue("blue.600", "blue.300");
+  const textSecondary = useColorModeValue("gray.600", "gray.400");
+  const inputBg = useColorModeValue("blue.50", "gray.700");
+  const inputBorder = useColorModeValue("blue.200", "blue.800");
+  const inputHoverBorder = useColorModeValue("blue.300", "blue.700");
+  const inputFocusBorder = useColorModeValue("blue.500", "blue.400");
+  const modalBg = useColorModeValue("white", "gray.800");
+  const modalBorder = useColorModeValue("blue.200", "blue.900");
+  const modalHeaderBg = useColorModeValue("blue.500", "blue.600");
+  const modalFooterBg = useColorModeValue("blue.50", "gray.700");
+  const buttonPrimary = useColorModeValue("blue.500", "blue.400");
+  const buttonPrimaryHover = useColorModeValue("blue.600", "blue.500");
+  const buttonSecondary = useColorModeValue("blue.400", "blue.500");
+  const buttonSecondaryHover = useColorModeValue("blue.500", "blue.600");
+  const iconBg = useColorModeValue("blue.50", "blue.900");
+  const iconBorder = useColorModeValue("blue.200", "blue.800");
+  const spinnerColor = useColorModeValue("blue.500", "blue.400");
+  const badgeActiveBg = useColorModeValue("blue.100", "blue.900");
+  const badgeActiveColor = useColorModeValue("blue.700", "blue.300");
+  const headerBg = useColorModeValue("white", "gray.800");
 
   // Fetch chapter data
   const fetchChapterData = async () => {
@@ -458,11 +484,17 @@ const ChapterQuestion = () => {
 
   if (loading) {
     return (
-      <Box p={{ base: 4, md: 8 }} className="mt-[80px]" maxW="1200px" mx="auto" bg={bgColor} minH="100vh">
+      <Box p={{ base: 4, md: 8 }} className="mt-[80px]" maxW="1200px" mx="auto" bg={pageBg} minH="100vh">
         <Flex justify="center" align="center" minH="80vh">
           <VStack spacing={4}>
-            <Spinner size="xl" color={accentColor} />
-            <Text color={textColor}>جاري تحميل بيانات الفصل...</Text>
+            <Spinner size="xl" color={spinnerColor} />
+            <Text 
+              color={useColorModeValue("blue.500", "blue.400")}
+              fontWeight="600"
+              fontFamily="'Cairo', 'Tajawal', sans-serif"
+            >
+              جاري تحميل بيانات الفصل...
+            </Text>
           </VStack>
         </Flex>
       </Box>
@@ -494,7 +526,7 @@ const ChapterQuestion = () => {
   }
 
   return (
-    <Box minH="100vh" bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)" position="relative">
+    <Box minH="100vh" bg={pageBg} position="relative">
       {/* Background Pattern */}
       <Box
         position="absolute"
@@ -502,22 +534,23 @@ const ChapterQuestion = () => {
         left={0}
         right={0}
         bottom={0}
-        opacity={0.1}
-        backgroundImage="radial-gradient(circle at 25px 25px, white 2px, transparent 0), radial-gradient(circle at 75px 75px, white 2px, transparent 0)"
+        opacity={useColorModeValue(0.05, 0.1)}
+        backgroundImage={useColorModeValue(
+          "radial-gradient(circle at 25px 25px, blue.500 2px, transparent 0), radial-gradient(circle at 75px 75px, blue.500 2px, transparent 0)",
+          "radial-gradient(circle at 25px 25px, blue.400 2px, transparent 0), radial-gradient(circle at 75px 75px, blue.400 2px, transparent 0)"
+        )}
         backgroundSize="100px 100px"
       />
       
       {/* Header */}
       <Box
-        bg="rgba(255, 255, 255, 0.95)"
-        backdropFilter="blur(20px)"
-        borderBottom="1px solid"
-        borderColor="rgba(255, 255, 255, 0.2)"
-        boxShadow="0 8px 32px rgba(0, 0, 0, 0.1)"
+        bg={headerBg}
+        borderBottom="3px solid"
+        borderColor={useColorModeValue("blue.500", "blue.400")}
+        boxShadow={useColorModeValue("0 4px 20px rgba(66, 153, 225, 0.15)", "0 4px 20px rgba(0, 0, 0, 0.3)")}
         position="sticky"
         top={0}
         zIndex={10}
-        mt="50px"
       >
         <Box maxW="1200px" mx="auto" px={{ base: 4, md: 8 }} py={{ base: 4, md: 6 }}>
           <Flex
@@ -528,27 +561,39 @@ const ChapterQuestion = () => {
           >
             <Flex align="center" gap={4}>
               <Box
-                w="60px"
-                h="60px"
-                bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                w="70px"
+                h="70px"
+                bg={buttonPrimary}
                 borderRadius="20px"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                boxShadow="0 10px 30px rgba(49, 130, 206, 0.3)"
+                boxShadow={useColorModeValue("0 8px 25px rgba(66, 153, 225, 0.4)", "0 8px 25px rgba(0, 0, 0, 0.4)")}
+                transition="all 0.3s"
+                _hover={{
+                  transform: "rotate(5deg) scale(1.05)",
+                  boxShadow: useColorModeValue("0 12px 35px rgba(66, 153, 225, 0.5)", "0 12px 35px rgba(0, 0, 0, 0.5)")
+                }}
               >
-                <Icon as={FaGraduationCap} color="white" boxSize={6} />
+                <Icon as={FaGraduationCap} color="white" boxSize={7} />
               </Box>
               <Box>
                 <Heading 
                   size={{ base: "lg", md: "xl" }} 
-                  bgGradient="linear(to-r, #3182ce, #2c5aa0)"
-                  bgClip="text"
-                  fontWeight="bold"
+                  color={textPrimary}
+                  fontWeight="800"
+                  fontFamily="'Cairo', 'Tajawal', sans-serif"
+                  letterSpacing="-0.02em"
                 >
                   {chapterData.name}
                 </Heading>
-                <Text color="gray.600" fontSize="sm" mt={1}>
+                <Text 
+                  color={textSecondary} 
+                  fontSize="md" 
+                  mt={1} 
+                  fontWeight="600"
+                  fontFamily="'Cairo', 'Tajawal', sans-serif"
+                >
                   {lessons.length} درس - {chapterData.description}
                 </Text>
               </Box>
@@ -556,20 +601,26 @@ const ChapterQuestion = () => {
 
             <MotionButton
               leftIcon={<FaPlus />}
-              bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+              bg={buttonPrimary}
               color="white"
               onClick={onOpen}
               size={{ base: "md", md: "lg" }}
               borderRadius="15px"
-              boxShadow="0 10px 30px rgba(49, 130, 206, 0.3)"
-              _hover={{
-                transform: "translateY(-2px)",
-                boxShadow: "0 15px 40px rgba(49, 130, 206, 0.4)",
-              }}
+              boxShadow={useColorModeValue("0 8px 25px rgba(66, 153, 225, 0.4)", "0 8px 25px rgba(0, 0, 0, 0.4)")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              px={8}
-              py={6}
+              px={10}
+              py={7}
+              fontWeight="800"
+              fontSize={{ base: "md", md: "lg" }}
+              fontFamily="'Cairo', 'Tajawal', sans-serif"
+              letterSpacing="0.02em"
+              transition="all 0.3s"
+              _hover={{
+                transform: "translateY(-4px) scale(1.02)",
+                boxShadow: useColorModeValue("0 12px 35px rgba(66, 153, 225, 0.5)", "0 12px 35px rgba(0, 0, 0, 0.5)"),
+                bg: buttonPrimaryHover
+              }}
             >
               إنشاء درس جديد
             </MotionButton>
@@ -582,38 +633,133 @@ const ChapterQuestion = () => {
 
       {/* شريط البحث */}
       <Box mb={8}>
-        <InputGroup size="lg" boxShadow="sm">
-          <InputLeftElement pointerEvents="none">
-            <Icon as={FaSearch} color="gray.400" />
-          </InputLeftElement>
-          <Input
-            placeholder="ابحث عن درس..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            bg={cardBg}
-            borderRadius="full"
-            boxShadow="sm"
-            _focus={{ borderColor: accentColor, boxShadow: `0 0 0 1px ${accentColor}` }}
-            py={6}
-          />
-        </InputGroup>
+        <Box
+          bg={inputBg}
+          borderRadius="12px"
+          p={2}
+          boxShadow={useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.1)", "0 5px 15px rgba(0, 0, 0, 0.2)")}
+          border="2px solid"
+          borderColor={inputBorder}
+          _hover={{ borderColor: inputHoverBorder }}
+          transition="all 0.2s"
+        >
+          <InputGroup size="lg">
+            <InputLeftElement pointerEvents="none" pl={6}>
+              <Icon as={FaSearch} color={useColorModeValue("#4299e1", "#63b3ed")} boxSize={5} />
+            </InputLeftElement>
+            <Input
+              placeholder="ابحث عن درس..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              bg="transparent"
+              border="none"
+              _hover={{ bg: useColorModeValue("blue.100", "gray.600") }}
+              _focus={{
+                bg: useColorModeValue("blue.100", "gray.600"),
+                boxShadow: "none",
+                outline: "none"
+              }}
+              borderRadius="10px"
+              py={6}
+              pl={16}
+              fontSize="lg"
+              fontWeight="medium"
+              color={textPrimary}
+              _placeholder={{ color: useColorModeValue("blue.400", "blue.500") }}
+              fontFamily="'Cairo', 'Tajawal', sans-serif"
+            />
+          </InputGroup>
+        </Box>
       </Box>
 
       {/* عرض الدروس */}
       <Box>
-        <Heading size="lg" mb={6} color={headingColor} textAlign="center">
-          <Icon as={FaBook} mr={2} color={accentColor} />
-          دروس الفصل ({filteredLessons.length})
-        </Heading>
+        <Flex align="center" justify="center" gap={4} mb={8}>
+          <Box
+            w="50px"
+            h="50px"
+            bg={buttonPrimary}
+            borderRadius="15px"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
+          >
+            <Icon as={FaBook} color="white" boxSize={5} />
+          </Box>
+          <Heading 
+            size="xl" 
+            color={textPrimary}
+            fontWeight="800"
+            fontFamily="'Cairo', 'Tajawal', sans-serif"
+            letterSpacing="-0.02em"
+          >
+            دروس الفصل ({filteredLessons.length})
+          </Heading>
+        </Flex>
 
         {filteredLessons.length === 0 ? (
-          <Box textAlign="center" py={12} bg={cardBg} borderRadius="lg" border="1px" borderColor={borderColor}>
-            <FaBook size={48} color="gray.400" style={{ margin: "0 auto 16px" }} />
-            <Text color="gray.500" fontSize="lg">
+          <Box 
+            textAlign="center" 
+            py={20} 
+            bg={cardBackground} 
+            borderRadius="20px" 
+            boxShadow={useColorModeValue("0 8px 30px rgba(66, 153, 225, 0.12)", "0 8px 30px rgba(0, 0, 0, 0.3)")}
+            border="2px solid"
+            borderColor={cardBorder}
+          >
+            <Box
+              w="120px"
+              h="120px"
+              bg={iconBg}
+              borderRadius="50%"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              mx="auto"
+              mb={6}
+              border="3px solid"
+              borderColor={iconBorder}
+            >
+              <FaBook size={50} color={useColorModeValue("#4299e1", "#63b3ed")} />
+            </Box>
+            <Heading 
+              size="lg" 
+              color={textPrimary} 
+              mb={3} 
+              fontWeight="800"
+              fontFamily="'Cairo', 'Tajawal', sans-serif"
+              letterSpacing="-0.01em"
+            >
               {searchTerm ? "لا توجد نتائج للبحث" : "لا توجد دروس بعد"}
+            </Heading>
+            <Text 
+              color={useColorModeValue("blue.500", "blue.400")} 
+              fontSize="lg" 
+              mb={8} 
+              fontWeight="600"
+              fontFamily="'Cairo', 'Tajawal', sans-serif"
+            >
+              {searchTerm ? "جرب البحث بكلمات مختلفة" : "ابدأ بإضافة أول درس"}
             </Text>
             {!searchTerm && (
-              <Button mt={4} colorScheme="blue" onClick={onOpen}>
+              <Button 
+                mt={4} 
+                bg={buttonPrimary}
+                color="white"
+                onClick={onOpen}
+                size="lg"
+                borderRadius="12px"
+                boxShadow={useColorModeValue("0 6px 20px rgba(66, 153, 225, 0.35)", "0 6px 20px rgba(0, 0, 0, 0.4)")}
+                _hover={{
+                  bg: buttonPrimaryHover,
+                  transform: "translateY(-3px)",
+                  boxShadow: useColorModeValue("0 10px 30px rgba(66, 153, 225, 0.45)", "0 10px 30px rgba(0, 0, 0, 0.5)")
+                }}
+                fontWeight="bold"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+                leftIcon={<FaPlus />}
+              >
                 إضافة أول درس
               </Button>
             )}
@@ -623,26 +769,26 @@ const ChapterQuestion = () => {
             {filteredLessons.map((lesson) => (
               <MotionCard
                 key={lesson.id}
-                whileHover={{ scale: 1.02, y: -5 }}
-                bg={cardBg}
-                borderRadius="xl"
-                border="1px solid"
-                borderColor={borderColor}
-                boxShadow="lg"
+                whileHover={{ y: -5 }}
+                bg={cardBackground}
+                borderRadius="16px"
+                border="2px solid"
+                borderColor={cardBorder}
+                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.1)", "0 4px 15px rgba(0, 0, 0, 0.2)")}
                 transition="all 0.3s"
+                overflow="hidden"
                 _hover={{
-                  boxShadow: "xl",
-                  borderColor: "blue.400"
+                  boxShadow: useColorModeValue("0 8px 25px rgba(66, 153, 225, 0.15)", "0 8px 25px rgba(0, 0, 0, 0.3)"),
+                  borderColor: cardHoverBorder
                 }}
               >
-                <CardHeader pb={2}>
-
-{lesson.image_url && (
-                    <Box mb={4}>
+                <CardHeader pb={4}>
+                  {lesson.image_url && (
+                    <Box mb={4} borderRadius="12px" overflow="hidden">
                       <Image
                         src={lesson.image_url}
                         alt={lesson.name}
-                        borderRadius="md"
+                        borderRadius="12px"
                         maxH="180px"
                         objectFit="cover"
                         w="full"
@@ -650,12 +796,37 @@ const ChapterQuestion = () => {
                     </Box>
                   )}
 
-                  <Flex align="center">
-                  
-                    <Box>
-                      <Heading size="md" color={headingColor} mb={1}>{lesson.name}</Heading>
+                  <Flex align="center" gap={3}>
+                    <Box
+                      w="50px"
+                      h="50px"
+                      bg={buttonPrimary}
+                      borderRadius="12px"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      flexShrink={0}
+                    >
+                      <Icon as={FaPlay} color="white" boxSize={5} />
+                    </Box>
+                    <Box flex={1} minW={0}>
+                      <Heading 
+                        size="md" 
+                        color={textPrimary}
+                        fontWeight="700"
+                        mb={1}
+                        fontFamily="'Cairo', 'Tajawal', sans-serif"
+                      >
+                        {lesson.name}
+                      </Heading>
                       {lesson.description && (
-                        <Text fontSize="sm" color={textColor} noOfLines={2}>
+                        <Text 
+                          fontSize="sm" 
+                          color={textSecondary} 
+                          noOfLines={2} 
+                          fontWeight="500"
+                          fontFamily="'Cairo', 'Tajawal', sans-serif"
+                        >
                           {lesson.description}
                         </Text>
                       )}
@@ -663,48 +834,66 @@ const ChapterQuestion = () => {
                   </Flex>
                 </CardHeader>
 
-                <CardBody py={4}>
-                  
-                  
-                  <VStack spacing={3} align="stretch">
-                 
-                    
-                    <Text fontSize="sm" color={textColor} textAlign="center">
-                      تم الإنشاء: {new Date(lesson.created_at).toLocaleDateString('ar-EG')}
+                <CardBody py={3}>
+                  <HStack spacing={2} justify="center">
+                    <Icon as={FaClock} color={useColorModeValue("blue.400", "blue.500")} boxSize={4} />
+                    <Text 
+                      fontSize="xs" 
+                      color={textSecondary} 
+                      fontWeight="500"
+                      fontFamily="'Cairo', 'Tajawal', sans-serif"
+                    >
+                      {new Date(lesson.created_at).toLocaleDateString('ar-EG', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
                     </Text>
-                  </VStack>
+                  </HStack>
                 </CardBody>
 
-                <CardFooter pt={0}>
-                  <HStack spacing={2} w="full">
-                    <IconButton
-                      icon={<FaEdit />}
-                      size="sm"
-                      variant="outline"
-                      colorScheme="green"
-                      onClick={() => handleEditClick(lesson)}
-                      aria-label="تعديل الدرس"
-                    />
-                    <IconButton
-                      icon={<FaTrash />}
-                      size="sm"
-                      variant="outline"
-                      colorScheme="red"
-                      onClick={() => handleDeleteClick(lesson)}
-                      aria-label="حذف الدرس"
-                    />
-                    <Link to={`/lesson/${lesson.id}`} style={{ flex: 1 }}>
+                <CardFooter pt={0} pb={4}>
+                  <VStack spacing={2} w="full">
+                    <Link to={`/lesson/${lesson.id}`} style={{ width: "100%" }}>
                       <Button
                         rightIcon={<FaPlay />}
-                        variant="solid"
-                        colorScheme="blue"
+                        bg={buttonPrimary}
+                        color="white"
                         w="full"
-                        size="sm"
+                        size="md"
+                        borderRadius="10px"
+                        _hover={{ bg: buttonPrimaryHover }}
+                        fontWeight="600"
+                        fontFamily="'Cairo', 'Tajawal', sans-serif"
                       >
                         بدء الدرس
                       </Button>
                     </Link>
-                  </HStack>
+                    <HStack spacing={2} w="full">
+                      <IconButton
+                        icon={<FaEdit />}
+                        size="md"
+                        bg={buttonSecondary}
+                        color="white"
+                        borderRadius="10px"
+                        onClick={() => handleEditClick(lesson)}
+                        aria-label="تعديل الدرس"
+                        _hover={{ bg: buttonSecondaryHover }}
+                        flex={1}
+                      />
+                      <IconButton
+                        icon={<FaTrash />}
+                        size="md"
+                        bg={useColorModeValue("blue.300", "blue.600")}
+                        color="white"
+                        borderRadius="10px"
+                        onClick={() => handleDeleteClick(lesson)}
+                        aria-label="حذف الدرس"
+                        _hover={{ bg: useColorModeValue("blue.400", "blue.700") }}
+                        flex={1}
+                      />
+                    </HStack>
+                  </VStack>
                 </CardFooter>
               </MotionCard>
             ))}
@@ -714,32 +903,49 @@ const ChapterQuestion = () => {
 
       {/* Add Lesson Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent bg={cardBg} borderRadius="xl">
-          <ModalHeader>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg={modalBg} borderRadius="20px" border="2px solid" borderColor={modalBorder}>
+          <ModalHeader bg={modalHeaderBg} color="white" borderRadius="18px 18px 0 0" py={4}>
             <HStack>
-              <FaPlus color="blue.500" />
-              <Text>إنشاء درس جديد</Text>
+              <Box
+                w="40px"
+                h="40px"
+                bg="white"
+                borderRadius="10px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <FaPlus color="#4299e1" size={18} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إنشاء درس جديد</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color="white" _hover={{ bg: buttonPrimaryHover }} />
           
           <ModalBody>
             <form onSubmit={handleSubmit}>
               <VStack spacing={6}>
                 <FormControl isRequired>
-                  <FormLabel>اسم الدرس</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">اسم الدرس</FormLabel>
                   <Input
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="أدخل اسم الدرس"
                     size="lg"
+                    border="2px solid"
+                    borderColor={inputBorder}
+                    _hover={{ borderColor: inputHoverBorder }}
+                    _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                    borderRadius="10px"
+                    bg={useColorModeValue("white", "gray.700")}
+                    fontFamily="'Cairo', 'Tajawal', sans-serif"
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>وصف الدرس (اختياري)</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">وصف الدرس (اختياري)</FormLabel>
                   <Textarea
                     name="description"
                     value={formData.description}
@@ -747,11 +953,18 @@ const ChapterQuestion = () => {
                     placeholder="أدخل وصف الدرس"
                     rows={4}
                     size="lg"
+                    border="2px solid"
+                    borderColor={inputBorder}
+                    _hover={{ borderColor: inputHoverBorder }}
+                    _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                    borderRadius="10px"
+                    bg={useColorModeValue("white", "gray.700")}
+                    fontFamily="'Cairo', 'Tajawal', sans-serif"
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>صورة الدرس (اختياري)</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">صورة الدرس (اختياري)</FormLabel>
                   <VStack spacing={4} align="stretch">
                     {!imagePreview ? (
                       <Button
@@ -761,7 +974,13 @@ const ChapterQuestion = () => {
                         variant="outline"
                         size="lg"
                         cursor="pointer"
-                        _hover={{ bg: "gray.50" }}
+                        border="2px solid"
+                        borderColor={inputHoverBorder}
+                        color={useColorModeValue("blue.500", "blue.400")}
+                        _hover={{ bg: iconBg, borderColor: inputFocusBorder }}
+                        borderRadius="10px"
+                        fontWeight="bold"
+                        fontFamily="'Cairo', 'Tajawal', sans-serif"
                       >
                         اختر صورة
                       </Button>
@@ -798,20 +1017,41 @@ const ChapterQuestion = () => {
             </form>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 18px 18px" py={4}>
             <HStack spacing={3}>
-              <Button variant="ghost" onClick={resetForm}>
+              <Button 
+                variant="ghost" 
+                onClick={resetForm}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+              >
                 إعادة تعيين
               </Button>
-              <Button variant="ghost" onClick={onClose}>
+              <Button 
+                variant="ghost" 
+                onClick={onClose}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+              >
                 إلغاء
               </Button>
               <Button
-                colorScheme="blue"
+                bg={buttonPrimary}
+                color="white"
                 onClick={handleSubmit}
                 isLoading={submitLoading}
                 loadingText="جاري الإنشاء..."
                 leftIcon={<FaPlus />}
+                _hover={{ bg: buttonPrimaryHover, transform: "translateY(-2px)" }}
+                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
+                borderRadius="10px"
+                fontWeight="bold"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+                transition="all 0.2s"
               >
                 إنشاء الدرس
               </Button>
@@ -822,32 +1062,49 @@ const ChapterQuestion = () => {
 
       {/* Edit Lesson Modal */}
       <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl">
-        <ModalOverlay />
-        <ModalContent bg={cardBg} borderRadius="xl">
-          <ModalHeader>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg={modalBg} borderRadius="20px" border="2px solid" borderColor={modalBorder}>
+          <ModalHeader bg={buttonSecondary} color="white" borderRadius="18px 18px 0 0" py={4}>
             <HStack>
-              <FaEdit color="green.500" />
-              <Text>تعديل الدرس</Text>
+              <Box
+                w="40px"
+                h="40px"
+                bg="white"
+                borderRadius="10px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <FaEdit color="#4299e1" size={18} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">تعديل الدرس</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color="white" _hover={{ bg: buttonSecondaryHover }} />
           
           <ModalBody>
             <form onSubmit={handleEditSubmit}>
               <VStack spacing={6}>
                 <FormControl isRequired>
-                  <FormLabel>اسم الدرس</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">اسم الدرس</FormLabel>
                   <Input
                     name="name"
                     value={editFormData.name}
                     onChange={handleEditInputChange}
                     placeholder="أدخل اسم الدرس"
                     size="lg"
+                    border="2px solid"
+                    borderColor={inputBorder}
+                    _hover={{ borderColor: inputHoverBorder }}
+                    _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                    borderRadius="10px"
+                    bg={useColorModeValue("white", "gray.700")}
+                    fontFamily="'Cairo', 'Tajawal', sans-serif"
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>وصف الدرس (اختياري)</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">وصف الدرس (اختياري)</FormLabel>
                   <Textarea
                     name="description"
                     value={editFormData.description}
@@ -855,11 +1112,18 @@ const ChapterQuestion = () => {
                     placeholder="أدخل وصف الدرس"
                     rows={4}
                     size="lg"
+                    border="2px solid"
+                    borderColor={inputBorder}
+                    _hover={{ borderColor: inputHoverBorder }}
+                    _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                    borderRadius="10px"
+                    bg={useColorModeValue("white", "gray.700")}
+                    fontFamily="'Cairo', 'Tajawal', sans-serif"
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>صورة الدرس (اختياري)</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">صورة الدرس (اختياري)</FormLabel>
                   <VStack spacing={4} align="stretch">
                     {!imagePreview ? (
                       <Button
@@ -869,7 +1133,13 @@ const ChapterQuestion = () => {
                         variant="outline"
                         size="lg"
                         cursor="pointer"
-                        _hover={{ bg: "gray.50" }}
+                        border="2px solid"
+                        borderColor={inputHoverBorder}
+                        color={useColorModeValue("blue.500", "blue.400")}
+                        _hover={{ bg: iconBg, borderColor: inputFocusBorder }}
+                        borderRadius="10px"
+                        fontWeight="bold"
+                        fontFamily="'Cairo', 'Tajawal', sans-serif"
                       >
                         اختر صورة
                       </Button>
@@ -906,20 +1176,41 @@ const ChapterQuestion = () => {
             </form>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 18px 18px" py={4}>
             <HStack spacing={3}>
-              <Button variant="ghost" onClick={resetEditForm}>
+              <Button 
+                variant="ghost" 
+                onClick={resetEditForm}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+              >
                 إعادة تعيين
               </Button>
-              <Button variant="ghost" onClick={onEditClose}>
+              <Button 
+                variant="ghost" 
+                onClick={onEditClose}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+              >
                 إلغاء
               </Button>
               <Button
-                colorScheme="green"
+                bg={buttonSecondary}
+                color="white"
                 onClick={handleEditSubmit}
                 isLoading={editLoading}
                 loadingText="جاري التحديث..."
                 leftIcon={<FaEdit />}
+                _hover={{ bg: buttonSecondaryHover, transform: "translateY(-2px)" }}
+                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
+                borderRadius="10px"
+                fontWeight="bold"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+                transition="all 0.2s"
               >
                 تحديث الدرس
               </Button>
@@ -930,44 +1221,100 @@ const ChapterQuestion = () => {
 
       {/* Delete Confirmation Modal */}
       <Modal isOpen={isDeleteOpen} onClose={onDeleteClose} size="md">
-        <ModalOverlay />
-        <ModalContent bg={cardBg} borderRadius="xl">
-          <ModalHeader>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg={modalBg} borderRadius="20px" border="2px solid" borderColor={modalBorder}>
+          <ModalHeader bg={useColorModeValue("blue.300", "blue.600")} color="white" borderRadius="18px 18px 0 0" py={4}>
             <HStack>
-              <FaTrash color="red.500" />
-              <Text>تأكيد الحذف</Text>
+              <Box
+                w="40px"
+                h="40px"
+                bg="white"
+                borderRadius="10px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <FaTrash color="#4299e1" size={18} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">تأكيد الحذف</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color="white" _hover={{ bg: useColorModeValue("blue.400", "blue.700") }} />
           
-          <ModalBody>
+          <ModalBody py={8}>
             <VStack spacing={4} align="stretch">
               <Box textAlign="center">
-                <FaBook size={48} color="red.400" style={{ margin: "0 auto 16px" }} />
-                <Text fontSize="lg" fontWeight="bold" color="red.600">
+                <Box
+                  w="80px"
+                  h="80px"
+                  bg={iconBg}
+                  borderRadius="50%"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  mx="auto"
+                  mb={4}
+                  border="3px solid"
+                  borderColor={iconBorder}
+                >
+                  <FaBook size={40} color={useColorModeValue("#4299e1", "#63b3ed")} />
+                </Box>
+                <Text 
+                  fontSize="lg" 
+                  fontWeight="800" 
+                  color={textPrimary}
+                  fontFamily="'Cairo', 'Tajawal', sans-serif"
+                  mb={2}
+                >
                   هل أنت متأكد من حذف الدرس؟
                 </Text>
-                <Text mt={2} color="gray.600">
+                <Text 
+                  mt={2} 
+                  color={useColorModeValue("blue.500", "blue.400")} 
+                  fontWeight="600"
+                  fontSize="md"
+                  fontFamily="'Cairo', 'Tajawal', sans-serif"
+                >
                   "{deletingLesson?.name}"
                 </Text>
-                <Text mt={2} color="gray.500" fontSize="sm">
+                <Text 
+                  mt={3} 
+                  color={useColorModeValue("blue.400", "blue.500")} 
+                  fontSize="sm" 
+                  fontWeight="medium"
+                  fontFamily="'Cairo', 'Tajawal', sans-serif"
+                >
                   هذا الإجراء لا يمكن التراجع عنه
                 </Text>
               </Box>
             </VStack>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 18px 18px" py={4}>
             <HStack spacing={3}>
-              <Button variant="ghost" onClick={onDeleteClose}>
+              <Button 
+                variant="ghost" 
+                onClick={onDeleteClose}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+              >
                 إلغاء
               </Button>
               <Button
-                colorScheme="red"
+                bg={useColorModeValue("blue.300", "blue.600")}
+                color="white"
                 onClick={handleDeleteConfirm}
                 isLoading={deleteLoading}
                 loadingText="جاري الحذف..."
                 leftIcon={<FaTrash />}
+                _hover={{ bg: useColorModeValue("blue.400", "blue.700"), transform: "translateY(-2px)" }}
+                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
+                borderRadius="10px"
+                fontWeight="bold"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+                transition="all 0.2s"
               >
                 حذف الدرس
               </Button>

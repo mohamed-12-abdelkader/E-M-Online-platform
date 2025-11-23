@@ -105,6 +105,35 @@ const QuestionBankDashboard = () => {
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const cardBg = useColorModeValue("white", "gray.700");
+  
+  // Colors for light/dark mode
+  const pageBg = useColorModeValue("blue.50", "gray.900");
+  const headerBg = useColorModeValue("white", "gray.800");
+  const headerBorder = useColorModeValue("blue.500", "blue.400");
+  const cardBackground = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("blue.100", "blue.900");
+  const cardHoverBorder = useColorModeValue("blue.300", "blue.700");
+  const textPrimary = useColorModeValue("blue.600", "blue.300");
+  const textSecondary = useColorModeValue("gray.600", "gray.400");
+  const inputBg = useColorModeValue("blue.50", "gray.700");
+  const inputBorder = useColorModeValue("blue.200", "blue.800");
+  const inputHoverBorder = useColorModeValue("blue.300", "blue.700");
+  const inputFocusBorder = useColorModeValue("blue.500", "blue.400");
+  const modalBg = useColorModeValue("white", "gray.800");
+  const modalBorder = useColorModeValue("blue.200", "blue.900");
+  const modalHeaderBg = useColorModeValue("blue.500", "blue.600");
+  const modalFooterBg = useColorModeValue("blue.50", "gray.700");
+  const buttonPrimary = useColorModeValue("blue.500", "blue.400");
+  const buttonPrimaryHover = useColorModeValue("blue.600", "blue.500");
+  const buttonSecondary = useColorModeValue("blue.400", "blue.500");
+  const buttonSecondaryHover = useColorModeValue("blue.500", "blue.600");
+  const buttonTertiary = useColorModeValue("blue.300", "blue.600");
+  const buttonTertiaryHover = useColorModeValue("blue.400", "blue.700");
+  const iconBg = useColorModeValue("blue.50", "blue.900");
+  const iconBorder = useColorModeValue("blue.200", "blue.800");
+  const spinnerColor = useColorModeValue("blue.500", "blue.400");
+  const badgeActiveBg = useColorModeValue("blue.100", "blue.900");
+  const badgeActiveColor = useColorModeValue("blue.700", "blue.300");
 
   // Fetch grades from API
   const fetchGrades = async () => {
@@ -565,7 +594,7 @@ const QuestionBankDashboard = () => {
   }
 
   return (
-    <Box minH="100vh" bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)" position="relative">
+    <Box minH="100vh" bg={pageBg} position="relative">
       {/* Background Pattern */}
       <Box
         position="absolute"
@@ -573,18 +602,20 @@ const QuestionBankDashboard = () => {
         left={0}
         right={0}
         bottom={0}
-        opacity={0.1}
-        backgroundImage="radial-gradient(circle at 25px 25px, white 2px, transparent 0), radial-gradient(circle at 75px 75px, white 2px, transparent 0)"
+        opacity={useColorModeValue(0.05, 0.1)}
+        backgroundImage={useColorModeValue(
+          "radial-gradient(circle at 25px 25px, blue.500 2px, transparent 0), radial-gradient(circle at 75px 75px, blue.500 2px, transparent 0)",
+          "radial-gradient(circle at 25px 25px, blue.400 2px, transparent 0), radial-gradient(circle at 75px 75px, blue.400 2px, transparent 0)"
+        )}
         backgroundSize="100px 100px"
       />
       
       {/* Header */}
       <Box
-        bg="rgba(255, 255, 255, 0.95)"
-        backdropFilter="blur(20px)"
-        borderBottom="1px solid"
-        borderColor="rgba(255, 255, 255, 0.2)"
-        boxShadow="0 8px 32px rgba(0, 0, 0, 0.1)"
+        bg={headerBg}
+        borderBottom="3px solid"
+        borderColor={headerBorder}
+        boxShadow={useColorModeValue("0 4px 20px rgba(66, 153, 225, 0.15)", "0 4px 20px rgba(0, 0, 0, 0.3)")}
         position="sticky"
         top={0}
         zIndex={10}
@@ -594,28 +625,33 @@ const QuestionBankDashboard = () => {
           <Flex justify="space-between" align="center">
             <Flex align="center" gap={4}>
               <Box
-                w="60px"
-                h="60px"
-                bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                w="70px"
+                h="70px"
+                bg="blue.500"
                 borderRadius="20px"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                                  boxShadow="0 10px 30px rgba(49, 130, 206, 0.3)"
+                boxShadow="0 8px 25px rgba(66, 153, 225, 0.4)"
+                transition="all 0.3s"
+                _hover={{
+                  transform: "rotate(5deg) scale(1.05)",
+                  boxShadow: "0 12px 35px rgba(66, 153, 225, 0.5)"
+                }}
               >
-                <FaBook size={24} color="white" />
+                <FaBook size={28} color="white" />
               </Box>
               <Box>
                 <Heading 
                   as="h1" 
                   size="xl" 
-                  bgGradient="linear(to-r, #3182ce, #2c5aa0)"
-                  bgClip="text"
+                  color={textPrimary}
                   fontWeight="bold"
+                  mb={1}
                 >
                   بنوك الأسئلة
                 </Heading>
-                <Text color="gray.600" fontSize="sm" mt={1}>
+                <Text color={textSecondary} fontSize="md" fontWeight="medium">
                   إدارة وإنشاء بنوك الأسئلة للمراحل الدراسية المختلفة
                 </Text>
               </Box>
@@ -629,32 +665,36 @@ const QuestionBankDashboard = () => {
 
         {/* Controls */}
         <Box
-          bg="rgba(255, 255, 255, 0.95)"
-          backdropFilter="blur(20px)"
-          borderRadius="25px"
+          bg={cardBackground}
+          borderRadius="20px"
           p={6}
-          boxShadow="0 20px 60px rgba(0, 0, 0, 0.1)"
-          border="1px solid"
-          borderColor="rgba(255, 255, 255, 0.2)"
+          boxShadow={useColorModeValue("0 8px 30px rgba(66, 153, 225, 0.12)", "0 8px 30px rgba(0, 0, 0, 0.3)")}
+          border="2px solid"
+          borderColor={cardBorder}
         >
           <Flex direction={{ base: "column", md: "row" }} gap={6} align="center">
             <Button
               leftIcon={<FaPlus />}
-              bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+              bg={buttonPrimary}
               color="white"
               size="lg"
               onClick={onOpen}
-              borderRadius="15px"
-                                boxShadow="0 10px 30px rgba(49, 130, 206, 0.3)"
+              borderRadius="12px"
+              boxShadow={useColorModeValue("0 6px 20px rgba(66, 153, 225, 0.35)", "0 6px 20px rgba(0, 0, 0, 0.4)")}
               _hover={{
-                transform: "translateY(-2px)",
-                boxShadow: "0 15px 40px rgba(102, 126, 234, 0.4)",
-                bg: "linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)"
+                transform: "translateY(-3px)",
+                boxShadow: useColorModeValue("0 10px 30px rgba(66, 153, 225, 0.45)", "0 10px 30px rgba(0, 0, 0, 0.5)"),
+                bg: buttonPrimaryHover
               }}
-              transition="all 0.3s"
+              _active={{
+                transform: "translateY(-1px)",
+                bg: useColorModeValue("blue.700", "blue.500")
+              }}
+              transition="all 0.3s ease"
               px={8}
               py={6}
-              fontWeight="medium"
+              fontWeight="bold"
+              fontSize="md"
             >
               إنشاء بنك أسئلة جديد
             </Button>
@@ -664,12 +704,12 @@ const QuestionBankDashboard = () => {
             <HStack spacing={4} w={{ base: "full", md: "auto" }}>
               {/* Grade Filter */}
               <Box
-                bg="rgba(255, 255, 255, 0.9)"
-                borderRadius="15px"
-                p={1}
-                boxShadow="0 5px 15px rgba(0, 0, 0, 0.1)"
-                border="1px solid"
-                borderColor="rgba(255, 255, 255, 0.3)"
+                bg={inputBg}
+                borderRadius="12px"
+                border="2px solid"
+                borderColor={inputBorder}
+                _hover={{ borderColor: inputHoverBorder }}
+                transition="all 0.2s"
               >
                 <Select
                   placeholder="فلترة حسب الصف"
@@ -678,10 +718,11 @@ const QuestionBankDashboard = () => {
                   w={{ base: "full", md: "220px" }}
                   border="none"
                   bg="transparent"
-                  _hover={{ bg: "transparent" }}
-                  _focus={{ bg: "transparent", boxShadow: "none" }}
-                  borderRadius="12px"
+                  _hover={{ bg: useColorModeValue("blue.100", "gray.600") }}
+                  _focus={{ bg: useColorModeValue("blue.100", "gray.600"), boxShadow: "none", border: "none" }}
+                  borderRadius="10px"
                   fontWeight="medium"
+                  color={textPrimary}
                 >
                   {grades.map((grade) => (
                     <option key={grade.id} value={grade.id}>
@@ -693,16 +734,16 @@ const QuestionBankDashboard = () => {
               
               {/* Search */}
               <Box
-                bg="rgba(255, 255, 255, 0.9)"
-                borderRadius="15px"
-                p={1}
-                boxShadow="0 5px 15px rgba(0, 0, 0, 0.1)"
-                border="1px solid"
-                borderColor="rgba(255, 255, 255, 0.3)"
+                bg={inputBg}
+                borderRadius="12px"
+                border="2px solid"
+                borderColor={inputBorder}
+                _hover={{ borderColor: inputHoverBorder }}
+                transition="all 0.2s"
               >
                 <InputGroup w={{ base: "full", md: "300px" }}>
                   <InputLeftElement pointerEvents="none" pl={4}>
-                    <FaSearch color="#3182ce" />
+                    <FaSearch color={useColorModeValue("#4299e1", "#63b3ed")} size={18} />
                   </InputLeftElement>
                   <Input
                     placeholder="البحث في بنوك الأسئلة..."
@@ -710,12 +751,13 @@ const QuestionBankDashboard = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     border="none"
                     bg="transparent"
-                    _hover={{ bg: "transparent" }}
-                    _focus={{ bg: "transparent", boxShadow: "none" }}
-                    borderRadius="12px"
+                    _hover={{ bg: useColorModeValue("blue.100", "gray.600") }}
+                    _focus={{ bg: useColorModeValue("blue.100", "gray.600"), boxShadow: "none", border: "none" }}
+                    borderRadius="10px"
                     pl={12}
                     fontWeight="medium"
-                    _placeholder={{ color: "gray.500" }}
+                    color={textPrimary}
+                    _placeholder={{ color: useColorModeValue("blue.400", "blue.500") }}
                   />
                 </InputGroup>
               </Box>
@@ -727,121 +769,123 @@ const QuestionBankDashboard = () => {
         {banksLoading ? (
           <Box
             textAlign="center"
-            py={16}
-            bg="rgba(255, 255, 255, 0.9)"
-            backdropFilter="blur(20px)"
-            borderRadius="25px"
-            boxShadow="0 15px 35px rgba(0, 0, 0, 0.1)"
-            border="1px solid"
-            borderColor="rgba(255, 255, 255, 0.2)"
-          >
-            <Box
-              w="80px"
-              h="80px"
-              bg="linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)"
-              borderRadius="50%"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              mx="auto"
-              mb={4}
-            >
-              <Spinner size="xl" color="#667eea" thickness="4px" />
-            </Box>
-            <Text color="gray.600" fontSize="lg" fontWeight="medium">جاري تحميل بنوك الأسئلة...</Text>
-          </Box>
-        ) : !Array.isArray(filteredBanks) || filteredBanks.length === 0 ? (
-          <Box
-            textAlign="center"
-            py={16}
-            bg="rgba(255, 255, 255, 0.9)"
-            backdropFilter="blur(20px)"
-            borderRadius="25px"
-            boxShadow="0 15px 35px rgba(0, 0, 0, 0.1)"
-            border="1px solid"
-            borderColor="rgba(255, 255, 255, 0.2)"
+            py={20}
+            bg={cardBackground}
+            borderRadius="20px"
+            boxShadow={useColorModeValue("0 8px 30px rgba(66, 153, 225, 0.12)", "0 8px 30px rgba(0, 0, 0, 0.3)")}
+            border="2px solid"
+            borderColor={cardBorder}
           >
             <Box
               w="100px"
               h="100px"
-              bg="linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)"
+              bg={iconBg}
               borderRadius="50%"
               display="flex"
               alignItems="center"
               justifyContent="center"
               mx="auto"
               mb={6}
+              border="3px solid"
+              borderColor={iconBorder}
             >
-              <FaBook size={40} color="#3182ce" />
+              <Spinner size="xl" color={spinnerColor} thickness="4px" />
             </Box>
-            <Heading size="lg" color="gray.700" mb={3}>
+            <Text color={textPrimary} fontSize="lg" fontWeight="bold">جاري تحميل بنوك الأسئلة...</Text>
+          </Box>
+        ) : !Array.isArray(filteredBanks) || filteredBanks.length === 0 ? (
+          <Box
+            textAlign="center"
+            py={20}
+            bg={cardBackground}
+            borderRadius="20px"
+            boxShadow={useColorModeValue("0 8px 30px rgba(66, 153, 225, 0.12)", "0 8px 30px rgba(0, 0, 0, 0.3)")}
+            border="2px solid"
+            borderColor={cardBorder}
+          >
+            <Box
+              w="120px"
+              h="120px"
+              bg={iconBg}
+              borderRadius="50%"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              mx="auto"
+              mb={6}
+              border="3px solid"
+              borderColor={iconBorder}
+            >
+              <FaBook size={50} color={useColorModeValue("#4299e1", "#63b3ed")} />
+            </Box>
+            <Heading size="lg" color={textPrimary} mb={3} fontWeight="bold">
               {questionBanks.length === 0 ? "لا توجد بنوك أسئلة بعد" : "لا توجد نتائج للبحث"}
             </Heading>
-            <Text color="gray.500" fontSize="lg" mb={6}>
+            <Text color={useColorModeValue("blue.500", "blue.400")} fontSize="lg" mb={8} fontWeight="medium">
               {questionBanks.length === 0 ? "ابدأ بإنشاء أول بنك أسئلة" : "جرب البحث بكلمات مختلفة"}
             </Text>
             {questionBanks.length === 0 && (
               <Button
-                bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                bg={buttonPrimary}
                 color="white"
                 size="lg"
-                borderRadius="15px"
-                                  boxShadow="0 10px 30px rgba(49, 130, 206, 0.3)"
+                borderRadius="12px"
+                boxShadow={useColorModeValue("0 6px 20px rgba(66, 153, 225, 0.35)", "0 6px 20px rgba(0, 0, 0, 0.4)")}
                 onClick={onOpen}
                 _hover={{
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 15px 40px rgba(102, 126, 234, 0.4)",
+                  transform: "translateY(-3px)",
+                  boxShadow: useColorModeValue("0 10px 30px rgba(66, 153, 225, 0.45)", "0 10px 30px rgba(0, 0, 0, 0.5)"),
+                  bg: buttonPrimaryHover
                 }}
-                transition="all 0.3s"
+                transition="all 0.3s ease"
                 px={8}
                 py={6}
                 leftIcon={<FaPlus />}
-                fontWeight="medium"
+                fontWeight="bold"
               >
                 إنشاء أول بنك أسئلة
               </Button>
             )}
           </Box>
         ) : (
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
             {filteredBanks.map((bank, index) => (
               <Card 
                 key={bank.id} 
-                bg="rgba(255, 255, 255, 0.95)"
-                backdropFilter="blur(20px)"
-                borderRadius="25px"
-                border="1px solid"
-                borderColor="rgba(255, 255, 255, 0.2)"
-                boxShadow="0 15px 35px rgba(0, 0, 0, 0.1)"
+                bg={cardBackground}
+                borderRadius="20px"
+                border="2px solid"
+                borderColor={cardBorder}
+                boxShadow={useColorModeValue("0 8px 25px rgba(66, 153, 225, 0.15)", "0 8px 25px rgba(0, 0, 0, 0.3)")}
                 overflow="hidden"
                 position="relative"
                 _hover={{ 
-                  boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15)", 
-                  transform: "translateY(-8px)",
-                  borderColor: "rgba(49, 130, 206, 0.3)"
+                  boxShadow: useColorModeValue("0 15px 40px rgba(66, 153, 225, 0.25)", "0 15px 40px rgba(0, 0, 0, 0.4)"), 
+                  transform: "translateY(-5px)",
+                  borderColor: cardHoverBorder
                 }} 
-                transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+                transition="all 0.3s ease"
               >
-                {/* Gradient Overlay */}
+                {/* Top Border */}
                 <Box
                   position="absolute"
                   top={0}
                   left={0}
                   right={0}
-                  h="4px"
-                  bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                  h="5px"
+                  bg={buttonPrimary}
                 />
 
                 {/* Decorative Element */}
                 <Box
                   position="absolute"
-                  top="-20px"
-                  right="-20px"
-                  w="80px"
-                  h="80px"
-                  bg="linear-gradient(135deg, rgba(49, 130, 206, 0.1) 0%, rgba(44, 90, 160, 0.1) 100%)"
+                  top="-30px"
+                  right="-30px"
+                  w="100px"
+                  h="100px"
+                  bg={iconBg}
                   borderRadius="50%"
-                  filter="blur(20px)"
+                  opacity={0.5}
                 />
 
                 <Link to={`/question-bank/${bank.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -875,66 +919,64 @@ const QuestionBankDashboard = () => {
                       
                       <Flex align="center" gap={3} mb={3}>
                         <Box
-                          w="40px"
-                          h="40px"
-                          bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                          w="50px"
+                          h="50px"
+                          bg={buttonPrimary}
                           borderRadius="12px"
                           display="flex"
                           alignItems="center"
                           justifyContent="center"
-                          boxShadow="0 5px 15px rgba(49, 130, 206, 0.3)"
+                          boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
                         >
-                          <FaBook color="white" size={16} />
+                          <FaBook color="white" size={20} />
                         </Box>
                         <Box flex={1}>
                           <Heading 
                             size="md" 
                             noOfLines={2}
-                            bgGradient="linear(to-r, #3182ce, #2c5aa0)"
-                            bgClip="text"
+                            color={textPrimary}
                             fontWeight="bold"
-                            mb={1}
+                            mb={2}
                           >
                             {bank.name}
                           </Heading>
-                          <Box
-                            bg={bank.is_active ? "linear-gradient(135deg, #48bb78 0%, #38a169 100%)" : "linear-gradient(135deg, #f56565 0%, #e53e3e 100%)"}
-                            color="white"
+                          <Badge
+                            bg={bank.is_active ? badgeActiveBg : useColorModeValue("gray.200", "gray.600")}
+                            color={bank.is_active ? badgeActiveColor : useColorModeValue("gray.600", "gray.300")}
                             px={3}
                             py={1}
-                            borderRadius="15px"
+                            borderRadius="8px"
                             fontSize="xs"
-                            fontWeight="medium"
+                            fontWeight="bold"
                             display="inline-block"
-                            boxShadow={bank.is_active ? "0 3px 10px rgba(72, 187, 120, 0.3)" : "0 3px 10px rgba(245, 101, 101, 0.3)"}
                           >
                             {bank.is_active ? "نشط" : "غير نشط"}
-                          </Box>
+                          </Badge>
                         </Box>
                       </Flex>
                     </CardHeader>
                     
                     <CardBody pt={0}>
                       {bank.description && (
-                        <Text color="gray.600" mb={4} noOfLines={3} lineHeight="1.6">
+                        <Text color={textSecondary} mb={4} noOfLines={3} lineHeight="1.6">
                           {bank.description}
                         </Text>
                       )}
                       
-                      <HStack mb={4}>
+                      <HStack mb={4} p={3} bg={iconBg} borderRadius="10px" border="1px solid" borderColor={iconBorder}>
                         <Box
-                          w="30px"
-                          h="30px"
-                          bg="linear-gradient(135deg, #48bb78 0%, #38a169 100%)"
+                          w="35px"
+                          h="35px"
+                          bg={buttonPrimary}
                           borderRadius="8px"
                           display="flex"
                           alignItems="center"
                           justifyContent="center"
-                          boxShadow="0 3px 10px rgba(72, 187, 120, 0.3)"
+                          boxShadow={useColorModeValue("0 2px 8px rgba(66, 153, 225, 0.3)", "0 2px 8px rgba(0, 0, 0, 0.3)")}
                         >
-                          <FaGraduationCap color="white" size={12} />
+                          <FaGraduationCap color="white" size={16} />
                         </Box>
-                        <Text fontSize="sm" color="gray.600" fontWeight="medium">
+                        <Text fontSize="sm" color={textPrimary} fontWeight="bold">
                           {bank.grade_name || "غير محدد"}
                         </Text>
                       </HStack>
@@ -943,22 +985,23 @@ const QuestionBankDashboard = () => {
                 </Link>
                 
                 {/* Action Buttons */}
-                <Box p={4} pt={0} position="relative" zIndex={1}>
+                <Box p={4} pt={0} position="relative" zIndex={1} bg={iconBg} borderTop="1px solid" borderColor={iconBorder}>
                   <HStack spacing={2} justify="center">
                     <Link to={`/question-bank/${bank.id}`}>
                       <Button 
                         size="sm" 
                         leftIcon={<FaEye />} 
-                        bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                        bg={buttonPrimary}
                         color="white"
-                        borderRadius="12px"
-                        boxShadow="0 5px 15px rgba(49, 130, 206, 0.3)"
+                        borderRadius="10px"
+                        boxShadow={useColorModeValue("0 4px 12px rgba(66, 153, 225, 0.3)", "0 4px 12px rgba(0, 0, 0, 0.3)")}
                         _hover={{ 
-                          bg: "linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)",
-                          transform: "scale(1.05)"
+                          bg: buttonPrimaryHover,
+                          transform: "translateY(-2px)",
+                          boxShadow: useColorModeValue("0 6px 18px rgba(66, 153, 225, 0.4)", "0 6px 18px rgba(0, 0, 0, 0.4)")
                         }}
                         transition="all 0.2s"
-                        fontWeight="medium"
+                        fontWeight="bold"
                       >
                         عرض
                       </Button>
@@ -966,34 +1009,36 @@ const QuestionBankDashboard = () => {
                     <Button 
                       size="sm" 
                       leftIcon={<FaEdit />} 
-                      bg="linear-gradient(135deg, #48bb78 0%, #38a169 100%)"
+                      bg={buttonSecondary}
                       color="white"
-                      borderRadius="12px"
-                      boxShadow="0 5px 15px rgba(72, 187, 120, 0.3)"
+                      borderRadius="10px"
+                      boxShadow={useColorModeValue("0 4px 12px rgba(66, 153, 225, 0.3)", "0 4px 12px rgba(0, 0, 0, 0.3)")}
                       onClick={() => handleEditClick(bank)}
                       _hover={{ 
-                        bg: "linear-gradient(135deg, #38a169 0%, #2f855a 100%)",
-                        transform: "scale(1.05)"
+                        bg: buttonSecondaryHover,
+                        transform: "translateY(-2px)",
+                        boxShadow: useColorModeValue("0 6px 18px rgba(66, 153, 225, 0.4)", "0 6px 18px rgba(0, 0, 0, 0.4)")
                       }}
                       transition="all 0.2s"
-                      fontWeight="medium"
+                      fontWeight="bold"
                     >
                       تعديل
                     </Button>
                     <Button 
                       size="sm" 
                       leftIcon={<FaTrash />} 
-                      bg="linear-gradient(135deg, #f56565 0%, #e53e3e 100%)"
+                      bg={buttonTertiary}
                       color="white"
-                      borderRadius="12px"
-                      boxShadow="0 5px 15px rgba(245, 101, 101, 0.3)"
+                      borderRadius="10px"
+                      boxShadow={useColorModeValue("0 4px 12px rgba(66, 153, 225, 0.3)", "0 4px 12px rgba(0, 0, 0, 0.3)")}
                       onClick={() => handleDeleteClick(bank)}
                       _hover={{ 
-                        bg: "linear-gradient(135deg, #e53e3e 0%, #c53030 100%)",
-                        transform: "scale(1.05)"
+                        bg: buttonTertiaryHover,
+                        transform: "translateY(-2px)",
+                        boxShadow: useColorModeValue("0 6px 18px rgba(66, 153, 225, 0.4)", "0 6px 18px rgba(0, 0, 0, 0.4)")
                       }}
                       transition="all 0.2s"
-                      fontWeight="medium"
+                      fontWeight="bold"
                     >
                       حذف
                     </Button>
@@ -1008,30 +1053,40 @@ const QuestionBankDashboard = () => {
 
       {/* Create Question Bank Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
-        <ModalOverlay />
-        <ModalContent bg={bgColor}>
-          <ModalHeader>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg={modalBg} borderRadius="20px" border="2px solid" borderColor={modalBorder}>
+          <ModalHeader bg={modalHeaderBg} color="white" borderRadius="18px 18px 0 0" py={4}>
             <HStack>
-              <FaPlus color="blue.500" />
-              <Text>إنشاء بنك أسئلة جديد</Text>
+              <Box
+                w="40px"
+                h="40px"
+                bg="white"
+                borderRadius="10px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <FaPlus color="#4299e1" size={18} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold">إنشاء بنك أسئلة جديد</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color="white" _hover={{ bg: buttonPrimaryHover }} />
           
           <ModalBody>
             <form onSubmit={handleSubmit}>
               <VStack spacing={6}>
                 {/* السعر */}
                 <FormControl>
-                  <FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">
                     <HStack spacing={2}>
-                      <FaDollarSign color="#3182ce" />
+                      <FaDollarSign color={useColorModeValue("#4299e1", "#63b3ed")} />
                       <Text>السعر</Text>
                     </HStack>
                   </FormLabel>
                   <InputGroup size="lg">
                     <InputLeftElement pointerEvents="none">
-                      <FaDollarSign color="#3182ce" />
+                      <FaDollarSign color={useColorModeValue("#4299e1", "#63b3ed")} />
                     </InputLeftElement>
                     <Input
                       name="price"
@@ -1040,60 +1095,51 @@ const QuestionBankDashboard = () => {
                       value={formData.price}
                       onChange={handleInputChange}
                       placeholder="أدخل السعر"
+                      border="2px solid"
+                      borderColor={inputBorder}
+                      _hover={{ borderColor: inputHoverBorder }}
+                      _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                      borderRadius="10px"
+                      bg={useColorModeValue("white", "gray.700")}
                     />
                     <InputRightElement pr={3}>
-                      <Text color="gray.500" fontSize="sm">جنيه</Text>
+                      <Text color={useColorModeValue("blue.500", "blue.400")} fontSize="sm" fontWeight="bold">جنيه</Text>
                     </InputRightElement>
                   </InputGroup>
                 </FormControl>
-                {/* السعر */}
-                <FormControl>
-                  <FormLabel>السعر</FormLabel>
-                  <InputGroup size="lg">
-                    <InputLeftElement pointerEvents="none">
-                      <FaDollarSign color="#38a169" />
-                    </InputLeftElement>
-                    <Input
-                      name="price"
-                      type="number"
-                      min={0}
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      placeholder="أدخل السعر"
-                    />
-                    <InputRightElement pr={3}>
-                      <Text color="gray.500" fontSize="sm">جنيه</Text>
-                    </InputRightElement>
-                  </InputGroup>
-                </FormControl>
-                {/* السعر */}
                 
                 {/* اسم بنك الأسئلة */}
                 <FormControl isRequired>
-                  <FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">
                     <HStack spacing={2}>
-                      <FaBook color="#3182ce" />
+                      <FaBook color={useColorModeValue("#4299e1", "#63b3ed")} />
                       <Text>اسم بنك الأسئلة</Text>
                     </HStack>
                   </FormLabel>
                   <InputGroup size="lg">
                     <InputLeftElement pointerEvents="none">
-                      <FaBook color="#3182ce" />
+                      <FaBook color={useColorModeValue("#4299e1", "#63b3ed")} />
                     </InputLeftElement>
                     <Input
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
                       placeholder="أدخل اسم بنك الأسئلة"
+                      border="2px solid"
+                      borderColor={inputBorder}
+                      _hover={{ borderColor: inputHoverBorder }}
+                      _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                      borderRadius="10px"
+                      bg={useColorModeValue("white", "gray.700")}
                     />
                   </InputGroup>
                 </FormControl>
 
                 {/* وصف بنك الأسئلة */}
                 <FormControl>
-                  <FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">
                     <HStack spacing={2}>
-                      <FaEdit color="#3182ce" />
+                      <FaEdit color={useColorModeValue("#4299e1", "#63b3ed")} />
                       <Text>وصف بنك الأسئلة (اختياري)</Text>
                     </HStack>
                   </FormLabel>
@@ -1104,20 +1150,26 @@ const QuestionBankDashboard = () => {
                     placeholder="أدخل وصف بنك الأسئلة"
                     rows={4}
                     size="lg"
+                    border="2px solid"
+                    borderColor={inputBorder}
+                    _hover={{ borderColor: inputHoverBorder }}
+                    _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                    borderRadius="10px"
+                    bg={useColorModeValue("white", "gray.700")}
                   />
                 </FormControl>
 
                 {/* اختيار الصف */}
                 <FormControl isRequired>
-                  <FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">
                     <HStack spacing={2}>
-                      <FaGraduationCap color="#3182ce" />
+                      <FaGraduationCap color={useColorModeValue("#4299e1", "#63b3ed")} />
                       <Text>الصف الدراسي</Text>
                     </HStack>
                   </FormLabel>
                   <InputGroup size="lg">
                     <InputLeftElement pointerEvents="none">
-                      <FaGraduationCap color="#3182ce" />
+                      <FaGraduationCap color={useColorModeValue("#4299e1", "#63b3ed")} />
                     </InputLeftElement>
                     <Select
                       name="grade_id"
@@ -1125,6 +1177,12 @@ const QuestionBankDashboard = () => {
                       onChange={handleInputChange}
                       placeholder="اختر الصف الدراسي"
                       isDisabled={gradesLoading}
+                      border="2px solid"
+                      borderColor={inputBorder}
+                      _hover={{ borderColor: inputHoverBorder }}
+                      _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                      borderRadius="10px"
+                      bg={useColorModeValue("white", "gray.700")}
                     >
                       {grades.map((grade) => (
                         <option key={grade.id} value={grade.id}>
@@ -1135,29 +1193,35 @@ const QuestionBankDashboard = () => {
                   </InputGroup>
                   {gradesLoading && (
                     <HStack mt={2}>
-                      <Spinner size="sm" />
-                      <Text fontSize="sm" color="gray.500">جاري تحميل الصفوف...</Text>
+                      <Spinner size="sm" color={spinnerColor} />
+                      <Text fontSize="sm" color={useColorModeValue("blue.500", "blue.400")} fontWeight="medium">جاري تحميل الصفوف...</Text>
                     </HStack>
                   )}
                 </FormControl>
 
                 {/* حالة النشاط */}
                 <FormControl>
-                  <FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">
                     <HStack spacing={2}>
-                      <FaEye color="#3182ce" />
+                      <FaEye color={useColorModeValue("#4299e1", "#63b3ed")} />
                       <Text>حالة النشاط</Text>
                     </HStack>
                   </FormLabel>
                   <InputGroup size="lg">
                     <InputLeftElement pointerEvents="none">
-                      <FaEye color="#3182ce" />
+                      <FaEye color={useColorModeValue("#4299e1", "#63b3ed")} />
                     </InputLeftElement>
                     <Select
                       name="is_active"
                       value={formData.is_active}
                       onChange={handleInputChange}
                       placeholder="اختر حالة النشاط"
+                      border="2px solid"
+                      borderColor={inputBorder}
+                      _hover={{ borderColor: inputHoverBorder }}
+                      _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                      borderRadius="10px"
+                      bg={useColorModeValue("white", "gray.700")}
                     >
                       <option value={true}>نشط</option>
                       <option value={false}>غير نشط</option>
@@ -1167,9 +1231,9 @@ const QuestionBankDashboard = () => {
 
                 {/* رفع الصورة */}
                 <FormControl>
-                  <FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">
                     <HStack spacing={2}>
-                      <FaUpload color="#3182ce" />
+                      <FaUpload color={useColorModeValue("#4299e1", "#63b3ed")} />
                       <Text>صورة بنك الأسئلة (اختياري)</Text>
                     </HStack>
                   </FormLabel>
@@ -1182,7 +1246,12 @@ const QuestionBankDashboard = () => {
                         variant="outline"
                         size="lg"
                         cursor="pointer"
-                        _hover={{ bg: "gray.50" }}
+                        border="2px solid"
+                        borderColor={inputHoverBorder}
+                        color={useColorModeValue("blue.500", "blue.400")}
+                        _hover={{ bg: iconBg, borderColor: inputFocusBorder }}
+                        borderRadius="10px"
+                        fontWeight="bold"
                       >
                         اختر صورة
                       </Button>
@@ -1219,20 +1288,38 @@ const QuestionBankDashboard = () => {
             </form>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 18px 18px" py={4}>
             <HStack spacing={3}>
-              <Button variant="ghost" onClick={resetForm}>
+              <Button 
+                variant="ghost" 
+                onClick={resetForm}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+              >
                 إعادة تعيين
               </Button>
-              <Button variant="ghost" onClick={onClose}>
+              <Button 
+                variant="ghost" 
+                onClick={onClose}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+              >
                 إلغاء
               </Button>
               <Button
-                colorScheme="blue"
+                bg={buttonPrimary}
+                color="white"
                 onClick={handleSubmit}
                 isLoading={submitLoading}
                 loadingText="جاري الإنشاء..."
                 leftIcon={<FaPlus />}
+                _hover={{ bg: buttonPrimaryHover, transform: "translateY(-2px)" }}
+                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
+                borderRadius="10px"
+                fontWeight="bold"
+                transition="all 0.2s"
               >
                 إنشاء بنك الأسئلة
               </Button>
@@ -1243,34 +1330,49 @@ const QuestionBankDashboard = () => {
 
       {/* Edit Question Bank Modal */}
       <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl" scrollBehavior="inside">
-        <ModalOverlay />
-        <ModalContent bg={bgColor}>
-          <ModalHeader>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg="white" borderRadius="20px" border="2px solid" borderColor="blue.200">
+          <ModalHeader bg="blue.400" color="white" borderRadius="18px 18px 0 0" py={4}>
             <HStack>
-              <FaEdit color="green.500" />
-              <Text>تعديل بنك الأسئلة</Text>
+              <Box
+                w="40px"
+                h="40px"
+                bg="white"
+                borderRadius="10px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <FaEdit color="#4299e1" size={18} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold">تعديل بنك الأسئلة</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color="white" _hover={{ bg: "blue.500" }} />
           
           <ModalBody>
             <form onSubmit={handleEditSubmit}>
               <VStack spacing={6}>
                 {/* اسم بنك الأسئلة */}
                 <FormControl isRequired>
-                  <FormLabel>اسم بنك الأسئلة</FormLabel>
+                  <FormLabel color="blue.600" fontWeight="bold">اسم بنك الأسئلة</FormLabel>
                   <Input
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="أدخل اسم بنك الأسئلة"
                     size="lg"
+                    border="2px solid"
+                    borderColor="blue.200"
+                    _hover={{ borderColor: "blue.300" }}
+                    _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px #4299e1" }}
+                    borderRadius="10px"
                   />
                 </FormControl>
 
                 {/* وصف بنك الأسئلة */}
                 <FormControl>
-                  <FormLabel>وصف بنك الأسئلة (اختياري)</FormLabel>
+                  <FormLabel color="blue.600" fontWeight="bold">وصف بنك الأسئلة (اختياري)</FormLabel>
                   <Textarea
                     name="description"
                     value={formData.description}
@@ -1278,12 +1380,17 @@ const QuestionBankDashboard = () => {
                     placeholder="أدخل وصف بنك الأسئلة"
                     rows={4}
                     size="lg"
+                    border="2px solid"
+                    borderColor="blue.200"
+                    _hover={{ borderColor: "blue.300" }}
+                    _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px #4299e1" }}
+                    borderRadius="10px"
                   />
                 </FormControl>
 
                 {/* اختيار الصف */}
                 <FormControl isRequired>
-                  <FormLabel>الصف الدراسي</FormLabel>
+                  <FormLabel color="blue.600" fontWeight="bold">الصف الدراسي</FormLabel>
                   <Select
                     name="grade_id"
                     value={formData.grade_id}
@@ -1291,6 +1398,11 @@ const QuestionBankDashboard = () => {
                     placeholder="اختر الصف الدراسي"
                     size="lg"
                     isDisabled={gradesLoading}
+                    border="2px solid"
+                    borderColor="blue.200"
+                    _hover={{ borderColor: "blue.300" }}
+                    _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px #4299e1" }}
+                    borderRadius="10px"
                   >
                     {grades.map((grade) => (
                       <option key={grade.id} value={grade.id}>
@@ -1300,21 +1412,26 @@ const QuestionBankDashboard = () => {
                   </Select>
                   {gradesLoading && (
                     <HStack mt={2}>
-                      <Spinner size="sm" />
-                      <Text fontSize="sm" color="gray.500">جاري تحميل الصفوف...</Text>
+                      <Spinner size="sm" color="blue.500" />
+                      <Text fontSize="sm" color="blue.500" fontWeight="medium">جاري تحميل الصفوف...</Text>
                     </HStack>
                   )}
                 </FormControl>
 
                 {/* حالة النشاط */}
                 <FormControl>
-                  <FormLabel>حالة النشاط</FormLabel>
+                  <FormLabel color="blue.600" fontWeight="bold">حالة النشاط</FormLabel>
                   <Select
                     name="is_active"
                     value={formData.is_active}
                     onChange={handleInputChange}
                     placeholder="اختر حالة النشاط"
                     size="lg"
+                    border="2px solid"
+                    borderColor="blue.200"
+                    _hover={{ borderColor: "blue.300" }}
+                    _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px #4299e1" }}
+                    borderRadius="10px"
                   >
                     <option value={true}>نشط</option>
                     <option value={false}>غير نشط</option>
@@ -1323,7 +1440,7 @@ const QuestionBankDashboard = () => {
 
                 {/* رفع الصورة */}
                 <FormControl>
-                  <FormLabel>صورة بنك الأسئلة (اختياري)</FormLabel>
+                  <FormLabel color="blue.600" fontWeight="bold">صورة بنك الأسئلة (اختياري)</FormLabel>
                   <VStack spacing={4} align="stretch">
                     {!imagePreview ? (
                       <Button
@@ -1333,7 +1450,12 @@ const QuestionBankDashboard = () => {
                         variant="outline"
                         size="lg"
                         cursor="pointer"
-                        _hover={{ bg: "gray.50" }}
+                        border="2px solid"
+                        borderColor="blue.300"
+                        color="blue.500"
+                        _hover={{ bg: "blue.50", borderColor: "blue.400" }}
+                        borderRadius="10px"
+                        fontWeight="bold"
                       >
                         اختر صورة
                       </Button>
@@ -1370,20 +1492,38 @@ const QuestionBankDashboard = () => {
             </form>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter bg="blue.50" borderRadius="0 0 18px 18px" py={4}>
             <HStack spacing={3}>
-              <Button variant="ghost" onClick={resetForm}>
+              <Button 
+                variant="ghost" 
+                onClick={resetForm}
+                color="blue.600"
+                _hover={{ bg: "blue.100" }}
+                fontWeight="bold"
+              >
                 إعادة تعيين
               </Button>
-              <Button variant="ghost" onClick={onEditClose}>
+              <Button 
+                variant="ghost" 
+                onClick={onEditClose}
+                color="blue.600"
+                _hover={{ bg: "blue.100" }}
+                fontWeight="bold"
+              >
                 إلغاء
               </Button>
               <Button
-                colorScheme="green"
+                bg="blue.400"
+                color="white"
                 onClick={handleEditSubmit}
                 isLoading={editLoading}
                 loadingText="جاري التحديث..."
                 leftIcon={<FaEdit />}
+                _hover={{ bg: "blue.500", transform: "translateY(-2px)" }}
+                boxShadow="0 4px 15px rgba(66, 153, 225, 0.35)"
+                borderRadius="10px"
+                fontWeight="bold"
+                transition="all 0.2s"
               >
                 تحديث بنك الأسئلة
               </Button>
@@ -1394,44 +1534,80 @@ const QuestionBankDashboard = () => {
 
       {/* Delete Confirmation Modal */}
       <Modal isOpen={isDeleteOpen} onClose={onDeleteClose} size="md">
-        <ModalOverlay />
-        <ModalContent bg={bgColor}>
-          <ModalHeader>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg="white" borderRadius="20px" border="2px solid" borderColor="blue.200">
+          <ModalHeader bg="blue.300" color="white" borderRadius="18px 18px 0 0" py={4}>
             <HStack>
-              <FaTrash color="red.500" />
-              <Text>تأكيد الحذف</Text>
+              <Box
+                w="40px"
+                h="40px"
+                bg="white"
+                borderRadius="10px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <FaTrash color="#4299e1" size={18} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold">تأكيد الحذف</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color="white" _hover={{ bg: "blue.400" }} />
           
-          <ModalBody>
+          <ModalBody py={8}>
             <VStack spacing={4} align="stretch">
               <Box textAlign="center">
-                <FaBook size={48} color="red.400" style={{ margin: "0 auto 16px" }} />
-                <Text fontSize="lg" fontWeight="bold" color="red.600">
+                <Box
+                  w="80px"
+                  h="80px"
+                  bg="blue.50"
+                  borderRadius="50%"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  mx="auto"
+                  mb={4}
+                  border="3px solid"
+                  borderColor="blue.200"
+                >
+                  <FaBook size={40} color="#4299e1" />
+                </Box>
+                <Text fontSize="lg" fontWeight="bold" color="blue.600" mb={2}>
                   هل أنت متأكد من حذف بنك الأسئلة؟
                 </Text>
-                <Text mt={2} color="gray.600">
+                <Text mt={2} color="blue.500" fontWeight="medium" fontSize="md">
                   "{deletingBank?.name}"
                 </Text>
-                <Text mt={2} color="gray.500" fontSize="sm">
+                <Text mt={3} color="blue.400" fontSize="sm" fontWeight="medium">
                   هذا الإجراء لا يمكن التراجع عنه
                 </Text>
               </Box>
             </VStack>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter bg="blue.50" borderRadius="0 0 18px 18px" py={4}>
             <HStack spacing={3}>
-              <Button variant="ghost" onClick={onDeleteClose}>
+              <Button 
+                variant="ghost" 
+                onClick={onDeleteClose}
+                color="blue.600"
+                _hover={{ bg: "blue.100" }}
+                fontWeight="bold"
+              >
                 إلغاء
               </Button>
               <Button
-                colorScheme="red"
+                bg="blue.300"
+                color="white"
                 onClick={handleDeleteConfirm}
                 isLoading={deleteLoading}
                 loadingText="جاري الحذف..."
                 leftIcon={<FaTrash />}
+                _hover={{ bg: "blue.400", transform: "translateY(-2px)" }}
+                boxShadow="0 4px 15px rgba(66, 153, 225, 0.35)"
+                borderRadius="10px"
+                fontWeight="bold"
+                transition="all 0.2s"
               >
                 حذف بنك الأسئلة
               </Button>

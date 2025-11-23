@@ -33,10 +33,18 @@ const ComprehensiveExam = () => {
   const [gradesData, setGradesData] = useState(null);
   const [gradesLoading, setGradesLoading] = useState(false);
   const [gradesError, setGradesError] = useState(null);
-  // State للتنقل بين الأسئلة
+  // State للتنقل بين الأسئلة 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   // State لعرض/إخفاء الباجنيشن
   const [showPagination, setShowPagination] = useState(false);
+  // States للامتحان الجديد
+  const [examData, setExamData] = useState(null);
+  const [examStatus, setExamStatus] = useState(null); // hidden, not_open_yet, closed, already_submitted, ready
+  const [currentAttempt, setCurrentAttempt] = useState(null);
+  const [remainingSeconds, setRemainingSeconds] = useState(null);
+  const [attemptHistory, setAttemptHistory] = useState([]);
+  const [feedback, setFeedback] = useState(null);
+  const [startingAttempt, setStartingAttempt] = useState(false);
   // State لإضافة الأسئلة كصور
   const [addImageModal, setAddImageModal] = useState({ open: false });
   const [selectedImages, setSelectedImages] = useState([]);
@@ -47,6 +55,11 @@ const ComprehensiveExam = () => {
   const [selectedQuestionImage, setSelectedQuestionImage] = useState(null);
   const [questionImagePreview, setQuestionImagePreview] = useState('');
   const [uploadingQuestionImage, setUploadingQuestionImage] = useState(false);
+  // State لتقارير الامتحان
+  const [examReport, setExamReport] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   // جلب درجات الطلاب
   const fetchGrades = async () => {
@@ -67,10 +80,55 @@ const ComprehensiveExam = () => {
     }
   };
 
+  // جلب تقرير الامتحان
+  const fetchExamReport = async () => {
+    setReportLoading(true);
+    setReportError(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await baseUrl.get(
+        `/api/exams/${id}/report`,
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      );
+      setExamReport(res.data);
+      setShowReportModal(true);
+    } catch (err) {
+      console.error('Error fetching exam report:', err);
+      setReportError(err.response?.data?.message || "حدث خطأ أثناء تحميل التقرير");
+      toast({
+        title: "خطأ في تحميل التقرير",
+        description: err.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchQuestions();
+    fetchExamData();
     // eslint-disable-next-line
   }, [id]);
+
+  // عداد الوقت للمحاولة النشطة
+  useEffect(() => {
+    if (currentAttempt && currentAttempt.remainingSeconds > 0 && student && !isTeacher && !isAdmin) {
+      const interval = setInterval(() => {
+        setRemainingSeconds((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            // عند انتهاء الوقت، تحديث البيانات
+            fetchExamData();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [currentAttempt, student, isTeacher, isAdmin]);
 
   // دالة لترتيب الأسئلة عشوائياً
   const shuffleArray = (array) => {
@@ -82,28 +140,130 @@ const ComprehensiveExam = () => {
     return shuffled;
   };
 
-  const fetchQuestions = async () => {
+  // جلب بيانات الامتحان
+  const fetchExamData = async () => {
     try {
       setLoading(true);
       setError(null);
+      const token = localStorage.getItem("token");
+      const res = await baseUrl.get(
+        `/api/exams/${id}`,
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      );
+      
+      const data = res.data;
+      setExamData(data.exam);
+      setExamStatus(data.status);
+      setCurrentAttempt(data.attempt || null);
+      setRemainingSeconds(data.attempt?.remainingSeconds || null);
+      setAttemptHistory(data.attemptHistory || []);
+      setFeedback(data.feedback || null);
+      
+      // للمدرسين والإداريين: جلب الأسئلة مباشرة
+      if (isTeacher || isAdmin) {
+        await fetchQuestionsForTeacher();
+      } else {
+        // للطلاب: الأسئلة تأتي مع المحاولة أو من feedback
+        if (data.status === 'ready' && data.attempt) {
+          // إذا كانت هناك محاولة نشطة، الأسئلة يجب أن تأتي من endpoint منفصل
+          await fetchQuestionsForStudent();
+        } else if (data.feedback && data.feedback.wrongQuestions) {
+          // إذا كان هناك feedback، نستخدم الأسئلة من هناك
+          const questionsFromFeedback = data.feedback.wrongQuestions.map(wq => ({
+            id: wq.questionId,
+            text: wq.questionText,
+            image: wq.questionImage || null,
+            choices: [] // سيتم ملؤها لاحقاً
+          }));
+          setQuestions(questionsFromFeedback);
+        }
+      }
+      
+      // عرض رسالة حسب الحالة
+      if (data.message) {
+        toast({
+          title: data.message,
+          status: data.status === 'ready' ? 'info' : 'warning',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching exam data:', err);
+      setError(err.response?.data?.message || "حدث خطأ أثناء تحميل بيانات الامتحان");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // جلب الأسئلة للمدرس
+  const fetchQuestionsForTeacher = async () => {
+    try {
       const token = localStorage.getItem("token");
       const res = await baseUrl.get(
         `/api/questions/lecture-exam/${id}/details`,
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       );
       const questionsData = res.data.questions || [];
-      
-      // ترتيب الأسئلة عشوائياً للطلاب فقط
-      if (student && !isTeacher && !isAdmin) {
-        setQuestions(shuffleArray(questionsData));
-      } else {
-        // للمدرسين والإداريين: عرض الأسئلة بالترتيب الأصلي
-        setQuestions(questionsData);
-      }
+      setQuestions(questionsData);
     } catch (err) {
-      setError("حدث خطأ أثناء تحميل الأسئلة");
+      console.error('Error fetching questions for teacher:', err);
+    }
+  };
+
+  // جلب الأسئلة للطالب
+  const fetchQuestionsForStudent = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await baseUrl.get(
+        `/api/questions/lecture-exam/${id}/details`,
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      );
+      const questionsData = res.data.questions || [];
+      // ترتيب الأسئلة عشوائياً للطلاب
+      setQuestions(shuffleArray(questionsData));
+    } catch (err) {
+      console.error('Error fetching questions for student:', err);
+    }
+  };
+
+  // بدء محاولة جديدة
+  const startAttempt = async () => {
+    setStartingAttempt(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await baseUrl.post(
+        `/api/exams/${id}/start`,
+        {},
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      );
+      
+      const attemptData = res.data;
+      setCurrentAttempt(attemptData);
+      setRemainingSeconds(attemptData.remainingSeconds);
+      setExamStatus('ready');
+      
+      // جلب الأسئلة بعد بدء المحاولة
+      await fetchQuestionsForStudent();
+      
+      toast({
+        title: "تم بدء المحاولة بنجاح",
+        description: attemptData.timeLimitMinutes ? `المدة: ${attemptData.timeLimitMinutes} دقيقة` : "بدون مدة محددة",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (err) {
+      console.error('Error starting attempt:', err);
+      toast({
+        title: "فشل بدء المحاولة",
+        description: err.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
-      setLoading(false);
+      setStartingAttempt(false);
     }
   };
 
@@ -345,14 +505,55 @@ const ComprehensiveExam = () => {
         choiceId: Number(choiceId),
       }));
       const res = await baseUrl.post(
-        `/api/questions/lecture-exam/${id}/submit`,
+        `/api/exams/${id}/submit`,
         { answers: answersArr },
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       );
-      setSubmitResult(res.data);
-      toast({ title: "تم تسليم الامتحان!", status: "success" });
-    } catch {
-      toast({ title: "فشل تسليم الامتحان", status: "error" });
+      
+      const result = res.data;
+      setSubmitResult({
+        attemptId: result.attemptId,
+        status: result.status,
+        totalGrade: result.totalGrade,
+        maxGrade: result.maxGrade,
+        passed: result.passed,
+        wrongQuestions: result.wrongQuestions || [],
+        releaseReason: result.releaseReason,
+        showAnswers: result.showAnswers
+      });
+      
+      // تحديث حالة الامتحان
+      setExamStatus(result.status === 'submitted' || result.status === 'late' ? 'already_submitted' : examStatus);
+      setCurrentAttempt(null);
+      setRemainingSeconds(null);
+      
+      // إذا كان هناك feedback، تحديثه
+      if (result.wrongQuestions && result.wrongQuestions.length > 0) {
+        setFeedback({
+          wrongQuestions: result.wrongQuestions,
+          releaseReason: result.releaseReason || 'immediate'
+        });
+      }
+      
+      toast({ 
+        title: "تم تسليم الامتحان!", 
+        description: `الدرجة: ${result.totalGrade}/${result.maxGrade}`,
+        status: "success",
+        duration: 4000,
+        isClosable: true
+      });
+      
+      // إعادة جلب بيانات الامتحان لتحديث الحالة
+      await fetchExamData();
+    } catch (err) {
+      console.error('Error submitting exam:', err);
+      toast({ 
+        title: "فشل تسليم الامتحان", 
+        description: err.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
+        duration: 3000,
+        isClosable: true
+      });
     } finally {
       setSubmitLoading(false);
     }
@@ -484,7 +685,11 @@ const ComprehensiveExam = () => {
       });
 
       // إعادة تحميل الأسئلة
-      await fetchQuestions();
+      if (isTeacher || isAdmin) {
+        await fetchQuestionsForTeacher();
+      } else {
+        await fetchExamData();
+      }
       
       // إغلاق المودال
       closeAddImageModal();
@@ -600,7 +805,11 @@ const ComprehensiveExam = () => {
       });
 
       // إعادة تحميل الأسئلة
-      await fetchQuestions();
+      if (isTeacher || isAdmin) {
+        await fetchQuestionsForTeacher();
+      } else {
+        await fetchExamData();
+      }
       
       // إغلاق المودال
       closeAddQuestionImageModal();
@@ -623,7 +832,7 @@ const ComprehensiveExam = () => {
     return (
       <Center minH="60vh">
         <Spinner size="xl" color="blue.500" />
-        <Text mt={4}>جاري تحميل الأسئلة...</Text>
+        <Text mt={4}>جاري تحميل بيانات الامتحان...</Text>
       </Center>
     );
   }
@@ -637,6 +846,131 @@ const ComprehensiveExam = () => {
         </Alert>
       </Center>
     );
+  }
+
+  // عرض الحالات المختلفة للطلاب
+  if (student && !isTeacher && !isAdmin) {
+    if (examStatus === 'hidden') {
+      return (
+        <Center minH="60vh">
+          <Alert status="warning" borderRadius="md" maxW="md">
+            <AlertIcon />
+            <VStack spacing={2} align="start">
+              <Text fontWeight="bold">الامتحان غير متاح</Text>
+              <Text>هذا الامتحان غير مرئي حالياً.</Text>
+            </VStack>
+          </Alert>
+        </Center>
+      );
+    }
+
+    if (examStatus === 'not_open_yet') {
+      return (
+        <Center minH="60vh">
+          <Alert status="info" borderRadius="md" maxW="md">
+            <AlertIcon />
+            <VStack spacing={2} align="start">
+              <Text fontWeight="bold">الامتحان لم يفتح بعد</Text>
+              <Text>سيتم فتح الامتحان في الوقت المحدد.</Text>
+              {examData?.startWindow && (
+                <Text fontSize="sm" color="gray.600">
+                  موعد الفتح: {new Date(examData.startWindow).toLocaleString('ar-EG')}
+                </Text>
+              )}
+            </VStack>
+          </Alert>
+        </Center>
+      );
+    }
+
+    if (examStatus === 'closed') {
+      return (
+        <Center minH="60vh">
+          <Alert status="error" borderRadius="md" maxW="md">
+            <AlertIcon />
+            <VStack spacing={2} align="start">
+              <Text fontWeight="bold">الامتحان مغلق</Text>
+              <Text>انتهت فترة الامتحان ولا يمكن بدء محاولات جديدة.</Text>
+              {examData?.endWindow && (
+                <Text fontSize="sm" color="gray.600">
+                  موعد الإغلاق: {new Date(examData.endWindow).toLocaleString('ar-EG')}
+                </Text>
+              )}
+            </VStack>
+          </Alert>
+        </Center>
+      );
+    }
+
+    if (examStatus === 'already_submitted' && !feedback) {
+      return (
+        <Center minH="60vh">
+          <Alert status="info" borderRadius="md" maxW="md">
+            <AlertIcon />
+            <VStack spacing={4} align="start">
+              <Text fontWeight="bold">تم إكمال الامتحان</Text>
+              <Text>لقد أكملت هذا الامتحان بالفعل.</Text>
+              {attemptHistory.length > 0 && (
+                <Box w="full">
+                  <Text fontWeight="bold" mb={2}>تاريخ المحاولات:</Text>
+                  <VStack spacing={2} align="stretch">
+                    {attemptHistory.map((attempt, idx) => (
+                      <Box key={attempt.attemptId} p={3} bg="gray.50" borderRadius="md">
+                        <HStack justify="space-between">
+                          <Text>المحاولة {idx + 1}</Text>
+                          <Badge colorScheme={attempt.status === 'submitted' ? 'green' : attempt.status === 'late' ? 'orange' : 'red'}>
+                            {attempt.status === 'submitted' ? 'تم التسليم' : attempt.status === 'late' ? 'متأخر' : 'منتهي'}
+                          </Badge>
+                        </HStack>
+                        <Text fontSize="sm" color="gray.600">
+                          الدرجة: {attempt.totalGrade} | التاريخ: {attempt.submittedAt ? new Date(attempt.submittedAt).toLocaleString('ar-EG') : 'غير متاح'}
+                        </Text>
+                      </Box>
+                    ))}
+                  </VStack>
+                </Box>
+              )}
+            </VStack>
+          </Alert>
+        </Center>
+      );
+    }
+
+    // إذا كان ready ولكن لا توجد محاولة نشطة، عرض زر البدء
+    if (examStatus === 'ready' && !currentAttempt && questions.length === 0) {
+      return (
+        <Center minH="60vh">
+          <VStack spacing={6}>
+            <Alert status="info" borderRadius="md" maxW="md">
+              <AlertIcon />
+              <VStack spacing={2} align="start">
+                <Text fontWeight="bold">جاهز للبدء</Text>
+                <Text>اضغط على الزر أدناه لبدء الامتحان.</Text>
+                {examData?.timeLimitEnabled && examData?.timeLimitMinutes && (
+                  <Text fontSize="sm" color="gray.600">
+                    المدة: {examData.timeLimitMinutes} دقيقة
+                  </Text>
+                )}
+              </VStack>
+            </Alert>
+            <Button
+              colorScheme="green"
+              size="lg"
+              onClick={startAttempt}
+              isLoading={startingAttempt}
+              leftIcon={<Icon as={AiFillCheckCircle} boxSize={6} />}
+              px={8}
+              py={6}
+              fontSize="xl"
+              fontWeight="bold"
+              borderRadius="full"
+            >
+              {startingAttempt ? "جاري البدء..." : "بدء الامتحان"}
+            </Button>
+          </VStack>
+        </Center>
+      );
+    }
   }
 
   // عرض درجات الطلاب
@@ -723,6 +1057,22 @@ const ComprehensiveExam = () => {
           </Button>
           
           <Button 
+            colorScheme="orange" 
+            onClick={fetchExamReport}
+            isLoading={reportLoading}
+            size={{ base: 'sm', sm: 'md', md: 'lg' }}
+            fontSize={{ base: 'sm', sm: 'md', md: 'lg' }}
+            px={{ base: 4, sm: 6, md: 8 }}
+            py={{ base: 2, sm: 3, md: 4 }}
+            minW={{ base: '160px', sm: '180px', md: '200px' }}
+            h={{ base: '40px', sm: '44px', md: '48px' }}
+            borderRadius="full"
+            leftIcon={<Icon as={AiFillStar} boxSize={{ base: 3, sm: 4, md: 5 }} />}
+          >
+            تقارير الامتحان
+          </Button>
+          
+          <Button 
             colorScheme="purple" 
             onClick={openAddImageModal}
             size={{ base: 'sm', sm: 'md', md: 'lg' }}
@@ -739,8 +1089,8 @@ const ComprehensiveExam = () => {
         </HStack>
       )}
               <VStack spacing={{ base: 6, sm: 7, md: 8 }} align="stretch">
-        {/* إذا الطالب سلّم الامتحان، اعرض النتيجة والأخطاء */}
-        {submitResult && !isTeacher && !isAdmin && student ? (
+        {/* إذا الطالب سلّم الامتحان أو كان هناك feedback، اعرض النتيجة والأخطاء */}
+        {((submitResult || (feedback && feedback.wrongQuestions && feedback.wrongQuestions.length > 0)) && !isTeacher && !isAdmin && student) ? (
           <>
             {/* بطاقة النتيجة الرئيسية */}
             <Box 
@@ -782,40 +1132,49 @@ const ComprehensiveExam = () => {
                   </Heading>
                   
                   {/* شريط التقدم الدائري */}
-                  <Box position="relative" mb={4}>
-                    <CircularProgress 
-                      value={Math.round((submitResult.totalGrade / submitResult.maxGrade) * 100)} 
-                      color="green.400" 
-                      size={{ base: '120px', sm: '140px', md: '160px' }} 
-                      thickness="12px" 
-                      trackColor="gray.200"
-                    >
-                      <CircularProgressLabel 
-                        fontSize={{ base: 'xl', sm: '2xl', md: '3xl' }} 
-                        fontWeight="bold"
-                        color="green.700"
+                  {(submitResult || (feedback && attemptHistory.length > 0)) && (
+                    <Box position="relative" mb={4}>
+                      <CircularProgress 
+                        value={submitResult ? Math.round((submitResult.totalGrade / submitResult.maxGrade) * 100) : attemptHistory[0] ? Math.round((attemptHistory[0].totalGrade / (examData?.totalGrade || 100)) * 100) : 0} 
+                        color="green.400" 
+                        size={{ base: '120px', sm: '140px', md: '160px' }} 
+                        thickness="12px" 
+                        trackColor="gray.200"
                       >
-                        {submitResult.totalGrade}
-                </CircularProgressLabel>
-              </CircularProgress>
-                    
-                    {/* النسبة المئوية */}
-                    <Text 
-                      fontSize={{ base: 'lg', sm: 'xl', md: '2xl' }} 
-                      fontWeight="bold" 
-                      color="green.600" 
-                      mt={2}
-                    >
-                      من {submitResult.maxGrade} ({Math.round((submitResult.totalGrade / submitResult.maxGrade) * 100)}%)
-              </Text>
-                  </Box>
-                  <Text 
-                          color="orange.600" 
-                          fontSize={{ base: 'md', sm: 'lg' }}
-                          textAlign="center"
+                        <CircularProgressLabel 
+                          fontSize={{ base: 'xl', sm: '2xl', md: '3xl' }} 
+                          fontWeight="bold"
+                          color="green.700"
                         >
-                          عدد الأسئلة الخاطئة: {submitResult.wrongQuestions ? submitResult.wrongQuestions.length : 0}
-              </Text>
+                          {submitResult ? submitResult.totalGrade : attemptHistory[0]?.totalGrade || 0}
+                        </CircularProgressLabel>
+                      </CircularProgress>
+                      
+                      {/* النسبة المئوية */}
+                      <Text 
+                        fontSize={{ base: 'lg', sm: 'xl', md: '2xl' }} 
+                        fontWeight="bold" 
+                        color="green.600" 
+                        mt={2}
+                      >
+                        من {submitResult ? submitResult.maxGrade : examData?.totalGrade || 100} ({submitResult ? Math.round((submitResult.totalGrade / submitResult.maxGrade) * 100) : attemptHistory[0] ? Math.round((attemptHistory[0].totalGrade / (examData?.totalGrade || 100)) * 100) : 0}%)
+                      </Text>
+                    </Box>
+                  )}
+                  <Text 
+                    color="orange.600" 
+                    fontSize={{ base: 'md', sm: 'lg' }}
+                    textAlign="center"
+                  >
+                    عدد الأسئلة الخاطئة: {(submitResult?.wrongQuestions?.length || feedback?.wrongQuestions?.length || 0)}
+                  </Text>
+                  {feedback?.releaseReason && (
+                    <Text fontSize="sm" color="blue.600" textAlign="center">
+                      {feedback.releaseReason === 'immediate' ? 'تم إظهار الإجابات فوراً' : 
+                       feedback.releaseReason === 'scheduled_release' ? 'تم إظهار الإجابات في الموعد المحدد' : 
+                       'تم إظهار الإجابات بعد المدة المحددة'}
+                    </Text>
+                  )}
                   {/* رسالة النتيجة */}
              
                 </VStack>
@@ -823,7 +1182,7 @@ const ComprehensiveExam = () => {
             </Box>
 
             {/* تفاصيل الأخطاء */}
-            {submitResult.wrongQuestions && submitResult.wrongQuestions.length > 0 && (
+            {((submitResult?.wrongQuestions && submitResult.wrongQuestions.length > 0) || (feedback?.wrongQuestions && feedback.wrongQuestions.length > 0)) && (
               <Box 
                 p={{ base: 4, sm: 5, md: 6 }} 
                 borderRadius="xl" 
@@ -851,7 +1210,7 @@ const ComprehensiveExam = () => {
                     </HStack>
                   
                   <VStack spacing={4} align="stretch">
-                    {submitResult.wrongQuestions.map((wq, idx) => (
+                    {(submitResult?.wrongQuestions || feedback?.wrongQuestions || []).map((wq, idx) => (
                       <Box 
                         key={wq.questionId} 
                         p={{ base: 4, sm: 5, md: 6 }} 
@@ -1202,6 +1561,33 @@ const ComprehensiveExam = () => {
                     mb={6}
                   >
                     <VStack spacing={4}>
+                      {/* عداد الوقت */}
+                      {currentAttempt && remainingSeconds !== null && remainingSeconds > 0 && (
+                        <Box 
+                          w="full" 
+                          p={4} 
+                          borderRadius="lg" 
+                          bgGradient={remainingSeconds < 300 ? "linear(to-r, red.50, orange.50)" : "linear(to-r, blue.50, green.50)"}
+                          border="2px solid"
+                          borderColor={remainingSeconds < 300 ? "red.300" : "blue.300"}
+                          textAlign="center"
+                        >
+                          <Text fontSize="sm" color="gray.600" mb={1}>الوقت المتبقي</Text>
+                          <Text 
+                            fontSize={{ base: '2xl', sm: '3xl', md: '4xl' }} 
+                            fontWeight="bold" 
+                            color={remainingSeconds < 300 ? "red.700" : "blue.700"}
+                          >
+                            {Math.floor(remainingSeconds / 60)}:{(remainingSeconds % 60).toString().padStart(2, '0')}
+                          </Text>
+                          {remainingSeconds < 300 && (
+                            <Text fontSize="sm" color="red.600" mt={2} fontWeight="bold">
+                              ⚠️ الوقت على وشك الانتهاء!
+                            </Text>
+                          )}
+                        </Box>
+                      )}
+                      
                       {/* شريط التقدم العام */}
                       <Box w="full">
                         <HStack justify="space-between" mb={3}>

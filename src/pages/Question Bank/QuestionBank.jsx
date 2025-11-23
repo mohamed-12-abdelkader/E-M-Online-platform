@@ -106,6 +106,31 @@ const QuestionBank = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const accentColor = useColorModeValue("blue.500", "blue.300");
   const accentLightBg = useColorModeValue("blue.50", "blue.900");
+  
+  // Colors for light/dark mode with blue.500 as primary
+  const pageBg = useColorModeValue("blue.50", "gray.900");
+  const cardBackground = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("blue.100", "blue.900");
+  const cardHoverBorder = useColorModeValue("blue.300", "blue.700");
+  const textPrimary = useColorModeValue("blue.600", "blue.300");
+  const textSecondary = useColorModeValue("gray.600", "gray.400");
+  const inputBg = useColorModeValue("blue.50", "gray.700");
+  const inputBorder = useColorModeValue("blue.200", "blue.800");
+  const inputHoverBorder = useColorModeValue("blue.300", "blue.700");
+  const inputFocusBorder = useColorModeValue("blue.500", "blue.400");
+  const modalBg = useColorModeValue("white", "gray.800");
+  const modalBorder = useColorModeValue("blue.200", "blue.900");
+  const modalHeaderBg = useColorModeValue("blue.500", "blue.600");
+  const modalFooterBg = useColorModeValue("blue.50", "gray.700");
+  const buttonPrimary = useColorModeValue("blue.500", "blue.400");
+  const buttonPrimaryHover = useColorModeValue("blue.600", "blue.500");
+  const buttonSecondary = useColorModeValue("blue.400", "blue.500");
+  const buttonSecondaryHover = useColorModeValue("blue.500", "blue.600");
+  const iconBg = useColorModeValue("blue.50", "blue.900");
+  const iconBorder = useColorModeValue("blue.200", "blue.800");
+  const spinnerColor = useColorModeValue("blue.500", "blue.400");
+  const badgeActiveBg = useColorModeValue("blue.100", "blue.900");
+  const badgeActiveColor = useColorModeValue("blue.700", "blue.300");
 
   // Fetch question bank data
   const fetchQuestionBankData = async () => {
@@ -506,7 +531,7 @@ const QuestionBank = () => {
   }
 
   return (
-    <Box minH="100vh" bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)" position="relative">
+    <Box minH="100vh" bg={pageBg} position="relative">
       {/* Background Pattern */}
       <Box
         position="absolute"
@@ -514,8 +539,11 @@ const QuestionBank = () => {
         left={0}
         right={0}
         bottom={0}
-        opacity={0.1}
-        backgroundImage="radial-gradient(circle at 25px 25px, white 2px, transparent 0), radial-gradient(circle at 75px 75px, white 2px, transparent 0)"
+        opacity={useColorModeValue(0.05, 0.1)}
+        backgroundImage={useColorModeValue(
+          "radial-gradient(circle at 25px 25px, blue.500 2px, transparent 0), radial-gradient(circle at 75px 75px, blue.500 2px, transparent 0)",
+          "radial-gradient(circle at 25px 25px, blue.400 2px, transparent 0), radial-gradient(circle at 75px 75px, blue.400 2px, transparent 0)"
+        )}
         backgroundSize="100px 100px"
       />
       
@@ -525,40 +553,50 @@ const QuestionBank = () => {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 120, damping: 20 }}
-        bg="rgba(255, 255, 255, 0.95)"
-        backdropFilter="blur(20px)"
-        borderBottom="1px solid"
-        borderColor="rgba(255, 255, 255, 0.2)"
-        boxShadow="0 8px 32px rgba(0, 0, 0, 0.1)"
+        bg={headerBg}
+        borderBottom="3px solid"
+        borderColor={useColorModeValue("blue.500", "blue.400")}
+        boxShadow={useColorModeValue("0 4px 20px rgba(66, 153, 225, 0.15)", "0 4px 20px rgba(0, 0, 0, 0.3)")}
         position="sticky"
         top={0}
         zIndex={10}
-      
       >
         <Flex justify="space-between" align="center" maxW="1400px" mx="auto" px={{ base: 4, md: 8 }} py={{ base: 4, md: 6 }}>
           <Flex align="center" gap={4}>
             <Box
-              w="60px"
-              h="60px"
-              bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+              w="70px"
+              h="70px"
+              bg={buttonPrimary}
               borderRadius="20px"
               display="flex"
               alignItems="center"
               justifyContent="center"
-              boxShadow="0 10px 30px rgba(102, 126, 234, 0.3)"
+              boxShadow={useColorModeValue("0 8px 25px rgba(66, 153, 225, 0.4)", "0 8px 25px rgba(0, 0, 0, 0.4)")}
+              transition="all 0.3s"
+              _hover={{
+                transform: "rotate(5deg) scale(1.05)",
+                boxShadow: useColorModeValue("0 12px 35px rgba(66, 153, 225, 0.5)", "0 12px 35px rgba(0, 0, 0, 0.5)")
+              }}
             >
-              <Icon as={FiGrid} color="white" boxSize={6} />
+              <Icon as={FiGrid} color="white" boxSize={7} />
             </Box>
             <Box>
               <Heading 
                 size={{ base: "lg", md: "xl" }} 
-                bgGradient="linear(to-r, #3182ce, #2c5aa0)"
-                bgClip="text"
-                fontWeight="bold"
+                color={textPrimary}
+                fontWeight="800"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+                letterSpacing="-0.02em"
               >
                 {questionBank.name}
               </Heading>
-              <Text color="gray.600" fontSize="sm" mt={1}>
+              <Text 
+                color={textSecondary} 
+                fontSize="md" 
+                mt={1} 
+                fontWeight="600"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+              >
                 إدارة بنك الأسئلة والمواد الدراسية
               </Text>
             </Box>
@@ -566,20 +604,22 @@ const QuestionBank = () => {
 
           <MotionButton
             leftIcon={<FiPlus />}
-            bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+            bg={buttonPrimary}
             color="white"
             onClick={onOpen}
             size={{ base: "md", md: "lg" }}
-            borderRadius="15px"
-            boxShadow="0 10px 30px rgba(102, 126, 234, 0.3)"
+            borderRadius="12px"
+            boxShadow={useColorModeValue("0 6px 20px rgba(66, 153, 225, 0.35)", "0 6px 20px rgba(0, 0, 0, 0.4)")}
             _hover={{
-              transform: "translateY(-2px)",
-              boxShadow: "0 15px 40px rgba(102, 126, 234, 0.4)",
+              transform: "translateY(-3px)",
+              boxShadow: useColorModeValue("0 10px 30px rgba(66, 153, 225, 0.45)", "0 10px 30px rgba(0, 0, 0, 0.5)"),
+              bg: buttonPrimaryHover
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             px={8}
             py={6}
+            fontWeight="bold"
           >
             إضافة مادة جديدة
           </MotionButton>
@@ -602,14 +642,13 @@ const QuestionBank = () => {
         {/* Question Bank Info */}
         <MotionBox
           variants={itemVariants}
-          bg="rgba(255, 255, 255, 0.95)"
-          backdropFilter="blur(20px)"
+          bg={cardBackground}
           p={{ base: 6, md: 8 }}
-          borderRadius="25px"
-          boxShadow="0 20px 60px rgba(0, 0, 0, 0.1)"
+          borderRadius="20px"
+          boxShadow={useColorModeValue("0 8px 30px rgba(66, 153, 225, 0.12)", "0 8px 30px rgba(0, 0, 0, 0.3)")}
           mb={8}
-          border="1px solid"
-          borderColor="rgba(255, 255, 255, 0.2)"
+          border="2px solid"
+          borderColor={cardBorder}
           position="relative"
           overflow="hidden"
         >
@@ -620,9 +659,9 @@ const QuestionBank = () => {
             right="-50px"
             w="200px"
             h="200px"
-            bg="linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)"
+            bg={iconBg}
             borderRadius="50%"
-            filter="blur(40px)"
+            opacity={0.5}
           />
           <Box
             position="absolute"
@@ -630,9 +669,9 @@ const QuestionBank = () => {
             left="-30px"
             w="150px"
             h="150px"
-            bg="linear-gradient(135deg, rgba(118, 75, 162, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%)"
+            bg={iconBg}
             borderRadius="50%"
-            filter="blur(30px)"
+            opacity={0.5}
           />
 
           <Flex
@@ -648,13 +687,13 @@ const QuestionBank = () => {
                 <Box
                   w="50px"
                   h="50px"
-                  bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                  bg={buttonPrimary}
                   borderRadius="15px"
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
                   mr={4}
-                  boxShadow="0 8px 25px rgba(102, 126, 234, 0.3)"
+                  boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
                 >
                   <Icon as={FiBookOpen} color="white" boxSize={5} />
                 </Box>
@@ -662,56 +701,62 @@ const QuestionBank = () => {
                   <Heading 
                     size={{ base: "lg", md: "xl" }} 
                     mb={2} 
-                    bgGradient="linear(to-r, #3182ce, #2c5aa0)"
-                    bgClip="text"
-                    fontWeight="bold"
+                    color={textPrimary}
+                    fontWeight="800"
+                    fontFamily="'Cairo', 'Tajawal', sans-serif"
+                    letterSpacing="-0.02em"
                   >
                     {questionBank.name}
                   </Heading>
-                  <Text fontSize={{ base: "md", md: "lg" }} color="gray.600" lineHeight="1.6">
+                  <Text 
+                    fontSize={{ base: "md", md: "lg" }} 
+                    color={textSecondary} 
+                    lineHeight="1.7"
+                    fontWeight="500"
+                    fontFamily="'Cairo', 'Tajawal', sans-serif"
+                  >
                     {questionBank.description}
                   </Text>
                 </Box>
               </Flex>
               
               <HStack spacing={4} flexWrap="wrap">
-                <Box
-                  bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                <Badge
+                  bg={buttonPrimary}
                   color="white"
                   px={4}
                   py={2}
-                  borderRadius="20px"
-                  fontWeight="medium"
+                  borderRadius="12px"
+                  fontWeight="bold"
                   fontSize="sm"
-                  boxShadow="0 5px 15px rgba(49, 130, 206, 0.3)"
+                  boxShadow={useColorModeValue("0 4px 12px rgba(66, 153, 225, 0.3)", "0 4px 12px rgba(0, 0, 0, 0.3)")}
                 >
                   {questionBank.grade_name}
-                </Box>
-                <Box
-                  bg={questionBank.is_active ? "linear-gradient(135deg, #48bb78 0%, #38a169 100%)" : "linear-gradient(135deg, #f56565 0%, #e53e3e 100%)"}
-                  color="white"
+                </Badge>
+                <Badge
+                  bg={questionBank.is_active ? badgeActiveBg : useColorModeValue("gray.200", "gray.600")}
+                  color={questionBank.is_active ? badgeActiveColor : useColorModeValue("gray.600", "gray.300")}
                   px={4}
                   py={2}
-                  borderRadius="20px"
-                  fontWeight="medium"
+                  borderRadius="12px"
+                  fontWeight="bold"
                   fontSize="sm"
-                  boxShadow={questionBank.is_active ? "0 5px 15px rgba(72, 187, 120, 0.3)" : "0 5px 15px rgba(245, 101, 101, 0.3)"}
                 >
                   {questionBank.is_active ? "نشط" : "غير نشط"}
-                </Box>
-                <Box
-                  bg="rgba(102, 126, 234, 0.1)"
-                  color="#3182ce"
+                </Badge>
+                <Badge
+                  bg={iconBg}
+                  color={textPrimary}
                   px={4}
                   py={2}
-                  borderRadius="20px"
-                  fontWeight="medium"
+                  borderRadius="12px"
+                  fontWeight="bold"
                   fontSize="sm"
-                  border="1px solid"
-                                      borderColor="rgba(49, 130, 206, 0.2)"
+                  border="2px solid"
+                  borderColor={iconBorder}
                 >
                   {filteredSubjects.length} مادة
-                </Box>
+                </Badge>
               </HStack>
             </Box>
 
@@ -746,17 +791,18 @@ const QuestionBank = () => {
         {/* Search Bar */}
         <MotionBox variants={itemVariants} mb={8}>
           <Box
-            bg="rgba(255, 255, 255, 0.9)"
-            backdropFilter="blur(20px)"
-            borderRadius="25px"
+            bg={inputBg}
+            borderRadius="12px"
             p={2}
-            boxShadow="0 15px 35px rgba(0, 0, 0, 0.1)"
-            border="1px solid"
-            borderColor="rgba(255, 255, 255, 0.2)"
+            boxShadow={useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.1)", "0 5px 15px rgba(0, 0, 0, 0.2)")}
+            border="2px solid"
+            borderColor={inputBorder}
+            _hover={{ borderColor: inputHoverBorder }}
+            transition="all 0.2s"
           >
             <InputGroup size="lg">
               <InputLeftElement pointerEvents="none" pl={6}>
-                <Icon as={FiSearch} color="#3182ce" boxSize={5} />
+                <Icon as={FiSearch} color={useColorModeValue("#4299e1", "#63b3ed")} boxSize={5} />
               </InputLeftElement>
               <Input
                 placeholder="ابحث عن مادة..."
@@ -764,19 +810,19 @@ const QuestionBank = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 bg="transparent"
                 border="none"
-                _hover={{ bg: "transparent" }}
+                _hover={{ bg: useColorModeValue("blue.100", "gray.600") }}
                 _focus={{
-                  bg: "transparent",
+                  bg: useColorModeValue("blue.100", "gray.600"),
                   boxShadow: "none",
                   outline: "none"
                 }}
-                borderRadius="20px"
+                borderRadius="10px"
                 py={6}
                 pl={16}
                 fontSize="lg"
                 fontWeight="medium"
-                color="gray.700"
-                _placeholder={{ color: "gray.500" }}
+                color={textPrimary}
+                _placeholder={{ color: useColorModeValue("blue.400", "blue.500") }}
               />
             </InputGroup>
           </Box>
@@ -789,25 +835,32 @@ const QuestionBank = () => {
               <Box
                 w="50px"
                 h="50px"
-                bg="linear-gradient(135deg, #48bb78 0%, #38a169 100%)"
+                bg={buttonPrimary}
                 borderRadius="15px"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                boxShadow="0 8px 25px rgba(72, 187, 120, 0.3)"
+                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
               >
                 <Icon as={FiBook} color="white" boxSize={5} />
               </Box>
               <Box>
                 <Heading 
                   size="xl" 
-                  bgGradient="linear(to-r, #48bb78, #38a169)"
-                  bgClip="text"
-                  fontWeight="bold"
+                  color={textPrimary}
+                  fontWeight="800"
+                  fontFamily="'Cairo', 'Tajawal', sans-serif"
+                  letterSpacing="-0.02em"
+                  mb={1}
                 >
                   المواد الدراسية
                 </Heading>
-                <Text color="gray.600" fontSize="sm">
+                <Text 
+                  color={textSecondary} 
+                  fontSize="md" 
+                  fontWeight="600"
+                  fontFamily="'Cairo', 'Tajawal', sans-serif"
+                >
                   {filteredSubjects.length} مادة متاحة
                 </Text>
               </Box>
@@ -818,48 +871,67 @@ const QuestionBank = () => {
             <MotionBox
               textAlign="center"
               py={16}
-              bg="rgba(255, 255, 255, 0.9)"
-              backdropFilter="blur(20px)"
-              borderRadius="25px"
-              boxShadow="0 15px 35px rgba(0, 0, 0, 0.1)"
-              border="1px solid"
-              borderColor="rgba(255, 255, 255, 0.2)"
+              bg={cardBackground}
+              borderRadius="20px"
+              boxShadow={useColorModeValue("0 8px 30px rgba(66, 153, 225, 0.12)", "0 8px 30px rgba(0, 0, 0, 0.3)")}
+              border="2px solid"
+              borderColor={cardBorder}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
               <Box
-                w="100px"
-                h="100px"
-                bg="linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)"
+                w="120px"
+                h="120px"
+                bg={iconBg}
                 borderRadius="50%"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
                 mx="auto"
                 mb={6}
+                border="3px solid"
+                borderColor={iconBorder}
               >
-                <FiBook size={40} color="#3182ce" />
+                <FiBook size={50} color={useColorModeValue("#4299e1", "#63b3ed")} />
               </Box>
-              <Heading size="lg" color="gray.700" mb={3}>
+              <Heading 
+                size="lg" 
+                color={textPrimary} 
+                mb={3} 
+                fontWeight="800"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+                letterSpacing="-0.01em"
+              >
                 {searchTerm ? "لا توجد نتائج للبحث" : "لا توجد مواد دراسية بعد"}
               </Heading>
-              <Text color="gray.500" fontSize="lg" mb={6}>
+              <Text 
+                color={useColorModeValue("blue.500", "blue.400")} 
+                fontSize="lg" 
+                mb={8} 
+                fontWeight="600"
+                fontFamily="'Cairo', 'Tajawal', sans-serif"
+              >
                 {searchTerm ? "جرب البحث بكلمات مختلفة" : "ابدأ بإضافة أول مادة دراسية"}
               </Text>
               {!searchTerm && (
                 <MotionButton
-                  bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                  bg={buttonPrimary}
                   color="white"
                   size="lg"
-                  borderRadius="15px"
-                  boxShadow="0 10px 30px rgba(102, 126, 234, 0.3)"
+                  borderRadius="12px"
+                  boxShadow={useColorModeValue("0 6px 20px rgba(66, 153, 225, 0.35)", "0 6px 20px rgba(0, 0, 0, 0.4)")}
                   onClick={onOpen}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   px={8}
                   py={6}
                   leftIcon={<FiPlus />}
+                  fontWeight="bold"
+                  _hover={{
+                    bg: buttonPrimaryHover,
+                    boxShadow: useColorModeValue("0 10px 30px rgba(66, 153, 225, 0.45)", "0 10px 30px rgba(0, 0, 0, 0.5)")
+                  }}
                 >
                   إضافة أول مادة
                 </MotionButton>
@@ -871,60 +943,61 @@ const QuestionBank = () => {
                 <MotionCard
                   key={subject.id}
                   variants={itemVariants}
-                  bg="rgba(255, 255, 255, 0.95)"
-                  backdropFilter="blur(20px)"
-                  borderRadius="25px"
-                  border="1px solid"
-                  borderColor="rgba(255, 255, 255, 0.2)"
-                  boxShadow="0 15px 35px rgba(0, 0, 0, 0.1)"
+                  bg={cardBackground}
+                  borderRadius="20px"
+                  border="2px solid"
+                  borderColor={cardBorder}
+                  boxShadow={useColorModeValue("0 8px 25px rgba(66, 153, 225, 0.15)", "0 8px 25px rgba(0, 0, 0, 0.3)")}
                   overflow="hidden"
                   position="relative"
                   whileHover={{ 
-                    y: -10,
+                    y: -5,
                     scale: 1.02,
                     transition: { duration: 0.3 }
                   }}
                   _hover={{
-                    boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15)",
-                    borderColor: "rgba(49, 130, 206, 0.3)"
+                    boxShadow: useColorModeValue("0 15px 40px rgba(66, 153, 225, 0.25)", "0 15px 40px rgba(0, 0, 0, 0.4)"),
+                    borderColor: cardHoverBorder
                   }}
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   custom={index}
                 >
-                  {/* Gradient Overlay */}
+                  {/* Top Border */}
                   <Box
                     position="absolute"
                     top={0}
                     left={0}
                     right={0}
-                    h="4px"
-                    bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                    h="5px"
+                    bg={buttonPrimary}
                   />
 
                   {/* Decorative Element */}
                   <Box
                     position="absolute"
-                    top="-20px"
-                    right="-20px"
-                    w="80px"
-                    h="80px"
-                    bg="linear-gradient(135deg, rgba(49, 130, 206, 0.1) 0%, rgba(44, 90, 160, 0.1) 100%)"
+                    top="-30px"
+                    right="-30px"
+                    w="100px"
+                    h="100px"
+                    bg={iconBg}
                     borderRadius="50%"
-                    filter="blur(20px)"
+                    opacity={0.5}
                   />
 
                   <CardHeader pb={4} position="relative" zIndex={1}>
                     {subject.image_url && (
-                      <Box mb={6} position="relative">
+                      <Box mb={6} position="relative" borderRadius="15px" overflow="hidden">
                         <Image
                           src={subject.image_url}
                           alt={subject.name}
-                          borderRadius="20px"
-                          maxH="200px"
+                          borderRadius="15px"
+                          maxH="220px"
                           objectFit="cover"
                           w="full"
-                          boxShadow="0 10px 25px rgba(0, 0, 0, 0.1)"
+                          boxShadow={useColorModeValue("0 8px 20px rgba(66, 153, 225, 0.2)", "0 8px 20px rgba(0, 0, 0, 0.3)")}
+                          transition="transform 0.3s"
+                          _hover={{ transform: "scale(1.05)" }}
                         />
                         <Box
                           position="absolute"
@@ -932,8 +1005,8 @@ const QuestionBank = () => {
                           left={0}
                           right={0}
                           bottom={0}
-                          bg="linear-gradient(45deg, rgba(49, 130, 206, 0.1), rgba(44, 90, 160, 0.1))"
-                          borderRadius="20px"
+                          bg={useColorModeValue("rgba(66, 153, 225, 0.1)", "rgba(66, 153, 225, 0.2)")}
+                          borderRadius="15px"
                           opacity={0}
                           transition="all 0.3s"
                           _hover={{ opacity: 1 }}
@@ -941,32 +1014,46 @@ const QuestionBank = () => {
                       </Box>
                     )}
                     
-                    <Flex align="center" mb={4}>
+                    <Flex align="flex-start" mb={4} gap={4}>
                       <Box
-                        w="40px"
-                        h="40px"
-                        bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
-                        borderRadius="12px"
+                        w="60px"
+                        h="60px"
+                        bg={buttonPrimary}
+                        borderRadius="15px"
                         display="flex"
                         alignItems="center"
                         justifyContent="center"
-                        mr={3}
-                        boxShadow="0 5px 15px rgba(49, 130, 206, 0.3)"
+                        flexShrink={0}
+                        boxShadow={useColorModeValue("0 6px 20px rgba(66, 153, 225, 0.4)", "0 6px 20px rgba(0, 0, 0, 0.4)")}
+                        transition="all 0.3s"
+                        _hover={{
+                          transform: "rotate(5deg) scale(1.1)",
+                          boxShadow: useColorModeValue("0 8px 25px rgba(66, 153, 225, 0.5)", "0 8px 25px rgba(0, 0, 0, 0.5)")
+                        }}
                       >
-                        <Icon as={FiBookOpen} color="white" boxSize={4} />
+                        <Icon as={FiBookOpen} color="white" boxSize={6} />
                       </Box>
-                      <Box flex={1}>
+                      <Box flex={1} minW={0}>
                         <Heading 
-                          size="md" 
-                          bgGradient="linear(to-r, #3182ce, #2c5aa0)"
-                          bgClip="text"
-                          fontWeight="bold"
-                          mb={1}
+                          size="lg" 
+                          color={textPrimary}
+                          fontWeight="800"
+                          mb={3}
+                          fontFamily="'Cairo', 'Tajawal', sans-serif"
+                          lineHeight="1.3"
+                          letterSpacing="-0.02em"
                         >
                           {subject.name}
                         </Heading>
                         {subject.description && (
-                          <Text fontSize="sm" color="gray.600" noOfLines={2} lineHeight="1.5">
+                          <Text 
+                            fontSize="md" 
+                            color={textSecondary} 
+                            noOfLines={3} 
+                            lineHeight="1.7"
+                            fontWeight="500"
+                            fontFamily="'Cairo', 'Tajawal', sans-serif"
+                          >
                             {subject.description}
                           </Text>
                         )}
@@ -974,72 +1061,100 @@ const QuestionBank = () => {
                     </Flex>
                   </CardHeader>
 
-                  <CardBody py={4} position="relative" zIndex={1}>
-                    <VStack spacing={4} align="stretch">
-                      <HStack justify="space-between" flexWrap="wrap">
-                        <Box
-                          bg={subject.is_active ? "linear-gradient(135deg, #48bb78 0%, #38a169 100%)" : "linear-gradient(135deg, #f56565 0%, #e53e3e 100%)"}
+                  <CardBody py={4} position="relative" zIndex={1} bg={iconBg} borderRadius="12px" mb={4}>
+                    <VStack spacing={3} align="stretch">
+                      <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                        <Badge
+                          bg={subject.is_active ? buttonPrimary : useColorModeValue("gray.300", "gray.600")}
                           color="white"
-                          px={3}
-                          py={1}
-                          borderRadius="15px"
-                          fontSize="xs"
-                          fontWeight="medium"
-                          boxShadow={subject.is_active ? "0 3px 10px rgba(72, 187, 120, 0.3)" : "0 3px 10px rgba(245, 101, 101, 0.3)"}
+                          px={4}
+                          py={2}
+                          borderRadius="10px"
+                          fontSize="sm"
+                          fontWeight="700"
+                          fontFamily="'Cairo', 'Tajawal', sans-serif"
+                          boxShadow={useColorModeValue("0 3px 10px rgba(66, 153, 225, 0.3)", "0 3px 10px rgba(0, 0, 0, 0.3)")}
                         >
-                          {subject.is_active ? "نشط" : "غير نشط"}
-                        </Box>
-                        <Text fontSize="xs" color="gray.500" fontWeight="medium">
-                          {new Date(subject.created_at).toLocaleDateString('ar-EG')}
-                        </Text>
+                          {subject.is_active ? "✓ نشط" : "✗ غير نشط"}
+                        </Badge>
+                        <HStack spacing={2}>
+                          <Icon as={FiAward} color={useColorModeValue("blue.400", "blue.500")} boxSize={4} />
+                          <Text 
+                            fontSize="sm" 
+                            color={textPrimary} 
+                            fontWeight="600"
+                            fontFamily="'Cairo', 'Tajawal', sans-serif"
+                          >
+                            {new Date(subject.created_at).toLocaleDateString('ar-EG', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </Text>
+                        </HStack>
                       </HStack>
                     </VStack>
                   </CardBody>
 
                   <CardFooter pt={0} position="relative" zIndex={1}>
                     <VStack spacing={3} w="full">
-                      <HStack spacing={2} w="full">
+                      <HStack spacing={3} w="full">
                         <MotionButton
                           as={IconButton}
                           icon={<FiEdit />}
-                          size="sm"
-                          bg="linear-gradient(135deg, #48bb78 0%, #38a169 100%)"
+                          size="md"
+                          bg={buttonSecondary}
                           color="white"
                           borderRadius="12px"
                           onClick={() => handleEditClick(subject)}
                           aria-label="تعديل المادة"
-                          boxShadow="0 5px 15px rgba(72, 187, 120, 0.3)"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          _hover={{ bg: "linear-gradient(135deg, #38a169 0%, #2f855a 100%)" }}
+                          boxShadow={useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.35)", "0 5px 15px rgba(0, 0, 0, 0.4)")}
+                          whileHover={{ scale: 1.1, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          _hover={{ 
+                            bg: buttonSecondaryHover,
+                            boxShadow: useColorModeValue("0 8px 20px rgba(66, 153, 225, 0.45)", "0 8px 20px rgba(0, 0, 0, 0.5)")
+                          }}
+                          transition="all 0.2s"
                         />
                         <MotionButton
                           as={IconButton}
                           icon={<FiTrash />}
-                          size="sm"
-                          bg="linear-gradient(135deg, #f56565 0%, #e53e3e 100%)"
+                          size="md"
+                          bg={useColorModeValue("blue.300", "blue.600")}
                           color="white"
                           borderRadius="12px"
                           onClick={() => handleDeleteClick(subject)}
                           aria-label="حذف المادة"
-                          boxShadow="0 5px 15px rgba(245, 101, 101, 0.3)"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          _hover={{ bg: "linear-gradient(135deg, #e53e3e 0%, #c53030 100%)" }}
+                          boxShadow={useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.35)", "0 5px 15px rgba(0, 0, 0, 0.4)")}
+                          whileHover={{ scale: 1.1, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          _hover={{ 
+                            bg: useColorModeValue("blue.400", "blue.700"),
+                            boxShadow: useColorModeValue("0 8px 20px rgba(66, 153, 225, 0.45)", "0 8px 20px rgba(0, 0, 0, 0.5)")
+                          }}
+                          transition="all 0.2s"
                         />
                         <Link to={`/supject/${subject.id}`} style={{ flex: 1 }}>
                           <MotionButton
                             rightIcon={<FiArrowRight />}
-                            bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
+                            bg={buttonPrimary}
                             color="white"
                             w="full"
-                            size="sm"
+                            size="md"
                             borderRadius="12px"
-                            boxShadow="0 5px 15px rgba(49, 130, 206, 0.3)"
-                            whileHover={{ scale: 1.02 }}
+                            boxShadow={useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.35)", "0 5px 15px rgba(0, 0, 0, 0.4)")}
+                            whileHover={{ scale: 1.02, y: -2 }}
                             whileTap={{ scale: 0.98 }}
-                            _hover={{ bg: "linear-gradient(135deg, #2c5aa0 0%, #2a4d8f 100%)" }}
-                            fontWeight="medium"
+                            _hover={{ 
+                              bg: buttonPrimaryHover,
+                              boxShadow: useColorModeValue("0 8px 20px rgba(66, 153, 225, 0.45)", "0 8px 20px rgba(0, 0, 0, 0.5)")
+                            }}
+                            fontWeight="700"
+                            fontSize="md"
+                            fontFamily="'Cairo', 'Tajawal', sans-serif"
+                            letterSpacing="0.02em"
+                            transition="all 0.2s"
                           >
                             عرض الأسئلة
                           </MotionButton>
@@ -1055,32 +1170,48 @@ const QuestionBank = () => {
       </MotionBox>
       {/* Add Subject Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent bg={cardBg}>
-          <ModalHeader>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg={modalBg} borderRadius="20px" border="2px solid" borderColor={modalBorder}>
+          <ModalHeader bg={modalHeaderBg} color="white" borderRadius="18px 18px 0 0" py={4}>
             <HStack>
-              <FiPlus color="blue.500" />
-              <Text>إضافة مادة جديدة</Text>
+              <Box
+                w="40px"
+                h="40px"
+                bg="white"
+                borderRadius="10px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <FiPlus color="#4299e1" size={18} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold">إضافة مادة جديدة</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color="white" _hover={{ bg: buttonPrimaryHover }} />
           
           <ModalBody>
             <form onSubmit={handleSubmit}>
               <VStack spacing={6}>
                 <FormControl isRequired>
-                  <FormLabel>اسم المادة</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">اسم المادة</FormLabel>
                   <Input
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="أدخل اسم المادة"
                     size="lg"
+                    border="2px solid"
+                    borderColor={inputBorder}
+                    _hover={{ borderColor: inputHoverBorder }}
+                    _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                    borderRadius="10px"
+                    bg={useColorModeValue("white", "gray.700")}
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>وصف المادة (اختياري)</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">وصف المادة (اختياري)</FormLabel>
                   <Textarea
                     name="description"
                     value={formData.description}
@@ -1088,11 +1219,17 @@ const QuestionBank = () => {
                     placeholder="أدخل وصف المادة"
                     rows={4}
                     size="lg"
+                    border="2px solid"
+                    borderColor={inputBorder}
+                    _hover={{ borderColor: inputHoverBorder }}
+                    _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                    borderRadius="10px"
+                    bg={useColorModeValue("white", "gray.700")}
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>صورة المادة (اختياري)</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">صورة المادة (اختياري)</FormLabel>
                   <VStack spacing={4} align="stretch">
                     {!imagePreview ? (
                       <Button
@@ -1102,7 +1239,12 @@ const QuestionBank = () => {
                         variant="outline"
                         size="lg"
                         cursor="pointer"
-                        _hover={{ bg: "gray.50" }}
+                        border="2px solid"
+                        borderColor={inputHoverBorder}
+                        color={useColorModeValue("blue.500", "blue.400")}
+                        _hover={{ bg: iconBg, borderColor: inputFocusBorder }}
+                        borderRadius="10px"
+                        fontWeight="bold"
                       >
                         اختر صورة
                       </Button>
@@ -1139,20 +1281,38 @@ const QuestionBank = () => {
             </form>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 18px 18px" py={4}>
             <HStack spacing={3}>
-              <Button variant="ghost" onClick={resetForm}>
+              <Button 
+                variant="ghost" 
+                onClick={resetForm}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+              >
                 إعادة تعيين
               </Button>
-              <Button variant="ghost" onClick={onClose}>
+              <Button 
+                variant="ghost" 
+                onClick={onClose}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+              >
                 إلغاء
               </Button>
               <Button
-                colorScheme="blue"
+                bg={buttonPrimary}
+                color="white"
                 onClick={handleSubmit}
                 isLoading={submitLoading}
                 loadingText="جاري الإنشاء..."
                 leftIcon={<FiPlus />}
+                _hover={{ bg: buttonPrimaryHover, transform: "translateY(-2px)" }}
+                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
+                borderRadius="10px"
+                fontWeight="bold"
+                transition="all 0.2s"
               >
                 إضافة المادة
               </Button>
@@ -1163,32 +1323,48 @@ const QuestionBank = () => {
 
       {/* Edit Subject Modal */}
       <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl">
-        <ModalOverlay />
-        <ModalContent bg={cardBg}>
-          <ModalHeader>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg={modalBg} borderRadius="20px" border="2px solid" borderColor={modalBorder}>
+          <ModalHeader bg={buttonSecondary} color="white" borderRadius="18px 18px 0 0" py={4}>
             <HStack>
-              <FiEdit color="green.500" />
-              <Text>تعديل المادة</Text>
+              <Box
+                w="40px"
+                h="40px"
+                bg="white"
+                borderRadius="10px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <FiEdit color="#4299e1" size={18} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold">تعديل المادة</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color="white" _hover={{ bg: buttonSecondaryHover }} />
           
           <ModalBody>
             <form onSubmit={handleEditSubmit}>
               <VStack spacing={6}>
                 <FormControl isRequired>
-                  <FormLabel>اسم المادة</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">اسم المادة</FormLabel>
                   <Input
                     name="name"
                     value={editFormData.name}
                     onChange={handleEditInputChange}
                     placeholder="أدخل اسم المادة"
                     size="lg"
+                    border="2px solid"
+                    borderColor={inputBorder}
+                    _hover={{ borderColor: inputHoverBorder }}
+                    _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                    borderRadius="10px"
+                    bg={useColorModeValue("white", "gray.700")}
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>وصف المادة (اختياري)</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">وصف المادة (اختياري)</FormLabel>
                   <Textarea
                     name="description"
                     value={editFormData.description}
@@ -1196,11 +1372,17 @@ const QuestionBank = () => {
                     placeholder="أدخل وصف المادة"
                     rows={4}
                     size="lg"
+                    border="2px solid"
+                    borderColor={inputBorder}
+                    _hover={{ borderColor: inputHoverBorder }}
+                    _focus={{ borderColor: inputFocusBorder, boxShadow: `0 0 0 1px ${useColorModeValue("#4299e1", "#63b3ed")}` }}
+                    borderRadius="10px"
+                    bg={useColorModeValue("white", "gray.700")}
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>صورة المادة (اختياري)</FormLabel>
+                  <FormLabel color={textPrimary} fontWeight="bold">صورة المادة (اختياري)</FormLabel>
                   <VStack spacing={4} align="stretch">
                     {!imagePreview ? (
                       <Button
@@ -1210,7 +1392,12 @@ const QuestionBank = () => {
                         variant="outline"
                         size="lg"
                         cursor="pointer"
-                        _hover={{ bg: "gray.50" }}
+                        border="2px solid"
+                        borderColor={inputHoverBorder}
+                        color={useColorModeValue("blue.500", "blue.400")}
+                        _hover={{ bg: iconBg, borderColor: inputFocusBorder }}
+                        borderRadius="10px"
+                        fontWeight="bold"
                       >
                         اختر صورة
                       </Button>
@@ -1247,20 +1434,38 @@ const QuestionBank = () => {
             </form>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 18px 18px" py={4}>
             <HStack spacing={3}>
-              <Button variant="ghost" onClick={resetEditForm}>
+              <Button 
+                variant="ghost" 
+                onClick={resetEditForm}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+              >
                 إعادة تعيين
               </Button>
-              <Button variant="ghost" onClick={onEditClose}>
+              <Button 
+                variant="ghost" 
+                onClick={onEditClose}
+                color={textPrimary}
+                _hover={{ bg: iconBg }}
+                fontWeight="bold"
+              >
                 إلغاء
               </Button>
               <Button
-                colorScheme="green"
+                bg={buttonSecondary}
+                color="white"
                 onClick={handleEditSubmit}
                 isLoading={editLoading}
                 loadingText="جاري التحديث..."
                 leftIcon={<FiEdit />}
+                _hover={{ bg: buttonSecondaryHover, transform: "translateY(-2px)" }}
+                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
+                borderRadius="10px"
+                fontWeight="bold"
+                transition="all 0.2s"
               >
                 تحديث المادة
               </Button>
