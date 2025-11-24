@@ -2605,6 +2605,170 @@ const ComprehensiveExam = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Exam Report Modal */}
+      <Modal isOpen={showReportModal} onClose={() => setShowReportModal(false)} size="xl" scrollBehavior="inside">
+        <ModalOverlay />
+        <ModalContent mx={{ base: 2, sm: 4 }} maxH="90vh">
+          <ModalHeader fontSize={{ base: 'md', sm: 'lg' }}>تقرير الامتحان</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {reportLoading ? (
+              <Center minH="40vh">
+                <VStack spacing={4}>
+                  <Spinner size="xl" color="blue.500" />
+                  <Text>جاري تحميل التقرير...</Text>
+                </VStack>
+              </Center>
+            ) : reportError ? (
+              <Alert status="error" borderRadius="md">
+                <AlertIcon />
+                <VStack spacing={2} align="start">
+                  <Text fontWeight="bold">خطأ في تحميل التقرير</Text>
+                  <Text>{reportError}</Text>
+                  <Button
+                    colorScheme="blue"
+                    size="sm"
+                    onClick={fetchExamReport}
+                    mt={2}
+                  >
+                    إعادة المحاولة
+                  </Button>
+                </VStack>
+              </Alert>
+            ) : examReport ? (
+              <VStack spacing={6} align="stretch">
+                {/* معلومات عامة عن الامتحان */}
+                {examReport.exam && (
+                  <Box p={4} bg="blue.50" borderRadius="lg" border="1px solid" borderColor="blue.200">
+                    <Heading size="md" color="blue.700" mb={3}>معلومات الامتحان</Heading>
+                    <VStack spacing={2} align="stretch">
+                      <HStack justify="space-between">
+                        <Text fontWeight="bold">العنوان:</Text>
+                        <Text>{examReport.exam.title || 'غير محدد'}</Text>
+                      </HStack>
+                      <HStack justify="space-between">
+                        <Text fontWeight="bold">الدرجة الكلية:</Text>
+                        <Text>{examReport.exam.totalGrade || 0}</Text>
+                      </HStack>
+                      {examReport.exam.duration && (
+                        <HStack justify="space-between">
+                          <Text fontWeight="bold">المدة:</Text>
+                          <Text>{examReport.exam.duration} دقيقة</Text>
+                        </HStack>
+                      )}
+                    </VStack>
+                  </Box>
+                )}
+
+                {/* إحصائيات المحاولات */}
+                {examReport.attemptSummary && (
+                  <Box p={4} bg="green.50" borderRadius="lg" border="1px solid" borderColor="green.200">
+                    <Heading size="md" color="green.700" mb={3}>إحصائيات المحاولات</Heading>
+                    <VStack spacing={3} align="stretch">
+                      <HStack justify="space-between">
+                        <Text fontWeight="bold">إجمالي المحاولات:</Text>
+                        <Badge colorScheme="blue" fontSize="md" px={3} py={1}>
+                          {examReport.attemptSummary.total_attempts || 0}
+                        </Badge>
+                      </HStack>
+                      <HStack justify="space-between">
+                        <Text fontWeight="bold">المحاولات المقدمة:</Text>
+                        <Badge colorScheme="green" fontSize="md" px={3} py={1}>
+                          {examReport.attemptSummary.submitted_attempts || 0}
+                        </Badge>
+                      </HStack>
+                      <HStack justify="space-between">
+                        <Text fontWeight="bold">المحاولات المتأخرة:</Text>
+                        <Badge colorScheme="orange" fontSize="md" px={3} py={1}>
+                          {examReport.attemptSummary.late_attempts || 0}
+                        </Badge>
+                      </HStack>
+                      <HStack justify="space-between">
+                        <Text fontWeight="bold">المحاولات المنتهية:</Text>
+                        <Badge colorScheme="red" fontSize="md" px={3} py={1}>
+                          {examReport.attemptSummary.expired_attempts || 0}
+                        </Badge>
+                      </HStack>
+                    </VStack>
+                  </Box>
+                )}
+
+                {/* إحصائيات الأسئلة */}
+                {examReport.questionStats && Array.isArray(examReport.questionStats) && examReport.questionStats.length > 0 && (
+                  <Box p={4} bg="purple.50" borderRadius="lg" border="1px solid" borderColor="purple.200">
+                    <Heading size="md" color="purple.700" mb={3}>إحصائيات الأسئلة</Heading>
+                    <VStack spacing={3} align="stretch" maxH="300px" overflowY="auto">
+                      {examReport.questionStats.map((stat, idx) => (
+                        <Box key={idx} p={3} bg="white" borderRadius="md" border="1px solid" borderColor="purple.200">
+                          <HStack justify="space-between" mb={2}>
+                            <Text fontWeight="bold">السؤال {idx + 1}</Text>
+                            <Badge colorScheme={stat.correctRate >= 70 ? 'green' : stat.correctRate >= 50 ? 'yellow' : 'red'}>
+                              {stat.correctRate?.toFixed(1) || 0}%
+                            </Badge>
+                          </HStack>
+                          <HStack spacing={4} fontSize="sm" color="gray.600">
+                            <Text>صحيح: {stat.correctCount || 0}</Text>
+                            <Text>خاطئ: {stat.incorrectCount || 0}</Text>
+                            <Text>لم يُجاب: {stat.unansweredCount || 0}</Text>
+                          </HStack>
+                        </Box>
+                      ))}
+                    </VStack>
+                  </Box>
+                )}
+
+                {/* قائمة الطلاب */}
+                {examReport.students && Array.isArray(examReport.students) && examReport.students.length > 0 && (
+                  <Box p={4} bg="gray.50" borderRadius="lg" border="1px solid" borderColor="gray.200">
+                    <Heading size="md" color="gray.700" mb={3}>قائمة الطلاب</Heading>
+                    <VStack spacing={2} align="stretch" maxH="400px" overflowY="auto">
+                      {examReport.students.map((student, idx) => (
+                        <Box key={student.studentId || idx} p={3} bg="white" borderRadius="md" border="1px solid" borderColor="gray.200">
+                          <HStack justify="space-between" mb={2}>
+                            <Text fontWeight="bold">{student.name || `طالب ${idx + 1}`}</Text>
+                            <Badge colorScheme={student.passed ? 'green' : 'red'} fontSize="md">
+                              {student.passed ? 'ناجح' : 'راسب'}
+                            </Badge>
+                          </HStack>
+                          <HStack spacing={4} fontSize="sm" color="gray.600">
+                            <Text>الدرجة: {student.totalGrade || 0}</Text>
+                            {student.submittedAt && (
+                              <Text>التاريخ: {new Date(student.submittedAt).toLocaleString('ar-EG')}</Text>
+                            )}
+                          </HStack>
+                        </Box>
+                      ))}
+                    </VStack>
+                  </Box>
+                )}
+
+                {/* إذا لم تكن هناك بيانات */}
+                {!examReport.exam && !examReport.attemptSummary && (!examReport.questionStats || examReport.questionStats.length === 0) && (!examReport.students || examReport.students.length === 0) && (
+                  <Alert status="info" borderRadius="md">
+                    <AlertIcon />
+                    <Text>لا توجد بيانات متاحة في التقرير</Text>
+                  </Alert>
+                )}
+              </VStack>
+            ) : (
+              <Alert status="info" borderRadius="md">
+                <AlertIcon />
+                <Text>لم يتم تحميل التقرير بعد</Text>
+              </Alert>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowReportModal(false)}
+              size={{ base: 'sm', sm: 'md' }}
+            >
+              إغلاق
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
