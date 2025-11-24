@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box, VStack, Heading, Text, Spinner, Center, RadioGroup, Radio, Stack,
   Alert, AlertIcon, Badge, IconButton, HStack, useToast, Modal, ModalOverlay,
@@ -107,10 +107,54 @@ const ComprehensiveExam = () => {
     }
   };
 
+  // استخدام useRef لتتبع الـ ID السابق
+  const prevExamIdRef = useRef(null);
+
   useEffect(() => {
-    fetchExamData();
+    if (id) {
+      // التحقق من أن الـ ID تغير فعلياً
+      if (prevExamIdRef.current !== null && prevExamIdRef.current !== id) {
+        console.log('🔄 Exam ID changed from', prevExamIdRef.current, 'to', id);
+        // إعادة تعيين جميع الـ states عند تغيير الامتحان
+        setQuestions([]);
+        setExamData(null);
+        setExamStatus(null);
+        setCurrentAttempt(null);
+        setRemainingSeconds(null);
+        setAttemptHistory([]);
+        setFeedback(null);
+        setError(null);
+        setStudentAnswers({});
+        setSubmitResult(null);
+        setCurrentQuestionIndex(0);
+      }
+      
+      // تحديث الـ ref
+      prevExamIdRef.current = id;
+      
+      // الانتظار حتى يكون isTeacher و isAdmin جاهزين
+      if (isTeacher !== undefined && isAdmin !== undefined) {
+        console.log('📥 Fetching exam data for ID:', id, 'isTeacher:', isTeacher, 'isAdmin:', isAdmin);
+        fetchExamData();
+      } else {
+        console.log('⏳ Waiting for user type to be determined...');
+      }
+    }
     // eslint-disable-next-line
-  }, [id]);
+  }, [id, isTeacher, isAdmin]);
+
+  // مراقبة تغييرات الأسئلة للمدرس
+  useEffect(() => {
+    if (isTeacher || isAdmin) {
+      console.log('🔍 Questions state updated:', questions.length, 'questions');
+      if (questions.length > 0) {
+        console.log('✅ First question:', questions[0]);
+        console.log('✅ All questions IDs:', questions.map(q => q.id));
+      } else {
+        console.log('❌ No questions in state!');
+      }
+    }
+  }, [questions, isTeacher, isAdmin]);
 
   // عداد الوقت للمحاولة النشطة
   useEffect(() => {
@@ -142,16 +186,37 @@ const ComprehensiveExam = () => {
 
   // جلب بيانات الامتحان
   const fetchExamData = async () => {
+    if (!id) {
+      console.log('⚠️ No exam ID provided');
+      return;
+    }
+
+    const currentExamId = id; // حفظ الـ ID الحالي للتحقق من race conditions
+    
     try {
       setLoading(true);
       setError(null);
+      // إعادة تعيين الأسئلة فقط إذا تغير الـ ID
+      if (prevExamIdRef.current !== null && prevExamIdRef.current !== currentExamId) {
+        console.log('🔄 Clearing questions because exam ID changed');
+        setQuestions([]);
+      }
+      
+      console.log('📡 Fetching exam data for ID:', currentExamId);
       const token = localStorage.getItem("token");
       const res = await baseUrl.get(
-        `/api/exams/${id}`,
+        `/api/exams/${currentExamId}`,
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       );
       
+      // التحقق من أن الـ ID لم يتغير أثناء الطلب
+      if (currentExamId !== id) {
+        console.log('⚠️ Exam ID changed during fetch, ignoring response');
+        return;
+      }
+      
       const data = res.data;
+      console.log('📦 Full API Response for exam', currentExamId, ':', data);
       setExamData(data.exam);
       setExamStatus(data.status);
       setCurrentAttempt(data.attempt || null);
@@ -159,9 +224,50 @@ const ComprehensiveExam = () => {
       setAttemptHistory(data.attemptHistory || []);
       setFeedback(data.feedback || null);
       
-      // للمدرسين والإداريين: جلب الأسئلة مباشرة
+      // للمدرسين والإداريين: جلب الأسئلة من نفس API response
       if (isTeacher || isAdmin) {
-        await fetchQuestionsForTeacher();
+        console.log('👨‍🏫 Teacher/Admin detected!');
+        console.log('isTeacher:', isTeacher, 'isAdmin:', isAdmin);
+        console.log('Looking for questions...');
+        console.log('data.questions exists?', !!data.questions);
+        console.log('data.questions is array?', Array.isArray(data.questions));
+        console.log('data.questions length:', data.questions?.length);
+        
+        let questionsFound = false;
+        
+        // أولاً: التحقق من data.questions (المستوى العلوي) - هذا هو المكان الصحيح
+        if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+          console.log('✓ Found questions in data.questions:', data.questions.length);
+          console.log('✓ Setting questions:', data.questions);
+          setQuestions(data.questions);
+          questionsFound = true;
+        } 
+        // ثانياً: التحقق من exam.questions
+        else if (data.exam && data.exam.questions && Array.isArray(data.exam.questions)) {
+          console.log('✓ Found questions in exam.questions:', data.exam.questions.length);
+          setQuestions(data.exam.questions);
+          questionsFound = true;
+        } 
+        // ثالثاً: التحقق من feedback.wrongQuestions
+        else if (data.feedback && data.feedback.wrongQuestions && Array.isArray(data.feedback.wrongQuestions)) {
+          console.log('✓ Found questions in feedback.wrongQuestions:', data.feedback.wrongQuestions.length);
+          const questionsFromFeedback = data.feedback.wrongQuestions.map(wq => ({
+            id: wq.questionId,
+            text: wq.questionText,
+            image: wq.questionImage || null,
+            choices: wq.choices || [],
+            correctChoice: wq.correctChoice,
+            yourChoice: wq.yourChoice
+          }));
+          setQuestions(questionsFromFeedback);
+          questionsFound = true;
+        }
+        
+        // إذا لم تكن موجودة، استخدم endpoint منفصل كبديل
+        if (!questionsFound) {
+          console.log('✗ Questions not found in API response, fetching from separate endpoint...');
+          await fetchQuestionsForTeacher();
+        }
       } else {
         // للطلاب: الأسئلة تأتي مع المحاولة أو من feedback
         if (data.status === 'ready' && data.attempt) {
@@ -189,25 +295,75 @@ const ComprehensiveExam = () => {
         });
       }
     } catch (err) {
-      console.error('Error fetching exam data:', err);
-      setError(err.response?.data?.message || "حدث خطأ أثناء تحميل بيانات الامتحان");
+      // التحقق من أن الـ ID لم يتغير أثناء الطلب
+      if (currentExamId !== id) {
+        console.log('⚠️ Exam ID changed during error handling, ignoring');
+        return;
+      }
+      
+      console.error('❌ Error fetching exam data:', err);
+      const errorMessage = err.response?.data?.message || "حدث خطأ أثناء تحميل بيانات الامتحان";
+      setError(errorMessage);
+      setQuestions([]); // إعادة تعيين الأسئلة في حالة الخطأ
+      
+      toast({
+        title: "خطأ في تحميل الامتحان",
+        description: errorMessage,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
-      setLoading(false);
+      // التحقق من أن الـ ID لم يتغير قبل إيقاف الـ loading
+      if (currentExamId === id) {
+        setLoading(false);
+      }
     }
   };
 
   // جلب الأسئلة للمدرس
   const fetchQuestionsForTeacher = async () => {
+    if (!id) {
+      console.log('⚠️ No exam ID provided for fetching questions');
+      return;
+    }
+
+    const currentExamId = id; // حفظ الـ ID الحالي للتحقق من race conditions
+    
     try {
       const token = localStorage.getItem("token");
+      console.log('📡 Fetching questions from separate endpoint for exam:', currentExamId);
       const res = await baseUrl.get(
-        `/api/questions/lecture-exam/${id}/details`,
+        `/api/questions/lecture-exam/${currentExamId}/details`,
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       );
+      
+      // التحقق من أن الـ ID لم يتغير أثناء الطلب
+      if (currentExamId !== id) {
+        console.log('⚠️ Exam ID changed during questions fetch, ignoring response');
+        return;
+      }
+      
+      console.log('📦 Questions response:', res.data);
       const questionsData = res.data.questions || [];
+      console.log('✅ Setting questions:', questionsData.length);
       setQuestions(questionsData);
     } catch (err) {
-      console.error('Error fetching questions for teacher:', err);
+      // التحقق من أن الـ ID لم يتغير أثناء الطلب
+      if (currentExamId !== id) {
+        console.log('⚠️ Exam ID changed during error handling, ignoring');
+        return;
+      }
+      
+      console.error('❌ Error fetching questions for teacher:', err);
+      toast({
+        title: "خطأ في جلب الأسئلة",
+        description: err.response?.data?.message || "حدث خطأ أثناء تحميل الأسئلة",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      setQuestions([]); // إعادة تعيين الأسئلة في حالة الخطأ
     }
   };
 
@@ -1381,7 +1537,10 @@ const ComprehensiveExam = () => {
           <>
             {/* للمدرسين: عرض جميع الأسئلة */}
             {isTeacher || isAdmin ? (
-              questions.map((q, idx) => (
+              <>
+                {console.log('Rendering questions for teacher:', questions.length, 'questions')}
+                {questions.length > 0 ? (
+                  questions.map((q, idx) => (
               <Box
                 key={q.id}
                   p={{ base: 4, sm: 5, md: 6 }}
@@ -1394,7 +1553,7 @@ const ComprehensiveExam = () => {
                   <HStack justify="space-between" mb={2} align="start">
                     <VStack align="start" flex={1} spacing={{ base: 2, sm: 3 }}>
                       <Text fontWeight="bold" fontSize={{ base: 'md', sm: 'lg', md: 'xl' }} color="blue.700" lineHeight="1.4">
-              {idx + 1}. {q.text}
+              {idx + 1}. {q.text || 'سؤال بصورة'}
             </Text>
                       {/* عرض صورة السؤال إذا كانت موجودة */}
                       {q.image && (
@@ -1545,7 +1704,22 @@ const ComprehensiveExam = () => {
                   </Alert>
                 )}
           </Box>
-              ))
+                  ))
+                ) : (
+                  <Center minH="40vh">
+                    <Alert status="info" borderRadius="md" maxW="md">
+                      <AlertIcon />
+                      <VStack spacing={2} align="start">
+                        <Text fontWeight="bold">لا توجد أسئلة</Text>
+                        <Text>لم يتم العثور على أسئلة في هذا الامتحان.</Text>
+                        <Text fontSize="sm" color="gray.600">
+                          عدد الأسئلة: {questions.length}
+                        </Text>
+                      </VStack>
+                    </Alert>
+                  </Center>
+                )}
+              </>
             ) : (
               // للطلاب: عرض سؤال واحد مع التنقل
               questions.length > 0 && (

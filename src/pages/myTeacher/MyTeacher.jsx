@@ -62,14 +62,6 @@ const MyTeacher = () => {
     );
   }
 
-  // If there's an error but not session expired, show error message
-  // Otherwise, show the component normally (with session expired modal if needed)
-  const hasError = error && error !== "Session expired or replaced" && error !== "UNKNOWN_ERROR";
-  
-  // Ensure teachers is always an object with teachers array
-  const teachersData = teachers || { teachers: [] };
-  const teachersList = teachersData.teachers || [];
-
   return (
     <Box 
       w="100%" 
@@ -141,16 +133,7 @@ const MyTeacher = () => {
       {/* Header Section */}
      
 
-      {hasError ? (
-        <Center py={20}>
-          <VStack spacing={4}>
-            <Icon as={FaChalkboardTeacher} boxSize={12} color="red.500" />
-            <Text color="red.500" fontSize="lg" fontWeight="bold">
-              {error}
-            </Text>
-          </VStack>
-        </Center>
-      ) : teachersList.length > 0 ? (
+      {teachers?.teachers?.length > 0 ? (
         <div >
            <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, md: 8 }} position="relative" zIndex={1}>
         <VStack spacing={{ base: 6, sm: 8, md: 10 }} mb={{ base: 12, sm: 16, md: 20 }}>
@@ -172,10 +155,10 @@ const MyTeacher = () => {
       <div className="flex flex-wrap">
 
       
-            {teachersList.map((teacher, index) => (
-              <Link className="w-[90%] md:w-[340px] m-3 " key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
+            {teachers.teachers.map((teacher, index) => (
+              <Link className="w-full  md:w-[340px]  m-3 " key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
                 <Card
-                 className=" w-[90%] mx-auto md:w-[340px] md:mx-3 "
+                 className=" w-full mx-auto md:w-[340px] md:mx-3 "
                   h="full"
                   bg={cardBg}
                   borderRadius="2xl"

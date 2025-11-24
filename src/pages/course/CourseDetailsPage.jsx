@@ -1003,47 +1003,26 @@ const CourseDetailsPage = () => {
     try {
       setExamActionLoading(true);
       
-      // تحضير البيانات للإرسال حسب API الجديد
+      // تحضير البيانات للإرسال
       const examData = {
-        lectureId: lectureId,
         title: data.title,
-        totalGrade: data.totalGrade,
-        isVisible: data.isVisible,
-        showAnswersImmediately: data.showAnswersImmediately,
-        allowMultipleAttempts: data.allowMultipleAttempts,
-        showAnswersLater: data.showAnswersLater,
-        timeLimitEnabled: data.timeLimitEnabled,
+        total_grade: data.total_grade,
+        duration: data.duration,
+        is_visible: data.is_visible,
+        lock_next_lectures: data.lock_next_lectures,
+        show_answers_immediately: data.show_answers_immediately,
+        show_answers_after_hours: data.show_answers_after_hours
       };
-
-      // دالة لتحويل datetime-local إلى ISO Date
-      const convertToISO = (dateTimeLocal) => {
-        if (!dateTimeLocal) return null;
-        // datetime-local يعطي YYYY-MM-DDTHH:mm بدون timezone
-        // نحولها إلى ISO Date مع الحفاظ على الوقت المحلي
-        const date = new Date(dateTimeLocal);
-        if (isNaN(date.getTime())) return null;
-        return date.toISOString();
-      };
-
-      // إضافة answersReleaseDate إذا تم تفعيل showAnswersLater
-      if (data.showAnswersLater && data.answersReleaseDate) {
-        examData.answersReleaseDate = convertToISO(data.answersReleaseDate);
-      } else {
-        examData.answersReleaseDate = null;
-      }
-
-      // إضافة timeLimitMinutes إذا تم تفعيل timeLimitEnabled
-      if (data.timeLimitEnabled && data.timeLimitMinutes) {
-        examData.timeLimitMinutes = data.timeLimitMinutes;
-      } else {
-        examData.timeLimitMinutes = null;
-      }
 
       // إضافة التواريخ إذا تم تحديدها
-      examData.startWindow = convertToISO(data.startWindow);
-      examData.endWindow = convertToISO(data.endWindow);
+      if (data.show_at) {
+        examData.show_at = new Date(data.show_at).toISOString();
+      }
+      if (data.hide_at) {
+        examData.hide_at = new Date(data.hide_at).toISOString();
+      }
 
-      await baseUrl.post(`/api/exams`, examData, {
+      await baseUrl.post(`/api/course/lecture/${lectureId}/exam`, examData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -1076,46 +1055,26 @@ const CourseDetailsPage = () => {
     try {
       setExamActionLoading(true);
       
-      // تحضير البيانات للإرسال حسب API الجديد
+      // تحضير البيانات للإرسال
       const examData = {
         title: data.title,
-        totalGrade: data.totalGrade,
-        isVisible: data.isVisible,
-        showAnswersImmediately: data.showAnswersImmediately,
-        allowMultipleAttempts: data.allowMultipleAttempts,
-        showAnswersLater: data.showAnswersLater,
-        timeLimitEnabled: data.timeLimitEnabled,
+        total_grade: data.total_grade,
+        duration: data.duration,
+        is_visible: data.is_visible,
+        lock_next_lectures: data.lock_next_lectures,
+        show_answers_immediately: data.show_answers_immediately,
+        show_answers_after_hours: data.show_answers_after_hours
       };
-
-      // دالة لتحويل datetime-local إلى ISO Date
-      const convertToISO = (dateTimeLocal) => {
-        if (!dateTimeLocal) return null;
-        // datetime-local يعطي YYYY-MM-DDTHH:mm بدون timezone
-        // نحولها إلى ISO Date مع الحفاظ على الوقت المحلي
-        const date = new Date(dateTimeLocal);
-        if (isNaN(date.getTime())) return null;
-        return date.toISOString();
-      };
-
-      // إضافة answersReleaseDate إذا تم تفعيل showAnswersLater
-      if (data.showAnswersLater && data.answersReleaseDate) {
-        examData.answersReleaseDate = convertToISO(data.answersReleaseDate);
-      } else {
-        examData.answersReleaseDate = null;
-      }
-
-      // إضافة timeLimitMinutes إذا تم تفعيل timeLimitEnabled
-      if (data.timeLimitEnabled && data.timeLimitMinutes) {
-        examData.timeLimitMinutes = data.timeLimitMinutes;
-      } else {
-        examData.timeLimitMinutes = null;
-      }
 
       // إضافة التواريخ إذا تم تحديدها
-      examData.startWindow = convertToISO(data.startWindow);
-      examData.endWindow = convertToISO(data.endWindow);
+      if (data.show_at) {
+        examData.show_at = new Date(data.show_at).toISOString();
+      }
+      if (data.hide_at) {
+        examData.hide_at = new Date(data.hide_at).toISOString();
+      }
 
-      await baseUrl.patch(`/api/exams/${examId}`, examData, {
+      await baseUrl.patch(`api/course/lecture/exam/${examId}`, examData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -1218,113 +1177,49 @@ const CourseDetailsPage = () => {
 
   // 3. مودال إضافة/تعديل امتحان محسن
   const ExamModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
-    const toast = useToast();
     const [formData, setFormData] = useState({
       title: data?.title || '',
-      totalGrade: data?.totalGrade || data?.total_grade || 100,
-      isVisible: data?.isVisible ?? data?.is_visible ?? true,
-      showAnswersImmediately: data?.showAnswersImmediately ?? data?.show_answers_immediately ?? false,
-      allowMultipleAttempts: data?.allowMultipleAttempts ?? false,
-      showAnswersLater: data?.showAnswersLater ?? false,
-      answersReleaseDate: data?.answersReleaseDate || '',
-      timeLimitEnabled: data?.timeLimitEnabled ?? true,
-      timeLimitMinutes: data?.timeLimitMinutes || data?.duration || 60,
-      startWindow: data?.startWindow || data?.show_at || '',
-      endWindow: data?.endWindow || data?.hide_at || '',
+      total_grade: data?.total_grade || 100,
+      duration: data?.duration || 60,
+      is_visible: data?.is_visible ?? true,
+      show_at: data?.show_at || '',
+      hide_at: data?.hide_at || '',
+      lock_next_lectures: data?.lock_next_lectures ?? true,
+      show_answers_immediately: data?.show_answers_immediately ?? false,
+      show_answers_after_hours: data?.show_answers_after_hours || 24,
     });
-
-    // دالة مساعدة لتحويل ISO Date إلى datetime-local format
-    const formatDateForInput = (dateString) => {
-      if (!dateString) return '';
-      try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '';
-        // تحويل إلى صيغة YYYY-MM-DDTHH:mm
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-      } catch (e) {
-        return '';
-      }
-    };
 
     useEffect(() => {
       if (data) {
         setFormData({
           title: data.title || '',
-          totalGrade: data.totalGrade || data.total_grade || 100,
-          isVisible: data.isVisible ?? data.is_visible ?? true,
-          showAnswersImmediately: data.showAnswersImmediately ?? data.show_answers_immediately ?? false,
-          allowMultipleAttempts: data.allowMultipleAttempts ?? false,
-          showAnswersLater: data.showAnswersLater ?? false,
-          answersReleaseDate: formatDateForInput(data.answersReleaseDate),
-          timeLimitEnabled: data.timeLimitEnabled ?? true,
-          timeLimitMinutes: data.timeLimitMinutes || data.duration || 60,
-          startWindow: formatDateForInput(data.startWindow || data.show_at),
-          endWindow: formatDateForInput(data.endWindow || data.hide_at),
+          total_grade: data.total_grade || 100,
+          duration: data.duration || 60,
+          is_visible: data.is_visible ?? true,
+          show_at: data.show_at || '',
+          hide_at: data.hide_at || '',
+          lock_next_lectures: data.lock_next_lectures ?? true,
+          show_answers_immediately: data.show_answers_immediately ?? false,
+          show_answers_after_hours: data.show_answers_after_hours || 24,
         });
       } else {
         // إعادة تعيين القيم الافتراضية عند إضافة امتحان جديد
         setFormData({
           title: '',
-          totalGrade: 100,
-          isVisible: true,
-          showAnswersImmediately: false,
-          allowMultipleAttempts: false,
-          showAnswersLater: false,
-          answersReleaseDate: '',
-          timeLimitEnabled: true,
-          timeLimitMinutes: 60,
-          startWindow: '',
-          endWindow: '',
+          total_grade: 100,
+          duration: 60,
+          is_visible: true,
+          show_at: '',
+          hide_at: '',
+          lock_next_lectures: true,
+          show_answers_immediately: false,
+          show_answers_after_hours: 24,
         });
       }
     }, [data, isOpen]);
 
     const handleSubmit = (e) => {
       e.preventDefault();
-      
-      // التحقق من صحة البيانات
-      if (formData.showAnswersLater && !formData.answersReleaseDate) {
-        toast({
-          title: 'خطأ في التحقق',
-          description: 'يجب تحديد تاريخ إظهار الإجابات عند تفعيل إظهار الإجابات لاحقاً',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      if (formData.timeLimitEnabled && (!formData.timeLimitMinutes || formData.timeLimitMinutes <= 0)) {
-        toast({
-          title: 'خطأ في التحقق',
-          description: 'يجب تحديد مدة موجبة عند تفعيل التوقيت',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      if (formData.startWindow && formData.endWindow) {
-        const startDate = new Date(formData.startWindow);
-        const endDate = new Date(formData.endWindow);
-        if (startDate >= endDate) {
-          toast({
-            title: 'خطأ في التحقق',
-            description: 'يجب أن يكون تاريخ الفتح قبل تاريخ الإغلاق',
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          });
-          return;
-        }
-      }
-
       if (type === 'edit') onSubmit(data.id, formData);
       else onSubmit(formData);
     };
@@ -1453,7 +1348,7 @@ const CourseDetailsPage = () => {
                   </FormControl>
                 </Box>
 
-                {/* الدرجة الكلية */}
+                {/* الدرجة الكلية ومدة الامتحان */}
                 <Box 
                   p={6} 
                   bg="white" 
@@ -1463,59 +1358,111 @@ const CourseDetailsPage = () => {
                   borderColor="gray.100"
                   _dark={{ bg: "gray.800", borderColor: "gray.600" }}
                 >
-                  <FormControl isRequired>
-                    <FormLabel 
-                      display="flex" 
-                      alignItems="center" 
-                      gap={3} 
-                      fontWeight="bold" 
-                      color="gray.700"
-                      fontSize="lg"
-                      mb={4}
-                      _dark={{ color: "gray.200" }}
-                    >
-                      <Box 
-                        p={2} 
-                        bg="yellow.100" 
-                        borderRadius="lg"
-                        _dark={{ bg: "yellow.900" }}
+                  <HStack spacing={6}>
+                    <FormControl isRequired flex={1}>
+                      <FormLabel 
+                        display="flex" 
+                        alignItems="center" 
+                        gap={3} 
+                        fontWeight="bold" 
+                        color="gray.700"
+                        fontSize="lg"
+                        mb={4}
+                        _dark={{ color: "gray.200" }}
                       >
-                        <Icon as={FaStar} color="yellow.600" boxSize={5} />
-                      </Box>
-                      الدرجة الكلية
-                    </FormLabel>
-                    <Input 
-                      type="number" 
-                      value={formData.totalGrade} 
-                      onChange={e => setFormData({ ...formData, totalGrade: parseInt(e.target.value) })}
-                      placeholder="100"
-                      min={1}
-                      max={1000}
-                      isDisabled={loading}
-                      borderRadius="xl"
-                      border="2px solid"
-                      borderColor="gray.200"
-                      _focus={{ 
-                        borderColor: "yellow.400", 
-                        boxShadow: "0 0 0 3px rgba(236, 201, 75, 0.1)",
-                        bg: "yellow.50"
-                      }}
-                      _dark={{
-                        borderColor: "gray.600",
-                        bg: "gray.700",
-                        _focus: {
-                          borderColor: "yellow.400",
-                          bg: "yellow.900"
-                        }
-                      }}
-                      size="lg"
-                      fontSize="lg"
-                      py={6}
-                    />
-                  </FormControl>
+                        <Box 
+                          p={2} 
+                          bg="yellow.100" 
+                          borderRadius="lg"
+                          _dark={{ bg: "yellow.900" }}
+                        >
+                          <Icon as={FaStar} color="yellow.600" boxSize={5} />
+                        </Box>
+                        الدرجة الكلية
+                      </FormLabel>
+                      <Input 
+                        type="number" 
+                        value={formData.total_grade} 
+                        onChange={e => setFormData({ ...formData, total_grade: parseInt(e.target.value) })}
+                        placeholder="100"
+                        min={1}
+                        max={1000}
+                        isDisabled={loading}
+                        borderRadius="xl"
+                        border="2px solid"
+                        borderColor="gray.200"
+                        _focus={{ 
+                          borderColor: "yellow.400", 
+                          boxShadow: "0 0 0 3px rgba(236, 201, 75, 0.1)",
+                          bg: "yellow.50"
+                        }}
+                        _dark={{
+                          borderColor: "gray.600",
+                          bg: "gray.700",
+                          _focus: {
+                            borderColor: "yellow.400",
+                            bg: "yellow.900"
+                          }
+                        }}
+                        size="lg"
+                        fontSize="lg"
+                        py={6}
+                      />
+                    </FormControl>
+                    <FormControl isRequired flex={1}>
+                      <FormLabel 
+                        display="flex" 
+                        alignItems="center" 
+                        gap={3} 
+                        fontWeight="bold" 
+                        color="gray.700"
+                        fontSize="lg"
+                        mb={4}
+                        _dark={{ color: "gray.200" }}
+                      >
+                        <Box 
+                          p={2} 
+                          bg="green.100" 
+                          borderRadius="lg"
+                          _dark={{ bg: "green.900" }}
+                        >
+                          <Icon as={FaClock} color="green.600" boxSize={5} />
+                        </Box>
+                        المدة (بالدقائق)
+                      </FormLabel>
+                      <Input 
+                        type="number" 
+                        value={formData.duration} 
+                        onChange={e => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+                        placeholder="60"
+                        min={1}
+                        max={300}
+                        isDisabled={loading}
+                        borderRadius="xl"
+                        border="2px solid"
+                        borderColor="gray.200"
+                        _focus={{ 
+                          borderColor: "green.400", 
+                          boxShadow: "0 0 0 3px rgba(56, 178, 172, 0.1)",
+                          bg: "green.50"
+                        }}
+                        _dark={{
+                          borderColor: "gray.600",
+                          bg: "gray.700",
+                          _focus: {
+                            borderColor: "green.400",
+                            bg: "green.900"
+                          }
+                        }}
+                        size="lg"
+                        fontSize="lg"
+                        py={6}
+                      />
+                    </FormControl>
+                  </HStack>
                 </Box>
 
-                {/* تواريخ الفتح والإغلاق */}
+                {/* تواريخ الظهور والإخفاء */}
                 <Box 
                   p={6} 
                   bg="white" 
@@ -1545,12 +1492,12 @@ const CourseDetailsPage = () => {
                         >
                           <Icon as={FaCalendarAlt} color="purple.600" boxSize={5} />
                         </Box>
-                        موعد فتح الامتحان
+                        تاريخ الظهور
                       </FormLabel>
                       <Input 
                         type="datetime-local" 
-                        value={formData.startWindow} 
-                        onChange={e => setFormData({ ...formData, startWindow: e.target.value })}
+                        value={formData.show_at} 
+                        onChange={e => setFormData({ ...formData, show_at: e.target.value })}
                         isDisabled={loading}
                         borderRadius="xl"
                         border="2px solid"
@@ -1592,12 +1539,12 @@ const CourseDetailsPage = () => {
                         >
                           <Icon as={FaCalendarAlt} color="red.600" boxSize={5} />
                         </Box>
-                        موعد إغلاق الامتحان
+                        تاريخ الإخفاء
                       </FormLabel>
                       <Input 
                         type="datetime-local" 
-                        value={formData.endWindow} 
-                        onChange={e => setFormData({ ...formData, endWindow: e.target.value })}
+                        value={formData.hide_at} 
+                        onChange={e => setFormData({ ...formData, hide_at: e.target.value })}
                         isDisabled={loading}
                         borderRadius="xl"
                         border="2px solid"
@@ -1621,129 +1568,6 @@ const CourseDetailsPage = () => {
                       />
                     </FormControl>
                   </HStack>
-                </Box>
-
-                {/* إعدادات التوقيت */}
-                <Box 
-                  p={8} 
-                  bg="linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%)" 
-                  borderRadius="2xl" 
-                  border="2px solid" 
-                  borderColor="blue.200"
-                  boxShadow="0 8px 25px rgba(66, 153, 225, 0.1)"
-                  _dark={{ 
-                    bg: "linear-gradient(135deg, #1a202c 0%, #2d3748 100%)",
-                    borderColor: "blue.700"
-                  }}
-                >
-                  <HStack spacing={4} mb={6}>
-                    <Box 
-                      p={3} 
-                      bg="blue.100" 
-                      borderRadius="xl"
-                      _dark={{ bg: "blue.900" }}
-                    >
-                      <Icon as={FaClock} color="blue.600" boxSize={6} />
-                    </Box>
-                    <VStack align="start" spacing={1}>
-                      <Text fontSize="xl" fontWeight="bold" color="blue.700" _dark={{ color: "blue.300" }}>
-                        إعدادات التوقيت
-                      </Text>
-                      <Text fontSize="sm" color="blue.600" _dark={{ color: "blue.400" }}>
-                        تحكم في مدة كل محاولة للامتحان
-                      </Text>
-                    </VStack>
-                  </HStack>
-                  <VStack spacing={6} align="stretch">
-                    <Box 
-                      p={6} 
-                      bg="white" 
-                      borderRadius="xl" 
-                      border="1px solid" 
-                      borderColor="blue.200"
-                      _dark={{ bg: "gray.800", borderColor: "blue.700" }}
-                    >
-                      <HStack justify="space-between" align="center">
-                        <VStack align="start" spacing={2}>
-                          <Text fontWeight="bold" color="gray.700" fontSize="lg" _dark={{ color: "gray.200" }}>
-                            تفعيل التوقيت
-                          </Text>
-                          <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
-                            تحديد مدة زمنية لكل محاولة
-                          </Text>
-                        </VStack>
-                        <Switch 
-                          isChecked={formData.timeLimitEnabled}
-                          onChange={e => setFormData({ ...formData, timeLimitEnabled: e.target.checked })}
-                          colorScheme="blue"
-                          size="lg"
-                          isDisabled={loading}
-                        />
-                      </HStack>
-                    </Box>
-                    
-                    {formData.timeLimitEnabled && (
-                      <Box 
-                        p={6} 
-                        bg="white" 
-                        borderRadius="xl" 
-                        border="1px solid" 
-                        borderColor="blue.200"
-                        _dark={{ bg: "gray.800", borderColor: "blue.700" }}
-                      >
-                        <FormControl isRequired={formData.timeLimitEnabled}>
-                          <FormLabel 
-                            display="flex" 
-                            alignItems="center" 
-                            gap={3} 
-                            fontWeight="bold" 
-                            color="gray.700"
-                            fontSize="lg"
-                            mb={4}
-                            _dark={{ color: "gray.200" }}
-                          >
-                            <Box 
-                              p={2} 
-                              bg="green.100" 
-                              borderRadius="lg"
-                              _dark={{ bg: "green.900" }}
-                            >
-                              <Icon as={FaClock} color="green.600" boxSize={5} />
-                            </Box>
-                            المدة (بالدقائق)
-                          </FormLabel>
-                          <Input 
-                            type="number" 
-                            value={formData.timeLimitMinutes} 
-                            onChange={e => setFormData({ ...formData, timeLimitMinutes: parseInt(e.target.value) || null })}
-                            placeholder="60"
-                            min={1}
-                            max={300}
-                            isDisabled={loading}
-                            borderRadius="xl"
-                            border="2px solid"
-                            borderColor="gray.200"
-                            _focus={{ 
-                              borderColor: "green.400", 
-                              boxShadow: "0 0 0 3px rgba(56, 178, 172, 0.1)",
-                              bg: "green.50"
-                            }}
-                            _dark={{
-                              borderColor: "gray.600",
-                              bg: "gray.700",
-                              _focus: {
-                                borderColor: "green.400",
-                                bg: "green.900"
-                              }
-                            }}
-                            size="lg"
-                            fontSize="lg"
-                            py={6}
-                          />
-                        </FormControl>
-                      </Box>
-                    )}
-                  </VStack>
                 </Box>
 
                 {/* إعدادات الإجابات */}
@@ -1792,12 +1616,12 @@ const CourseDetailsPage = () => {
                             إظهار الإجابات فوراً
                           </Text>
                           <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
-                            عرض الإجابات مباشرة بعد التسليم
+                            عرض الإجابات مباشرة بعد انتهاء الامتحان
                           </Text>
                         </VStack>
                         <Switch 
-                          isChecked={formData.showAnswersImmediately}
-                          onChange={e => setFormData({ ...formData, showAnswersImmediately: e.target.checked })}
+                          isChecked={formData.show_answers_immediately}
+                          onChange={e => setFormData({ ...formData, show_answers_immediately: e.target.checked })}
                           colorScheme="green"
                           size="lg"
                           isDisabled={loading}
@@ -1805,7 +1629,7 @@ const CourseDetailsPage = () => {
                       </HStack>
                     </Box>
                     
-                    {!formData.showAnswersImmediately && (
+                    {!formData.show_answers_immediately && (
                       <Box 
                         p={6} 
                         bg="white" 
@@ -1814,72 +1638,56 @@ const CourseDetailsPage = () => {
                         borderColor="green.200"
                         _dark={{ bg: "gray.800", borderColor: "green.700" }}
                       >
-                        <HStack justify="space-between" align="center" mb={4}>
-                          <VStack align="start" spacing={2}>
-                            <Text fontWeight="bold" color="gray.700" fontSize="lg" _dark={{ color: "gray.200" }}>
-                              إظهار الإجابات لاحقاً
-                            </Text>
-                            <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
-                              جدول زمني لإظهار الإجابات في تاريخ محدد
-                            </Text>
-                          </VStack>
-                          <Switch 
-                            isChecked={formData.showAnswersLater}
-                            onChange={e => setFormData({ ...formData, showAnswersLater: e.target.checked })}
-                            colorScheme="orange"
-                            size="lg"
-                            isDisabled={loading}
-                          />
-                        </HStack>
-                        {formData.showAnswersLater && (
-                          <FormControl isRequired={formData.showAnswersLater}>
-                            <FormLabel 
-                              display="flex" 
-                              alignItems="center" 
-                              gap={3} 
-                              fontWeight="bold" 
-                              color="gray.700"
-                              fontSize="lg"
-                              mb={4}
-                              _dark={{ color: "gray.200" }}
+                        <FormControl>
+                          <FormLabel 
+                            display="flex" 
+                            alignItems="center" 
+                            gap={3} 
+                            fontWeight="bold" 
+                            color="gray.700"
+                            fontSize="lg"
+                            mb={4}
+                            _dark={{ color: "gray.200" }}
+                          >
+                            <Box 
+                              p={2} 
+                              bg="orange.100" 
+                              borderRadius="lg"
+                              _dark={{ bg: "orange.900" }}
                             >
-                              <Box 
-                                p={2} 
-                                bg="orange.100" 
-                                borderRadius="lg"
-                                _dark={{ bg: "orange.900" }}
-                              >
-                                <Icon as={FaCalendarAlt} color="orange.600" boxSize={5} />
-                              </Box>
-                              تاريخ إظهار الإجابات
-                            </FormLabel>
-                            <Input 
-                              type="datetime-local" 
-                              value={formData.answersReleaseDate} 
-                              onChange={e => setFormData({ ...formData, answersReleaseDate: e.target.value })}
-                              isDisabled={loading}
-                              borderRadius="xl"
-                              border="2px solid"
-                              borderColor="gray.200"
-                              _focus={{ 
-                                borderColor: "orange.400", 
-                                boxShadow: "0 0 0 3px rgba(237, 137, 54, 0.1)",
-                                bg: "orange.50"
-                              }}
-                              _dark={{
-                                borderColor: "gray.600",
-                                bg: "gray.700",
-                                _focus: {
-                                  borderColor: "orange.400",
-                                  bg: "orange.900"
-                                }
-                              }}
-                              size="lg"
-                              fontSize="lg"
-                              py={6}
-                            />
-                          </FormControl>
-                        )}
+                              <Icon as={FaClock} color="orange.600" boxSize={5} />
+                            </Box>
+                            إظهار الإجابات بعد (ساعات)
+                          </FormLabel>
+                          <Input 
+                            type="number" 
+                            value={formData.show_answers_after_hours} 
+                            onChange={e => setFormData({ ...formData, show_answers_after_hours: parseInt(e.target.value) })}
+                            placeholder="24"
+                            min={1}
+                            max={168}
+                            isDisabled={loading}
+                            borderRadius="xl"
+                            border="2px solid"
+                            borderColor="gray.200"
+                            _focus={{ 
+                              borderColor: "orange.400", 
+                              boxShadow: "0 0 0 3px rgba(237, 137, 54, 0.1)",
+                              bg: "orange.50"
+                            }}
+                            _dark={{
+                              borderColor: "gray.600",
+                              bg: "gray.700",
+                              _focus: {
+                                borderColor: "orange.400",
+                                bg: "orange.900"
+                              }
+                            }}
+                            size="lg"
+                            fontSize="lg"
+                            py={6}
+                          />
+                        </FormControl>
                       </Box>
                     )}
                   </VStack>
@@ -1888,31 +1696,31 @@ const CourseDetailsPage = () => {
                 {/* إعدادات إضافية */}
                 <Box 
                   p={8} 
-                  bg="linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)" 
+                  bg="linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%)" 
                   borderRadius="2xl" 
                   border="2px solid" 
-                  borderColor="yellow.200"
-                  boxShadow="0 8px 25px rgba(234, 179, 8, 0.1)"
+                  borderColor="blue.200"
+                  boxShadow="0 8px 25px rgba(66, 153, 225, 0.1)"
                   _dark={{ 
                     bg: "linear-gradient(135deg, #1a202c 0%, #2d3748 100%)",
-                    borderColor: "yellow.700"
+                    borderColor: "blue.700"
                   }}
                 >
                   <HStack spacing={4} mb={6}>
                     <Box 
                       p={3} 
-                      bg="yellow.100" 
+                      bg="blue.100" 
                       borderRadius="xl"
-                      _dark={{ bg: "yellow.900" }}
+                      _dark={{ bg: "blue.900" }}
                     >
-                      <Icon as={FaCog} color="yellow.600" boxSize={6} />
+                      <Icon as={FaCog} color="blue.600" boxSize={6} />
                     </Box>
                     <VStack align="start" spacing={1}>
-                      <Text fontSize="xl" fontWeight="bold" color="yellow.700" _dark={{ color: "yellow.300" }}>
+                      <Text fontSize="xl" fontWeight="bold" color="blue.700" _dark={{ color: "blue.300" }}>
                         إعدادات إضافية
                       </Text>
-                      <Text fontSize="sm" color="yellow.600" _dark={{ color: "yellow.400" }}>
-                        تحكم في رؤية الامتحان وعدد المحاولات
+                      <Text fontSize="sm" color="blue.600" _dark={{ color: "blue.400" }}>
+                        تحكم في رؤية الامتحان وسلوك المحاضرات
                       </Text>
                     </VStack>
                   </HStack>
@@ -1922,8 +1730,8 @@ const CourseDetailsPage = () => {
                       bg="white" 
                       borderRadius="xl" 
                       border="1px solid" 
-                      borderColor="yellow.200"
-                      _dark={{ bg: "gray.800", borderColor: "yellow.700" }}
+                      borderColor="blue.200"
+                      _dark={{ bg: "gray.800", borderColor: "blue.700" }}
                     >
                       <HStack justify="space-between" align="center">
                         <VStack align="start" spacing={2}>
@@ -1935,9 +1743,9 @@ const CourseDetailsPage = () => {
                           </Text>
                         </VStack>
                         <Switch 
-                          isChecked={formData.isVisible}
-                          onChange={e => setFormData({ ...formData, isVisible: e.target.checked })}
-                          colorScheme="yellow"
+                          isChecked={formData.is_visible}
+                          onChange={e => setFormData({ ...formData, is_visible: e.target.checked })}
+                          colorScheme="blue"
                           size="lg"
                           isDisabled={loading}
                         />
@@ -1949,22 +1757,22 @@ const CourseDetailsPage = () => {
                       bg="white" 
                       borderRadius="xl" 
                       border="1px solid" 
-                      borderColor="yellow.200"
-                      _dark={{ bg: "gray.800", borderColor: "yellow.700" }}
+                      borderColor="blue.200"
+                      _dark={{ bg: "gray.800", borderColor: "blue.700" }}
                     >
                       <HStack justify="space-between" align="center">
                         <VStack align="start" spacing={2}>
                           <Text fontWeight="bold" color="gray.700" fontSize="lg" _dark={{ color: "gray.200" }}>
-                            السماح بمحاولات متعددة
+                            قفل المحاضرات التالية
                           </Text>
                           <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
-                            السماح للطالب بأكثر من محاولة. عند الإلغاء، لن يرى الطالب الأسئلة بعد أول تسليم
+                            منع الوصول للمحاضرات التالية حتى اجتياز الامتحان
                           </Text>
                         </VStack>
                         <Switch 
-                          isChecked={formData.allowMultipleAttempts}
-                          onChange={e => setFormData({ ...formData, allowMultipleAttempts: e.target.checked })}
-                          colorScheme="purple"
+                          isChecked={formData.lock_next_lectures}
+                          onChange={e => setFormData({ ...formData, lock_next_lectures: e.target.checked })}
+                          colorScheme="red"
                           size="lg"
                           isDisabled={loading}
                         />
@@ -2477,7 +2285,7 @@ D) has made`}
                       <!-- Activation Code Section - Left -->
                       <div style='text-align: center;'>
                         <div style='font-size: 9px; color: #3182ce; font-weight: bold; margin-bottom: 2px;'>كود التفعيل</div>
-                        <div style='font-size: 15px; color: red; font-weight: bold;'>${code.code}</div>
+                        <div style='font-size: 9px; color: #3182ce; font-weight: bold;'>${code.code}</div>
                       </div>
                       
                       <!-- Empty Middle Space -->

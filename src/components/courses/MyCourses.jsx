@@ -33,8 +33,6 @@ import {
   FaCamera,
   FaGraduationCap,
   FaUsers,
-  FaChevronUp,
-  FaChevronDown,
 } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -52,8 +50,7 @@ const MyCourses = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [activationResult, setActivationResult] = useState(null);
   const [expandedCards, setExpandedCards] = useState({}); 
-  const [sessionExpired, setSessionExpired] = useState(false);
-  const buttonColorScheme = useColorModeValue("blue", "teal");
+    const buttonColorScheme = useColorModeValue("blue", "teal");
   const authHeader = useMemo(() => ({
     Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
   }), []);
@@ -73,7 +70,6 @@ const MyCourses = () => {
     try {
       setLoading(true);
       setError(null);
-      setSessionExpired(false);
       const response = await baseUrl.get('api/course/my-enrollments', {
         headers: authHeader,
       });
@@ -85,37 +81,11 @@ const MyCourses = () => {
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
-      const apiMessage = error?.response?.data?.message;
-      
-      // Check if token expired (from interceptor or direct error)
-      if (error.sessionExpired ||
-          apiMessage === "Session expired or replaced" || 
-          error?.response?.status === 401 ||
-          apiMessage?.includes('expired') ||
-          apiMessage?.includes('انتهت') ||
-          apiMessage?.includes('غير صالح')) {
-        setSessionExpired(true);
-        setError(null);
-        // Set courses to empty array so component shows "no courses" message
-        setCourses([]);
-      } else {
-        // For other errors, set courses to empty array and show error
-        setError(apiMessage || 'حدث خطأ في تحميل الكورسات');
-        setCourses([]);
-      }
+      setError('حدث خطأ في تحميل الكورسات');
+      setCourses([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleForceLogout = () => {
-    try {
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      localStorage.removeItem("examAnswers");
-      localStorage.removeItem("examTimeLeft");
-    } catch (e) {}
-    window.location.href = "/login";
   };
 
   useEffect(() => {
@@ -295,8 +265,7 @@ const MyCourses = () => {
     );
   }
 
-  // إذا كان هناك خطأ ولكن ليس بسبب انتهاء الجلسة، نعرض رسالة الخطأ
-  if (error && !sessionExpired) {
+  if (error) {
     return (
       <Center py={20}>
         <VStack spacing={4}>
@@ -312,28 +281,6 @@ const MyCourses = () => {
 
   return (
     <Box w="100%" py={8} px={{ base: 4, md: 6, lg: 8 }}>
-      {/* Session Expired Modal */}
-      <Modal isOpen={sessionExpired} onClose={() => {}} isCentered closeOnOverlayClick={false} closeOnEsc={false}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader textAlign="center">انتهاء الجلسة</ModalHeader>
-          <ModalBody>
-            <Text textAlign="center" color={subTextColor}>
-              لقد انتهت جلستك أو تم استبدالها. يجب تسجيل الدخول مرة أخرى.
-            </Text>
-            <Text textAlign="center" color={subTextColor} mt={2}>
-              سجّل دخولك باستخدام رقم الهاتف وكلمة المرور التي قمت بالتسجيل بهما من قبل.
-              إذا كنت قد نسيت كلمة المرور، يُرجى التواصل مع الدعم الفني لاستعادتها.
-            </Text>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" w="full" onClick={handleForceLogout}>
-              تسجيل الدخول مرة أخرى
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
       {/* Header Section */}
       <Flex
         direction={{ base: 'column', md: 'row' }}
@@ -357,72 +304,71 @@ const MyCourses = () => {
 
         {/* QR Activation Button */}
         <Box
-                as="button"
-                onClick={openQrScannerModal}
-                bgGradient="linear(to-r, blue.500, blue.600)"
-                color="white"
-                borderRadius="2xl"
-                px={8}
-                py={5}
-                boxShadow="xl"
-                _hover={{
-                  bgGradient: 'linear(to-r, blue.600, blue.700)',
-                  transform: 'translateY(-3px)',
-                  shadow: '2xl',
-                }}
-                transition="all 0.3s"
-                border="2px solid"
-                borderColor="blue.400"
-                position="relative"
-                overflow="hidden"
-                mt={4}
+          as="button"
+          onClick={openQrScannerModal}
+          bgGradient="linear(to-r, blue.500, blue.600)"
+          color="white"
+          borderRadius="2xl"
+          px={{ base: 6, md: 8 }}
+          py={{ base: 4, md: 5 }}
+          boxShadow="xl"
+          _hover={{
+            bgGradient: 'linear(to-r, blue.600, blue.700)',
+            transform: 'translateY(-3px)',
+            shadow: '2xl',
+          }}
+          transition="all 0.3s"
+          border="2px solid"
+          borderColor="blue.400"
+          position="relative"
+          overflow="hidden"
+        >
+          {/* Background Animation */}
+          <Box
+            position="absolute"
+            top="0"
+            left="-100%"
+            w="100%"
+            h="100%"
+            bgGradient="linear(to-r, transparent, rgba(255,255,255,0.2), transparent)"
+            transition="left 0.5s"
+            _hover={{ left: '100%' }}
+          />
+          
+          <HStack spacing={3} position="relative" zIndex={1}>
+            <Box
+              bg="whiteAlpha.200"
+              borderRadius="lg"
+              p={2}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Icon as={FaCamera} boxSize={{ base: 5, md: 6 }} />
+            </Box>
+            <VStack align="flex-start" spacing={0}>
+              <Text
+                fontSize={{ base: 'md', md: 'lg' }}
+                fontWeight="bold"
+                lineHeight="shorter"
               >
-                {/* Background Animation */}
-                <Box
-                  position="absolute"
-                  top="0"
-                  left="-100%"
-                  w="100%"
-                  h="100%"
-                  bgGradient="linear(to-r, transparent, rgba(255,255,255,0.2), transparent)"
-                  transition="left 0.5s"
-                  _hover={{ left: '100%' }}
-                />
-                
-                <HStack spacing={4} position="relative" zIndex={1}>
-                  <Box
-                    bg="whiteAlpha.200"
-                    borderRadius="lg"
-                    p={3}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    <Icon as={FaCamera} boxSize={6} />
-                  </Box>
-                  <VStack align="flex-start" spacing={1}>
-                    <Text
-                      fontSize="xl"
-                      fontWeight="bold"
-                      lineHeight="shorter"
-                    >
-                      📱 امسح QR Code الآن
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      opacity={0.9}
-                      fontWeight="medium"
-                    >
-                      لتفعيل كورس جديد وبدء التعلم
-                    </Text>
-                  </VStack>
-                  <Icon as={FaQrcode} boxSize={7} opacity={0.8} />
-                </HStack>
-              </Box>
+                📱 امسح QR Code
+              </Text>
+              <Text
+                fontSize={{ base: 'xs', md: 'sm' }}
+                opacity={0.9}
+                fontWeight="medium"
+              >
+                لتفعيل كورس جديد
+              </Text>
+            </VStack>
+            <Icon as={FaQrcode} boxSize={{ base: 5, md: 6 }} opacity={0.8} />
+          </HStack>
+        </Box>
       </Flex>
 
       {/* Courses Grid */}
-      {Array.isArray(courses) && courses.length > 0 ? (
+      {courses.length > 0 ? (
         <div className="flex flex-wrap  ">
           {courses.map((course) => (
                   <Link 
@@ -668,7 +614,69 @@ const MyCourses = () => {
               <Text color={subTextColor} textAlign="center" maxW="400px" fontSize={{ base: 'sm', md: 'md' }}>
                 ابدأ رحلتك التعليمية الآن! قم بمسح QR Code لتفعيل كورس جديد
               </Text>
-            
+              <Box
+                as="button"
+                onClick={openQrScannerModal}
+                bgGradient="linear(to-r, blue.500, blue.600)"
+                color="white"
+                borderRadius="2xl"
+                px={8}
+                py={5}
+                boxShadow="xl"
+                _hover={{
+                  bgGradient: 'linear(to-r, blue.600, blue.700)',
+                  transform: 'translateY(-3px)',
+                  shadow: '2xl',
+                }}
+                transition="all 0.3s"
+                border="2px solid"
+                borderColor="blue.400"
+                position="relative"
+                overflow="hidden"
+                mt={4}
+              >
+                {/* Background Animation */}
+                <Box
+                  position="absolute"
+                  top="0"
+                  left="-100%"
+                  w="100%"
+                  h="100%"
+                  bgGradient="linear(to-r, transparent, rgba(255,255,255,0.2), transparent)"
+                  transition="left 0.5s"
+                  _hover={{ left: '100%' }}
+                />
+                
+                <HStack spacing={4} position="relative" zIndex={1}>
+                  <Box
+                    bg="whiteAlpha.200"
+                    borderRadius="lg"
+                    p={3}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Icon as={FaCamera} boxSize={6} />
+                  </Box>
+                  <VStack align="flex-start" spacing={1}>
+                    <Text
+                      fontSize="xl"
+                      fontWeight="bold"
+                      lineHeight="shorter"
+                    >
+                      📱 امسح QR Code الآن
+                    </Text>
+                    <Text
+                      fontSize="sm"
+                      opacity={0.9}
+                      fontWeight="medium"
+                    >
+                      لتفعيل كورس جديد وبدء التعلم
+                    </Text>
+                  </VStack>
+                  <Icon as={FaQrcode} boxSize={7} opacity={0.8} />
+                </HStack>
+              </Box>
             </VStack>
           </VStack>
         </Center>

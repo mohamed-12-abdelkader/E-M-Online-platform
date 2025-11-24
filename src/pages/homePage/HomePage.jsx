@@ -112,10 +112,6 @@ const HomePage = () => {
   // Game invitation state (for receiving invitations)
   const [latestInvitation, setLatestInvitation] = useState(null);
   const socketRef = useRef(null);
-  
-  // Points state
-  const [userPoints, setUserPoints] = useState(null);
-  const [pointsLoading, setPointsLoading] = useState(false);
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return "";
@@ -287,30 +283,6 @@ const HomePage = () => {
   useEffect(() => {
     fetchGradeFeed();
   }, [authHeader]);
-
-  // Fetch user points
-  const fetchUserPoints = async () => {
-    try {
-      setPointsLoading(true);
-      const response = await baseUrl.get('/api/student/my-points', {
-        headers: authHeader
-      });
-      if (response.data?.success && response.data?.points) {
-        setUserPoints(response.data.points);
-      }
-    } catch (error) {
-      console.error('Error fetching points:', error);
-      setUserPoints(null);
-    } finally {
-      setPointsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (student) {
-      fetchUserPoints();
-    }
-  }, [authHeader, student]);
 
   // Fetch latest game invitation (initial load only, real-time updates come from WebSocket)
   const fetchLatestInvitation = async () => {
@@ -769,70 +741,21 @@ const HomePage = () => {
 
             </VStack>
 
-                <VStack spacing={3} align="center" w="full">
-                  {/* Points Display */}
-                  {pointsLoading ? (
-                    <Spinner size="sm" color="white" />
-                  ) : userPoints ? (
-                    <Box
-                      w="full"
-                      bg="whiteAlpha.200"
-                      borderRadius="xl"
-                      p={3}
-                      border="1px solid"
-                      borderColor="whiteAlpha.300"
-                      backdropFilter="blur(10px)"
-                    >
-                      <HStack justify="space-between" mb={2}>
-                        <HStack spacing={2}>
-                          <Icon as={FaTrophy} boxSize={5} />
-                          <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }}>
-                            نقاطك
-                          </Text>
-                        </HStack>
-                        <Text 
-                          fontWeight="extrabold" 
-                          fontSize={{ base: "xl", md: "2xl" }}
-                          textShadow="0 2px 4px rgba(0,0,0,0.3)"
-                        >
-                          {userPoints.total_points || 0}
-                        </Text>
-                      </HStack>
-                      <Box
-                        mt={2}
-                        pt={2}
-                        borderTop="1px solid"
-                        borderColor="whiteAlpha.300"
-                      >
-                        <Text fontSize="xs" opacity={0.9} mb={1} fontWeight="medium">
-                          كيف تحصل على النقاط؟
-                        </Text>
-                        <VStack align="flex-start" spacing={1} fontSize="xs" opacity={0.85}>
-                          <HStack spacing={2}>
-                            <Icon as={FaBookOpen} boxSize={3} />
-                            <Text>مشاهدة فيديو: 10 نقاط</Text>
-                          </HStack>
-                          <HStack spacing={2}>
-                            <Icon as={FaGraduationCap} boxSize={3} />
-                            <Text>حل امتحان: 20 نقطة حسب الدرجة</Text>
-                          </HStack>
-                        </VStack>
-                      </Box>
-                    </Box>
-                  ) : null}
-                  
-                  <Text 
-                    fontWeight="bold" 
+                <VStack spacing={2} align="center">
+                <Text 
+                  fontWeight="bold" 
                     fontSize={{ base: "md", md: "lg" }} 
-                    textShadow="0 2px 4px rgba(0,0,0,0.3)" 
-                  >
-                    {user?.fname || ""} {user?.lname || ""}
-                  </Text>
-                  
-                  <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }} opacity={0.8}>
-                    كود الطالب: {user?.id || "غير متاح"}
-                  </Text>
-                </VStack>
+                  textShadow="0 2px 4px rgba(0,0,0,0.3)" 
+                >
+                  {user?.fname || ""} {user?.lname || ""}
+                </Text>
+                
+                <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }} opacity={0.8}>
+                  كود الطالب: {user?.id || "غير متاح"}
+                </Text>
+                
+               
+              </VStack>
               </VStack>
            </Box>
 
