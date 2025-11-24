@@ -114,7 +114,6 @@ const ComprehensiveExam = () => {
     if (id) {
       // التحقق من أن الـ ID تغير فعلياً
       if (prevExamIdRef.current !== null && prevExamIdRef.current !== id) {
-        console.log('🔄 Exam ID changed from', prevExamIdRef.current, 'to', id);
         // إعادة تعيين جميع الـ states عند تغيير الامتحان
         setQuestions([]);
         setExamData(null);
@@ -134,27 +133,11 @@ const ComprehensiveExam = () => {
       
       // الانتظار حتى يكون isTeacher و isAdmin جاهزين
       if (isTeacher !== undefined && isAdmin !== undefined) {
-        console.log('📥 Fetching exam data for ID:', id, 'isTeacher:', isTeacher, 'isAdmin:', isAdmin);
         fetchExamData();
-      } else {
-        console.log('⏳ Waiting for user type to be determined...');
       }
     }
     // eslint-disable-next-line
   }, [id, isTeacher, isAdmin]);
-
-  // مراقبة تغييرات الأسئلة للمدرس
-  useEffect(() => {
-    if (isTeacher || isAdmin) {
-      console.log('🔍 Questions state updated:', questions.length, 'questions');
-      if (questions.length > 0) {
-        console.log('✅ First question:', questions[0]);
-        console.log('✅ All questions IDs:', questions.map(q => q.id));
-      } else {
-        console.log('❌ No questions in state!');
-      }
-    }
-  }, [questions, isTeacher, isAdmin]);
 
   // عداد الوقت للمحاولة النشطة
   useEffect(() => {
@@ -187,7 +170,6 @@ const ComprehensiveExam = () => {
   // جلب بيانات الامتحان
   const fetchExamData = async () => {
     if (!id) {
-      console.log('⚠️ No exam ID provided');
       return;
     }
 
@@ -198,11 +180,9 @@ const ComprehensiveExam = () => {
       setError(null);
       // إعادة تعيين الأسئلة فقط إذا تغير الـ ID
       if (prevExamIdRef.current !== null && prevExamIdRef.current !== currentExamId) {
-        console.log('🔄 Clearing questions because exam ID changed');
         setQuestions([]);
       }
       
-      console.log('📡 Fetching exam data for ID:', currentExamId);
       const token = localStorage.getItem("token");
       const res = await baseUrl.get(
         `/api/exams/${currentExamId}`,
@@ -211,12 +191,10 @@ const ComprehensiveExam = () => {
       
       // التحقق من أن الـ ID لم يتغير أثناء الطلب
       if (currentExamId !== id) {
-        console.log('⚠️ Exam ID changed during fetch, ignoring response');
         return;
       }
       
       const data = res.data;
-      console.log('📦 Full API Response for exam', currentExamId, ':', data);
       setExamData(data.exam);
       setExamStatus(data.status);
       setCurrentAttempt(data.attempt || null);
@@ -226,46 +204,66 @@ const ComprehensiveExam = () => {
       
       // للمدرسين والإداريين: جلب الأسئلة من نفس API response
       if (isTeacher || isAdmin) {
-        console.log('👨‍🏫 Teacher/Admin detected!');
-        console.log('isTeacher:', isTeacher, 'isAdmin:', isAdmin);
-        console.log('Looking for questions...');
-        console.log('data.questions exists?', !!data.questions);
-        console.log('data.questions is array?', Array.isArray(data.questions));
-        console.log('data.questions length:', data.questions?.length);
-        
         let questionsFound = false;
         
         // أولاً: التحقق من data.questions (المستوى العلوي) - هذا هو المكان الصحيح
-        if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
-          console.log('✓ Found questions in data.questions:', data.questions.length);
-          console.log('✓ Setting questions:', data.questions);
-          setQuestions(data.questions);
-          questionsFound = true;
+        if (data.questions && Array.isArray(data.questions)) {
+          // تنظيف وتنسيق الأسئلة
+          const formattedQuestions = data.questions.map(q => ({
+            id: q.id,
+            text: q.text || null,
+            image: q.image || null,
+            grade: q.grade || 1,
+            choices: Array.isArray(q.choices) ? q.choices.map(c => ({
+              id: c.id,
+              text: c.text || '',
+              is_correct: c.is_correct || false
+            })) : []
+          }));
+          
+          if (formattedQuestions.length > 0) {
+            setQuestions(formattedQuestions);
+            questionsFound = true;
+          }
         } 
         // ثانياً: التحقق من exam.questions
         else if (data.exam && data.exam.questions && Array.isArray(data.exam.questions)) {
-          console.log('✓ Found questions in exam.questions:', data.exam.questions.length);
-          setQuestions(data.exam.questions);
-          questionsFound = true;
+          const formattedQuestions = data.exam.questions.map(q => ({
+            id: q.id,
+            text: q.text || null,
+            image: q.image || null,
+            grade: q.grade || 1,
+            choices: Array.isArray(q.choices) ? q.choices.map(c => ({
+              id: c.id,
+              text: c.text || '',
+              is_correct: c.is_correct || false
+            })) : []
+          }));
+          
+          if (formattedQuestions.length > 0) {
+            setQuestions(formattedQuestions);
+            questionsFound = true;
+          }
         } 
         // ثالثاً: التحقق من feedback.wrongQuestions
         else if (data.feedback && data.feedback.wrongQuestions && Array.isArray(data.feedback.wrongQuestions)) {
-          console.log('✓ Found questions in feedback.wrongQuestions:', data.feedback.wrongQuestions.length);
           const questionsFromFeedback = data.feedback.wrongQuestions.map(wq => ({
             id: wq.questionId,
-            text: wq.questionText,
+            text: wq.questionText || null,
             image: wq.questionImage || null,
-            choices: wq.choices || [],
+            choices: Array.isArray(wq.choices) ? wq.choices : [],
             correctChoice: wq.correctChoice,
             yourChoice: wq.yourChoice
           }));
-          setQuestions(questionsFromFeedback);
-          questionsFound = true;
+          
+          if (questionsFromFeedback.length > 0) {
+            setQuestions(questionsFromFeedback);
+            questionsFound = true;
+          }
         }
         
         // إذا لم تكن موجودة، استخدم endpoint منفصل كبديل
         if (!questionsFound) {
-          console.log('✗ Questions not found in API response, fetching from separate endpoint...');
           await fetchQuestionsForTeacher();
         }
       } else {
@@ -297,11 +295,9 @@ const ComprehensiveExam = () => {
     } catch (err) {
       // التحقق من أن الـ ID لم يتغير أثناء الطلب
       if (currentExamId !== id) {
-        console.log('⚠️ Exam ID changed during error handling, ignoring');
         return;
       }
       
-      console.error('❌ Error fetching exam data:', err);
       const errorMessage = err.response?.data?.message || "حدث خطأ أثناء تحميل بيانات الامتحان";
       setError(errorMessage);
       setQuestions([]); // إعادة تعيين الأسئلة في حالة الخطأ
@@ -324,7 +320,6 @@ const ComprehensiveExam = () => {
   // جلب الأسئلة للمدرس
   const fetchQuestionsForTeacher = async () => {
     if (!id) {
-      console.log('⚠️ No exam ID provided for fetching questions');
       return;
     }
 
@@ -332,7 +327,6 @@ const ComprehensiveExam = () => {
     
     try {
       const token = localStorage.getItem("token");
-      console.log('📡 Fetching questions from separate endpoint for exam:', currentExamId);
       const res = await baseUrl.get(
         `/api/questions/lecture-exam/${currentExamId}/details`,
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
@@ -340,22 +334,31 @@ const ComprehensiveExam = () => {
       
       // التحقق من أن الـ ID لم يتغير أثناء الطلب
       if (currentExamId !== id) {
-        console.log('⚠️ Exam ID changed during questions fetch, ignoring response');
         return;
       }
       
-      console.log('📦 Questions response:', res.data);
       const questionsData = res.data.questions || [];
-      console.log('✅ Setting questions:', questionsData.length);
-      setQuestions(questionsData);
+      
+      // تنظيف وتنسيق الأسئلة
+      const formattedQuestions = questionsData.map(q => ({
+        id: q.id,
+        text: q.text || null,
+        image: q.image || null,
+        grade: q.grade || 1,
+        choices: Array.isArray(q.choices) ? q.choices.map(c => ({
+          id: c.id,
+          text: c.text || '',
+          is_correct: c.is_correct || false
+        })) : []
+      }));
+      
+      setQuestions(formattedQuestions);
     } catch (err) {
       // التحقق من أن الـ ID لم يتغير أثناء الطلب
       if (currentExamId !== id) {
-        console.log('⚠️ Exam ID changed during error handling, ignoring');
         return;
       }
       
-      console.error('❌ Error fetching questions for teacher:', err);
       toast({
         title: "خطأ في جلب الأسئلة",
         description: err.response?.data?.message || "حدث خطأ أثناء تحميل الأسئلة",
@@ -1538,7 +1541,6 @@ const ComprehensiveExam = () => {
             {/* للمدرسين: عرض جميع الأسئلة */}
             {isTeacher || isAdmin ? (
               <>
-                {console.log('Rendering questions for teacher:', questions.length, 'questions')}
                 {questions.length > 0 ? (
                   questions.map((q, idx) => (
               <Box
@@ -1551,10 +1553,26 @@ const ComprehensiveExam = () => {
                 position="relative"
               >
                   <HStack justify="space-between" mb={2} align="start">
-                    <VStack align="start" flex={1} spacing={{ base: 2, sm: 3 }}>
-                      <Text fontWeight="bold" fontSize={{ base: 'md', sm: 'lg', md: 'xl' }} color="blue.700" lineHeight="1.4">
-              {idx + 1}. {q.text || 'سؤال بصورة'}
-            </Text>
+                    <VStack align="start" flex={1} spacing={{ base: 2, sm: 3 }} w="full">
+                      {/* عرض نص السؤال أو رقم السؤال فقط */}
+                      {q.text ? (
+                        <Text fontWeight="bold" fontSize={{ base: 'md', sm: 'lg', md: 'xl' }} color="blue.700" lineHeight="1.4" w="full">
+                          {idx + 1}. {q.text}
+                        </Text>
+                      ) : q.image ? (
+                        <HStack spacing={2} w="full">
+                          <Badge colorScheme="purple" fontSize="sm" px={2} py={1}>
+                            سؤال بصورة
+                          </Badge>
+                          <Text fontWeight="bold" fontSize={{ base: 'md', sm: 'lg', md: 'xl' }} color="blue.700" lineHeight="1.4">
+                            {idx + 1}
+                          </Text>
+                        </HStack>
+                      ) : (
+                        <Text fontWeight="bold" fontSize={{ base: 'md', sm: 'lg', md: 'xl' }} color="blue.700" lineHeight="1.4" w="full">
+                          {idx + 1}. سؤال {idx + 1}
+                        </Text>
+                      )}
                       {/* عرض صورة السؤال إذا كانت موجودة */}
                       {q.image && (
                         <Box 
@@ -1709,12 +1727,17 @@ const ComprehensiveExam = () => {
                   <Center minH="40vh">
                     <Alert status="info" borderRadius="md" maxW="md">
                       <AlertIcon />
-                      <VStack spacing={2} align="start">
-                        <Text fontWeight="bold">لا توجد أسئلة</Text>
+                      <VStack spacing={3} align="start">
+                        <Text fontWeight="bold" fontSize="lg">لا توجد أسئلة</Text>
                         <Text>لم يتم العثور على أسئلة في هذا الامتحان.</Text>
-                        <Text fontSize="sm" color="gray.600">
-                          عدد الأسئلة: {questions.length}
-                        </Text>
+                        <Button
+                          colorScheme="blue"
+                          size="sm"
+                          onClick={fetchExamData}
+                          isLoading={loading}
+                        >
+                          إعادة تحميل
+                        </Button>
                       </VStack>
                     </Alert>
                   </Center>
