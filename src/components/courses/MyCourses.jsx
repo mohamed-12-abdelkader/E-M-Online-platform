@@ -33,6 +33,8 @@ import {
   FaCamera,
   FaGraduationCap,
   FaUsers,
+  FaChevronDown,
+  FaChevronUp,
 } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -64,6 +66,19 @@ const MyCourses = () => {
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subTextColor = useColorModeValue('gray.600', 'gray.300');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const hoverBorderColor = useColorModeValue('blue.300', 'blue.500');
+  const courseCardBgGradient = useColorModeValue(
+    'linear(to-br, white, gray.50)',
+    'linear(to-br, gray.800, gray.700)'
+  );
+  const courseButtonBgGradient = useColorModeValue(
+    'linear(to-r, blue.500, blue.600)',
+    'linear(to-r, teal.500, teal.600)'
+  );
+  const courseButtonHoverBgGradient = useColorModeValue(
+    'linear(to-r, blue.600, blue.700)',
+    'linear(to-r, teal.600, teal.700)'
+  );
 
   // Fetch courses from API
   const fetchCourses = async () => {
@@ -389,13 +404,13 @@ const MyCourses = () => {
                   _hover={{
                     shadow: "2xl",
                     transform: "translateY(-8px)",
-                    borderColor: useColorModeValue("blue.300", "blue.500"),
+                    borderColor: hoverBorderColor,
                   }}
                   transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
                   display="flex"
                   flexDirection="column"
                   position="relative"
-                  bgGradient={useColorModeValue("linear(to-br, white, gray.50)", "linear(to-br, gray.800, gray.700)")}
+                  bgGradient={courseCardBgGradient}
                   role="group"
                   cursor="pointer"
                 >
@@ -566,15 +581,9 @@ const MyCourses = () => {
                         borderRadius="xl"
                         fontSize="md"
                         fontWeight="bold"
-                        bgGradient={useColorModeValue(
-                          "linear(to-r, blue.500, blue.600)",
-                          "linear(to-r, teal.500, teal.600)"
-                        )}
+                        bgGradient={courseButtonBgGradient}
                         _hover={{
-                          bgGradient: useColorModeValue(
-                            "linear(to-r, blue.600, blue.700)",
-                            "linear(to-r, teal.600, teal.700)"
-                          ),
+                          bgGradient: courseButtonHoverBgGradient,
                           transform: "translateY(-2px)",
                           boxShadow: "xl"
                         }}

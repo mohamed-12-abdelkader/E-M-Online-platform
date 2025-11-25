@@ -50,6 +50,12 @@ const MyTeacher = () => {
   const textColor = useColorModeValue("blue.700", "blue.500");
   const subTextColor = useColorModeValue("gray.500", "gray.400");
   const borderColor = useColorModeValue("gray.200", "gray.600");
+  const emptyStateBgGradient = useColorModeValue(
+    "linear(to-br, blue.50, blue.50, blue.50)",
+    "linear(to-br, gray.800, gray.700, gray.800)"
+  );
+  const emptyStateBorderColor = useColorModeValue("blue.200", "gray.600");
+  const emptyStateParagraphColor = useColorModeValue("gray.600", "gray.300");
 
   if (loading) {
     return (
@@ -169,7 +175,7 @@ const MyTeacher = () => {
                   transition="all 0.3s ease"
                   cursor="pointer"
                   position="relative"
-                  group
+                  role="group"
                   _hover={{
                     transform: "translateY(-4px)",
                     boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
@@ -321,12 +327,9 @@ const MyTeacher = () => {
               <Box
                 p={{ base: 8, md: 12 }}
                 borderRadius="3xl"
-                bgGradient={useColorModeValue(
-                  "linear(to-br, blue.50, blue.50, blue.50)",
-                  "linear(to-br, gray.800, gray.700, gray.800)"
-                )}
+                bgGradient={emptyStateBgGradient}
                 border="2px solid"
-                borderColor={useColorModeValue("blue.200", "gray.600")}
+                borderColor={emptyStateBorderColor}
                 boxShadow="2xl"
                 textAlign="center"
                 position="relative"
@@ -432,7 +435,7 @@ const MyTeacher = () => {
                     
                     <Text
                       fontSize={{ base: "md", md: "lg" }}
-                      color={useColorModeValue("gray.600", "gray.300")}
+                      color={emptyStateParagraphColor}
                       maxW="400px"
                       lineHeight="tall"
                     >
