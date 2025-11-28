@@ -602,20 +602,57 @@ const CourseDetailsPage = () => {
         console.log('Course Exams Response:', response.data);
         
         // التحقق من وجود البيانات في response.data
-        if (response.data && response.data.exams) {
-          setCourseExams(response.data.exams);
-        } else if (Array.isArray(response.data)) {
-          // في حالة كانت البيانات مصفوفة مباشرة
-          setCourseExams(response.data);
+        if (response.data) {
+          // إذا كانت البيانات تحتوي على exams array
+          if (response.data.exams && Array.isArray(response.data.exams)) {
+            setCourseExams(response.data.exams);
+            setCourseExamsError(null); // مسح أي خطأ سابق
+          } 
+          // إذا كانت البيانات مصفوفة مباشرة
+          else if (Array.isArray(response.data)) {
+            setCourseExams(response.data);
+            setCourseExamsError(null); // مسح أي خطأ سابق
+          } 
+          // إذا كانت البيانات كائن فارغ أو null
+          else if (response.data.exams === null || response.data.exams === undefined) {
+            setCourseExams([]);
+            setCourseExamsError(null); // لا نعرض خطأ إذا كانت القائمة فارغة
+          } 
+          else {
+            console.warn('Unexpected response structure:', response.data);
+            setCourseExams([]);
+            setCourseExamsError(null); // لا نعرض خطأ للبنية غير المتوقعة
+          }
         } else {
-          console.warn('Unexpected response structure:', response.data);
           setCourseExams([]);
+          setCourseExamsError(null);
         }
       } catch (error) {
         console.error('Error fetching course exams:', error);
-        const errorMessage = error.response?.data?.message || error.message || 'حدث خطأ في تحميل الامتحانات الشاملة';
-        setCourseExamsError(errorMessage);
-        setCourseExams([]);
+        // التحقق من نوع الخطأ
+        if (error.response) {
+          const status = error.response.status;
+          const errorMessage = error.response?.data?.message || error.message;
+          
+          // إذا كان الخطأ 403 (Forbidden)، قد يكون بسبب الصلاحيات
+          if (status === 403) {
+            // إذا كان المستخدم ليس مدرس أو admin، قد يكون هذا طبيعي
+            if (!isAdmin && !isTeacher) {
+              // للطلاب، إذا كان الخطأ 403، قد يعني أنه لا توجد امتحانات متاحة لهم
+              setCourseExams([]);
+              setCourseExamsError(null); // لا نعرض خطأ للطلاب
+            } else {
+              setCourseExamsError(errorMessage || 'غير مصرح لك بالوصول إلى هذه الامتحانات');
+              setCourseExams([]);
+            }
+          } else {
+            setCourseExamsError(errorMessage || 'حدث خطأ في تحميل الامتحانات الشاملة');
+            setCourseExams([]);
+          }
+        } else {
+          setCourseExamsError(error.message || 'حدث خطأ في تحميل الامتحانات الشاملة');
+          setCourseExams([]);
+        }
       } finally {
         setCourseExamsLoading(false);
       }
@@ -642,20 +679,57 @@ const CourseDetailsPage = () => {
       console.log('Course Exams Refresh Response:', response.data);
       
       // التحقق من وجود البيانات في response.data
-      if (response.data && response.data.exams) {
-        setCourseExams(response.data.exams);
-      } else if (Array.isArray(response.data)) {
-        // في حالة كانت البيانات مصفوفة مباشرة
-        setCourseExams(response.data);
+      if (response.data) {
+        // إذا كانت البيانات تحتوي على exams array
+        if (response.data.exams && Array.isArray(response.data.exams)) {
+          setCourseExams(response.data.exams);
+          setCourseExamsError(null); // مسح أي خطأ سابق
+        } 
+        // إذا كانت البيانات مصفوفة مباشرة
+        else if (Array.isArray(response.data)) {
+          setCourseExams(response.data);
+          setCourseExamsError(null); // مسح أي خطأ سابق
+        } 
+        // إذا كانت البيانات كائن فارغ أو null
+        else if (response.data.exams === null || response.data.exams === undefined) {
+          setCourseExams([]);
+          setCourseExamsError(null); // لا نعرض خطأ إذا كانت القائمة فارغة
+        } 
+        else {
+          console.warn('Unexpected response structure:', response.data);
+          setCourseExams([]);
+          setCourseExamsError(null); // لا نعرض خطأ للبنية غير المتوقعة
+        }
       } else {
-        console.warn('Unexpected response structure:', response.data);
         setCourseExams([]);
+        setCourseExamsError(null);
       }
     } catch (error) {
       console.error('Error refreshing course exams:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'حدث خطأ في تحميل الامتحانات الشاملة';
-      setCourseExamsError(errorMessage);
-      setCourseExams([]);
+      // التحقق من نوع الخطأ
+      if (error.response) {
+        const status = error.response.status;
+        const errorMessage = error.response?.data?.message || error.message;
+        
+        // إذا كان الخطأ 403 (Forbidden)، قد يكون بسبب الصلاحيات
+        if (status === 403) {
+          // إذا كان المستخدم ليس مدرس أو admin، قد يكون هذا طبيعي
+          if (!isAdmin && !isTeacher) {
+            // للطلاب، إذا كان الخطأ 403، قد يعني أنه لا توجد امتحانات متاحة لهم
+            setCourseExams([]);
+            setCourseExamsError(null); // لا نعرض خطأ للطلاب
+          } else {
+            setCourseExamsError(errorMessage || 'غير مصرح لك بالوصول إلى هذه الامتحانات');
+            setCourseExams([]);
+          }
+        } else {
+          setCourseExamsError(errorMessage || 'حدث خطأ في تحميل الامتحانات الشاملة');
+          setCourseExams([]);
+        }
+      } else {
+        setCourseExamsError(error.message || 'حدث خطأ في تحميل الامتحانات الشاملة');
+        setCourseExams([]);
+      }
     } finally {
       setCourseExamsLoading(false);
     }
