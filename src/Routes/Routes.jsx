@@ -41,6 +41,8 @@ import AllTeacherLogin from "../components/teacher/AllTeacherLogin";
 
 import MyTeacher from "../pages/myTeacher/MyTeacher";
 import SuggestedTeachers from "../pages/suggested-teachers/SuggestedTeachers";
+import TeacherStudents from "../pages/teacher/TeacherStudents";
+import StudentReport from "../pages/teacher/StudentReport";
 
 // Exam Components
 import Exam from "../pages/exam/Exam";
@@ -337,6 +339,8 @@ const AppRouter = () => {
           <Route path="teacher_courses/*" element={<TeacherCourses />}>
             <Route path="courses/:id" element={<AllCourses />} />
           </Route>
+          <Route path="teacher-students" element={<TeacherStudents />} />
+          <Route path="teacher-students/:studentId" element={<StudentReport />} />
         </Route>
 
         {/* Student Specific Routes */}

@@ -590,30 +590,72 @@ const CourseDetailsPage = () => {
       try {
         setCourseExamsLoading(true);
         setCourseExamsError(null);
-        const response = await baseUrl.get(`api/course/${id}/course-exams`, {
+        // استخدام endpoint مختلف للطلاب
+        const endpoint = (isAdmin || isTeacher) 
+          ? `api/course/${id}/course-exams`
+          : `api/exams/course/${id}/student`;
+        const response = await baseUrl.get(endpoint, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setCourseExams(response.data.exams || []);
+        
+        // تسجيل مؤقت للتشخيص
+        console.log('Course Exams Response:', response.data);
+        
+        // التحقق من وجود البيانات في response.data
+        if (response.data && response.data.exams) {
+          setCourseExams(response.data.exams);
+        } else if (Array.isArray(response.data)) {
+          // في حالة كانت البيانات مصفوفة مباشرة
+          setCourseExams(response.data);
+        } else {
+          console.warn('Unexpected response structure:', response.data);
+          setCourseExams([]);
+        }
       } catch (error) {
-        setCourseExamsError('حدث خطأ في تحميل الامتحانات الشاملة');
+        console.error('Error fetching course exams:', error);
+        const errorMessage = error.response?.data?.message || error.message || 'حدث خطأ في تحميل الامتحانات الشاملة';
+        setCourseExamsError(errorMessage);
+        setCourseExams([]);
       } finally {
         setCourseExamsLoading(false);
       }
     };
-    fetchCourseExams();
-  }, [id, token]);
+    if (id && token) {
+      fetchCourseExams();
+    }
+  }, [id, token, isAdmin, isTeacher]);
 
   // بعد useEffect الخاص بجلب الامتحانات الشاملة:
   const refreshExams = async () => {
     try {
       setCourseExamsLoading(true);
       setCourseExamsError(null);
-      const response = await baseUrl.get(`api/course/${id}/course-exams`, {
+      // استخدام endpoint مختلف للطلاب
+      const endpoint = (isAdmin || isTeacher) 
+        ? `api/course/${id}/course-exams`
+        : `api/exams/course/${id}/student`;
+      const response = await baseUrl.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCourseExams(response.data.exams || []);
+      
+      // تسجيل مؤقت للتشخيص
+      console.log('Course Exams Refresh Response:', response.data);
+      
+      // التحقق من وجود البيانات في response.data
+      if (response.data && response.data.exams) {
+        setCourseExams(response.data.exams);
+      } else if (Array.isArray(response.data)) {
+        // في حالة كانت البيانات مصفوفة مباشرة
+        setCourseExams(response.data);
+      } else {
+        console.warn('Unexpected response structure:', response.data);
+        setCourseExams([]);
+      }
     } catch (error) {
-      setCourseExamsError('حدث خطأ في تحميل الامتحانات الشاملة');
+      console.error('Error refreshing course exams:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'حدث خطأ في تحميل الامتحانات الشاملة';
+      setCourseExamsError(errorMessage);
+      setCourseExams([]);
     } finally {
       setCourseExamsLoading(false);
     }

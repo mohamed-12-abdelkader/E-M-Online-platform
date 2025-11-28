@@ -90,6 +90,7 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
     { to: "/Teacher_subjects", Icon: MdQuestionAnswer, label: " بنك الاسئله  " },
     { to: "/center_groups", Icon: MdGroups, label: "سيستم إدارة السنتر" },
     { to: "/TeacherChat", Icon: MdForum, label: " الرسائل " },
+    { to: "/teacher-students", Icon: MdPeople, label: "طلابي" },
     { to: "/social", Icon: MdPublic, label: "EM Social" },
   ];
 

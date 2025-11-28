@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box, VStack, Heading, Text, Spinner, Center, RadioGroup, Radio, Stack,
   Alert, AlertIcon, IconButton, HStack, useToast, Modal, ModalOverlay,
-  ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Button, Input, Divider, Badge, Tooltip, InputGroup, InputRightElement
+  ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Button, Input, Divider, Badge, Tooltip, InputGroup, InputRightElement, Image
 } from "@chakra-ui/react";
 import { AiFillEdit, AiFillDelete, AiFillCheckCircle, AiOutlineCheckCircle, AiOutlineCloseCircle, AiFillStar } from "react-icons/ai";
 import { CircularProgress, CircularProgressLabel } from "@chakra-ui/react";
@@ -23,11 +23,11 @@ const Exam = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editModal, setEditModal] = useState({ open: null });
-  const [editForm, setEditForm] = useState({ text: "", choices: [] });
+  const [editForm, setEditForm] = useState({ text: "", choices: [], image: null });
   const [deleteModal, setDeleteModal] = useState({ open: false, qid: null });
   const [deleting, setDeleting] = useState(false);
   const [pendingCorrect, setPendingCorrect] = useState({});
-  const [studentAnswers, setStudentAnswers] = useState({}); // { [questionId]: choiceId }
+  const [studentAnswers, setStudentAnswers] = useState({}); // { [questionId]: answerLetter } where answerLetter is "A", "B", "C", or "D"
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitResult, setSubmitResult] = useState(null);
   const toast = useToast();
@@ -38,19 +38,52 @@ const Exam = () => {
   const [gradesLoading, setGradesLoading] = useState(false);
   const [gradesData, setGradesData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [examSession, setExamSession] = useState(null);
+  const [remainingSeconds, setRemainingSeconds] = useState(null);
+  const [attemptId, setAttemptId] = useState(null); // ID المحاولة الحالية
+  const timerExpiredRef = useRef(false);
+  const isStudentUser = !isTeacher && !isAdmin && !!student;
+
+  const getQuestionImageSrc = (imagePath) => {
+    if (!imagePath || imagePath === "null") return null;
+    if (/^https?:\/\//i.test(imagePath)) return imagePath;
+    const base = (baseUrl.defaults.baseURL || "").replace(/\/$/, "");
+    const normalizedPath = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
+    // Try to ensure we hit the public storage endpoint by default
+    const prefixedPath =
+      normalizedPath.startsWith("storage/") || normalizedPath.startsWith("uploads/")
+        ? normalizedPath
+        : `storage/${normalizedPath}`;
+    return `${base}/${prefixedPath}`;
+  };
+
+  const formatTime = (seconds) => {
+    if (seconds === null || seconds === undefined) return "--:--";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
 
   useEffect(() => {
-    fetchQuestions();
-    // eslint-disable-next-line
-  }, [examId]);
+    if (isTeacher || isAdmin) {
+      fetchQuestions();
+    } else if (isStudentUser) {
+      fetchExamForStudent();
+    } else {
+      setLoading(false);
+    }
+  }, [examId, isTeacher, isAdmin, isStudentUser]);
 
   const fetchQuestions = async () => {
     try {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem("token");
+      const endpoint = isTeacher
+        ? `/api/exams/${examId}/questions`
+        : `/api/course/course-exam/${examId}/questions`;
       const res = await baseUrl.get(
-        `/api/course/course-exam/${examId}/questions`,
+        endpoint,
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       );
       setQuestions(res.data.questions || []);
@@ -60,6 +93,113 @@ const Exam = () => {
       setLoading(false);
     }
   };
+
+  const fetchExamForStudent = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem("token");
+      // استخدام POST لبدء محاولة جديدة
+      const res = await baseUrl.post(
+        `/api/exams/${examId}/start`,
+        {},
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      );
+      const data = res.data || {};
+      
+      // حفظ attemptId
+      setAttemptId(data.attemptId);
+      
+      // إعداد معلومات الامتحان
+      setExamSession({
+        title: data.examTitle,
+        durationMinutes: data.durationMinutes,
+        startedAt: data.startedAt || new Date().toISOString(),
+      });
+      
+      // إعداد الأسئلة
+      setQuestions(data.questions || []);
+      
+      // إعداد المؤقت
+      const initialSeconds = data.durationMinutes
+        ? data.durationMinutes * 60
+        : null;
+      setRemainingSeconds(initialSeconds);
+      timerExpiredRef.current = false;
+      setSubmitResult(null);
+      setStudentAnswers({});
+      setCurrent(0);
+    } catch (err) {
+      // التحقق من وجود محاولة سابقة في الـ error response
+      const errorData = err.response?.data || {};
+      const previousAttempt = errorData.previousAttempt;
+      
+      if (previousAttempt) {
+        // إذا كان هناك محاولة سابقة، عرض النتيجة بدلاً من الخطأ
+        const wrongCount = previousAttempt.wrongQuestions?.length || 0;
+        // تقدير عدد الإجابات الصحيحة (الدرجة الكلية - عدد الأسئلة الخاطئة)
+        // هذا تقدير، يمكن تحسينه إذا كان API يرجع العدد الفعلي
+        const correctCount = previousAttempt.maxGrade - wrongCount;
+        
+        setSubmitResult({
+          attemptId: previousAttempt.attemptId,
+          totalGrade: previousAttempt.totalGrade,
+          maxGrade: previousAttempt.maxGrade,
+          correctCount: correctCount,
+          wrongCount: wrongCount,
+          showAnswers: previousAttempt.showAnswers,
+          releaseReason: previousAttempt.releaseReason,
+          answersVisibleAt: previousAttempt.answersVisibleAt,
+          wrongQuestions: previousAttempt.wrongQuestions || [],
+        });
+        
+        // جلب معلومات الامتحان لعرض العنوان
+        try {
+          const token = localStorage.getItem("token");
+          const examRes = await baseUrl.get(
+            `/api/course/course-exam/${examId}/questions`,
+            token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+          );
+          const examData = examRes.data || {};
+          const examInfo = examData.exam || {};
+          setExamSession({
+            title: examInfo.title || "الامتحان الشامل",
+            durationMinutes: examInfo.durationMinutes,
+            startedAt: previousAttempt.submittedAt,
+          });
+        } catch (examErr) {
+          // إذا فشل جلب معلومات الامتحان، نستخدم قيم افتراضية
+          setExamSession({
+            title: "الامتحان الشامل",
+            durationMinutes: null,
+            startedAt: previousAttempt.submittedAt,
+          });
+        }
+        
+        toast({ 
+          title: "تم إكمال هذا الامتحان مسبقاً", 
+          description: errorData.message || "يمكنك عرض النتيجة أدناه",
+          status: "info",
+          duration: 5000,
+          isClosable: true
+        });
+      } else {
+        // إذا لم تكن هناك محاولة سابقة، عرض رسالة الخطأ العادية
+        const message = errorData.message || "غير مسموح ببدء الامتحان حالياً";
+        setError(message);
+        toast({ 
+          title: "خطأ في بدء الامتحان", 
+          description: message,
+          status: "error",
+          duration: 5000,
+          isClosable: true
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   // جلب الدرجات
   const fetchGrades = async () => {
@@ -81,12 +221,16 @@ const Exam = () => {
     setDeleting(true);
     try {
       const token = localStorage.getItem("token");
-      await baseUrl.delete(`/api/course/course-exam/question/${deleteModal.qid}`, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
+      await baseUrl.delete(`/api/questions/${deleteModal.qid}`, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
       setQuestions((prev) => prev.filter((q) => q.id !== deleteModal.qid));
       toast({ title: "تم حذف السؤال", status: "success" });
       setDeleteModal({ open: false, qid: null });
-    } catch {
-      toast({ title: "فشل الحذف", status: "error" });
+    } catch (err) {
+      toast({ 
+        title: "فشل الحذف", 
+        description: err.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error" 
+      });
     } finally {
       setDeleting(false);
     }
@@ -94,9 +238,16 @@ const Exam = () => {
 
   // فتح مودال التعديل
   const openEditModal = (q) => {
+    // تحويل البنية الجديدة إلى البنية القديمة للواجهة
     setEditForm({
-      text: q.text,
-      choices: q.choices.map((c) => ({ ...c })),
+      text: q.question_text || "",
+      choices: [
+        { id: "A", text: q.option_a || "", is_correct: q.correct_answer === "A" },
+        { id: "B", text: q.option_b || "", is_correct: q.correct_answer === "B" },
+        { id: "C", text: q.option_c || "", is_correct: q.correct_answer === "C" },
+        { id: "D", text: q.option_d || "", is_correct: q.correct_answer === "D" },
+      ],
+      image: q.question_image || null,
     });
     setEditModal({ open: true, question: q });
   };
@@ -106,51 +257,97 @@ const Exam = () => {
     const { question } = editModal;
     try {
       const token = localStorage.getItem("token");
-      await baseUrl.put(
-        `/api/course/course-exam/question/${question.id}`,
-        { text: editForm.text, choices: editForm.choices.map((c) => ({ id: c.id, text: c.text })) },
-        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      const formData = new FormData();
+      
+      // إضافة الحقول المحدثة
+      if (editForm.text !== undefined) {
+        formData.append("questionText", editForm.text);
+      }
+      if (editForm.choices) {
+        formData.append("optionA", editForm.choices[0]?.text || "");
+        formData.append("optionB", editForm.choices[1]?.text || "");
+        formData.append("optionC", editForm.choices[2]?.text || "");
+        formData.append("optionD", editForm.choices[3]?.text || "");
+      }
+      
+      const res = await baseUrl.put(
+        `/api/questions/${question.id}`,
+        formData,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            // لا نضيف Content-Type للسماح للمتصفح بتعيينه تلقائياً مع boundary
+          } 
+        }
       );
+      
+      // تحديث الأسئلة بالبيانات الجديدة
+      const updatedQuestion = res.data.question;
       setQuestions((prev) => prev.map((q) =>
-        q.id === question.id
-          ? { ...q, text: editForm.text, choices: editForm.choices.map((c) => ({ ...c })) }
-          : q
+        q.id === question.id ? updatedQuestion : q
       ));
       toast({ title: "تم التعديل بنجاح", status: "success" });
       setEditModal({ open: false, question: null });
-    } catch {
-      toast({ title: "فشل التعديل", status: "error" });
+    } catch (err) {
+      toast({ 
+        title: "فشل التعديل", 
+        description: err.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error" 
+      });
     }
   };
 
   // تعيين الإجابة الصحيحة
-  const handleSetCorrect = async (qid, cid) => {
-    setPendingCorrect((prev) => ({ ...prev, [qid]: cid }));
+  const handleSetCorrect = async (qid, answerLetter) => {
+    // answerLetter يجب أن يكون "A", "B", "C", أو "D"
+    setPendingCorrect((prev) => ({ ...prev, [qid]: answerLetter }));
+    
+    // تحديث محلي فوري
     setQuestions((prev) => prev.map((q) =>
-      q.id === qid
-        ? { ...q, choices: q.choices.map((c) => ({ ...c, is_correct: c.id === cid })) }
-        : q
+      q.id === qid ? { ...q, correct_answer: answerLetter } : q
     ));
+    
     try {
       const token = localStorage.getItem("token");
-      await baseUrl.patch(
-        `/api/course/course-exam/question/${qid}/correct-answer`,
-        { correct_choice_id: cid },
-        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      const res = await baseUrl.patch(
+        `/api/questions/${qid}/correct-answer`,
+        { correctAnswer: answerLetter },
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
+      
+      // تحديث بالبيانات من السيرفر
+      const updatedQuestion = res.data.question;
+      setQuestions((prev) => prev.map((q) =>
+        q.id === qid ? updatedQuestion : q
+      ));
+      
       toast({ title: "تم تحديد الإجابة الصحيحة", status: "success" });
       setPendingCorrect((prev) => {
         const copy = { ...prev };
         delete copy[qid];
         return copy;
       });
-    } catch {
-      toast({ title: "فشل تحديد الإجابة", status: "error" });
-      setQuestions((prev) => prev.map((q) =>
-        q.id === qid
-          ? { ...q, choices: q.choices.map((c) => ({ ...c, is_correct: false })) }
-          : q
-      ));
+    } catch (err) {
+      toast({ 
+        title: "فشل تحديد الإجابة", 
+        description: err.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error" 
+      });
+      
+      // إعادة الحالة السابقة
+      setQuestions((prev) => prev.map((q) => {
+        if (q.id === qid) {
+          const originalQ = questions.find(orig => orig.id === qid);
+          return originalQ ? { ...originalQ } : q;
+        }
+        return q;
+      }));
+      
       setPendingCorrect((prev) => {
         const copy = { ...prev };
         delete copy[qid];
@@ -160,32 +357,114 @@ const Exam = () => {
   };
 
   // للطالب: عند اختيار إجابة
-  const handleStudentChoice = (qid, cid) => {
-    setStudentAnswers((prev) => ({ ...prev, [qid]: cid }));
+  const handleStudentChoice = (qid, answerLetter) => {
+    // answerLetter يجب أن يكون "A", "B", "C", أو "D"
+    setStudentAnswers((prev) => ({ ...prev, [qid]: answerLetter }));
   };
 
   // للطالب: تسليم الامتحان
-  const handleSubmitExam = async () => {
+  const handleSubmitExam = async (autoSubmit = false) => {
+    if (!isStudentUser) return;
+    if (!attemptId) {
+      toast({ 
+        title: "خطأ", 
+        description: "لا توجد محاولة نشطة لتسليمها",
+        status: "error" 
+      });
+      return;
+    }
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast({ title: "يجب تسجيل الدخول لتسليم الامتحان", status: "error" });
+      return;
+    }
     setSubmitLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const answersArr = Object.entries(studentAnswers).map(([questionId, choiceId]) => ({
+      // تحويل الإجابات من الحروف (A, B, C, D) إلى الشكل المطلوب
+      const answersArr = Object.entries(studentAnswers).map(([questionId, answerLetter]) => ({
         questionId: Number(questionId),
-        choiceId: Number(choiceId),
+        selectedAnswer: answerLetter, // A, B, C, or D
       }));
+      
       const res = await baseUrl.post(
-        `/api/course/course-exam/${examId}/submit`,
-        { answers: answersArr },
-        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+        `/api/exams/${examId}/submit`,
+        { 
+          attemptId: attemptId,
+          answers: answersArr 
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSubmitResult(res.data);
-      toast({ title: "تم تسليم الامتحان!", status: "success" });
-    } catch {
-      toast({ title: "فشل تسليم الامتحان", status: "error" });
+      
+      // معالجة النتيجة حسب البنية الجديدة
+      const resultData = res.data || {};
+      setSubmitResult({
+        attemptId: resultData.attemptId,
+        totalGrade: resultData.totalGrade,
+        maxGrade: resultData.maxGrade,
+        correctCount: resultData.correctCount,
+        wrongCount: resultData.wrongCount,
+        showAnswers: resultData.showAnswers,
+        releaseReason: resultData.releaseReason,
+        answersVisibleAt: resultData.answersVisibleAt,
+        wrongQuestions: resultData.wrongQuestions || [],
+      });
+      
+      setExamSession(null);
+      setRemainingSeconds(null);
+      timerExpiredRef.current = false;
+      
+      // رسالة مختلفة حسب سبب الإظهار
+      let successMessage = autoSubmit 
+        ? "تم تسليم الامتحان تلقائياً لانتهاء الوقت" 
+        : "تم تسليم الامتحان!";
+      
+      if (resultData.showAnswers) {
+        successMessage += " يمكنك الآن عرض الإجابات الصحيحة.";
+      } else if (resultData.releaseReason === "scheduled_pending") {
+        const visibleDate = resultData.answersVisibleAt 
+          ? new Date(resultData.answersVisibleAt).toLocaleString("ar-EG")
+          : "لاحقاً";
+        successMessage += ` سيتم إظهار الإجابات في: ${visibleDate}`;
+      }
+      
+      toast({
+        title: successMessage,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || "حدث خطأ غير متوقع";
+      toast({
+        title: autoSubmit ? "تعذر التسليم التلقائي" : "فشل تسليم الامتحان",
+        description: errorMessage,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setSubmitLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!examSession || remainingSeconds === null) return;
+    if (remainingSeconds !== null && remainingSeconds <= 0) {
+      if (!timerExpiredRef.current && !submitResult && !submitLoading) {
+        timerExpiredRef.current = true;
+        toast({ title: "انتهى الوقت! يتم تسليم الامتحان تلقائياً.", status: "warning" });
+        handleSubmitExam(true);
+      }
+      return;
+    }
+    const interval = setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev === null) return null;
+        return prev > 0 ? prev - 1 : 0;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [examSession, remainingSeconds, submitResult, submitLoading]);
 
   if (loading) {
     return (
@@ -419,7 +698,7 @@ const Exam = () => {
       ) : (
         <>
         {/* للطالب: عرض سؤال واحد مع pagination */}
-        {!isTeacher && !isAdmin && student ? (
+        {isStudentUser ? (
           <>
             {/* عرض النتيجة إذا تم التسليم */}
             {submitResult ? (
@@ -498,8 +777,41 @@ const Exam = () => {
                   </VStack>
                 </Box>
 
-                {/* تفاصيل الأخطاء */}
-                {submitResult.wrongQuestions && submitResult.wrongQuestions.length > 0 && (
+                {/* رسالة حالة الإجابات */}
+                {!submitResult.showAnswers && submitResult.releaseReason === "scheduled_pending" && (
+                  <Box 
+                    p={{ base: 4, sm: 5, md: 6 }} 
+                    borderRadius="xl" 
+                    bg="blue.50" 
+                    boxShadow="lg"
+                    border="1px solid"
+                    borderColor="blue.200"
+                    mb={6}
+                  >
+                    <VStack spacing={3} align="center">
+                      <AiOutlineCheckCircle size={32} color="#3182CE" />
+                      <Heading size="md" color="blue.700">
+                        تم تسليم الامتحان بنجاح
+                      </Heading>
+                      <Text fontSize="md" color="blue.600" textAlign="center">
+                        سيتم إظهار الإجابات الصحيحة في:{" "}
+                        {submitResult.answersVisibleAt 
+                          ? new Date(submitResult.answersVisibleAt).toLocaleString("ar-EG", {
+                              dateStyle: "full",
+                              timeStyle: "short"
+                            })
+                          : "لاحقاً"}
+                      </Text>
+                      <Text fontSize="sm" color="blue.500" textAlign="center">
+                        درجتك: {submitResult.totalGrade} من {submitResult.maxGrade}
+                        {" "}({submitResult.correctCount} صحيح، {submitResult.wrongCount} خاطئ)
+                      </Text>
+                    </VStack>
+                  </Box>
+                )}
+
+                {/* تفاصيل الأخطاء - تظهر فقط إذا كان showAnswers = true */}
+                {submitResult.showAnswers && submitResult.wrongQuestions && submitResult.wrongQuestions.length > 0 && (
                   <Box 
                     p={{ base: 4, sm: 5, md: 6 }} 
                     borderRadius="xl" 
@@ -522,7 +834,7 @@ const Exam = () => {
                           <AiOutlineCloseCircle size={20} color="#F59E0B" />
                         </Box>
                         <Heading size="lg" color="orange.700">
-                          الأسئلة الخاطئة
+                          الأسئلة الخاطئة ({submitResult.wrongCount})
                         </Heading>
                       </HStack>
                       
@@ -558,15 +870,37 @@ const Exam = () => {
                             </Box>
 
                             <VStack spacing={4} align="stretch">
+                              {/* صورة السؤال إذا كانت موجودة */}
+                              {wq.questionImage && (
+                                <Box
+                                  mb={4}
+                                  borderRadius="xl"
+                                  overflow="hidden"
+                                  border="1px solid"
+                                  borderColor="orange.200"
+                                >
+                                  <Image
+                                    src={getQuestionImageSrc(wq.questionImage)}
+                                    alt={`question-${idx + 1}`}
+                                    w="100%"
+                                    maxH="320px"
+                                    objectFit="contain"
+                                    bg="white"
+                                  />
+                                </Box>
+                              )}
+                              
                               {/* نص السؤال */}
-                              <Text 
-                                fontWeight="bold" 
-                                color="orange.800" 
-                                fontSize={{ base: 'md', sm: 'lg' }}
-                                lineHeight="1.5"
-                              >
-                                {wq.questionText}
-                              </Text>
+                              {wq.questionText && (
+                                <Text 
+                                  fontWeight="bold" 
+                                  color="orange.800" 
+                                  fontSize={{ base: 'md', sm: 'lg' }}
+                                  lineHeight="1.5"
+                                >
+                                  {wq.questionText}
+                                </Text>
+                              )}
 
                               {/* الإجابات */}
                               <VStack spacing={3} align="stretch">
@@ -592,7 +926,7 @@ const Exam = () => {
                                     p={2}
                                     borderRadius="md"
                                   >
-                                    {wq.yourChoice?.text || "لم تجب"}
+                                    {wq.yourAnswer ? `${wq.yourAnswer}. ${wq[`option${wq.yourAnswer}`] || ""}` : "لم تجب"}
                                   </Text>
                                 </Box>
 
@@ -618,7 +952,7 @@ const Exam = () => {
                                     p={2}
                                     borderRadius="md"
                                   >
-                                    {wq.correctChoice?.text}
+                                    {wq.correctAnswer ? `${wq.correctAnswer}. ${wq[`option${wq.correctAnswer}`] || ""}` : "غير متوفر"}
                                   </Text>
                                 </Box>
                               </VStack>
@@ -630,8 +964,43 @@ const Exam = () => {
                   </Box>
                 )}
               </>
-                         ) : (
-               <>
+            ) : examSession ? (
+              <>
+                <Box
+                  mb={{ base: 4, md: 6 }}
+                  p={{ base: 4, md: 5 }}
+                  borderRadius="2xl"
+                  border="1px solid"
+                  borderColor="blue.200"
+                  boxShadow="lg"
+                  bgGradient="linear(135deg, blue.50, white)"
+                >
+                  <VStack spacing={3} align="flex-start">
+                    <Heading size="md" color="blue.700">
+                      {examSession.title || "الامتحان الشامل"}
+                    </Heading>
+                    <HStack spacing={3} flexWrap="wrap">
+                      <Badge colorScheme="blue" borderRadius="full" px={4} py={2}>
+                        الوقت المتبقي: {formatTime(remainingSeconds)}
+                      </Badge>
+                      {examSession.timeLimitEnabled && examSession.timeLimitMinutes && (
+                        <Badge colorScheme="purple" borderRadius="full" px={4} py={2}>
+                          مؤقت داخلي: {examSession.timeLimitMinutes} دقيقة
+                        </Badge>
+                      )}
+                      {!examSession.timeLimitEnabled && examSession.durationMinutes && (
+                        <Badge colorScheme="green" borderRadius="full" px={4} py={2}>
+                          مدة الامتحان: {examSession.durationMinutes} دقيقة
+                        </Badge>
+                      )}
+                    </HStack>
+                    {examSession.startedAt && (
+                      <Text fontSize="sm" color="gray.600">
+                        بدأ عند: {new Date(examSession.startedAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
+                      </Text>
+                    )}
+                  </VStack>
+                </Box>
                  {/* السؤال الحالي */}
             {questions.length > 0 && (
               <Box
@@ -650,23 +1019,46 @@ const Exam = () => {
                       {current + 1}
                     </Box>
                     <FaBookOpen color="#3182ce" size={22} />
-                    <Text fontWeight="bold" fontSize="lg" color="blue.800">{questions[current].text}</Text>
+                    <Text fontWeight="bold" fontSize="lg" color="blue.800">{questions[current].questionText || "سؤال صوري"}</Text>
                   </HStack>
                   <Badge colorScheme="purple" fontSize="md" px={3} py={1} borderRadius="md">
                     درجة السؤال: {questions[current].grade || 0}
                   </Badge>
                 </HStack>
                 <Divider mb={4} />
-                {questions[current].choices && questions[current].choices.length > 0 ? (
+                {getQuestionImageSrc(questions[current].questionImage) && (
+                  <Box
+                    mb={4}
+                    borderRadius="xl"
+                    overflow="hidden"
+                    border="1px solid"
+                    borderColor="blue.100"
+                  >
+                    <Image
+                      src={getQuestionImageSrc(questions[current].questionImage)}
+                      alt={`question-${current + 1}`}
+                      w="100%"
+                      maxH="320px"
+                      objectFit="contain"
+                      bg="white"
+                    />
+                  </Box>
+                )}
+                {questions[current].optionA ? (
                        <RadioGroup 
-                         value={studentAnswers[questions[current].id] ? String(studentAnswers[questions[current].id]) : ""}
-                         onChange={(value) => handleStudentChoice(questions[current].id, parseInt(value))}
+                         value={studentAnswers[questions[current].id] || ""}
+                         onChange={(value) => handleStudentChoice(questions[current].id, value)}
                        >
                     <Stack direction="column" spacing={4}>
-                      {questions[current].choices.map((choice, cidx) => {
-                        const isSelected = studentAnswers[questions[current].id] === choice.id;
+                      {[
+                        { letter: "A", text: questions[current].optionA },
+                        { letter: "B", text: questions[current].optionB },
+                        { letter: "C", text: questions[current].optionC },
+                        { letter: "D", text: questions[current].optionD },
+                      ].map((option) => {
+                        const isSelected = studentAnswers[questions[current].id] === option.letter;
                         return (
-                          <Tooltip key={choice.id} label="اختر هذه الإجابة" placement="left" hasArrow>
+                          <Tooltip key={option.letter} label="اختر هذه الإجابة" placement="left" hasArrow>
                             <Box
                               as="label"
                               p={3}
@@ -677,16 +1069,16 @@ const Exam = () => {
                               color={isSelected ? 'blue.800' : 'gray.800'}
                               display="flex"
                               alignItems="center"
-                                   cursor="pointer"
+                              cursor="pointer"
                               transition="all 0.2s"
                             >
                               <Radio
-                                value={String(choice.id)}
+                                value={option.letter}
                                 colorScheme="blue"
                                 mr={3}
                               />
                               <Text fontWeight="bold" fontSize="md">
-                                {String.fromCharCode(65 + cidx)}. {choice.text}
+                                {option.letter}. {option.text}
                               </Text>
                             </Box>
                           </Tooltip>
@@ -877,6 +1269,12 @@ const Exam = () => {
                    </Box>
                  )}
                </>
+            ) : (
+              <Center py={10}>
+                <Text color="gray.600" fontSize="lg">
+                  لا توجد بيانات متاحة لهذا الامتحان حالياً.
+                </Text>
+              </Center>
             )}
           </>
         ) : (
@@ -899,7 +1297,7 @@ const Exam = () => {
                       {idx + 1}
                     </Box>
                     <FaBookOpen color="#3182ce" size={22} />
-                    <Text fontWeight="bold" fontSize="lg" color="blue.800">{q.text}</Text>
+                    <Text fontWeight="bold" fontSize="lg" color="blue.800">{q.question_text || "سؤال صوري"}</Text>
                   </HStack>
                   <HStack>
                     <IconButton
@@ -922,46 +1320,72 @@ const Exam = () => {
                   </Badge>
                 </HStack>
                 <Divider mb={4} />
-                {q.choices && q.choices.length > 0 ? (
+                {getQuestionImageSrc(q.question_image) && (
+                  <Box
+                    mb={4}
+                    borderRadius="xl"
+                    overflow="hidden"
+                    border="1px solid"
+                    borderColor="blue.100"
+                  >
+                    <Image
+                      src={getQuestionImageSrc(q.question_image)}
+                      alt={`question-${idx + 1}`}
+                      w="100%"
+                      maxH="320px"
+                      objectFit="contain"
+                      bg="white"
+                    />
+                  </Box>
+                )}
+                {q.option_a && (
                   <RadioGroup>
                     <Stack direction="column" spacing={4}>
-                      {q.choices.map((choice, cidx) => (
-                        <Tooltip key={choice.id} label={choice.is_correct ? "الإجابة الصحيحة" : "تعيين كإجابة صحيحة"} placement="left" hasArrow>
-                          <Box
-                            as="label"
-                            p={3}
-                            borderRadius="lg"
-                            border={choice.is_correct ? '2px solid #38A169' : '1px solid #e2e8f0'}
-                            boxShadow={choice.is_correct ? 'md' : 'sm'}
-                            bg={choice.is_correct ? 'green.50' : 'white'}
-                            color={choice.is_correct ? 'green.800' : 'gray.800'}
-                            display="flex"
-                            alignItems="center"
-                            transition="all 0.2s"
-                            cursor="pointer"
-                            onClick={() => handleSetCorrect(q.id, choice.id)}
+                      {[
+                        { letter: "A", text: q.option_a },
+                        { letter: "B", text: q.option_b },
+                        { letter: "C", text: q.option_c },
+                        { letter: "D", text: q.option_d },
+                      ].map((option) => {
+                        const isCorrect = q.correct_answer === option.letter;
+                        return (
+                          <Tooltip 
+                            key={option.letter} 
+                            label={isCorrect ? "الإجابة الصحيحة" : "تعيين كإجابة صحيحة"} 
+                            placement="left" 
+                            hasArrow
                           >
-                            <Radio
-                              value={String(choice.id)}
-                              colorScheme="green"
-                              isChecked={choice.is_correct}
-                              isReadOnly
-                              mr={3}
-                            />
-                            <Text fontWeight="bold" fontSize="md">
-                              {String.fromCharCode(65 + cidx)}. {choice.text}
-                            </Text>
-                            {choice.is_correct && <FaCheckCircle color="#38A169" style={{marginRight:8}} />}
-                          </Box>
-                        </Tooltip>
-                      ))}
+                            <Box
+                              as="label"
+                              p={3}
+                              borderRadius="lg"
+                              border={isCorrect ? '2px solid #38A169' : '1px solid #e2e8f0'}
+                              boxShadow={isCorrect ? 'md' : 'sm'}
+                              bg={isCorrect ? 'green.50' : 'white'}
+                              color={isCorrect ? 'green.800' : 'gray.800'}
+                              display="flex"
+                              alignItems="center"
+                              transition="all 0.2s"
+                              cursor="pointer"
+                              onClick={() => handleSetCorrect(q.id, option.letter)}
+                            >
+                              <Radio
+                                value={option.letter}
+                                colorScheme="green"
+                                isChecked={isCorrect}
+                                isReadOnly
+                                mr={3}
+                              />
+                              <Text fontWeight="bold" fontSize="md">
+                                {option.letter}. {option.text}
+                              </Text>
+                              {isCorrect && <FaCheckCircle color="#38A169" style={{marginRight:8}} />}
+                            </Box>
+                          </Tooltip>
+                        );
+                      })}
                     </Stack>
                   </RadioGroup>
-                ) : (
-                  <Alert status="info" borderRadius="md" mt={2}>
-                    <AlertIcon />
-                    لا توجد اختيارات متاحة لهذا السؤال.
-                  </Alert>
                 )}
               </Box>
             ))}
@@ -971,32 +1395,60 @@ const Exam = () => {
       )}
 
       {/* Edit Modal */}
-      <Modal isOpen={editModal.open} onClose={() => setEditModal({ open: false, question: null })}>
+      <Modal isOpen={editModal.open} onClose={() => setEditModal({ open: false, question: null })} size="lg">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>تعديل السؤال</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text mb={2}>نص السؤال:</Text>
-            <Input
-              value={editForm.text}
-              onChange={(e) => setEditForm((prev) => ({ ...prev, text: e.target.value }))}
-              mb={4}
-            />
-            <Text mb={2}>الاختيارات:</Text>
-            <VStack spacing={2}>
-              {editForm.choices.map((choice, idx) => (
+            <VStack spacing={4} align="stretch">
+              <Box>
+                <Text mb={2} fontWeight="medium">نص السؤال:</Text>
                 <Input
-                  key={choice.id}
-                  value={choice.text}
-                  onChange={(e) => setEditForm((prev) => {
-                    const choices = [...prev.choices];
-                    choices[idx].text = e.target.value;
-                    return { ...prev, choices };
-                  })}
-                  placeholder={`اختيار ${String.fromCharCode(65 + idx)}`}
+                  value={editForm.text}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, text: e.target.value }))}
+                  placeholder="أدخل نص السؤال"
                 />
-              ))}
+              </Box>
+              <Box>
+                <Text mb={2} fontWeight="medium">الاختيارات:</Text>
+                <VStack spacing={2}>
+                  {editForm.choices && editForm.choices.map((choice, idx) => {
+                    const labels = ["A", "B", "C", "D"];
+                    return (
+                      <HStack key={choice.id || idx} w="full" spacing={2}>
+                        <Text fontWeight="bold" minW="20px" color="blue.600">
+                          {labels[idx]}:
+                        </Text>
+                        <Input
+                          value={choice.text}
+                          onChange={(e) => setEditForm((prev) => {
+                            const choices = [...prev.choices];
+                            choices[idx].text = e.target.value;
+                            return { ...prev, choices };
+                          })}
+                          placeholder={`اختيار ${labels[idx]}`}
+                          flex={1}
+                        />
+                      </HStack>
+                    );
+                  })}
+                </VStack>
+              </Box>
+              {editForm.image && (
+                <Box>
+                  <Text mb={2} fontWeight="medium">صورة السؤال:</Text>
+                  <Image
+                    src={getQuestionImageSrc(editForm.image)}
+                    alt="صورة السؤال"
+                    maxH="200px"
+                    objectFit="contain"
+                    borderRadius="md"
+                    border="1px solid"
+                    borderColor="gray.200"
+                  />
+                </Box>
+              )}
             </VStack>
           </ModalBody>
           <ModalFooter>
