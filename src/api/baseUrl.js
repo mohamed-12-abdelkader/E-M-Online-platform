@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const baseUrl = axios.create({
-  baseURL: "https://api.e-monline.online/
+  baseURL: "https://api.e-monline.online/"
 });
 
 // Response interceptor to handle token expiration globally
