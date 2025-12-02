@@ -590,39 +590,40 @@ const CourseDetailsPage = () => {
       try {
         setCourseExamsLoading(true);
         setCourseExamsError(null);
-        // استخدام endpoint مختلف للطلاب
-        const endpoint = (isAdmin || isTeacher) 
+        // استخدام endpoint مختلف للطلاب مع timestamp لمنع الـ caching
+        const baseEndpoint = (isAdmin || isTeacher) 
           ? `api/course/${id}/course-exams`
           : `api/exams/course/${id}/student`;
+        const endpoint = `${baseEndpoint}?_t=${Date.now()}`;
         const response = await baseUrl.get(endpoint, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
         });
         
-        // تسجيل مؤقت للتشخيص
-        console.log('Course Exams Response:', response.data);
-        
         // التحقق من وجود البيانات في response.data
-        if (response.data) {
-          // إذا كانت البيانات تحتوي على exams array
-          if (response.data.exams && Array.isArray(response.data.exams)) {
-            setCourseExams(response.data.exams);
-            setCourseExamsError(null); // مسح أي خطأ سابق
-          } 
-          // إذا كانت البيانات مصفوفة مباشرة
-          else if (Array.isArray(response.data)) {
-            setCourseExams(response.data);
-            setCourseExamsError(null); // مسح أي خطأ سابق
-          } 
-          // إذا كانت البيانات كائن فارغ أو null
-          else if (response.data.exams === null || response.data.exams === undefined) {
-            setCourseExams([]);
-            setCourseExamsError(null); // لا نعرض خطأ إذا كانت القائمة فارغة
-          } 
-          else {
-            console.warn('Unexpected response structure:', response.data);
-            setCourseExams([]);
-            setCourseExamsError(null); // لا نعرض خطأ للبنية غير المتوقعة
+        const responseData = response?.data;
+        
+        // معالجة البيانات - التحقق من جميع الحالات الممكنة
+        let examsData = null;
+        
+        if (responseData) {
+          // الحالة 1: البيانات في responseData.exams
+          if (responseData.exams !== undefined && responseData.exams !== null && Array.isArray(responseData.exams)) {
+            examsData = responseData.exams;
           }
+          // الحالة 2: البيانات مصفوفة مباشرة
+          else if (Array.isArray(responseData)) {
+            examsData = responseData;
+          }
+        }
+        
+        // تعيين البيانات في state
+        if (examsData && Array.isArray(examsData)) {
+          setCourseExams(examsData);
+          setCourseExamsError(null);
         } else {
           setCourseExams([]);
           setCourseExamsError(null);
@@ -667,39 +668,40 @@ const CourseDetailsPage = () => {
     try {
       setCourseExamsLoading(true);
       setCourseExamsError(null);
-      // استخدام endpoint مختلف للطلاب
-      const endpoint = (isAdmin || isTeacher) 
+      // استخدام endpoint مختلف للطلاب مع timestamp لمنع الـ caching
+      const baseEndpoint = (isAdmin || isTeacher) 
         ? `api/course/${id}/course-exams`
         : `api/exams/course/${id}/student`;
+      const endpoint = `${baseEndpoint}?_t=${Date.now()}`;
       const response = await baseUrl.get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
       });
       
-      // تسجيل مؤقت للتشخيص
-      console.log('Course Exams Refresh Response:', response.data);
-      
       // التحقق من وجود البيانات في response.data
-      if (response.data) {
-        // إذا كانت البيانات تحتوي على exams array
-        if (response.data.exams && Array.isArray(response.data.exams)) {
-          setCourseExams(response.data.exams);
-          setCourseExamsError(null); // مسح أي خطأ سابق
-        } 
-        // إذا كانت البيانات مصفوفة مباشرة
-        else if (Array.isArray(response.data)) {
-          setCourseExams(response.data);
-          setCourseExamsError(null); // مسح أي خطأ سابق
-        } 
-        // إذا كانت البيانات كائن فارغ أو null
-        else if (response.data.exams === null || response.data.exams === undefined) {
-          setCourseExams([]);
-          setCourseExamsError(null); // لا نعرض خطأ إذا كانت القائمة فارغة
-        } 
-        else {
-          console.warn('Unexpected response structure:', response.data);
-          setCourseExams([]);
-          setCourseExamsError(null); // لا نعرض خطأ للبنية غير المتوقعة
+      const responseData = response?.data;
+      
+      // معالجة البيانات - التحقق من جميع الحالات الممكنة
+      let examsData = null;
+      
+      if (responseData) {
+        // الحالة 1: البيانات في responseData.exams
+        if (responseData.exams !== undefined && responseData.exams !== null && Array.isArray(responseData.exams)) {
+          examsData = responseData.exams;
         }
+        // الحالة 2: البيانات مصفوفة مباشرة
+        else if (Array.isArray(responseData)) {
+          examsData = responseData;
+        }
+      }
+      
+      // تعيين البيانات في state
+      if (examsData && Array.isArray(examsData)) {
+        setCourseExams(examsData);
+        setCourseExamsError(null);
       } else {
         setCourseExams([]);
         setCourseExamsError(null);

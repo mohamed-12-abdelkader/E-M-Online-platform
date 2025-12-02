@@ -183,6 +183,8 @@ const CourseExamsTab = ({
     };
   }, [imageQuestionItems, singleImageQuestion.imagePreview]);
 
+
+
   // تعديل الامتحان
   const handleEditExam = async (examId, payload) => {
     try {
@@ -1301,7 +1303,7 @@ const CourseExamsTab = ({
             <Text color="red.500">{courseExamsError}</Text>
           </VStack>
         </Center>
-      ) : courseExams.length === 0 ? (
+      ) : !Array.isArray(courseExams) || courseExams.length === 0 ? (
         <Center py={10}>
           <VStack spacing={4}>
             <Icon as={FaGraduationCap} boxSize={12} color="gray.400" />

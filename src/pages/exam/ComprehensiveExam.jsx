@@ -432,13 +432,21 @@ const ComprehensiveExam = () => {
     setDeleting(true);
     try {
       const token = localStorage.getItem("token");
-      await baseUrl.delete(`/api/questions/lecture-exam-question/${deleteModal.qid}`, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
+      await baseUrl.delete(`/api/course/course-exam/question/${deleteModal.qid}`, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
       // حذف السؤال محلياً
       setQuestions((prev) => prev.filter((q) => q.id !== deleteModal.qid));
       toast({ title: "تم حذف السؤال", status: "success" });
       setDeleteModal({ open: false, qid: null });
-    } catch {
-      toast({ title: "فشل الحذف", status: "error" });
+      // إعادة جلب الأسئلة للتأكد من التحديث
+      if (isTeacher || isAdmin) {
+        await fetchQuestionsForTeacher();
+      }
+    } catch (error) {
+      toast({ 
+        title: "فشل الحذف", 
+        description: error.response?.data?.message || "حدث خطأ أثناء حذف السؤال",
+        status: "error" 
+      });
     } finally {
       setDeleting(false);
     }
@@ -488,86 +496,119 @@ const ComprehensiveExam = () => {
     try {
       const token = localStorage.getItem("token");
       
-      let requestData;
-      let config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      
-      // إنشاء FormData إذا كان هناك ملف محدد
-      if (selectedFile) {
-        // تحويل الصورة إلى base64 وإرسالها كـ JSON
-        const base64Image = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result);
-          reader.readAsDataURL(selectedFile);
+      // التحقق من وجود نص السؤال
+      if (!editForm.text || !editForm.text.trim()) {
+        toast({ 
+          title: "خطأ في البيانات", 
+          description: "يرجى إدخال نص السؤال",
+          status: "error" 
         });
-        
-        requestData = {
-          text: editForm.text,
-          choices: editForm.choices.map((c) => ({ id: c.id, text: c.text })),
-          image: base64Image
-        };
-        config.headers['Content-Type'] = 'application/json';
-        console.log("Sending JSON with base64 image");
-      } else {
-        requestData = { 
-          text: editForm.text, 
-          choices: editForm.choices.map((c) => ({ id: c.id, text: c.text })),
-          image: editForm.image // إرسال رابط الصورة إذا كان موجوداً
-        };
-        config.headers['Content-Type'] = 'application/json';
-        console.log("Sending JSON with URL image");
+        return;
       }
       
-      console.log("API Endpoint:", `/api/questions/lecture-exam-question/${question.id}`);
-      console.log("Request Data:", requestData);
+      // التحقق من وجود 4 اختيارات
+      if (!editForm.choices || editForm.choices.length !== 4) {
+        toast({ 
+          title: "خطأ في البيانات", 
+          description: "يجب أن يحتوي السؤال على 4 اختيارات",
+          status: "error" 
+        });
+        return;
+      }
       
-      let response;
+      // التحقق من وجود إجابة صحيحة واحدة على الأقل
+      const hasCorrectAnswer = editForm.choices.some(c => c.is_correct);
+      if (!hasCorrectAnswer) {
+        toast({ 
+          title: "خطأ في البيانات", 
+          description: "يجب تحديد إجابة صحيحة واحدة على الأقل",
+          status: "error" 
+        });
+        return;
+      }
       
-      // إذا كان هناك ملف جديد، جرب رفعه أولاً
+      let requestData;
+      let config = token ? { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } } : { headers: { 'Content-Type': 'application/json' } };
+      
+      // إعداد البيانات حسب الصيغة المطلوبة
+      requestData = {
+        text: editForm.text.trim(),
+        choices: editForm.choices.map((c) => ({
+          text: c.text.trim(),
+          is_correct: c.is_correct || false
+        }))
+      };
+      
+      // إضافة الصورة إذا كانت موجودة (اختياري)
       if (selectedFile) {
+        // محاولة رفع الصورة أولاً
         try {
-          // محاولة رفع الصورة إلى endpoint منفصل
           const imageFormData = new FormData();
           imageFormData.append('image', selectedFile);
           
           const imageResponse = await baseUrl.post(
-            '/api/upload/image', // أو أي endpoint مناسب لرفع الصور
+            '/api/upload/image',
             imageFormData,
             { 
               headers: { 
                 Authorization: `Bearer ${token}`,
-                // لا نضيف Content-Type للـ FormData
               } 
             }
           );
           
-          console.log("Image upload response:", imageResponse.data);
-          
-          // إذا نجح رفع الصورة، استخدم الرابط في تحديث السؤال
-          if (imageResponse.data.image_url) {
-            requestData.image = imageResponse.data.image_url;
+          if (imageResponse.data?.image_url || imageResponse.data?.url) {
+            requestData.image = imageResponse.data.image_url || imageResponse.data.url;
+          } else {
+            // إذا لم يتم إرجاع رابط، استخدم base64
+            const base64Image = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (e) => resolve(e.target.result);
+              reader.readAsDataURL(selectedFile);
+            });
+            requestData.image = base64Image;
           }
         } catch (imageError) {
-          console.log("Image upload failed, using base64:", imageError);
-          // إذا فشل رفع الصورة، استخدم base64
+          console.log("Image upload failed, using existing image or base64:", imageError);
+          // إذا فشل رفع الصورة، استخدم الصورة الحالية أو base64
+          if (editForm.image) {
+            requestData.image = editForm.image;
+          } else if (selectedFile) {
+            const base64Image = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (e) => resolve(e.target.result);
+              reader.readAsDataURL(selectedFile);
+            });
+            requestData.image = base64Image;
+          }
         }
+      } else if (editForm.image) {
+        // استخدام الصورة الحالية إذا لم يتم اختيار ملف جديد
+        requestData.image = editForm.image;
       }
       
-      response = await baseUrl.patch(
-        `/api/questions/lecture-exam-question/${question.id}`,
+      console.log("API Endpoint:", `/api/course/course-exam/question/${question.id}`);
+      console.log("Request Data:", requestData);
+      
+      const response = await baseUrl.put(
+        `/api/course/course-exam/question/${question.id}`,
         requestData,
         config
       );
       
       console.log("Response:", response.data);
       
-      // عدل السؤال محلياً
+      // تحديث السؤال محلياً
       setQuestions((prev) => prev.map((q) =>
         q.id === question.id
           ? { 
               ...q, 
-              text: editForm.text, 
-              choices: editForm.choices.map((c) => ({ ...c })),
-              image: response.data.image || imagePreview || editForm.image
+              text: editForm.text.trim(), 
+              choices: editForm.choices.map((c) => ({ 
+                ...c, 
+                text: c.text.trim(),
+                is_correct: c.is_correct || false
+              })),
+              image: requestData.image || imagePreview || editForm.image
             }
           : q
       ));
@@ -576,6 +617,11 @@ const ComprehensiveExam = () => {
       setEditModal({ open: false, question: null });
       setSelectedFile(null);
       setImagePreview('');
+      
+      // إعادة جلب الأسئلة للتأكد من التحديث
+      if (isTeacher || isAdmin) {
+        await fetchQuestionsForTeacher();
+      }
     } catch (error) {
       console.error("Error updating question:", error);
       console.error("Error response:", error.response?.data);

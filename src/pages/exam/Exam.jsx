@@ -221,10 +221,12 @@ const Exam = () => {
     setDeleting(true);
     try {
       const token = localStorage.getItem("token");
-      await baseUrl.delete(`/api/questions/${deleteModal.qid}`, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
+      await baseUrl.delete(`/api/course/course-exam/question/${deleteModal.qid}`, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
       setQuestions((prev) => prev.filter((q) => q.id !== deleteModal.qid));
       toast({ title: "تم حذف السؤال", status: "success" });
       setDeleteModal({ open: false, qid: null });
+      // إعادة جلب الأسئلة للتأكد من التحديث
+      await fetchQuestions();
     } catch (err) {
       toast({ 
         title: "فشل الحذف", 
@@ -255,39 +257,96 @@ const Exam = () => {
   // حفظ التعديل
   const handleEditSave = async () => {
     const { question } = editModal;
+    if (!question) return;
+    
     try {
       const token = localStorage.getItem("token");
-      const formData = new FormData();
       
-      // إضافة الحقول المحدثة
-      if (editForm.text !== undefined) {
-        formData.append("questionText", editForm.text);
+      // التحقق من وجود نص السؤال
+      if (!editForm.text || !editForm.text.trim()) {
+        toast({ 
+          title: "خطأ في البيانات", 
+          description: "يرجى إدخال نص السؤال",
+          status: "error" 
+        });
+        return;
       }
-      if (editForm.choices) {
-        formData.append("optionA", editForm.choices[0]?.text || "");
-        formData.append("optionB", editForm.choices[1]?.text || "");
-        formData.append("optionC", editForm.choices[2]?.text || "");
-        formData.append("optionD", editForm.choices[3]?.text || "");
+      
+      // التحقق من وجود 4 اختيارات
+      if (!editForm.choices || editForm.choices.length !== 4) {
+        toast({ 
+          title: "خطأ في البيانات", 
+          description: "يجب أن يحتوي السؤال على 4 اختيارات",
+          status: "error" 
+        });
+        return;
+      }
+      
+      // التحقق من وجود إجابة صحيحة واحدة على الأقل
+      const hasCorrectAnswer = editForm.choices.some(c => c.is_correct);
+      if (!hasCorrectAnswer) {
+        toast({ 
+          title: "خطأ في البيانات", 
+          description: "يجب تحديد إجابة صحيحة واحدة على الأقل",
+          status: "error" 
+        });
+        return;
+      }
+      
+      // إعداد البيانات بالصيغة المطلوبة
+      const requestData = {
+        text: editForm.text.trim(),
+        choices: editForm.choices.map((c) => ({
+          text: c.text.trim(),
+          is_correct: c.is_correct || false
+        }))
+      };
+      
+      // إضافة الصورة إذا كانت موجودة (اختياري)
+      if (editForm.image) {
+        requestData.image = editForm.image;
       }
       
       const res = await baseUrl.put(
-        `/api/questions/${question.id}`,
-        formData,
+        `/api/course/course-exam/question/${question.id}`,
+        requestData,
         { 
           headers: { 
             Authorization: `Bearer ${token}`,
-            // لا نضيف Content-Type للسماح للمتصفح بتعيينه تلقائياً مع boundary
+            'Content-Type': 'application/json'
           } 
         }
       );
       
       // تحديث الأسئلة بالبيانات الجديدة
-      const updatedQuestion = res.data.question;
-      setQuestions((prev) => prev.map((q) =>
-        q.id === question.id ? updatedQuestion : q
-      ));
+      const updatedQuestion = res.data?.question || res.data;
+      if (updatedQuestion) {
+        setQuestions((prev) => prev.map((q) =>
+          q.id === question.id ? updatedQuestion : q
+        ));
+      } else {
+        // إذا لم يتم إرجاع السؤال المحدث، نحدثه محلياً
+        setQuestions((prev) => prev.map((q) =>
+          q.id === question.id
+            ? { 
+                ...q, 
+                question_text: editForm.text.trim(),
+                option_a: editForm.choices[0]?.text.trim() || "",
+                option_b: editForm.choices[1]?.text.trim() || "",
+                option_c: editForm.choices[2]?.text.trim() || "",
+                option_d: editForm.choices[3]?.text.trim() || "",
+                correct_answer: editForm.choices.find(c => c.is_correct)?.id || "A",
+                question_image: editForm.image || q.question_image
+              }
+            : q
+        ));
+      }
+      
       toast({ title: "تم التعديل بنجاح", status: "success" });
       setEditModal({ open: false, question: null });
+      
+      // إعادة جلب الأسئلة للتأكد من التحديث
+      await fetchQuestions();
     } catch (err) {
       toast({ 
         title: "فشل التعديل", 
@@ -504,7 +563,7 @@ const Exam = () => {
   }
 
   return (
-    <Box maxW="2xl" mx="auto" py={10} px={4} className="mt-[80px]">
+    <Box maxW="2xl" mx="auto" py={10} px={4} className="mt-[80px] mb-[250px]">
       <style>
         {`
           @keyframes pulse {
@@ -1021,9 +1080,6 @@ const Exam = () => {
                     <FaBookOpen color="#3182ce" size={22} />
                     <Text fontWeight="bold" fontSize="lg" color="blue.800">{questions[current].questionText || "سؤال صوري"}</Text>
                   </HStack>
-                  <Badge colorScheme="purple" fontSize="md" px={3} py={1} borderRadius="md">
-                    درجة السؤال: {questions[current].grade || 0}
-                  </Badge>
                 </HStack>
                 <Divider mb={4} />
                 {getQuestionImageSrc(questions[current].questionImage) && (
@@ -1051,12 +1107,14 @@ const Exam = () => {
                        >
                     <Stack direction="column" spacing={4}>
                       {[
-                        { letter: "A", text: questions[current].optionA },
-                        { letter: "B", text: questions[current].optionB },
-                        { letter: "C", text: questions[current].optionC },
-                        { letter: "D", text: questions[current].optionD },
+                        { letter: "A", arabicLetter: "أ", text: questions[current].optionA },
+                        { letter: "B", arabicLetter: "ب", text: questions[current].optionB },
+                        { letter: "C", arabicLetter: "ج", text: questions[current].optionC },
+                        { letter: "D", arabicLetter: "د", text: questions[current].optionD },
                       ].map((option) => {
                         const isSelected = studentAnswers[questions[current].id] === option.letter;
+                        const isImageQuestion = questions[current].type === "IMAGE";
+                        const displayText = isImageQuestion ? option.arabicLetter : option.text;
                         return (
                           <Tooltip key={option.letter} label="اختر هذه الإجابة" placement="left" hasArrow>
                             <Box
@@ -1078,7 +1136,7 @@ const Exam = () => {
                                 mr={3}
                               />
                               <Text fontWeight="bold" fontSize="md">
-                                {option.letter}. {option.text}
+                                {option.letter}. {displayText}
                               </Text>
                             </Box>
                           </Tooltip>
@@ -1315,9 +1373,6 @@ const Exam = () => {
                       onClick={() => setDeleteModal({ open: true, qid: q.id })}
                     />
                   </HStack>
-                  <Badge colorScheme="purple" fontSize="md" px={3} py={1} borderRadius="md">
-                    درجة السؤال: {q.grade || 0}
-                  </Badge>
                 </HStack>
                 <Divider mb={4} />
                 {getQuestionImageSrc(q.question_image) && (
@@ -1412,28 +1467,55 @@ const Exam = () => {
               </Box>
               <Box>
                 <Text mb={2} fontWeight="medium">الاختيارات:</Text>
-                <VStack spacing={2}>
-                  {editForm.choices && editForm.choices.map((choice, idx) => {
-                    const labels = ["A", "B", "C", "D"];
-                    return (
-                      <HStack key={choice.id || idx} w="full" spacing={2}>
-                        <Text fontWeight="bold" minW="20px" color="blue.600">
-                          {labels[idx]}:
-                        </Text>
-                        <Input
-                          value={choice.text}
-                          onChange={(e) => setEditForm((prev) => {
-                            const choices = [...prev.choices];
-                            choices[idx].text = e.target.value;
-                            return { ...prev, choices };
-                          })}
-                          placeholder={`اختيار ${labels[idx]}`}
-                          flex={1}
-                        />
-                      </HStack>
-                    );
-                  })}
-                </VStack>
+                <RadioGroup
+                  value={(() => {
+                    if (!editForm.choices) return "0";
+                    const correctIndex = editForm.choices.findIndex(c => c.is_correct);
+                    return correctIndex >= 0 ? correctIndex.toString() : "0";
+                  })()}
+                  onChange={(value) => {
+                    const correctIndex = parseInt(value);
+                    setEditForm((prev) => {
+                      const choices = prev.choices.map((c, idx) => ({
+                        ...c,
+                        is_correct: idx === correctIndex
+                      }));
+                      return { ...prev, choices };
+                    });
+                  }}
+                >
+                  <VStack spacing={2}>
+                    {editForm.choices && editForm.choices.map((choice, idx) => {
+                      const labels = ["A", "B", "C", "D"];
+                      return (
+                        <HStack key={choice.id || idx} w="full" spacing={2}>
+                          <Radio value={idx.toString()} colorScheme="green" />
+                          <Text fontWeight="bold" minW="20px" color="blue.600">
+                            {labels[idx]}:
+                          </Text>
+                          <Input
+                            value={choice.text}
+                            onChange={(e) => setEditForm((prev) => {
+                              const choices = [...prev.choices];
+                              choices[idx].text = e.target.value;
+                              return { ...prev, choices };
+                            })}
+                            placeholder={`اختيار ${labels[idx]}`}
+                            flex={1}
+                          />
+                          {choice.is_correct && (
+                            <Text fontSize="sm" color="green.600" fontWeight="bold">
+                              (صحيح)
+                            </Text>
+                          )}
+                        </HStack>
+                      );
+                    })}
+                  </VStack>
+                </RadioGroup>
+                <Text fontSize="xs" color="gray.500" mt={2}>
+                  اختر الإجابة الصحيحة من الخيارات أعلاه
+                </Text>
               </Box>
               {editForm.image && (
                 <Box>
