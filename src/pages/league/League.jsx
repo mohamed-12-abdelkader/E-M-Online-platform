@@ -86,6 +86,7 @@ const League = () => {
   const [startDate, setStartDate] = useState("")
   const [startTime, setStartTime] = useState("")
   const [endTime, setEndTime] = useState("")
+  const [durationMinutes, setDurationMinutes] = useState("")
   const [isVisible, setIsVisible] = useState(true)
   const [matchImageFile, setMatchImageFile] = useState(null)
   const [matchImagePreview, setMatchImagePreview] = useState("")
@@ -229,6 +230,7 @@ const League = () => {
     setStartDate("")
     setStartTime("")
     setEndTime("")
+    setDurationMinutes("")
     setIsVisible(true)
     setMatchImageFile(null)
     setMatchImagePreview("")
@@ -257,20 +259,40 @@ const League = () => {
         }
       }
 
-      const form = new FormData()
-      form.append('name', matchName)
-      if (matchDescription) form.append('description', matchDescription)
-      if (startDate) form.append('start_date', startDate)
-      if (startTime) form.append('start_time', startTime)
-      if (endTime) form.append('end_time', endTime)
-      form.append('is_visible', isVisible ? 'true' : 'false')
-      if (matchImageFile) form.append('image', matchImageFile)
-
       const endpoint = isEditMatch && editingMatch ? `/api/leagues/matches/${editingMatch.id}` : `/api/leagues/${id}/matches`
       const method = isEditMatch && editingMatch ? 'put' : 'post'
-      await baseUrl[method](endpoint, form, {
-        headers: { ...authHeader, 'Content-Type': 'multipart/form-data' },
-      })
+      
+      // Prepare JSON payload
+      const payload = {
+        name: matchName,
+        description: matchDescription || undefined,
+        start_date: startDate || undefined,
+        start_time: startTime || undefined,
+        end_time: endTime || undefined,
+        duration_minutes: durationMinutes ? parseInt(durationMinutes) : undefined,
+        is_visible: isVisible
+      }
+      
+      // Remove undefined fields
+      Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key])
+      
+      // If there's an image, use FormData, otherwise use JSON
+      if (matchImageFile) {
+        const form = new FormData()
+        Object.keys(payload).forEach(key => {
+          if (payload[key] !== undefined) {
+            form.append(key, typeof payload[key] === 'boolean' ? payload[key].toString() : payload[key])
+          }
+        })
+        form.append('image', matchImageFile)
+        await baseUrl[method](endpoint, form, {
+          headers: { ...authHeader, 'Content-Type': 'multipart/form-data' },
+        })
+      } else {
+        await baseUrl[method](endpoint, payload, {
+          headers: { ...authHeader, 'Content-Type': 'application/json' },
+        })
+      }
       
       setCreateMsg(isEditMatch ? 'تم تحديث المباراة بنجاح' : 'تم إنشاء المباراة بنجاح')
       await fetchMatches()
@@ -294,6 +316,7 @@ const League = () => {
     setStartDate(match.start_date || '')
     setStartTime(match.start_time || '')
     setEndTime(match.end_time || '')
+    setDurationMinutes(match.duration_minutes || '')
     setMatchImageFile(null)
     setIsCreateMatchOpen(true)
   }
@@ -1265,6 +1288,38 @@ const League = () => {
                     <Text fontSize="xs" color={subTextColor} mt={1}>الوقت: {endTime}</Text>
                   )}
                 </Box>
+
+                <FormControl>
+                  <FormLabel>
+                    <HStack spacing={2}>
+                      <Box color="blue.500">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </Box>
+                      <Text fontSize="sm" fontWeight="medium" color={textColor}>مدة المباراة (بالدقائق)</Text>
+                    </HStack>
+                  </FormLabel>
+                  <NumberInput 
+                    value={durationMinutes} 
+                    onChange={(valueString) => setDurationMinutes(valueString)}
+                    min={1}
+                    bg={cardBg}
+                    borderColor={borderColor}
+                  >
+                    <NumberInputField 
+                      placeholder="مثال: 60"
+                      _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px blue.500' }}
+                    />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                  <FormHelperText fontSize="xs" color={subTextColor} mt={1}>
+                    المدة الزمنية للمباراة بالدقائق
+                  </FormHelperText>
+                </FormControl>
 
                 <Box gridColumn={{ base: '1', md: '1 / -1' }}>
                   <Text fontSize="sm" fontWeight="medium" color={textColor} mb={2}>

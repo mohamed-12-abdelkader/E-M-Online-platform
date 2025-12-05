@@ -94,6 +94,8 @@ const TeacherDashboardHome = () => {
   const [error, setError] = useState(null);
   const [selectedGrade, setSelectedGrade] = useState("");
   const [grades, setGrades] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(true);
   
   // Modal states
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -243,6 +245,22 @@ const TeacherDashboardHome = () => {
       setGrades(response.data.grades || []);
     } catch (error) {
       console.error('Error fetching grades:', error);
+    }
+  };
+
+  // Fetch available subjects
+  const fetchSubjects = async () => {
+    try {
+      setSubjectsLoading(true);
+      const response = await baseUrl.get('/api/packages/subjects/available', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSubjects(response.data.subjects || []);
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      setSubjects([]);
+    } finally {
+      setSubjectsLoading(false);
     }
   };
 
@@ -502,6 +520,7 @@ const TeacherDashboardHome = () => {
     console.log('Token:', token);
     fetchCourses();
     fetchGrades();
+    fetchSubjects();
   }, []);
 
   return (
@@ -708,6 +727,236 @@ const TeacherDashboardHome = () => {
               ))}
             </MotionGrid>
           </MotionBox>
+
+          {/* Subjects Section */}
+          {subjects.length > 0 && (
+            <MotionBox w="full" variants={itemVariants}>
+              <VStack spacing={{ base: 3, sm: 4, md: 6 }} align="stretch" mb={{ base: 4, sm: 5, md: 6, lg: 8 }}>
+                <MotionHeading 
+                  size={{ base: "md", sm: "lg", md: "xl", lg: "2xl" }} 
+                  color="blue.500"
+                  textAlign={{ base: "center",  }}
+                  fontWeight={{ base: "semibold", md: "bold" }}
+                >
+                  موادي
+                </MotionHeading>
+
+                {subjectsLoading ? (
+                  <MotionCenter py={12} variants={itemVariants}>
+                    <VStack spacing={4}>
+                      <Spinner size="xl" color="blue.500" thickness="4px" />
+                      <Text color={textColor}>جاري تحميل المواد...</Text>
+                    </VStack>
+                  </MotionCenter>
+                ) : (
+                  <MotionGrid
+                    templateColumns={{ 
+                      base: "1fr", 
+                      sm: "repeat(2, 1fr)", 
+                      md: "repeat(2, 1fr)", 
+                      lg: "repeat(3, 1fr)",
+                      xl: "repeat(3, 1fr)"
+                    }}
+                    gap={{ base: 3, sm: 3, md: 3, lg: 5 }}
+                    variants={containerVariants}
+                    w="full"
+                    className="mb-10"
+                    justifyItems="stretch"
+                  >
+                    {subjects.map((subject) => (
+                      <MotionCard
+                        key={subject.id}
+                        bg={cardBg}
+                        borderRadius={{ base: "md", sm: "lg", md: "xl" }}
+                        shadow={{ base: "sm", sm: "md", md: "lg" }}
+                        variants={cardVariants}
+                        whileHover="hover"
+                        border="1px solid"
+                        borderColor={borderColor}
+                        w="full"
+                        h="full"
+                        className="mx-auto teacher-subject"
+                        as={Link}
+                        to={`/subject/${subject.id}`}
+                        style={{ textDecoration: 'none' }}
+                        cursor="pointer"
+                      >
+                        {/* Subject Image */}
+                        {subject.image && (
+                          <Box position="relative" overflow="hidden">
+                            <Image
+                              src={subject.image}
+                              alt={subject.name}
+                              w="full"
+                              h={{ base: "180px", sm: "180px", md: "180px", lg: "200px" }}
+                              objectFit="cover"
+                              borderRadius={{ base: "md", sm: "lg", md: "xl" }}
+                            />
+                            <Badge
+                              position="absolute"
+                              top={1}
+                              right={1}
+                              colorScheme="purple"
+                              borderRadius="full"
+                              px={{ base: 1, sm: 2, md: 3 }}
+                              py={1}
+                              fontSize={{ base: "2xs", sm: "xs", md: "sm" }}
+                            >
+                              مادة دراسية
+                            </Badge>
+                          </Box>
+                        )}
+                        
+                        <CardHeader pb={{ base: 2, sm: 3, md: 4 }} px={{ base: 3, sm: 4, md: 5 }}>
+                          <VStack align="flex-start" spacing={{ base: 2, sm: 3 }} w="full">
+                            <VStack align="flex-start" spacing={{ base: 1, sm: 2 }} flex={1} minW={0} w="full">
+                              <Heading 
+                                size={{ base: "xs", sm: "sm", md: "md" }} 
+                                color="purple.500"
+                                noOfLines={2}
+                                w="full"
+                                lineHeight={{ base: 1.3, md: 1.4 }}
+                              >
+                                {subject.name}
+                              </Heading>
+                              <Text 
+                                fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
+                                color={textColor} 
+                                noOfLines={1}
+                                w="full"
+                                lineHeight={{ base: 1.4, md: 1.5 }}
+                              >
+                                {subject.package_name}
+                              </Text>
+                              <Text 
+                                fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
+                                color="blue.500" 
+                                fontWeight="medium"
+                                noOfLines={1}
+                                w="full"
+                              >
+                                {subject.grade_name}
+                              </Text>
+                            </VStack>
+                          </VStack>
+                        </CardHeader>
+                        
+                        <CardBody pt={0} px={{ base: 3, sm: 4, md: 5 }} pb={{ base: 3, sm: 4, md: 5 }}>
+                          <VStack spacing={{ base: 2, sm: 3, md: 4 }} align="stretch">
+                            <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                              <HStack spacing={1} minW={0} flex={1}>
+                                <Icon as={FaBookOpen} color="purple.500" boxSize={{ base: 3, sm: 3, md: 4 }} />
+                                <Text 
+                                  fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
+                                  color={textColor}
+                                  noOfLines={1}
+                                >
+                                  {subject.courses_count || 0} كورس
+                                </Text>
+                              </HStack>
+                              <Badge 
+                                colorScheme="purple" 
+                                px={{ base: 1, sm: 2, md: 3 }} 
+                                py={1} 
+                                borderRadius="full"
+                                fontSize={{ base: "2xs", sm: "xs", md: "sm" }}
+                              >
+                                {subject.courses_count || 0} كورس
+                              </Badge>
+                            </HStack>
+                            
+                            {/* Courses List */}
+                            {subject.courses && subject.courses.length > 0 && (
+                              <>
+                                <Divider />
+                                <VStack align="stretch" spacing={2}>
+                                  <Text 
+                                    fontSize={{ base: "2xs", sm: "xs" }} 
+                                    color={textColor}
+                                    fontWeight="medium"
+                                  >
+                                    الكورسات:
+                                  </Text>
+                                  {subject.courses.slice(0, 3).map((course) => (
+                                    <HStack 
+                                      key={course.id}
+                                      spacing={2}
+                                      p={2}
+                                      bg={useColorModeValue("gray.50", "gray.700")}
+                                      borderRadius="md"
+                                      _hover={{ bg: useColorModeValue("gray.100", "gray.600") }}
+                                    >
+                                      {course.avatar && (
+                                        <Image
+                                          src={course.avatar}
+                                          alt={course.title}
+                                          w="40px"
+                                          h="40px"
+                                          borderRadius="md"
+                                          objectFit="cover"
+                                        />
+                                      )}
+                                      <VStack align="start" spacing={0} flex={1} minW={0}>
+                                        <Text 
+                                          fontSize={{ base: "2xs", sm: "xs" }} 
+                                          color={textColor}
+                                          fontWeight="medium"
+                                          noOfLines={1}
+                                        >
+                                          {course.title}
+                                        </Text>
+                                        <Text 
+                                          fontSize={{ base: "2xs", sm: "xs" }} 
+                                          color="blue.500"
+                                          noOfLines={1}
+                                        >
+                                          {course.price} ج.م
+                                        </Text>
+                                      </VStack>
+                                      {course.is_visible ? (
+                                        <Icon as={FaEye} color="green.500" boxSize={3} />
+                                      ) : (
+                                        <Icon as={FaEyeSlash} color="gray.400" boxSize={3} />
+                                      )}
+                                    </HStack>
+                                  ))}
+                                  {subject.courses.length > 3 && (
+                                    <Text 
+                                      fontSize={{ base: "2xs", sm: "xs" }} 
+                                      color="blue.500"
+                                      textAlign="center"
+                                      fontWeight="medium"
+                                    >
+                                      +{subject.courses.length - 3} كورس آخر
+                                    </Text>
+                                  )}
+                                </VStack>
+                              </>
+                            )}
+                            
+                            <Divider />
+                            
+                            <Button 
+                              colorScheme="purple" 
+                              w="full"
+                              size={{ base: "md", sm: "md", md: "md" }}
+                              borderRadius={{ base: "md", md: "lg" }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href = `/subject/${subject.id}`;
+                              }}
+                            >
+                              عرض المادة
+                            </Button>
+                          </VStack>
+                        </CardBody>
+                      </MotionCard>
+                    ))}
+                  </MotionGrid>
+                )}
+              </VStack>
+            </MotionBox>
+          )}
 
           {/* Courses Section */}
           <MotionBox w="full" variants={itemVariants}>

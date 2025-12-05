@@ -80,7 +80,13 @@ const MyCourses = () => {
     'linear(to-r, teal.600, teal.700)'
   );
 
-  // Fetch courses from API
+  const [stats, setStats] = useState({
+    courses_count: 0,
+    packages_count: 0,
+    total: 0,
+  });
+
+  // Fetch courses and packages from API
   const fetchCourses = async () => {
     try {
       setLoading(true);
@@ -89,15 +95,22 @@ const MyCourses = () => {
         headers: authHeader,
       });
       
-      if (response.data && response.data.courses) {
-        setCourses(response.data.courses);
+      if (response.data && response.data.items) {
+        setCourses(response.data.items);
+        setStats({
+          courses_count: response.data.courses_count || 0,
+          packages_count: response.data.packages_count || 0,
+          total: response.data.total || 0,
+        });
       } else {
         setCourses([]);
+        setStats({ courses_count: 0, packages_count: 0, total: 0 });
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
-      setError('حدث خطأ في تحميل الكورسات');
+      setError('حدث خطأ في تحميل الكورسات والباقات');
       setCourses([]);
+      setStats({ courses_count: 0, packages_count: 0, total: 0 });
     } finally {
       setLoading(false);
     }
@@ -310,11 +323,46 @@ const MyCourses = () => {
             color="blue.500"
             fontWeight="bold"
           >
-            كورساتي
+            كورساتي وباقاتي
           </Heading>
           <Text color={subTextColor} fontSize={{ base: 'sm', md: 'md' }}>
-            جميع الكورسات المشترك بها
+            جميع الكورسات والباقات المشترك بها
           </Text>
+          {/* Statistics */}
+          {stats.total > 0 && (
+            <HStack spacing={4} mt={2} flexWrap="wrap">
+              <Badge
+                colorScheme="blue"
+                borderRadius="full"
+                px={4}
+                py={1.5}
+                fontSize="sm"
+                fontWeight="bold"
+              >
+                {stats.total} إجمالي
+              </Badge>
+              <Badge
+                colorScheme="green"
+                borderRadius="full"
+                px={4}
+                py={1.5}
+                fontSize="sm"
+                fontWeight="bold"
+              >
+                {stats.courses_count} كورس
+              </Badge>
+              <Badge
+                colorScheme="purple"
+                borderRadius="full"
+                px={4}
+                py={1.5}
+                fontSize="sm"
+                fontWeight="bold"
+              >
+                {stats.packages_count} باقة
+              </Badge>
+            </HStack>
+          )}
         </VStack>
 
         {/* QR Activation Button */}
@@ -382,14 +430,18 @@ const MyCourses = () => {
         </Box>
       </Flex>
 
-      {/* Courses Grid */}
+      {/* Courses and Packages Grid */}
       {courses.length > 0 ? (
         <div className="flex flex-wrap  ">
-          {courses.map((course) => (
-                  <Link 
-                key={course.id}
+          {courses.map((item) => {
+            const isPackage = item.type === 'package';
+            const linkTo = isPackage ? `/package/${item.id}` : `/CourseDetailsPage/${item.id}`;
+            
+            return (
+              <Link 
+                key={item.id}
                 className="w-full md:w-[330px] mx-3" 
-                to={`/CourseDetailsPage/${course.id}`} 
+                to={linkTo} 
                 style={{ textDecoration: "none" }}
               >
                 <Card
@@ -423,12 +475,12 @@ const MyCourses = () => {
                       <Image
                       style={{borderRadius:"20px"}}
                        className="p-2"
-                        src={course.avatar}
-                        alt={course.title}
+                        src={item.avatar || (isPackage ? 'https://via.placeholder.com/400x225/764BA2/FFFFFF?text=Package' : 'https://via.placeholder.com/400x225/4A90E2/FFFFFF?text=Course+Image')}
+                        alt={item.title}
                         objectFit="cover"
                         transition="transform 0.4s ease"
                         _groupHover={{ transform: "scale(1.05)" }}
-                        fallbackSrc="https://via.placeholder.com/400x225/4A90E2/FFFFFF?text=Course+Image"
+                        fallbackSrc={isPackage ? 'https://via.placeholder.com/400x225/764BA2/FFFFFF?text=Package' : 'https://via.placeholder.com/400x225/4A90E2/FFFFFF?text=Course+Image'}
                       />
                     </AspectRatio>
                     {/* Gradient overlay */}
@@ -465,8 +517,23 @@ const MyCourses = () => {
                         filter="drop-shadow(0 0 8px rgba(0,0,0,0.5))"
                       />
                     </Box>
-                    {/* Course status badge */}
-                 
+                    {/* Type Badge */}
+                    <Badge
+                      position="absolute"
+                      top={3}
+                      left={3}
+                      bg={isPackage ? "purple.500" : "blue.500"}
+                      color="white"
+                      px={3}
+                      py={1}
+                      borderRadius="full"
+                      fontSize="xs"
+                      fontWeight="bold"
+                      boxShadow="lg"
+                      zIndex={2}
+                    >
+                      {isPackage ? "📦 باقة" : "🎓 كورس"}
+                    </Badge>
                   </Box>
                   <CardBody p={{ base: 4, sm: 5, md: 6 }} display="flex" flexDirection="column" flex="1">
                     <VStack align="flex-end" spacing={4} w="full" h="100%" justify="space-between">
@@ -481,21 +548,21 @@ const MyCourses = () => {
                           lineHeight="shorter"
                           mb={2}
                         >
-                          {course.title}
+                          {item.title}
                         </Text>
-                        {/* Course Description */}
-                        {course.description && (
+                        {/* Description */}
+                        {item.description && (
                           <Box w="full">
                             <Text
                               fontSize={{ base: "sm", sm: "md" }}
                               color={subTextColor}
                               textAlign="right"
                               lineHeight="tall"
-                              noOfLines={expandedCards[course.id] ? undefined : 1}
+                              noOfLines={expandedCards[item.id] ? undefined : 1}
                             >
-                              {course.description}
+                              {item.description}
                             </Text>
-                            {course.description.length > 50 && (
+                            {item.description.length > 50 && (
                               <HStack 
                                 spacing={1} 
                                 mt={2} 
@@ -503,7 +570,7 @@ const MyCourses = () => {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  toggleDescription(course.id);
+                                  toggleDescription(item.id);
                                 }}
                                 cursor="pointer"
                                 _hover={{ opacity: 0.8 }}
@@ -514,10 +581,10 @@ const MyCourses = () => {
                                   fontSize="xs"
                                   fontWeight="bold"
                                 >
-                                  {expandedCards[course.id] ? "عرض أقل" : "عرض المزيد"}
+                                  {expandedCards[item.id] ? "عرض أقل" : "عرض المزيد"}
                                 </Text>
                                 <Icon
-                                  as={expandedCards[course.id] ? FaChevronUp : FaChevronDown}
+                                  as={expandedCards[item.id] ? FaChevronUp : FaChevronDown}
                                   color="blue.500"
                                   boxSize={3}
                                 />
@@ -527,19 +594,13 @@ const MyCourses = () => {
                         )}
                       </Box>
 
-                      {/* Course Stats */}
+                      {/* Stats */}
                       <Box w="full">
                         <HStack justify="space-between" mb={3} flexWrap="wrap" gap={2}>
                           <HStack spacing={2}>
-                            <Icon as={FaGraduationCap} color="blue.500" />
+                            <Icon as={isPackage ? FaBookOpen : FaGraduationCap} color={isPackage ? "purple.500" : "blue.500"} />
                             <Text fontSize="sm" color={subTextColor}>
-                              كورس تعليمي
-                            </Text>
-                          </HStack>
-                          <HStack spacing={1} color={subTextColor}>
-                            <Icon as={FaUsers} />
-                            <Text fontSize="sm">
-                              {Math.floor(Math.random() * 500) + 100} طالب
+                              {isPackage ? "باقة تعليمية" : "كورس تعليمي"}
                             </Text>
                           </HStack>
                         </HStack>
@@ -547,22 +608,22 @@ const MyCourses = () => {
                         {/* Price and Date */}
                         <HStack justify="space-between" w="full" mb={4}>
                           <Badge
-                            colorScheme="green"
+                            colorScheme={isPackage ? "purple" : "green"}
                             borderRadius="full"
                             px={4}
                             py={2}
                             fontSize="sm"
                             fontWeight="bold"
-                            bg="green.500"
+                            bg={isPackage ? "purple.500" : "green.500"}
                             color="white"
                             boxShadow="md"
                           >
-                            {course.price} جنيه 💰
+                            {item.price} جنيه 💰
                           </Badge>
                           <HStack spacing={1} color={subTextColor} fontSize="sm">
                             <Icon as={FaCalendarAlt} />
                             <Text>
-                              {new Date(course.created_at).toLocaleDateString('ar-EG', {
+                              {new Date(item.created_at).toLocaleDateString('ar-EG', {
                                 year: 'numeric',
                                 month: 'short',
                                 day: 'numeric',
@@ -574,16 +635,16 @@ const MyCourses = () => {
 
                       {/* Action Button */}
                       <Button
-                        colorScheme={buttonColorScheme}
+                        colorScheme={isPackage ? "purple" : buttonColorScheme}
                         w="full"
                         size="lg"
-                        rightIcon={<FaPlay />}
+                        rightIcon={isPackage ? <FaBookOpen /> : <FaPlay />}
                         borderRadius="xl"
                         fontSize="md"
                         fontWeight="bold"
-                        bgGradient={courseButtonBgGradient}
+                        bgGradient={isPackage ? "linear(to-r, purple.500, purple.600)" : courseButtonBgGradient}
                         _hover={{
-                          bgGradient: courseButtonHoverBgGradient,
+                          bgGradient: isPackage ? "linear(to-r, purple.600, purple.700)" : courseButtonHoverBgGradient,
                           transform: "translateY(-2px)",
                           boxShadow: "xl"
                         }}
@@ -593,13 +654,14 @@ const MyCourses = () => {
                         transition="all 0.2s ease"
                         boxShadow="lg"
                       >
-                        دخول الكورس
+                        {isPackage ? "عرض الباقة" : "دخول الكورس"}
                       </Button>
                     </VStack>
                   </CardBody>
                   </Card>
                 </Link>
-          ))}
+              );
+            })}
         </div>
       ) : (
         <Center py={20}>
@@ -618,10 +680,10 @@ const MyCourses = () => {
             </Box>
             <VStack spacing={3}>
               <Heading size="lg" color={textColor}>
-                لا توجد كورسات مشترك بها
+                لا توجد كورسات أو باقات مشترك بها
               </Heading>
               <Text color={subTextColor} textAlign="center" maxW="400px" fontSize={{ base: 'sm', md: 'md' }}>
-                ابدأ رحلتك التعليمية الآن! قم بمسح QR Code لتفعيل كورس جديد
+                ابدأ رحلتك التعليمية الآن! قم بمسح QR Code لتفعيل كورس أو باقة جديدة
               </Text>
               <Box
                 as="button"

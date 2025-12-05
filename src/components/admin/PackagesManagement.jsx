@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -45,7 +46,8 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-  StatArrow
+  StatArrow,
+  AspectRatio
 } from '@chakra-ui/react';
 import { 
   FiPlus, 
@@ -57,12 +59,17 @@ import {
   FiUsers,
   FiBookOpen,
   FiCalendar,
-  FiImage
+  FiImage,
+  FiCheckCircle,
+  FiXCircle,
+  FiTrendingUp,
+  FiLayers
 } from 'react-icons/fi';
 import baseUrl from '../../api/baseUrl';
 import ScrollToTop from '../scollToTop/ScrollToTop';
 
 const PackagesManagement = () => {
+  const navigate = useNavigate();
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [grades, setGrades] = useState([]);
@@ -84,15 +91,36 @@ const PackagesManagement = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   
-  const toast = useToast();
+  const toast = useToast({
+    position: 'top-right',
+    duration: 4000,
+    isClosable: true,
+    containerStyle: {
+      marginTop: '80px',
+    },
+  });
   
-  // Color mode values
-  const bgColor = useColorModeValue("gray.50", "gray.900");
+  // Color mode values - Blue.500 as primary
+  const bgGradient = useColorModeValue(
+    "linear-gradient(135deg, #EBF8FF 0%, #BEE3F8 100%)",
+    "linear-gradient(135deg, #1a202c 0%, #2d3748 100%)"
+  );
   const cardBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const subTextColor = useColorModeValue("gray.600", "gray.400");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const primaryColor = useColorModeValue("blue.600", "blue.300");
+  const primaryColor = "blue.500";
+  const headerBg = useColorModeValue(
+    "linear-gradient(135deg, #3182CE 0%, #2C5282 100%)",
+    "linear-gradient(135deg, #2C5282 0%, #1a202c 100%)"
+  );
+  const statCardBg = useColorModeValue(
+    "linear-gradient(135deg, #3182CE 0%, #2C5282 100%)",
+    "linear-gradient(135deg, #2C5282 0%, #1a202c 100%)"
+  );
+  const blueGradient = "linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%)";
+  const blueLight = useColorModeValue("blue.50", "blue.900");
+  const blueMedium = useColorModeValue("blue.100", "blue.800");
 
   // جلب الباقات
   const fetchPackages = async () => {
@@ -130,14 +158,14 @@ const PackagesManagement = () => {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await baseUrl.get('/api/grades', {
+      const response = await baseUrl.get('/api/users/grades', {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
 
-      if (response.data?.success) {
-        setGrades(response.data.data || []);
+      if (response.data?.grades) {
+        setGrades(response.data.grades || []);
       }
     } catch (error) {
       console.error('Error fetching grades:', error);
@@ -191,11 +219,12 @@ const PackagesManagement = () => {
   const handleCreatePackage = async () => {
     if (!formData.name || !formData.price || !formData.grade_id) {
       toast({
-        title: 'خطأ',
-        description: 'يرجى ملء جميع الحقول المطلوبة',
-        status: 'error',
-        duration: 3000,
+        title: 'حقول مطلوبة! ⚠️',
+        description: 'يرجى ملء جميع الحقول المطلوبة (الاسم، السعر، الصف الدراسي)',
+        status: 'warning',
+        duration: 4000,
         isClosable: true,
+        position: 'top-right',
       });
       return;
     }
@@ -223,24 +252,38 @@ const PackagesManagement = () => {
       });
 
       if (response.data?.success) {
+        const newPackage = response.data?.package || response.data?.data;
+        
+        // إضافة الباقة فوراً للقائمة
+        if (newPackage) {
+          setPackages(prev => [newPackage, ...prev]);
+        } else {
+          // إذا لم تأت الباقة في الرد، نجلبها
+          fetchPackages();
+        }
+        
         toast({
-          title: 'تم الإنشاء',
-          description: 'تم إنشاء الباقة بنجاح',
+          title: 'تم الإنشاء بنجاح! 🎉',
+          description: `تم إنشاء الباقة "${formData.name}" بنجاح وتم إضافتها للقائمة`,
           status: 'success',
-          duration: 3000,
+          duration: 5000,
           isClosable: true,
+          position: 'top-right',
+          icon: <Icon as={FiCheckCircle} />,
         });
         onClose();
-        fetchPackages();
+        resetForm();
       }
     } catch (error) {
       console.error('Error creating package:', error);
       toast({
-        title: 'خطأ',
-        description: error.response?.data?.message || 'فشل في إنشاء الباقة',
+        title: 'فشل الإنشاء! ❌',
+        description: error.response?.data?.message || 'حدث خطأ أثناء إنشاء الباقة. يرجى المحاولة مرة أخرى',
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
+        position: 'top-right',
+        icon: <Icon as={FiXCircle} />,
       });
     } finally {
       setActionLoading(false);
@@ -251,11 +294,12 @@ const PackagesManagement = () => {
   const handleUpdatePackage = async () => {
     if (!formData.name || !formData.price || !formData.grade_id) {
       toast({
-        title: 'خطأ',
-        description: 'يرجى ملء جميع الحقول المطلوبة',
-        status: 'error',
-        duration: 3000,
+        title: 'حقول مطلوبة! ⚠️',
+        description: 'يرجى ملء جميع الحقول المطلوبة (الاسم، السعر، الصف الدراسي)',
+        status: 'warning',
+        duration: 4000,
         isClosable: true,
+        position: 'top-right',
       });
       return;
     }
@@ -283,24 +327,40 @@ const PackagesManagement = () => {
       });
 
       if (response.data?.success) {
+        const updatedPackage = response.data?.package || response.data?.data;
+        
+        // تحديث الباقة فوراً في القائمة
+        if (updatedPackage) {
+          setPackages(prev => prev.map(p => 
+            p.id === selectedPackage.id ? { ...p, ...updatedPackage } : p
+          ));
+        } else {
+          // إذا لم تأت الباقة المحدثة في الرد، نجلبها
+          fetchPackages();
+        }
+        
         toast({
-          title: 'تم التحديث',
-          description: 'تم تحديث الباقة بنجاح',
+          title: 'تم التحديث بنجاح! ✨',
+          description: `تم تحديث الباقة "${formData.name}" بنجاح`,
           status: 'success',
-          duration: 3000,
+          duration: 5000,
           isClosable: true,
+          position: 'top-right',
+          icon: <Icon as={FiCheckCircle} />,
         });
         onClose();
-        fetchPackages();
+        resetForm();
       }
     } catch (error) {
       console.error('Error updating package:', error);
       toast({
-        title: 'خطأ',
-        description: error.response?.data?.message || 'فشل في تحديث الباقة',
+        title: 'فشل التحديث! ❌',
+        description: error.response?.data?.message || 'حدث خطأ أثناء تحديث الباقة. يرجى المحاولة مرة أخرى',
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
+        position: 'top-right',
+        icon: <Icon as={FiXCircle} />,
       });
     } finally {
       setActionLoading(false);
@@ -322,25 +382,33 @@ const PackagesManagement = () => {
       });
 
       if (response.data?.success) {
+        const deletedPackageName = selectedPackage.name;
+        
+        // حذف الباقة فوراً من القائمة
+        setPackages(prev => prev.filter(p => p.id !== selectedPackage.id));
+        
         toast({
-          title: 'تم الحذف',
-          description: 'تم حذف الباقة بنجاح',
+          title: 'تم الحذف بنجاح! 🗑️',
+          description: `تم حذف الباقة "${deletedPackageName}" بنجاح`,
           status: 'success',
-          duration: 3000,
+          duration: 5000,
           isClosable: true,
+          position: 'top-right',
+          icon: <Icon as={FiCheckCircle} />,
         });
         setIsDeleteDialogOpen(false);
         setSelectedPackage(null);
-        fetchPackages();
       }
     } catch (error) {
       console.error('Error deleting package:', error);
       toast({
-        title: 'خطأ',
-        description: error.response?.data?.message || 'فشل في حذف الباقة',
+        title: 'فشل الحذف! ❌',
+        description: error.response?.data?.message || 'حدث خطأ أثناء حذف الباقة. يرجى المحاولة مرة أخرى',
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
+        position: 'top-right',
+        icon: <Icon as={FiXCircle} />,
       });
     } finally {
       setActionLoading(false);
@@ -366,99 +434,253 @@ const PackagesManagement = () => {
 
   if (loading && packages.length === 0) {
     return (
-      <Box minH="100vh" bg={bgColor} display="flex" alignItems="center" justifyContent="center">
-        <VStack spacing={4}>
-          <Spinner size="xl" color={primaryColor} />
-          <Text fontSize="lg" color={subTextColor}>جاري تحميل الباقات...</Text>
+      <Box 
+        minH="100vh" 
+        bg={bgGradient}
+        display="flex" 
+        alignItems="center" 
+        justifyContent="center"
+      >
+        <VStack spacing={6}>
+          <Spinner 
+            size="xl" 
+            thickness="4px"
+            speed="0.65s"
+            color={primaryColor}
+            emptyColor="gray.200"
+          />
+          <VStack spacing={2}>
+            <Text fontSize="xl" fontWeight="bold" color={textColor}>
+              جاري تحميل الباقات...
+            </Text>
+            <Text fontSize="sm" color={subTextColor}>
+              يرجى الانتظار قليلاً
+            </Text>
+          </VStack>
         </VStack>
       </Box>
     );
   }
 
   return (
-    <Box minH="100vh" bg={bgColor} pt="80px" pb={8} px={4}>
+    <Box minH="100vh" bg={bgGradient} pt="80px" pb={12} px={4}>
       <Container maxW="7xl">
-        {/* Header */}
-        <VStack spacing={4} mb={8} textAlign="center">
-          <Heading size="2xl" color={textColor}>إدارة الباقات</Heading>
-          <Text fontSize="lg" color={subTextColor}>إنشاء وإدارة باقات الدورات التعليمية</Text>
-        </VStack>
+        {/* Header Section with Gradient */}
+        <Box
+          bg={headerBg}
+          borderRadius="2xl"
+          p={8}
+          mb={8}
+          boxShadow="2xl"
+          position="relative"
+          overflow="hidden"
+          _before={{
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <VStack spacing={4} textAlign="center" position="relative" zIndex={1}>
+            <HStack spacing={3}>
+              <Icon as={FiPackage} boxSize={10} color="white" />
+              <Heading size="2xl" color="white" fontWeight="bold">
+                إدارة الباقات التعليمية
+              </Heading>
+            </HStack>
+            <Text fontSize="lg" color="whiteAlpha.900" maxW="2xl">
+              إنشاء وإدارة باقات الدورات التعليمية بسهولة واحترافية
+            </Text>
+          </VStack>
+        </Box>
 
-        {/* Statistics */}
-        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={6} mb={8}>
-          <Card bg={cardBg} shadow="md">
-            <CardBody textAlign="center">
-              <Stat>
-                <StatLabel color={subTextColor}>إجمالي الباقات</StatLabel>
-                <StatNumber color={primaryColor}>{packages.length}</StatNumber>
-                <StatHelpText>
-                  <StatArrow type="increase" />
-                  {packages.length} باقة
-                </StatHelpText>
-              </Stat>
+        {/* Statistics Cards with Blue Theme */}
+        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={6} mb={10}>
+          <Card 
+            bg={statCardBg}
+            shadow="xl"
+            borderRadius="xl"
+            overflow="hidden"
+            _hover={{ transform: 'translateY(-5px)', shadow: '2xl' }}
+            transition="all 0.3s ease"
+            border="none"
+          >
+            <CardBody p={6} textAlign="center" color="white">
+              <VStack spacing={3}>
+                <Box
+                  bg="whiteAlpha.200"
+                  borderRadius="full"
+                  p={3}
+                  backdropFilter="blur(10px)"
+                >
+                  <Icon as={FiLayers} boxSize={6} />
+                </Box>
+                <Stat>
+                  <StatLabel fontSize="sm" color="whiteAlpha.900" fontWeight="medium">
+                    إجمالي الباقات
+                  </StatLabel>
+                  <StatNumber fontSize="3xl" fontWeight="bold" color="white">
+                    {packages.length}
+                  </StatNumber>
+                  <StatHelpText color="whiteAlpha.800" fontSize="xs">
+                    <StatArrow type="increase" />
+                    {packages.length} باقة متاحة
+                  </StatHelpText>
+                </Stat>
+              </VStack>
             </CardBody>
           </Card>
           
-          <Card bg={cardBg} shadow="md">
-            <CardBody textAlign="center">
-              <Stat>
-                <StatLabel color={subTextColor}>الباقات النشطة</StatLabel>
-                <StatNumber color="green.500">{packages.filter(p => p.is_active !== false).length}</StatNumber>
-                <StatHelpText>
-                  <StatArrow type="increase" />
-                  نشطة
-                </StatHelpText>
-              </Stat>
+          <Card 
+            bg="linear-gradient(135deg, #2B6CB0 0%, #3182CE 100%)"
+            shadow="xl"
+            borderRadius="xl"
+            overflow="hidden"
+            _hover={{ transform: 'translateY(-5px)', shadow: '2xl' }}
+            transition="all 0.3s ease"
+            border="none"
+          >
+            <CardBody p={6} textAlign="center" color="white">
+              <VStack spacing={3}>
+                <Box
+                  bg="whiteAlpha.200"
+                  borderRadius="full"
+                  p={3}
+                  backdropFilter="blur(10px)"
+                >
+                  <Icon as={FiCheckCircle} boxSize={6} />
+                </Box>
+                <Stat>
+                  <StatLabel fontSize="sm" color="whiteAlpha.900" fontWeight="medium">
+                    الباقات النشطة
+                  </StatLabel>
+                  <StatNumber fontSize="3xl" fontWeight="bold" color="white">
+                    {packages.filter(p => p.is_active !== false).length}
+                  </StatNumber>
+                  <StatHelpText color="whiteAlpha.800" fontSize="xs">
+                    <StatArrow type="increase" />
+                    نشطة ومتاحة
+                  </StatHelpText>
+                </Stat>
+              </VStack>
             </CardBody>
           </Card>
           
-          <Card bg={cardBg} shadow="md">
-            <CardBody textAlign="center">
-              <Stat>
-                <StatLabel color={subTextColor}>متوسط السعر</StatLabel>
-                <StatNumber color="orange.500">
-                  {packages.length > 0 
-                    ? (packages.reduce((sum, p) => sum + parseFloat(p.price), 0) / packages.length).toFixed(2)
-                    : '0'
-                  }
-                </StatNumber>
-                <StatHelpText>جنيه مصري</StatHelpText>
-              </Stat>
+          <Card 
+            bg="linear-gradient(135deg, #3182CE 0%, #4299E1 100%)"
+            shadow="xl"
+            borderRadius="xl"
+            overflow="hidden"
+            _hover={{ transform: 'translateY(-5px)', shadow: '2xl' }}
+            transition="all 0.3s ease"
+            border="none"
+          >
+            <CardBody p={6} textAlign="center" color="white">
+              <VStack spacing={3}>
+                <Box
+                  bg="whiteAlpha.200"
+                  borderRadius="full"
+                  p={3}
+                  backdropFilter="blur(10px)"
+                >
+                  <Icon as={FiDollarSign} boxSize={6} />
+                </Box>
+                <Stat>
+                  <StatLabel fontSize="sm" color="whiteAlpha.900" fontWeight="medium">
+                    متوسط السعر
+                  </StatLabel>
+                  <StatNumber fontSize="3xl" fontWeight="bold" color="white">
+                    {packages.length > 0 
+                      ? (packages.reduce((sum, p) => sum + parseFloat(p.price), 0) / packages.length).toFixed(0)
+                      : '0'
+                    }
+                  </StatNumber>
+                  <StatHelpText color="whiteAlpha.800" fontSize="xs">
+                    جنيه مصري
+                  </StatHelpText>
+                </Stat>
+              </VStack>
             </CardBody>
           </Card>
           
-          <Card bg={cardBg} shadow="md">
-            <CardBody textAlign="center">
-              <Stat>
-                <StatLabel color={subTextColor}>الصفوف المغطاة</StatLabel>
-                <StatNumber color="purple.500">
-                  {new Set(packages.map(p => p.grade_id)).size}
-                </StatNumber>
-                <StatHelpText>
-                  <StatArrow type="increase" />
-                  صف دراسي
-                </StatHelpText>
-              </Stat>
+          <Card 
+            bg="linear-gradient(135deg, #2C5282 0%, #3182CE 100%)"
+            shadow="xl"
+            borderRadius="xl"
+            overflow="hidden"
+            _hover={{ transform: 'translateY(-5px)', shadow: '2xl' }}
+            transition="all 0.3s ease"
+            border="none"
+          >
+            <CardBody p={6} textAlign="center" color="white">
+              <VStack spacing={3}>
+                <Box
+                  bg="whiteAlpha.200"
+                  borderRadius="full"
+                  p={3}
+                  backdropFilter="blur(10px)"
+                >
+                  <Icon as={FiBookOpen} boxSize={6} />
+                </Box>
+                <Stat>
+                  <StatLabel fontSize="sm" color="whiteAlpha.900" fontWeight="medium">
+                    الصفوف المغطاة
+                  </StatLabel>
+                  <StatNumber fontSize="3xl" fontWeight="bold" color="white">
+                    {new Set(packages.map(p => p.grade_id)).size}
+                  </StatNumber>
+                  <StatHelpText color="whiteAlpha.800" fontSize="xs">
+                    <StatArrow type="increase" />
+                    صف دراسي مختلف
+                  </StatHelpText>
+                </Stat>
+              </VStack>
             </CardBody>
           </Card>
         </SimpleGrid>
 
-        {/* Action Buttons */}
-        <Flex justify="space-between" align="center" mb={6}>
-          <Heading size="lg" color={textColor}>الباقات المتاحة</Heading>
+        {/* Action Buttons Section */}
+        <Flex 
+          justify="space-between" 
+          align="center" 
+          mb={8}
+          flexWrap="wrap"
+          gap={4}
+        >
+          <VStack align="start" spacing={1}>
+            <Heading size="xl" color={textColor} fontWeight="bold">
+              الباقات المتاحة
+            </Heading>
+            <Text fontSize="sm" color={subTextColor}>
+              إدارة وعرض جميع الباقات التعليمية
+            </Text>
+          </VStack>
           <Button
             leftIcon={<Icon as={FiPlus} />}
-            colorScheme="blue"
+            bg={blueGradient}
+            color="white"
             size="lg"
+            px={8}
+            py={6}
+            borderRadius="xl"
             onClick={() => openPackageModal()}
-            _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }}
-            transition="all 0.2s"
+            _hover={{ 
+              transform: 'translateY(-3px)', 
+              shadow: 'xl',
+              bg: "linear-gradient(135deg, #2C5282 0%, #3182CE 100%)"
+            }}
+            _active={{ transform: 'translateY(0px)' }}
+            transition="all 0.3s ease"
+            fontWeight="bold"
+            boxShadow="lg"
           >
             إنشاء باقة جديدة
           </Button>
         </Flex>
-
-        <Divider mb={6} />
 
         {/* Packages Grid */}
         {packages.length > 0 ? (
@@ -468,69 +690,127 @@ const PackagesManagement = () => {
                 key={packageItem.id}
                 bg={cardBg}
                 shadow="lg"
-                _hover={{ transform: 'translateY(-4px)', shadow: 'xl' }}
-                transition="all 0.3s"
+                borderRadius="xl"
                 overflow="hidden"
+                border="none"
+                cursor="pointer"
+                onClick={() => navigate(`/package/${packageItem.id}`)}
+                _hover={{ 
+                  transform: 'translateY(-8px)', 
+                  shadow: '2xl',
+                }}
+                transition="all 0.3s ease"
+                position="relative"
+                group
               >
                 {/* Package Image */}
-                <Box position="relative">
+                <Box position="relative" overflow="hidden" h="220px">
                   <Image
-                    src={packageItem.image || 'https://via.placeholder.com/300x200?text=صورة+الباقة'}
+                    src={packageItem.image || 'https://via.placeholder.com/400x225?text=صورة+الباقة'}
                     alt={packageItem.name}
-                    height="200px"
-                    width="100%"
                     objectFit="cover"
-                    fallbackSrc="https://via.placeholder.com/300x200?text=صورة+الباقة"
+                    w="100%"
+                    h="100%"
+                    fallbackSrc="https://via.placeholder.com/400x225?text=صورة+الباقة"
+                    transition="transform 0.5s ease"
+                    _groupHover={{ transform: 'scale(1.1)' }}
+                  />
+                  
+                  {/* Overlay Gradient */}
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    right={0}
+                    bottom={0}
+                    bg="linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.4) 100%)"
                   />
                   
                   {/* Price Badge */}
-                  <Badge
+                  <Box
                     position="absolute"
-                    top={3}
-                    left={3}
-                    colorScheme="green"
-                    variant="solid"
-                    fontSize="lg"
-                    px={3}
-                    py={1}
+                    top={4}
+                    right={4}
+                    bg="white"
+                    color={primaryColor}
+                    px={4}
+                    py={2}
                     borderRadius="full"
+                    boxShadow="lg"
+                    fontWeight="bold"
+                    fontSize="md"
                   >
                     <HStack spacing={1}>
                       <Icon as={FiDollarSign} />
                       <Text>{packageItem.price} جنيه</Text>
                     </HStack>
-                  </Badge>
+                  </Box>
                 </Box>
 
-                <CardBody>
+                <CardBody p={5}>
                   {/* Package Name */}
-                  <Heading size="md" mb={3} color={textColor} noOfLines={2}>
+                  <Heading 
+                    size="md" 
+                    mb={3} 
+                    color={textColor} 
+                    noOfLines={2}
+                    fontWeight="bold"
+                    lineHeight="1.3"
+                  >
                     {packageItem.name}
                   </Heading>
                   
                   {/* Grade */}
                   <HStack spacing={2} mb={3}>
-                    <Icon as={FiBookOpen} color="purple.500" />
-                    <Badge colorScheme="purple" variant="subtle">
+                    <Icon as={FiBookOpen} color={primaryColor} boxSize={4} />
+                    <Badge 
+                      bg={blueLight}
+                      color={primaryColor}
+                      variant="subtle"
+                      px={3}
+                      py={1}
+                      borderRadius="md"
+                      fontSize="xs"
+                      fontWeight="semibold"
+                    >
                       {packageItem.grade_name}
                     </Badge>
                   </HStack>
 
                   {/* Subjects */}
                   {packageItem.subjects && packageItem.subjects.length > 0 && (
-                    <VStack spacing={2} align="start" mb={4}>
-                      <Text fontSize="sm" color={subTextColor} fontWeight="medium">
-                        المواد المدرجة:
+                    <VStack spacing={2} align="start" mb={3}>
+                      <Text fontSize="xs" color={subTextColor} fontWeight="medium">
+                        المواد:
                       </Text>
-                      <HStack spacing={2} flexWrap="wrap">
+                      <HStack spacing={1.5} flexWrap="wrap">
                         {packageItem.subjects.slice(0, 3).map((subject) => (
-                          <Badge key={subject.id} colorScheme="blue" variant="outline" size="sm">
+                          <Badge 
+                            key={subject.id} 
+                            bg={primaryColor}
+                            color="white"
+                            variant="solid" 
+                            px={2.5}
+                            py={0.5}
+                            borderRadius="md"
+                            fontSize="xs"
+                            fontWeight="medium"
+                          >
                             {subject.name}
                           </Badge>
                         ))}
                         {packageItem.subjects.length > 3 && (
-                          <Badge colorScheme="gray" variant="outline" size="sm">
-                            +{packageItem.subjects.length - 3} أكثر
+                          <Badge 
+                            bg={blueLight}
+                            color={primaryColor}
+                            variant="subtle" 
+                            px={2.5}
+                            py={0.5}
+                            borderRadius="md"
+                            fontSize="xs"
+                            fontWeight="medium"
+                          >
+                            +{packageItem.subjects.length - 3}
                           </Badge>
                         )}
                       </HStack>
@@ -538,59 +818,131 @@ const PackagesManagement = () => {
                   )}
 
                   {/* Created Date */}
-                  <HStack spacing={2} fontSize="sm" color={subTextColor}>
-                    <Icon as={FiCalendar} />
+                  <HStack 
+                    spacing={1.5} 
+                    fontSize="xs" 
+                    color={subTextColor}
+                    mt="auto"
+                  >
+                    <Icon as={FiCalendar} boxSize={3} />
                     <Text>
-                      {new Date(packageItem.created_at).toLocaleDateString('ar-EG')}
+                      {new Date(packageItem.created_at).toLocaleDateString('ar-EG', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
                     </Text>
                   </HStack>
                 </CardBody>
 
-                <CardFooter p={6} pt={0}>
+                <CardFooter p={4} pt={0} borderTop="1px solid" borderColor={borderColor}>
                   <HStack spacing={2} w="full" justify="center">
-                    <Tooltip label="تعديل الباقة">
-                      <IconButton
-                        icon={<Icon as={FiEdit2} />}
-                        colorScheme="blue"
-                        variant="outline"
-                        size="md"
-                        onClick={() => openPackageModal(packageItem)}
-                        _hover={{ bg: "blue.50" }}
-                      />
-                    </Tooltip>
+                    <Button
+                      leftIcon={<Icon as={FiEye} />}
+                      bg={primaryColor}
+                      color="white"
+                      size="sm"
+                      flex={1}
+                      borderRadius="md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/package/${packageItem.id}`);
+                      }}
+                      _hover={{ 
+                        bg: "blue.600",
+                        transform: 'translateY(-2px)',
+                        shadow: 'md'
+                      }}
+                      transition="all 0.2s ease"
+                      fontWeight="semibold"
+                    >
+                      عرض
+                    </Button>
+                    <Button
+                      leftIcon={<Icon as={FiEdit2} />}
+                      bg={primaryColor}
+                      color="white"
+                      size="sm"
+                      flex={1}
+                      borderRadius="md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openPackageModal(packageItem);
+                      }}
+                      _hover={{ 
+                        bg: "blue.600",
+                        transform: 'translateY(-2px)',
+                        shadow: 'md'
+                      }}
+                      transition="all 0.2s ease"
+                      fontWeight="semibold"
+                    >
+                      تعديل
+                    </Button>
                     
-                    <Tooltip label="حذف الباقة">
-                      <IconButton
-                        icon={<Icon as={FiTrash2} />}
-                        colorScheme="red"
-                        variant="outline"
-                        size="md"
-                        onClick={() => {
-                          setSelectedPackage(packageItem);
-                          setIsDeleteDialogOpen(true);
-                        }}
-                        _hover={{ bg: "red.50" }}
-                      />
-                    </Tooltip>
+                    <Button
+                      leftIcon={<Icon as={FiTrash2} />}
+                      bg="red.500"
+                      color="white"
+                      size="sm"
+                      flex={1}
+                      borderRadius="md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPackage(packageItem);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                      _hover={{ 
+                        bg: "red.600",
+                        transform: 'translateY(-2px)',
+                        shadow: 'md'
+                      }}
+                      transition="all 0.2s ease"
+                      fontWeight="semibold"
+                    >
+                      حذف
+                    </Button>
                   </HStack>
                 </CardFooter>
               </Card>
             ))}
           </SimpleGrid>
         ) : (
-          <Center py={12}>
-            <VStack spacing={4}>
-              <Icon as={FiPackage} size="6xl" color="gray.400" />
-              <Heading size="lg" color={textColor}>
-                لا توجد باقات متاحة
-              </Heading>
-              <Text color={subTextColor}>
-                قم بإنشاء باقة جديدة للبدء
-              </Text>
+          <Center py={20}>
+            <VStack spacing={6}>
+              <Box
+                bg={blueGradient}
+                borderRadius="full"
+                p={8}
+                boxShadow="2xl"
+              >
+                <Icon as={FiPackage} boxSize={20} color="white" />
+              </Box>
+              <VStack spacing={2}>
+                <Heading size="xl" color={textColor} fontWeight="bold">
+                  لا توجد باقات متاحة
+                </Heading>
+                <Text color={subTextColor} fontSize="lg" textAlign="center" maxW="md">
+                  ابدأ رحلتك بإنشاء أول باقة تعليمية وتقديم محتوى مميز للطلاب
+                </Text>
+              </VStack>
               <Button
-                colorScheme="blue"
+                bg={blueGradient}
+                color="white"
+                size="lg"
+                px={8}
+                py={6}
+                borderRadius="xl"
                 leftIcon={<Icon as={FiPlus} />}
                 onClick={() => openPackageModal()}
+                _hover={{ 
+                  transform: 'translateY(-3px)', 
+                  shadow: 'xl',
+                  bg: "linear-gradient(135deg, #2C5282 0%, #3182CE 100%)"
+                }}
+                transition="all 0.3s ease"
+                fontWeight="bold"
+                boxShadow="lg"
               >
                 إنشاء أول باقة
               </Button>
@@ -599,23 +951,33 @@ const PackagesManagement = () => {
         )}
 
         {/* Create/Edit Package Modal */}
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>
-              <HStack spacing={3}>
-                <Icon as={FiPackage} color="blue.500" />
-                <Text>
-                  {isEditMode ? 'تعديل الباقة' : 'إنشاء باقة جديدة'}
-                </Text>
-              </HStack>
-            </ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
+        <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
+          <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
+          <ModalContent borderRadius="2xl" overflow="hidden" boxShadow="2xl">
+            <Box
+              bg={blueGradient}
+              p={6}
+              color="white"
+            >
+              <ModalHeader p={0}>
+                <HStack spacing={3}>
+                  <Icon as={FiPackage} boxSize={6} />
+                  <Text fontSize="xl" fontWeight="bold">
+                    {isEditMode ? 'تعديل الباقة' : 'إنشاء باقة جديدة'}
+                  </Text>
+                </HStack>
+              </ModalHeader>
+              <ModalCloseButton 
+                color="white" 
+                _hover={{ bg: 'whiteAlpha.200' }}
+                size="lg"
+              />
+            </Box>
+            <ModalBody p={6} bg={cardBg}>
               <VStack spacing={6} align="stretch">
                 {/* Package Name */}
                 <FormControl isRequired>
-                  <FormLabel fontWeight="bold" color={textColor}>
+                  <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
                     اسم الباقة
                   </FormLabel>
                   <Input
@@ -623,14 +985,22 @@ const PackagesManagement = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="أدخل اسم الباقة"
                     borderColor={borderColor}
-                    _focus={{ borderColor: primaryColor, boxShadow: `0 0 0 1px ${primaryColor}` }}
+                    borderRadius="lg"
+                    size="lg"
+                    _focus={{ 
+                      borderColor: primaryColor, 
+                      boxShadow: `0 0 0 3px ${primaryColor}33`,
+                      borderWidth: '2px'
+                    }}
+                    _hover={{ borderColor: primaryColor }}
+                    transition="all 0.2s"
                   />
                 </FormControl>
 
                 {/* Price and Grade */}
                 <HStack spacing={4}>
                   <FormControl isRequired flex={1}>
-                    <FormLabel fontWeight="bold" color={textColor}>
+                    <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
                       السعر (جنيه مصري)
                     </FormLabel>
                     <Input
@@ -639,12 +1009,20 @@ const PackagesManagement = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                       placeholder="0.00"
                       borderColor={borderColor}
-                      _focus={{ borderColor: primaryColor, boxShadow: `0 0 0 1px ${primaryColor}` }}
+                      borderRadius="lg"
+                      size="lg"
+                      _focus={{ 
+                        borderColor: primaryColor, 
+                        boxShadow: `0 0 0 3px ${primaryColor}33`,
+                        borderWidth: '2px'
+                      }}
+                      _hover={{ borderColor: primaryColor }}
+                      transition="all 0.2s"
                     />
                   </FormControl>
 
                   <FormControl isRequired flex={1}>
-                    <FormLabel fontWeight="bold" color={textColor}>
+                    <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
                       الصف الدراسي
                     </FormLabel>
                     <Select
@@ -652,7 +1030,15 @@ const PackagesManagement = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, grade_id: e.target.value }))}
                       placeholder="اختر الصف الدراسي"
                       borderColor={borderColor}
-                      _focus={{ borderColor: primaryColor, boxShadow: `0 0 0 1px ${primaryColor}` }}
+                      borderRadius="lg"
+                      size="lg"
+                      _focus={{ 
+                        borderColor: primaryColor, 
+                        boxShadow: `0 0 0 3px ${primaryColor}33`,
+                        borderWidth: '2px'
+                      }}
+                      _hover={{ borderColor: primaryColor }}
+                      transition="all 0.2s"
                     >
                       {grades.map((grade) => (
                         <option key={grade.id} value={grade.id}>
@@ -665,47 +1051,87 @@ const PackagesManagement = () => {
 
                 {/* Description */}
                 <FormControl>
-                  <FormLabel fontWeight="bold" color={textColor}>
+                  <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
                     وصف الباقة (اختياري)
                   </FormLabel>
                   <Textarea
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="أدخل وصفاً للباقة..."
-                    rows={3}
+                    rows={4}
                     borderColor={borderColor}
-                    _focus={{ borderColor: primaryColor, boxShadow: `0 0 0 1px ${primaryColor}` }}
+                    borderRadius="lg"
+                    size="lg"
+                    _focus={{ 
+                      borderColor: primaryColor, 
+                      boxShadow: `0 0 0 3px ${primaryColor}33`,
+                      borderWidth: '2px'
+                    }}
+                    _hover={{ borderColor: primaryColor }}
+                    transition="all 0.2s"
                   />
                 </FormControl>
 
                 {/* Image Upload */}
                 <FormControl>
-                  <FormLabel fontWeight="bold" color={textColor}>
+                  <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
                     صورة الباقة (اختياري)
                   </FormLabel>
                   <VStack spacing={4} align="stretch">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
+                    <Box
+                      border="2px dashed"
                       borderColor={borderColor}
-                      _focus={{ borderColor: primaryColor, boxShadow: `0 0 0 1px ${primaryColor}` }}
-                    />
+                      borderRadius="xl"
+                      p={6}
+                      textAlign="center"
+                      bg={useColorModeValue("gray.50", "gray.700")}
+                      _hover={{ 
+                        borderColor: primaryColor,
+                        bg: useColorModeValue("blue.50", "blue.900")
+                      }}
+                      transition="all 0.3s"
+                      cursor="pointer"
+                    >
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        border="none"
+                        position="absolute"
+                        opacity={0}
+                        width="100%"
+                        height="100%"
+                        cursor="pointer"
+                        zIndex={1}
+                      />
+                      <VStack spacing={2}>
+                        <Icon as={FiImage} boxSize={8} color={primaryColor} />
+                        <Text color={textColor} fontWeight="medium">
+                          اضغط لاختيار صورة الباقة
+                        </Text>
+                        <Text fontSize="xs" color={subTextColor}>
+                          PNG, JPG, GIF حتى 10MB
+                        </Text>
+                      </VStack>
+                    </Box>
                     
                     {imagePreview && (
                       <Box
-                        border="2px dashed"
-                        borderColor={borderColor}
-                        borderRadius="lg"
+                        border="2px solid"
+                        borderColor={primaryColor}
+                        borderRadius="xl"
                         p={4}
                         textAlign="center"
+                        bg={useColorModeValue("gray.50", "gray.700")}
+                        position="relative"
                       >
                         <Image
                           src={imagePreview}
                           alt="معاينة الصورة"
-                          maxH="200px"
+                          maxH="250px"
                           mx="auto"
-                          borderRadius="md"
+                          borderRadius="lg"
+                          boxShadow="md"
                         />
                       </Box>
                     )}
@@ -713,17 +1139,35 @@ const PackagesManagement = () => {
                 </FormControl>
               </VStack>
             </ModalBody>
-            <ModalFooter>
-              <HStack spacing={3}>
-                <Button onClick={onClose} variant="outline">
+            <ModalFooter p={6} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
+              <HStack spacing={3} w="full" justify="flex-end">
+                <Button 
+                  onClick={onClose} 
+                  variant="outline"
+                  size="lg"
+                  borderRadius="xl"
+                  px={6}
+                  _hover={{ bg: useColorModeValue("gray.100", "gray.600") }}
+                >
                   إلغاء
                 </Button>
                 <Button
-                  colorScheme="blue"
+                  bg={blueGradient}
+                  color="white"
                   onClick={isEditMode ? handleUpdatePackage : handleCreatePackage}
                   isLoading={actionLoading}
                   loadingText={isEditMode ? "جاري التحديث..." : "جاري الإنشاء..."}
                   leftIcon={<Icon as={isEditMode ? FiEdit2 : FiPlus} />}
+                  size="lg"
+                  px={8}
+                  borderRadius="xl"
+                  fontWeight="bold"
+                  _hover={{ 
+                    transform: 'translateY(-2px)',
+                    shadow: 'xl',
+                    bg: "linear-gradient(135deg, #2C5282 0%, #3182CE 100%)"
+                  }}
+                  transition="all 0.3s ease"
                 >
                   {isEditMode ? 'تحديث الباقة' : 'إنشاء الباقة'}
                 </Button>
@@ -736,31 +1180,74 @@ const PackagesManagement = () => {
         <AlertDialog
           isOpen={isDeleteDialogOpen}
           onClose={() => setIsDeleteDialogOpen(false)}
+          isCentered
         >
-          <AlertDialogOverlay>
-            <AlertDialogContent>
-              <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                حذف الباقة
+          <AlertDialogOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
+          <AlertDialogContent borderRadius="2xl" overflow="hidden" boxShadow="2xl">
+            <Box
+              bg="red.500"
+              p={6}
+              color="white"
+            >
+              <AlertDialogHeader fontSize="xl" fontWeight="bold" p={0}>
+                <HStack spacing={3}>
+                  <Icon as={FiTrash2} boxSize={6} />
+                  <Text>حذف الباقة</Text>
+                </HStack>
               </AlertDialogHeader>
-              <AlertDialogBody>
-                هل أنت متأكد من حذف الباقة "{selectedPackage?.name}"؟ 
-                لا يمكن التراجع عن هذا الإجراء.
-              </AlertDialogBody>
-              <AlertDialogFooter>
-                <Button onClick={() => setIsDeleteDialogOpen(false)}>
+            </Box>
+            <AlertDialogBody p={6} bg={cardBg}>
+              <VStack spacing={4} align="start">
+                <Text color={textColor} fontSize="md">
+                  هل أنت متأكد من حذف الباقة <strong>"{selectedPackage?.name}"</strong>؟
+                </Text>
+                <Box
+                  p={4}
+                  bg={useColorModeValue("red.50", "red.900")}
+                  borderRadius="lg"
+                  borderLeft="4px solid"
+                  borderColor="red.500"
+                  w="full"
+                >
+                  <Text color={useColorModeValue("red.800", "red.200")} fontSize="sm" fontWeight="medium">
+                    ⚠️ تحذير: لا يمكن التراجع عن هذا الإجراء بعد التنفيذ
+                  </Text>
+                </Box>
+              </VStack>
+            </AlertDialogBody>
+            <AlertDialogFooter p={6} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
+              <HStack spacing={3} w="full" justify="flex-end">
+                <Button 
+                  onClick={() => setIsDeleteDialogOpen(false)}
+                  variant="outline"
+                  size="lg"
+                  borderRadius="xl"
+                  px={6}
+                  _hover={{ bg: useColorModeValue("gray.100", "gray.600") }}
+                >
                   إلغاء
                 </Button>
                 <Button 
-                  colorScheme="red" 
+                  bg="red.500"
+                  color="white"
                   onClick={handleDeletePackage} 
-                  ml={3}
+                  size="lg"
+                  px={8}
+                  borderRadius="xl"
+                  fontWeight="bold"
                   isLoading={actionLoading}
+                  _hover={{ 
+                    transform: 'translateY(-2px)',
+                    shadow: 'xl',
+                    bg: "red.600"
+                  }}
+                  transition="all 0.3s ease"
                 >
-                  حذف
+                  حذف الباقة
                 </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialogOverlay>
+              </HStack>
+            </AlertDialogFooter>
+          </AlertDialogContent>
         </AlertDialog>
       </Container>
       <ScrollToTop/>

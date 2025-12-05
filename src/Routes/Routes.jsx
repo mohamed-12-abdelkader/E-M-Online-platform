@@ -25,6 +25,8 @@ import OpenPhone from "../components/admin/OpenPhone";
 import CreateComp from "../components/admin/CreateComp";
 import AllComps from "../components/admin/AllComps";
 import PackagesManagement from "../components/admin/PackagesManagement";
+import PackageDetails from "../pages/package/PackageDetails";
+import SubjectDetails from "../pages/package/SubjectDetails";
 import AdminStreamsList from "../components/stream/adminList";
 
 // Teacher Components
@@ -180,6 +182,22 @@ const AppRouter = () => {
           element={
             <ProtectedRoute auth={isAdmin}>
               <PackagesManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/package/:id"
+          element={
+            <ProtectedRoute auth={isAdmin}>
+              <PackageDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/subject/:id"
+          element={
+            <ProtectedRoute auth={isAdmin || isTeacher || student}>
+              <SubjectDetails />
             </ProtectedRoute>
           }
         />

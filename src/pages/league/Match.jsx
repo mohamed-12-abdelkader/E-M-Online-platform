@@ -6,7 +6,7 @@ import ScrollToTop from '../../components/scollToTop/ScrollToTop'
 
 const Match = () => {
   const { id } = useParams()
-  const [userData, isAdmin] = UserType()
+  const [userData, isAdmin, isTeacher] = UserType()
   const [matchData, setMatchData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -19,8 +19,11 @@ const Match = () => {
   const [bulkText, setBulkText] = useState('')
   const [creatingBulk, setCreatingBulk] = useState(false)
   const [showSingleForm, setShowSingleForm] = useState(false)
-  const [singleDraft, setSingleDraft] = useState({ text: '', option_a: '', option_b: '', option_c: '', option_d: '' })
+  const [singleDraft, setSingleDraft] = useState({ text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: '' })
   const [creatingSingle, setCreatingSingle] = useState(false)
+  const [showImageForm, setShowImageForm] = useState(false)
+  const [selectedImages, setSelectedImages] = useState([])
+  const [uploadingImages, setUploadingImages] = useState(false)
   const [editing, setEditing] = useState(null) // { id, text, option_a.. }
   const [savingEdit, setSavingEdit] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
@@ -92,7 +95,8 @@ const Match = () => {
       setQLoading(true)
       setQError('')
       const { data } = await baseUrl.get(`/api/leagues/matches/${id}/questions`, { headers: authHeader })
-      const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
+      // البيانات تأتي كمصفوفة مباشرة
+      const list = Array.isArray(data) ? data : []
       setQuestions(list)
     } catch {
       setQError('فشل في جلب أسئلة المباراة')
@@ -168,11 +172,17 @@ const Match = () => {
     if (!singleDraft.text.trim()) return
     try {
       setCreatingSingle(true)
-      const { data } = await baseUrl.post(`/api/leagues/matches/${id}/questions`, singleDraft, { headers: { ...authHeader, 'Content-Type': 'application/json' } })
+      // تحضير البيانات - إزالة correct_answer إذا كان فارغاً
+      const payload = { ...singleDraft }
+      if (!payload.correct_answer || payload.correct_answer.trim() === '') {
+        delete payload.correct_answer
+      }
+      const { data } = await baseUrl.post(`/api/leagues/matches/${id}/questions`, payload, { headers: { ...authHeader, 'Content-Type': 'application/json' } })
       const created = data?.data ?? data
       setQuestions(prev => [created, ...prev])
-      setSingleDraft({ text: '', option_a: '', option_b: '', option_c: '', option_d: '' })
+      setSingleDraft({ text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: '' })
       setShowSingleForm(false)
+      await fetchQuestions() // إعادة جلب الأسئلة للتأكد من التحديث
     } catch {
       setQError('تعذر إضافة السؤال')
     } finally {
@@ -181,7 +191,15 @@ const Match = () => {
   }
 
   const startEdit = (q) => {
-    setEditing({ id: q.id, text: q.text || '', option_a: q.option_a || q.options?.[0] || '', option_b: q.option_b || q.options?.[1] || '', option_c: q.option_c || q.options?.[2] || '', option_d: q.option_d || q.options?.[3] || '' })
+    setEditing({ 
+      id: q.id, 
+      text: q.text || '', 
+      option_a: q.option_a || q.options?.[0] || '', 
+      option_b: q.option_b || q.options?.[1] || '', 
+      option_c: q.option_c || q.options?.[2] || '', 
+      option_d: q.option_d || q.options?.[3] || '',
+      correct_answer: q.correct_answer || ''
+    })
   }
 
   const saveEdit = async () => {
@@ -189,10 +207,15 @@ const Match = () => {
     try {
       setSavingEdit(true)
       const { id: qid, ...payload } = editing
+      // إزالة correct_answer إذا كان فارغاً
+      if (!payload.correct_answer || payload.correct_answer.trim() === '') {
+        delete payload.correct_answer
+      }
       const { data } = await baseUrl.put(`/api/leagues/questions/${qid}`, payload, { headers: { ...authHeader, 'Content-Type': 'application/json' } })
       const updated = data?.data ?? data
       setQuestions(prev => prev.map(q => q.id === qid ? { ...q, ...updated } : q))
       setEditing(null)
+      await fetchQuestions() // إعادة جلب الأسئلة للتأكد من التحديث
     } catch {
       setQError('تعذر حفظ التعديلات')
     } finally {
@@ -207,6 +230,7 @@ const Match = () => {
       await baseUrl.delete(`/api/leagues/questions/${deletingId}`, { headers: authHeader })
       setQuestions(prev => prev.filter(q => q.id !== deletingId))
       setDeletingId(null)
+      await fetchQuestions() // إعادة جلب الأسئلة للتأكد من التحديث
     } catch {
       setQError('تعذر حذف السؤال')
     } finally {
@@ -233,14 +257,45 @@ const Match = () => {
   const handleSetCorrect = async (qid, letter) => {
     try {
       setSettingCorrectId(qid)
-      const body = { correct_answer: letter }
+      const body = { correct_answer: letter || null }
       const { data } = await baseUrl.post(`/api/leagues/questions/${qid}/correct-answer`, body, { headers: { ...authHeader, 'Content-Type': 'application/json' } })
       const updated = data?.data ?? data
       setQuestions(prev => prev.map(q => q.id === qid ? { ...q, ...updated } : q))
+      await fetchQuestions() // إعادة جلب الأسئلة للتأكد من التحديث
     } catch {
       setQError('تعذر تحديد الإجابة الصحيحة')
     } finally {
       setSettingCorrectId(null)
+    }
+  }
+
+  const handleUploadImages = async () => {
+    if (!selectedImages || selectedImages.length === 0) return
+    if (selectedImages.length > 10) {
+      setQError('يمكن رفع حتى 10 صور فقط')
+      return
+    }
+    try {
+      setUploadingImages(true)
+      const formData = new FormData()
+      selectedImages.forEach((file) => {
+        formData.append('images', file)
+      })
+      const { data } = await baseUrl.post(`/api/leagues/matches/${id}/questions/images`, formData, { 
+        headers: { 
+          ...authHeader,
+          'Content-Type': 'multipart/form-data'
+        } 
+      })
+      const created = Array.isArray(data?.questions) ? data.questions : []
+      setQuestions(prev => [...created, ...prev])
+      setSelectedImages([])
+      setShowImageForm(false)
+      await fetchQuestions() // إعادة جلب الأسئلة للتأكد من التحديث
+    } catch {
+      setQError('تعذر رفع الصور')
+    } finally {
+      setUploadingImages(false)
     }
   }
 
@@ -393,10 +448,26 @@ const Match = () => {
         <div className="mt-8 bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200/60 flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-800">أسئلة المباراة ({questions.length})</h2>
-            {isAdmin && (
+            {(isAdmin || isTeacher) && (
               <div className="flex items-center gap-2">
-                <button onClick={() => setShowBulkForm(v => !v)} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">إضافة نص حر</button>
-                <button onClick={() => setShowSingleForm(v => !v)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700">إضافة سؤال</button>
+                <button 
+                  onClick={() => setShowBulkForm(v => !v)} 
+                  className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700"
+                >
+                  إضافة نص حر
+                </button>
+                <button 
+                  onClick={() => setShowSingleForm(v => !v)} 
+                  className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700"
+                >
+                  إضافة سؤال
+                </button>
+                <button 
+                  onClick={() => setShowImageForm(v => !v)} 
+                  className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700"
+                >
+                  إضافة صور
+                </button>
               </div>
             )}
           </div>
@@ -407,12 +478,12 @@ const Match = () => {
 
             {qLoading ? (
               <div className="text-center py-8">جارِ تحميل الأسئلة...</div>
-            ) : questions.length === 0 ? (
-              <div className="text-center text-slate-600">لا توجد أسئلة حتى الآن</div>
-            ) : isAdmin ? (
+            ) : (
               <>
-                {showBulkForm && (
-                  <div className="mb-6">
+                {(isAdmin || isTeacher) && (
+                  <>
+                    {showBulkForm && (
+                      <div className="mb-6">
                     <label className="block text-sm font-medium text-slate-700 mb-2">أدخل النص (سطر للسؤال، والأسطر التالية للاختيارات A-D)</label>
                     <textarea
                       value={bulkText}
@@ -453,6 +524,20 @@ const Match = () => {
                         />
                       </div>
                     ))}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">الإجابة الصحيحة (اختياري)</label>
+                      <select
+                        value={singleDraft.correct_answer}
+                        onChange={(e) => setSingleDraft(prev => ({ ...prev, correct_answer: e.target.value }))}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
+                        <option value="">-- اختر الإجابة الصحيحة --</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                      </select>
+                    </div>
                     <div className="md:col-span-2 flex items-center justify-end gap-2">
                       <button onClick={() => setShowSingleForm(false)} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700">إلغاء</button>
                       <button onClick={handleCreateSingle} disabled={creatingSingle} className="px-5 py-2 bg-emerald-600 text-white rounded-lg disabled:opacity-50">{creatingSingle ? 'جارٍ الإضافة...' : 'إضافة السؤال'}</button>
@@ -460,70 +545,145 @@ const Match = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-4">
-                  {questions.map((q) => {
-                    const options = [q.option_a ?? q.options?.[0], q.option_b ?? q.options?.[1], q.option_c ?? q.options?.[2], q.option_d ?? q.options?.[3]]
-                    return (
-                      <div key={q.id} className="bg-white/60 border border-slate-200 rounded-xl p-4">
-                        {editing?.id === q.id ? (
-                          <div className="space-y-3">
-                            <textarea value={editing.text} onChange={(e) => setEditing(prev => ({ ...prev, text: e.target.value }))} className="w-full px-3 py-2 border border-slate-300 rounded-lg" rows={3} />
-                            {(['option_a','option_b','option_c','option_d']).map((k, idx) => (
-                              <div key={k} className="grid grid-cols-[36px_1fr] items-center gap-2">
-                                <div className="text-sm font-semibold text-slate-600">{String.fromCharCode(65+idx)})</div>
-                                <input value={editing[k]} onChange={(e) => setEditing(prev => ({ ...prev, [k]: e.target.value }))} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-                              </div>
-                            ))}
-                            <div className="flex items-center justify-end gap-2">
-                              <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700">إلغاء</button>
-                              <button onClick={saveEdit} disabled={savingEdit} className="px-5 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50">{savingEdit ? 'جارٍ الحفظ...' : 'حفظ'}</button>
+                {showImageForm && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">اختر الصور (حتى 10 صور)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || [])
+                        if (files.length > 10) {
+                          setQError('يمكن رفع حتى 10 صور فقط')
+                          return
+                        }
+                        setSelectedImages(files)
+                      }}
+                      className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                    {selectedImages.length > 0 && (
+                      <div className="mt-3">
+                        <div className="text-sm text-slate-600 mb-2">الصور المحددة: {selectedImages.length}</div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {selectedImages.map((file, idx) => (
+                            <div key={idx} className="relative">
+                              <img src={URL.createObjectURL(file)} alt={`Preview ${idx + 1}`} className="w-full h-24 object-cover rounded-lg border border-slate-200" />
+                              <button
+                                onClick={() => setSelectedImages(prev => prev.filter((_, i) => i !== idx))}
+                                className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                              >
+                                ×
+                              </button>
                             </div>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex-1">
-                                <p className="text-slate-800 font-medium mb-2 whitespace-pre-wrap">{q.text}</p>
-                                <div className="space-y-2">
-                                  {options.map((opt, idx) => (
-                                    <div key={idx} className={`px-3 py-2 rounded-lg border text-sm ${isAdmin && q.correct_answer && q.correct_answer === String.fromCharCode(65+idx) ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
-                                      <span className="font-semibold mr-2">{String.fromCharCode(65+idx)})</span>
-                                      <span>{opt}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                                {q.image && (
-                                  <div className="mt-3">
-                                    <img src={q.image} alt="question" className="max-h-48 rounded-lg border border-slate-200" />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex flex-col items-end gap-2">
-                                <button onClick={() => startEdit(q)} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm hover:bg-indigo-100">تعديل</button>
-                                <button onClick={() => setDeletingId(q.id)} className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100">حذف</button>
-                                <label className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200 cursor-pointer">
-                                  رفع صورة
-                                  <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadImage(q.id, f); e.target.value=''; }} style={{ display: 'none' }} />
-                                </label>
-                                <div className="mt-1 text-xs text-slate-500">الإجابة الصحيحة</div>
-                                <div className="grid grid-cols-4 gap-1">
-                                  {['A','B','C','D'].map(letter => (
-                                    <button key={letter} onClick={() => handleSetCorrect(q.id, letter)} disabled={settingCorrectId===q.id} className={`px-2 py-1 rounded-md text-xs ${q.correct_answer === letter ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}`}>{letter}</button>
-                                  ))}
-                                  <button onClick={() => handleSetCorrect(q.id, null)} disabled={settingCorrectId===q.id} className="px-2 py-1 rounded-md text-xs bg-slate-100 text-slate-600">مسح</button>
-                                </div>
-                              </div>
-                            </div>
-                          </>
-                        )}
+                          ))}
+                        </div>
                       </div>
-                    )
-                  })}
-                </div>
+                    )}
+                    <div className="mt-3 flex items-center justify-end gap-2">
+                      <button onClick={() => { setShowImageForm(false); setSelectedImages([]); }} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700">إلغاء</button>
+                      <button onClick={handleUploadImages} disabled={uploadingImages || selectedImages.length === 0} className="px-5 py-2 bg-purple-600 text-white rounded-lg disabled:opacity-50">
+                        {uploadingImages ? 'جارٍ الرفع...' : 'رفع الصور'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {questions.length === 0 && !showBulkForm && !showSingleForm && !showImageForm && (
+                  <div className="text-center text-slate-600 py-8">لا توجد أسئلة حتى الآن</div>
+                )}
+
+                {questions.length > 0 && (
+                  <div className="grid grid-cols-1 gap-4 mt-6">
+                    {questions.map((q) => {
+                      const options = [q.option_a ?? q.options?.[0], q.option_b ?? q.options?.[1], q.option_c ?? q.options?.[2], q.option_d ?? q.options?.[3]]
+                      return (
+                        <div key={q.id} className="bg-white/60 border border-slate-200 rounded-xl p-4">
+                          {editing?.id === q.id ? (
+                            <div className="space-y-3">
+                              <textarea value={editing.text} onChange={(e) => setEditing(prev => ({ ...prev, text: e.target.value }))} className="w-full px-3 py-2 border border-slate-300 rounded-lg" rows={3} />
+                              {(['option_a','option_b','option_c','option_d']).map((k, idx) => (
+                                <div key={k} className="grid grid-cols-[36px_1fr] items-center gap-2">
+                                  <div className="text-sm font-semibold text-slate-600">{String.fromCharCode(65+idx)})</div>
+                                  <input value={editing[k]} onChange={(e) => setEditing(prev => ({ ...prev, [k]: e.target.value }))} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+                                </div>
+                              ))}
+                              <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">الإجابة الصحيحة (اختياري)</label>
+                                <select
+                                  value={editing.correct_answer || ''}
+                                  onChange={(e) => setEditing(prev => ({ ...prev, correct_answer: e.target.value }))}
+                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                                >
+                                  <option value="">-- اختر الإجابة الصحيحة --</option>
+                                  <option value="A">A</option>
+                                  <option value="B">B</option>
+                                  <option value="C">C</option>
+                                  <option value="D">D</option>
+                                </select>
+                              </div>
+                              <div className="flex items-center justify-end gap-2">
+                                <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700">إلغاء</button>
+                                <button onClick={saveEdit} disabled={savingEdit} className="px-5 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50">{savingEdit ? 'جارٍ الحفظ...' : 'حفظ'}</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1">
+                                  <p className="text-slate-800 font-medium mb-2 whitespace-pre-wrap">{q.text}</p>
+                                  <div className="space-y-2">
+                                    {options.map((opt, idx) => {
+                                      const letter = String.fromCharCode(65+idx)
+                                      return (
+                                        <div key={idx} className={`px-3 py-2 rounded-lg border text-sm ${(isAdmin || isTeacher) && q.correct_answer && q.correct_answer === letter ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
+                                          <span className="font-semibold mr-2">{letter})</span>
+                                          <span>{opt}</span>
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                  {q.image && (
+                                    <div className="mt-3">
+                                      <img src={q.image} alt="question" className="max-h-48 rounded-lg border border-slate-200" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                  <button onClick={() => startEdit(q)} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm hover:bg-indigo-100">تعديل</button>
+                                  <button onClick={() => setDeletingId(q.id)} className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100">حذف</button>
+                                  <label className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200 cursor-pointer">
+                                    رفع صورة
+                                    <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadImage(q.id, f); e.target.value=''; }} style={{ display: 'none' }} />
+                                  </label>
+                                  <div className="mt-1 text-xs text-slate-500">الإجابة الصحيحة</div>
+                                  <div className="grid grid-cols-4 gap-1">
+                                    {['A','B','C','D'].map(letter => (
+                                      <button key={letter} onClick={() => handleSetCorrect(q.id, letter)} disabled={settingCorrectId===q.id} className={`px-2 py-1 rounded-md text-xs ${q.correct_answer === letter ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}`}>{letter}</button>
+                                    ))}
+                                    <button onClick={() => handleSetCorrect(q.id, null)} disabled={settingCorrectId===q.id} className="px-2 py-1 rounded-md text-xs bg-slate-100 text-slate-600">مسح</button>
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+                  </>
+                )}
               </>
-            ) : (
-              // Student view: one-by-one with pagination and selectable answers
-              <div className="max-w-3xl mx-auto space-y-4">
+            )}
+          </div>
+        </div>
+      </div>
+      {/* Student view section */}
+      {!qLoading && !(isAdmin || isTeacher) && (
+        <div className="mt-8 bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-6">
+            <div className="max-w-3xl mx-auto space-y-4">
                 {resultLoading ? (
                   <div className="text-center py-8">جارِ تحميل النتيجة...</div>
                 ) : resultData ? (
@@ -671,11 +831,10 @@ const Match = () => {
                 {resultError && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{resultError}</div>
                 )}
-              </div>
-            )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
       {deletingId && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[100px]">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeletingId(null)} />
