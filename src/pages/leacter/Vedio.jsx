@@ -8,7 +8,7 @@ import Plyr from "plyr";
 import "plyr/dist/plyr.css";
 
 const Video = () => {
-  const { videoId } = useParams();
+  const { videoId, token: urlToken } = useParams();
 
   const [videoUrl, setVideoUrl] = useState("");
   const [loading, setLoading] = useState(true);
@@ -17,13 +17,26 @@ const Video = () => {
   const [blockReason, setBlockReason] = useState("تم تعطيل العرض لأسباب أمنية");
   const playerRef = useRef(null);
   const devtoolsOpenRef = useRef(false);
+  
+  // Get token from URL or localStorage
+  const getToken = () => {
+    if (urlToken) {
+      return decodeURIComponent(urlToken);
+    }
+    return localStorage.getItem("token") || "";
+  };
 
   // استرجاع رابط الفيديو من API
   useEffect(() => {
     const fetchVideoUrl = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
+        const token = getToken();
+        if (!token) {
+          setError("لم يتم العثور على رمز الوصول");
+          setLoading(false);
+          return;
+        }
         const response = await baseUrl.get(`/api/course/video/${videoId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -40,7 +53,7 @@ const Video = () => {
     if (videoId) {
       fetchVideoUrl();
     }
-  }, [videoId]);
+  }, [videoId, urlToken]);
 
   // استخراج YouTube ID
   const getYoutubeId = (url) => {

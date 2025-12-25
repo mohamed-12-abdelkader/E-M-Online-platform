@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import baseUrl from '../../api/baseUrl';
-import { FaSearch, FaPhone, FaUser, FaGraduationCap, FaArrowLeft, FaArrowRight, FaCalendar, FaKey, FaEdit } from 'react-icons/fa';
+import { FaSearch, FaPhone, FaUser, FaGraduationCap, FaArrowLeft, FaArrowRight, FaCalendar, FaKey, FaEdit, FaMobileAlt, FaCheckCircle } from 'react-icons/fa';
 import {
   Box,
   Container,
@@ -59,6 +59,12 @@ const AllStudents = () => {
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  
+  // حالات نافذة السماح بجهاز آخر
+  const { isOpen: isDeviceModalOpen, onOpen: onDeviceModalOpen, onClose: onDeviceModalClose } = useDisclosure();
+  const [deviceLoading, setDeviceLoading] = useState(false);
+  const [deviceResult, setDeviceResult] = useState(null);
+  
   const toast = useToast();
 
   // Color mode values
@@ -221,6 +227,65 @@ const AllStudents = () => {
     }
   };
 
+  // السماح بجهاز آخر للطالب
+  const handleAllowDevice = async (student) => {
+    if (!student.phone) {
+      toast({
+        title: 'خطأ',
+        description: 'رقم الهاتف غير متوفر للطالب',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      setDeviceLoading(true);
+      setDeviceResult(null);
+      const token = localStorage.getItem("token");
+      
+      const response = await baseUrl.patch(
+        `/api/users/students/allow-device`,
+        {
+          phone: student.phone
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.success) {
+        setDeviceResult(response.data.data);
+        setSelectedStudent(student);
+        onDeviceModalOpen();
+        toast({
+          title: 'تم بنجاح',
+          description: response.data.message || 'تم السماح للطالب باستخدام جهاز آخر',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        throw new Error('فشل في السماح بجهاز آخر');
+      }
+    } catch (error) {
+      console.error('Error allowing device:', error);
+      toast({
+        title: 'خطأ',
+        description: error.response?.data?.message || 'فشل في السماح بجهاز آخر',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setDeviceLoading(false);
+    }
+  };
+
   // Calculate pagination for filtered students
   const totalPages = Math.ceil(filteredStudents.length / pagination.limit);
   const startIndex = (currentPage - 1) * pagination.limit;
@@ -242,57 +307,42 @@ const AllStudents = () => {
     <Box minH="100vh" bg={bgColor} pt="80px" pb={8} px={4}>
       <Container maxW="7xl">
         {/* Header */}
-        <VStack spacing={4} mb={8} textAlign="center">
-          <Heading size="2xl" color={textColor}>جميع الطلاب</Heading>
-          <Text fontSize="lg" color={subTextColor}>إدارة وعرض بيانات الطلاب المسجلين</Text>
+        <VStack spacing={3} mb={6} textAlign="center">
+          <Heading size={{ base: "xl", md: "2xl" }} color={textColor}>جميع الطلاب</Heading>
+          <Text fontSize={{ base: "sm", md: "md" }} color={subTextColor}>إدارة وعرض بيانات الطلاب المسجلين</Text>
         </VStack>
 
         {/* Search Section */}
-        <Card bg={cardBg} shadow="lg" mb={8}>
-          <CardBody>
+        <Box mb={6}>
             <form onSubmit={handleSearch}>
-              <Flex direction={{ base: "column", md: "row" }} gap={4}>
-                <InputGroup
-                 flex={1}>
-                  <InputLeftElement>
+            <Flex direction={{ base: "column", sm: "row" }} gap={3}>
+              <InputGroup flex={1}>
+                <InputLeftElement pointerEvents="none">
                     <Icon as={FaSearch} color={subTextColor} />
                   </InputLeftElement>
                   <Input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="البحث بالاسم أو رقم الهاتف أو رقم ولي الأمر..."
-                    borderColor={borderColor}
-                    _focus={{ borderColor: primaryColor, boxShadow: `0 0 0 1px ${primaryColor}` }}
+                  placeholder="البحث بالاسم أو رقم الهاتف..."
+                  size="md"
+                  bg="white"
+                  _focus={{ borderColor: primaryColor }}
                   />
                 </InputGroup>
+              {searchTerm && (
                 <Button
-                  type="submit"
-                  bg={primaryColor}
-                  _hover={{ bg: primaryHoverColor }}
-                  color="white"
-                  px={6}
-                  py={3}
-                >
-                  بحث
-                </Button>
-                {searchTerm && (
-                  <Button
                     type="button"
                     onClick={clearSearch}
-                    bg={secondaryColor}
-                    _hover={{ bg: secondaryHoverColor }}
-                    color="white"
-                    px={6}
-                    py={3}
+                  size="md"
+                  variant="outline"
                   >
-                    مسح البحث
+                  مسح
                   </Button>
                 )}
               </Flex>
             </form>
-          </CardBody>
-        </Card>
+        </Box>
 
         {/* Error Message */}
         {error && (
@@ -304,82 +354,80 @@ const AllStudents = () => {
 
         {/* Students Grid */}
         {currentStudents.length > 0 ? (
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6} mb={8}>
+          <SimpleGrid 
+            columns={{ base: 1, sm: 2, lg: 3, xl: 4 }} 
+            spacing={4} 
+            mb={6}
+          >
             {currentStudents.map((student) => (
               <Card
                 key={student.id}
                 bg={cardBg}
-                shadow="lg"
-                _hover={{ shadow: "xl" }}
-                transition="all 0.3s"
-                overflow="hidden"
+                shadow="sm"
+                _hover={{ shadow: "md" }}
+                transition="all 0.2s"
+                borderRadius="md"
               >
-                <CardBody>
-                  {/* Student Avatar */}
-                  <Flex alignItems="center" mb={4}>
+                <CardBody p={4}>
+                  {/* Student Header */}
+                  <Flex alignItems="center" mb={3} gap={2}>
                     <Avatar
                       size="md"
                       bg={avatarBg}
                       name={student.name || '?'}
-                      mr={3}
                     />
-                    <VStack align="start" spacing={1}>
-                      <Text fontWeight="semibold" color={textColor} fontSize="lg" noOfLines={1}>
+                    <Box flex={1} minW={0}>
+                      <Text 
+                        fontWeight="bold" 
+                        color={textColor} 
+                        fontSize="md"
+                        noOfLines={1}
+                      >
                         {student.name || 'غير محدد'}
                       </Text>
-                      <Text color={subTextColor} fontSize="sm">ID: {student.id}</Text>
-                    </VStack>
+                      <Text color={subTextColor} fontSize="xs">
+                        ID: {student.id}
+                      </Text>
+                    </Box>
                   </Flex>
 
-                  <Divider mb={4} borderColor={borderColor} />
+                  <Divider mb={3} />
 
                   {/* Student Details */}
-                  <VStack spacing={3} align="start">
-                    {/* Phone */}
-                    <HStack spacing={2} justify="space-between" w="full">
-                      <HStack spacing={2}>
-                        <Icon as={FaPhone} color={phoneIconColor} />
-                        <Text color={subTextColor} fontSize="sm">رقم الهاتف:</Text>
+                  <VStack spacing={2} align="stretch" mb={3}>
+                    <HStack spacing={2} justify="space-between">
+                      <HStack spacing={1}>
+                        <Icon as={FaPhone} color={phoneIconColor} fontSize="xs" />
+                        <Text color={subTextColor} fontSize="xs">الهاتف:</Text>
                       </HStack>
-                      <Text color={textColor} fontSize="sm" fontWeight="medium">
+                      <Text color={textColor} fontSize="xs" noOfLines={1}>
                         {student.phone || 'غير محدد'}
                       </Text>
                     </HStack>
 
-                    {/* Parent Phone */}
-                    <HStack spacing={2} justify="space-between" w="full">
-                      <HStack spacing={2}>
-                        <Icon as={FaUser} color={userIconColor} />
-                        <Text color={subTextColor} fontSize="sm">رقم ولي الأمر:</Text>
+                    <HStack spacing={2} justify="space-between">
+                      <HStack spacing={1}>
+                        <Icon as={FaUser} color={userIconColor} fontSize="xs" />
+                        <Text color={subTextColor} fontSize="xs">ولي الأمر:</Text>
                       </HStack>
-                      <Text color={textColor} fontSize="sm" fontWeight="medium">
+                      <Text color={textColor} fontSize="xs" noOfLines={1}>
                         {student.parent_phone || 'غير محدد'}
                       </Text>
                     </HStack>
 
-                    {/* Grade */}
-                    <HStack spacing={2} justify="space-between" w="full">
-                      <HStack spacing={2}>
-                        <Icon as={FaGraduationCap} color={gradeIconColor} />
-                        <Text color={subTextColor} fontSize="sm">الصف الدراسي:</Text>
+                    <HStack spacing={2} justify="space-between" align="start">
+                      <HStack spacing={1}>
+                        <Icon as={FaGraduationCap} color={gradeIconColor} fontSize="xs" />
+                        <Text color={subTextColor} fontSize="xs">الصف:</Text>
                       </HStack>
-                      <Text color={textColor} fontSize="sm" fontWeight="medium" textAlign="left">
+                      <Text 
+                        color={textColor} 
+                        fontSize="xs"
+                        textAlign="right"
+                        noOfLines={2}
+                      >
                         {student.grades && student.grades.length > 0 
                           ? student.grades.map(grade => grade.name).join(', ')
-                          : 'غير محدد'
-                        }
-                      </Text>
-                    </HStack>
-
-                    {/* Created Date */}
-                    <HStack spacing={2} justify="space-between" w="full">
-                      <HStack spacing={2}>
-                        <Icon as={FaCalendar} color="orange.500" />
-                        <Text color={subTextColor} fontSize="sm">تاريخ التسجيل:</Text>
-                      </HStack>
-                      <Text color={textColor} fontSize="sm" fontWeight="medium">
-                        {student.created_at 
-                          ? new Date(student.created_at).toLocaleDateString('ar-EG')
                           : 'غير محدد'
                         }
                       </Text>
@@ -387,19 +435,31 @@ const AllStudents = () => {
                   </VStack>
 
                   {/* Action Buttons */}
-                  <Divider my={4} borderColor={borderColor} />
-                  <HStack spacing={2} justify="center">
+                  <VStack spacing={2} w="full">
                     <Button
                       size="sm"
                       colorScheme="blue"
-                      variant="outline"
                       leftIcon={<Icon as={FaKey} />}
                       onClick={() => openPasswordModal(student)}
-                      _hover={{ bg: "blue.50" }}
+                      w="full"
+                      fontSize="xs"
                     >
                       تعديل كلمة المرور
                     </Button>
-                  </HStack>
+                    <Button
+                      size="sm"
+                      colorScheme="green"
+                      variant="outline"
+                      leftIcon={<Icon as={FaMobileAlt} />}
+                      onClick={() => handleAllowDevice(student)}
+                      isLoading={deviceLoading}
+                      loadingText="جاري..."
+                      w="full"
+                      fontSize="xs"
+                    >
+                      السماح بجهاز آخر
+                    </Button>
+                  </VStack>
                 </CardBody>
               </Card>
             ))}
@@ -420,27 +480,30 @@ const AllStudents = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <Card bg={cardBg} shadow="lg">
-            <CardBody>
-              <Flex direction={{ base: "column", md: "row" }} justify="space-between" align="center" gap={4}>
-                                 <Text color={subTextColor}>
-                   عرض {startIndex + 1} إلى {Math.min(endIndex, filteredStudents.length)} من أصل {filteredStudents.length} طالب
+          <Box 
+            bg={cardBg} 
+            p={3} 
+            borderRadius="md"
+          >
+            <Flex 
+              direction={{ base: "column", sm: "row" }} 
+              justify="space-between" 
+              align="center" 
+              gap={3}
+            >
+              <Text color={subTextColor} fontSize="xs" textAlign="center">
+                {startIndex + 1} - {Math.min(endIndex, filteredStudents.length)} من {filteredStudents.length}
                  </Text>
                 
-                <HStack spacing={2}>
-                  {/* Previous Page */}
+              <HStack spacing={1} flexWrap="wrap" justify="center">
                   <IconButton
                     onClick={() => handlePageChange(currentPage - 1)}
                     isDisabled={currentPage === 1}
                     icon={<Icon as={FaArrowRight} />}
-                    bg={currentPage === 1 ? "gray.100" : primaryColor}
-                    color={currentPage === 1 ? "gray.400" : "white"}
-                    _hover={{ bg: currentPage === 1 ? "gray.100" : primaryHoverColor }}
-                    _disabled={{ bg: "gray.100", color: "gray.400", cursor: "not-allowed" }}
-                    size="md"
+                  size="xs"
+                  aria-label="السابق"
                   />
 
-                  {/* Page Numbers */}
                   <HStack spacing={1}>
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum;
@@ -458,13 +521,11 @@ const AllStudents = () => {
                         <Button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          bg={currentPage === pageNum ? primaryColor : "gray.100"}
-                          color={currentPage === pageNum ? "white" : subTextColor}
-                          _hover={{ 
-                            bg: currentPage === pageNum ? primaryHoverColor : "gray.200" 
-                          }}
-                          size="md"
-                          px={3}
+                        size="xs"
+                        colorScheme={currentPage === pageNum ? "blue" : "gray"}
+                        variant={currentPage === pageNum ? "solid" : "outline"}
+                        minW="32px"
+                        fontSize="xs"
                         >
                           {pageNum}
                         </Button>
@@ -472,21 +533,16 @@ const AllStudents = () => {
                     })}
                   </HStack>
 
-                  {/* Next Page */}
                   <IconButton
                     onClick={() => handlePageChange(currentPage + 1)}
                     isDisabled={currentPage === totalPages}
                     icon={<Icon as={FaArrowLeft} />}
-                    bg={currentPage === totalPages ? "gray.100" : primaryColor}
-                    color={currentPage === totalPages ? "gray.400" : "white"}
-                    _hover={{ bg: currentPage === totalPages ? "gray.100" : primaryHoverColor }}
-                    _disabled={{ bg: "gray.100", color: "gray.400", cursor: "not-allowed" }}
-                    size="md"
+                  size="xs"
+                  aria-label="التالي"
                   />
                 </HStack>
               </Flex>
-            </CardBody>
-          </Card>
+          </Box>
         )}
 
         {/* Loading Overlay */}
@@ -514,61 +570,48 @@ const AllStudents = () => {
       </Container>
 
       {/* Modal تعديل كلمة المرور */}
-      <Modal isOpen={isOpen} onClose={onClose} size="md">
+      <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", sm: "md" }} isCentered>
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            <HStack spacing={3}>
-              <Icon as={FaKey} color="blue.500" />
+        <ModalContent m={{ base: 0, sm: 4 }}>
+          <ModalHeader fontSize={{ base: "md", sm: "lg" }}>
+            <HStack spacing={2}>
+              <Icon as={FaKey} />
               <Text>تعديل كلمة مرور الطالب</Text>
             </HStack>
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {selectedStudent && (
-              <VStack spacing={6} align="stretch">
-                {/* معلومات الطالب */}
-                <Box p={4} bg="blue.50" borderRadius="lg" border="1px solid" borderColor="blue.200">
-                  <VStack spacing={2} align="start">
-                    <HStack spacing={3}>
-                      <Avatar
-                        size="sm"
-                        bg={avatarBg}
-                        name={selectedStudent.name || '?'}
-                      />
-                      <VStack align="start" spacing={1}>
-                        <Text fontWeight="bold" color="blue.800">
+              <VStack spacing={4} align="stretch">
+                <Box p={3} bg="blue.50" borderRadius="md">
+                  <HStack spacing={2}>
+                    <Avatar size="sm" bg={avatarBg} name={selectedStudent.name || '?'} />
+                    <Box>
+                      <Text fontWeight="bold" fontSize="sm">
                           {selectedStudent.name || 'غير محدد'}
                         </Text>
-                        <Text fontSize="sm" color="blue.600">
+                      <Text fontSize="xs" color={subTextColor}>
                           ID: {selectedStudent.id}
                         </Text>
-                      </VStack>
+                    </Box>
                     </HStack>
-                  </VStack>
                 </Box>
 
-                {/* نموذج كلمة المرور الجديدة */}
                 <FormControl>
-                  <FormLabel fontWeight="bold" color={textColor}>
-                    كلمة المرور الجديدة
-                  </FormLabel>
-                  <InputGroup>
+                  <FormLabel fontSize="sm">كلمة المرور الجديدة</FormLabel>
+                  <InputGroup size="sm">
                     <Input
                       type={showPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="أدخل كلمة المرور الجديدة"
-                      borderColor={borderColor}
-                      _focus={{ borderColor: primaryColor, boxShadow: `0 0 0 1px ${primaryColor}` }}
                     />
-                    <InputRightElement width="4.5rem">
+                    <InputRightElement width="4rem">
                       <Button
-                        h="1.75rem"
-                        size="sm"
+                        h="1.5rem"
+                        size="xs"
                         onClick={() => setShowPassword(!showPassword)}
                         variant="ghost"
-                        color={subTextColor}
                       >
                         {showPassword ? "إخفاء" : "إظهار"}
                       </Button>
@@ -576,36 +619,131 @@ const AllStudents = () => {
                   </InputGroup>
                 </FormControl>
 
-                {/* تحذير */}
-                <Alert status="info" borderRadius="lg">
+                <Alert status="info" borderRadius="md" fontSize="xs">
                   <AlertIcon />
-                  <VStack align="start" spacing={1}>
-                    <Text fontSize="sm" fontWeight="bold">
-                      تنبيه مهم
-                    </Text>
-                    <Text fontSize="xs">
+                  <Text>
                       سيتم تغيير كلمة مرور الطالب فوراً. تأكد من إبلاغ الطالب بكلمة المرور الجديدة.
                     </Text>
-                  </VStack>
                 </Alert>
               </VStack>
             )}
           </ModalBody>
           <ModalFooter>
-            <HStack spacing={3}>
-              <Button onClick={onClose} variant="outline">
+            <HStack spacing={2} w="full" justify="flex-end">
+              <Button onClick={onClose} variant="outline" size="sm">
                 إلغاء
               </Button>
               <Button
                 colorScheme="blue"
                 onClick={handlePasswordChange}
                 isLoading={passwordLoading}
-                loadingText="جاري التحديث..."
+                loadingText="جاري..."
                 leftIcon={<Icon as={FaKey} />}
+                size="sm"
               >
-                تغيير كلمة المرور
+                تغيير
               </Button>
             </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal السماح بجهاز آخر */}
+      <Modal 
+        isOpen={isDeviceModalOpen} 
+        onClose={() => {
+          onDeviceModalClose();
+          setDeviceResult(null);
+          setSelectedStudent(null);
+        }} 
+        size={{ base: "full", sm: "md" }}
+        isCentered
+      >
+        <ModalOverlay />
+        <ModalContent m={{ base: 0, sm: 4 }}>
+          <ModalHeader fontSize={{ base: "md", sm: "lg" }}>
+            <HStack spacing={2}>
+              <Icon as={FaMobileAlt} />
+              <Text>السماح بجهاز آخر</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {deviceResult && selectedStudent && (
+              <VStack spacing={4} align="stretch">
+                <Alert status="success" borderRadius="md" fontSize="xs">
+                  <AlertIcon />
+                  <Text>تم السماح للطالب باستخدام جهاز آخر بنجاح</Text>
+                </Alert>
+
+                <Box p={3} bg="green.50" borderRadius="md">
+                  <VStack spacing={3} align="stretch">
+                    <HStack spacing={2}>
+                      <Avatar size="sm" bg={avatarBg} name={selectedStudent.name || '?'} />
+                      <Box>
+                        <Text fontWeight="bold" fontSize="sm">
+                          {deviceResult.student_name || selectedStudent.name || 'غير محدد'}
+                        </Text>
+                        <Text fontSize="xs" color={subTextColor}>
+                          ID: {deviceResult.student_id || selectedStudent.id}
+                        </Text>
+                      </Box>
+                    </HStack>
+                    
+                    <Divider />
+                    
+                    <VStack spacing={2} align="stretch">
+                      <HStack justify="space-between" fontSize="xs">
+                        <Text color={subTextColor}>رقم الهاتف:</Text>
+                        <Text fontWeight="bold">
+                          {deviceResult.student_phone || selectedStudent.phone || 'غير محدد'}
+                        </Text>
+                      </HStack>
+                      
+                      {deviceResult.old_device_ip && (
+                        <HStack justify="space-between" fontSize="xs">
+                          <Text color={subTextColor}>IP السابق:</Text>
+                          <Text fontWeight="bold" fontFamily="mono" fontSize="xs">
+                            {deviceResult.old_device_ip}
+                          </Text>
+                        </HStack>
+                      )}
+                      
+                      {deviceResult.updated_at && (
+                        <HStack justify="space-between" fontSize="xs">
+                          <Text color={subTextColor}>التحديث:</Text>
+                          <Text fontWeight="bold" fontSize="xs">
+                            {new Date(deviceResult.updated_at).toLocaleString('ar-EG')}
+                          </Text>
+                        </HStack>
+                      )}
+                    </VStack>
+                  </VStack>
+                </Box>
+
+                {deviceResult.note && (
+                  <Alert status="info" borderRadius="md" fontSize="xs">
+                    <AlertIcon />
+                    <Text>{deviceResult.note}</Text>
+                  </Alert>
+                )}
+              </VStack>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="green"
+              onClick={() => {
+                onDeviceModalClose();
+                setDeviceResult(null);
+                setSelectedStudent(null);
+              }}
+              leftIcon={<Icon as={FaCheckCircle} />}
+              size="sm"
+              w="full"
+            >
+              تم
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

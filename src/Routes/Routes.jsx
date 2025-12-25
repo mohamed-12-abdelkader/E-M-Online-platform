@@ -27,7 +27,9 @@ import AllComps from "../components/admin/AllComps";
 import PackagesManagement from "../components/admin/PackagesManagement";
 import PackageDetails from "../pages/package/PackageDetails";
 import SubjectDetails from "../pages/package/SubjectDetails";
+import AssignmentQuestions from "../pages/package/AssignmentQuestions";
 import AdminStreamsList from "../components/stream/adminList";
+import GeneralCourses from "../components/admin/GeneralCourses";
 
 // Teacher Components
 
@@ -81,6 +83,7 @@ import ChatPage from "../pages/chat/ChatPage";
 import TeacherChat from "../pages/chat/TeacherChatPage";
 import ChatbotPage from "../pages/chatbot/ChatbotPage";
 import TeamChat from "../pages/teamChatPage/TeamChat";
+import SupportChatAdmin from "../pages/support/SupportChatAdmin";
 
 // Center System Components
 import GroupsPage from "../pages/centerSystem/GroupsPage";
@@ -114,6 +117,7 @@ import Match from "../pages/league/Match";
 import EssayExam from "../pages/exam/EssayExam";
 import ChallengeEMAcademy from "../pages/challengeEMAcademy/ChallengeEMAcademy";
 import LecturesTaple from "../pages/lecturesTaple/LecturesTaple";
+import MeetingRoom from "../pages/meeting/MeetingRoom";
 
 
 const AppRouter = () => {
@@ -178,6 +182,14 @@ const AppRouter = () => {
           }
         />
         <Route
+          path="/support-chat"
+          element={
+            <ProtectedRoute auth={isAdmin}>
+              <SupportChatAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/packages-management"
           element={
             <ProtectedRoute auth={isAdmin}>
@@ -198,6 +210,14 @@ const AppRouter = () => {
           element={
             <ProtectedRoute auth={isAdmin || isTeacher || student}>
               <SubjectDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assignment/:assignmentId/questions"
+          element={
+            <ProtectedRoute auth={isAdmin || isTeacher || student}>
+              <AssignmentQuestions />
             </ProtectedRoute>
           }
         />
@@ -232,12 +252,13 @@ const AppRouter = () => {
             <Route path="create_code" element={<AdminCreateCode />} />
             <Route path="cridet" element={<AdminTeacherBalances />} />
             <Route path="open_phone" element={<OpenPhone />} />
+           
           </Route>
           
           {/* Teacher Routes */}
          
         </Route>
-
+ <Route path="video/:videoId/:token?" element={<Vedio />} />
         {/* Main App Routes */}
         <Route
           path="/*"
@@ -278,7 +299,7 @@ const AppRouter = () => {
           
         
           
-          <Route path="video/:videoId" element={<Vedio />} />
+         
 
           {/* Groups */}
         
@@ -287,7 +308,7 @@ const AppRouter = () => {
           <Route path="competitions" element={<Competitions />} />
           <Route path="competition/:id" element={<CompetitionDetails />} />
           <Route path="the_Firsts" element={<TheFirsts />} />
-
+ <Route path="general-courses" element={<GeneralCourses />} />
           {/* Question Bank */}
           <Route path="question-bank/:id" element={<QuestionBank />} />
           <Route path="question_bank" element={<QuestionBank />} />
@@ -338,6 +359,9 @@ const AppRouter = () => {
           {/* Course Details */}
           <Route path="CourseDetailsPage/:id" element={<CourseDetailsPage />} />
           <Route path="CourseStatisticsPage/:id" element={<CourseStatisticsPage />} />
+          
+          {/* Meeting Room */}
+          <Route path="meeting/:meetingId" element={<MeetingRoom />} />
 
           {/* Financial */}
           <Route path="PlatformAccounts" element={<PlatformAccounts />} />
@@ -372,7 +396,7 @@ const AppRouter = () => {
         <Route element={<ProtectedRoute auth={isTeacher || student} />}>
        
           
-          <Route path="video/:videoId" element={<Vedio />} />
+          <Route path="video/:videoId/:token?" element={<Vedio />} />
         </Route>
       </Routes>
     </div>

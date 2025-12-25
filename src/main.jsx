@@ -34,8 +34,8 @@ const RootContent = () => {
     };
   }, []);
 
-  // Only display the SidebarWithHeader if the current path is not '/landing'
-  const showSidebar = location.pathname !== "/landing";
+  // Only display the SidebarWithHeader if the current path is not '/landing' or '/video'
+  const showSidebar = location.pathname !== "/landing" && !location.pathname.startsWith("/video/");
   const hasUser = Boolean(userData);
   const showBottomNav = userData && location.pathname.toLowerCase() !== "/teacherchat";
 

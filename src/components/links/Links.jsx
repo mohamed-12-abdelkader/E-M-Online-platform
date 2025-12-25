@@ -26,7 +26,8 @@ import {
   MdInventory,
   MdHome,
   MdPublic,
-  MdSchedule
+  MdSchedule,
+  MdBook
 } from "react-icons/md";
 import { FaFistRaised  } from "react-icons/fa";
 import UserType from "../../Hooks/auth/userType";
@@ -82,6 +83,7 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
     { to: "/view_exams", Icon: MdEventAvailable, label: "عرض الامتحانات" },
     { to: "/show_grades", Icon: MdGrading, label: "عرض درجات الامتحان" },
     { to: "/leagues", Icon: MdLeaderboard, label: "إدارة الدوريات" },
+    { to: "/general-courses", Icon: MdBook, label: "إدارة الكورسات العامة" },
   ];
 
   const teacherLinks = [
