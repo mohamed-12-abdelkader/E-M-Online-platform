@@ -331,8 +331,8 @@ const SupportChatAdmin = () => {
       socket.emit(
         "support:send-message",
         {
-          chat_id: selectedChat.id,
-          text: text,
+        chat_id: selectedChat.id,
+        text: text,
         },
         (response) => {
           // Clear timeout
@@ -1596,12 +1596,12 @@ const SupportChatAdmin = () => {
             <HStack justify="space-between" flexWrap="wrap" spacing={2}>
               <VStack align="flex-start" spacing={1} flex={1} minW="200px">
                 <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color={textColor}>
-                  إدارة شات الدعم الفني
-                </Text>
+                إدارة شات الدعم الفني
+              </Text>
                 <Text fontSize={{ base: "xs", md: "sm" }} color={subTextColor}>
-                  إدارة محادثات الطلاب والدعم الفني
-                </Text>
-              </VStack>
+                إدارة محادثات الطلاب والدعم الفني
+              </Text>
+            </VStack>
               <HStack spacing={2} flexWrap="wrap">
                 {!isConnected && (
                   <Badge colorScheme="orange" fontSize="xs" px={2} py={1} borderRadius="full">
@@ -1613,12 +1613,12 @@ const SupportChatAdmin = () => {
                     متصل
                   </Badge>
                 )}
-                {unreadCount > 0 && (
+            {unreadCount > 0 && (
                   <Badge colorScheme="red" fontSize={{ base: "xs", md: "md" }} px={{ base: 2, md: 3 }} py={1} borderRadius="full">
                     {unreadCount} غير مقروءة
-                  </Badge>
-                )}
-              </HStack>
+              </Badge>
+            )}
+          </HStack>
             </HStack>
             <HStack spacing={2} flexWrap="wrap">
               <Button
@@ -1662,15 +1662,15 @@ const SupportChatAdmin = () => {
           {!selectedChat && (
             <Box
               w={{ base: "100%", md: chatsListWidth }}
-              bg={bgColor}
-              borderRadius="xl"
-              border="1px solid"
-              borderColor={borderColor}
-              shadow="md"
-              display="flex"
-              flexDirection="column"
-              overflow="hidden"
-            >
+            bg={bgColor}
+            borderRadius="xl"
+            border="1px solid"
+            borderColor={borderColor}
+            shadow="md"
+            display="flex"
+            flexDirection="column"
+            overflow="hidden"
+          >
             {/* Search and Filter */}
             <Box p={4} borderBottom="1px solid" borderColor={borderColor}>
               <InputGroup size="md" mb={3}>
@@ -1798,18 +1798,18 @@ const SupportChatAdmin = () => {
                 ))
               )}
             </Box>
-            </Box>
+          </Box>
           )}
 
           {/* Back to Chats List Button - Desktop */}
           {selectedChat && !isMobile && (
-            <Box
+          <Box
               w={chatsListWidth}
-              bg={bgColor}
-              borderRadius="xl"
-              border="1px solid"
-              borderColor={borderColor}
-              shadow="md"
+            bg={bgColor}
+            borderRadius="xl"
+            border="1px solid"
+            borderColor={borderColor}
+            shadow="md"
               p={4}
               display="flex"
               flexDirection="column"
@@ -1853,10 +1853,10 @@ const SupportChatAdmin = () => {
                   <Box
                     bg={bgColor}
                     h="full"
-                    display="flex"
-                    flexDirection="column"
-                    overflow="hidden"
-                  >
+            display="flex"
+            flexDirection="column"
+            overflow="hidden"
+          >
                     {/* Search and Filter */}
                     <Box p={3} borderBottom="1px solid" borderColor={borderColor}>
                       <InputGroup size="md" mb={2}>
@@ -1997,7 +1997,7 @@ const SupportChatAdmin = () => {
           )}
 
           {/* Chat Messages - Only show when chat is selected */}
-          {selectedChat ? (
+            {selectedChat ? (
             <Box
               flex={1}
               bg={bgColor}
@@ -2149,13 +2149,13 @@ const SupportChatAdmin = () => {
                           )}
                           {message.message_type === "image" && message.media_url && (
                             <Box>
-                              <Image
-                                src={message.media_url}
-                                alt={message.text || "صورة"}
-                                maxH="300px"
-                                borderRadius="md"
-                                mb={message.text ? 2 : 0}
-                              />
+                            <Image
+                              src={message.media_url}
+                              alt={message.text || "صورة"}
+                              maxH="300px"
+                              borderRadius="md"
+                              mb={message.text ? 2 : 0}
+                            />
                               {message.is_optimistic && (
                                 <Text fontSize="xs" opacity={0.7} mt={1}>
                                   جاري الإرسال...
@@ -2421,10 +2421,10 @@ const SupportChatAdmin = () => {
                 justifyContent="center"
               >
                 <VStack spacing={4} color={subTextColor}>
-                  <MdMessage size={64} />
+                <MdMessage size={64} />
                   <Text fontSize="lg" fontWeight="medium">
                     اختر محادثة لعرض الرسائل
-                  </Text>
+                </Text>
                   <Text fontSize="sm" textAlign="center" px={4}>
                     اضغط على أي محادثة من القائمة لبدء المحادثة
                   </Text>
@@ -2432,7 +2432,7 @@ const SupportChatAdmin = () => {
               </Box>
             )
           )}
-        </Flex>
+              </Flex>
       </VStack>
 
       {/* FAQ Management Drawer */}
@@ -2709,7 +2709,7 @@ const SupportChatAdmin = () => {
                       <Text fontSize="sm" color={subTextColor}>
                         املأ النموذج أدناه لإنشاء رد تلقائي جديد
                       </Text>
-                    </Box>
+          </Box>
 
                     {/* FAQ Form */}
                     <Card bg={bgColor} border="1px solid" borderColor={borderColor}>
@@ -2888,7 +2888,7 @@ const SupportChatAdmin = () => {
                                         ? "سيتم استخدام هذا الرد"
                                         : "لن يتم استخدام هذا الرد"}
                                     </Text>
-                                  </VStack>
+      </VStack>
                                   <Switch
                                     isChecked={faqForm.is_active}
                                     onChange={(e) =>

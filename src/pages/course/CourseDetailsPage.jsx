@@ -66,6 +66,11 @@ import {
   NumberDecrementStepper,
   Container,
   Switch,
+  Checkbox,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import {
@@ -97,6 +102,8 @@ import {
   FaCalendar,
   FaKey,
   FaLock, // New: For locked lectures
+  FaUnlock, // For unlock
+  FaBan, // For block
   FaSearch,
   FaRegFileAlt,
   FaListOl,
@@ -107,7 +114,7 @@ import {
 } from "react-icons/fa";
 import baseUrl from "../../api/baseUrl";
 import UserType from "../../Hooks/auth/userType";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import CourseHeroSection from "./components/CourseHeroSection";
 import LectureCard from "./components/LectureCard";
 import LecturesTab from "./components/LecturesTab";
@@ -149,7 +156,7 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
   };
 
   return (
-     <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading} size="lg">
+    <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading} size="lg">
       <ModalOverlay />
       <ModalContent borderRadius="2xl" boxShadow="2xl">
         <ModalHeader display="flex" alignItems="center" fontWeight="bold" fontSize="xl" color="blue.600">
@@ -217,7 +224,7 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
               إلغاء
             </Button>
             <Button
-            className="mx-2"
+              className="mx-2"
               colorScheme="blue"
               type="submit"
               isLoading={loading}
@@ -285,7 +292,7 @@ const VideoModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading 
           <ModalBody>
             <VStack spacing={5} align="stretch">
               {/* رابط الفيديو */}
-             
+
 
               {/* عنوان الفيديو */}
               <FormControl>
@@ -300,7 +307,7 @@ const VideoModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading 
                   borderRadius="lg"
                 />
               </FormControl>
- <FormControl isRequired>
+              <FormControl isRequired>
                 <FormLabel display="flex" alignItems="center" gap={2}>
                   <FaVideo /> رابط الفيديو
                 </FormLabel>
@@ -399,7 +406,7 @@ const FileModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading }
                 <FormLabel>رابط الملف</FormLabel>
                 <Input
                   value={formData.file_url}
-                  onChange={(e) => setFormData({...formData, file_url: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
                   placeholder="أدخل رابط الملف"
                   isDisabled={loading}
                 />
@@ -408,7 +415,7 @@ const FileModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading }
                 <FormLabel>اسم الملف</FormLabel>
                 <Input
                   value={formData.filename}
-                  onChange={(e) => setFormData({...formData, filename: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, filename: e.target.value })}
                   placeholder="أدخل اسم الملف"
                   isDisabled={loading}
                 />
@@ -445,7 +452,8 @@ const MotionVStack = motion(VStack);
 const MotionHStack = motion(HStack);
 
 const CourseDetailsPage = () => {
-  const {id}=useParams()
+  const { id } = useParams()
+  const navigate = useNavigate();
   const [userData, isAdmin, isTeacher, student] = UserType();
   const [showFullDescription, setShowFullDescription] = React.useState(false);
   const [expandedLecture, setExpandedLecture] = React.useState(null);
@@ -454,12 +462,9 @@ const CourseDetailsPage = () => {
   const [courseData, setCourseData] = useState(null);
   const [courseLoading, setCourseLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [enrollments, setEnrollments] = useState([]);
-  const [enrollmentsLoading, setEnrollmentsLoading] = useState(false);
-  const [searchStudent, setSearchStudent] = useState('');
-  const [filteredEnrollments, setFilteredEnrollments] = useState([]);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  
+
+
+
   // Lecture management states
   const [lectureModal, setLectureModal] = useState({ isOpen: false, type: 'add', data: null });
   const [videoModal, setVideoModal] = useState({ isOpen: false, type: 'add', lectureId: null, data: null });
@@ -473,7 +478,7 @@ const CourseDetailsPage = () => {
   const [examModal, setExamModal] = useState({ isOpen: false, type: 'add', lectureId: null, data: null });
   const [deleteExamDialog, setDeleteExamDialog] = useState({ isOpen: false, examId: null, title: '' });
   const [examActionLoading, setExamActionLoading] = useState(false);
-  
+
   // State لمودال إضافة الأسئلة بالجملة
   const [bulkQuestionsModal, setBulkQuestionsModal] = useState({ isOpen: false, examId: null, examTitle: '', examType: '' });
   const [bulkQuestionsLoading, setBulkQuestionsLoading] = useState(false);
@@ -527,27 +532,14 @@ const CourseDetailsPage = () => {
     if (searchCode.trim() === '') {
       setFilteredCodes(activationCodes);
     } else {
-      const filtered = activationCodes.filter(code => 
+      const filtered = activationCodes.filter(code =>
         code.code.toLowerCase().includes(searchCode.toLowerCase())
       );
       setFilteredCodes(filtered);
     }
   }, [searchCode, activationCodes]);
 
-  // فلترة الطلاب عند تغيير نص البحث
-  useEffect(() => {
-    if (searchStudent.trim() === '') {
-      setFilteredEnrollments(enrollments);
-    } else {
-      const filtered = enrollments.filter(student => 
-        student.name.toLowerCase().includes(searchStudent.toLowerCase()) ||
-        (student.phone && student.phone.includes(searchStudent)) ||
-        (student.email && student.email.toLowerCase().includes(searchStudent.toLowerCase())) ||
-        (student.activation_code && student.activation_code.toLowerCase().includes(searchStudent.toLowerCase()))
-      );
-      setFilteredEnrollments(filtered);
-    }
-  }, [searchStudent, enrollments]);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -569,20 +561,7 @@ const CourseDetailsPage = () => {
     fetchData();
   }, [token]);
 
-  // Fetch enrollments function
-  const fetchEnrollments = async () => {
-    try {
-      setEnrollmentsLoading(true);
-      const response = await baseUrl.get(`api/course/${id}/enrollments`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setEnrollments(response.data.students);
-    } catch (error) {
-      console.log("Error fetching enrollments:", error);
-    } finally {
-      setEnrollmentsLoading(false);
-    }
-  };
+
 
   // 2. جلب الامتحانات الشاملة
   useEffect(() => {
@@ -591,24 +570,24 @@ const CourseDetailsPage = () => {
         setCourseExamsLoading(true);
         setCourseExamsError(null);
         // استخدام endpoint مختلف للطلاب مع timestamp لمنع الـ caching
-        const baseEndpoint = (isAdmin || isTeacher) 
+        const baseEndpoint = (isAdmin || isTeacher)
           ? `api/course/${id}/course-exams`
           : `api/exams/course/${id}/student`;
         const endpoint = `${baseEndpoint}?_t=${Date.now()}`;
         const response = await baseUrl.get(endpoint, {
-          headers: { 
+          headers: {
             Authorization: `Bearer ${token}`,
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
           },
         });
-        
+
         // التحقق من وجود البيانات في response.data
         const responseData = response?.data;
-        
+
         // معالجة البيانات - التحقق من جميع الحالات الممكنة
         let examsData = null;
-        
+
         if (responseData) {
           // الحالة 1: البيانات في responseData.exams
           if (responseData.exams !== undefined && responseData.exams !== null && Array.isArray(responseData.exams)) {
@@ -619,7 +598,7 @@ const CourseDetailsPage = () => {
             examsData = responseData;
           }
         }
-        
+
         // تعيين البيانات في state
         if (examsData && Array.isArray(examsData)) {
           setCourseExams(examsData);
@@ -634,7 +613,7 @@ const CourseDetailsPage = () => {
         if (error.response) {
           const status = error.response.status;
           const errorMessage = error.response?.data?.message || error.message;
-          
+
           // إذا كان الخطأ 403 (Forbidden)، قد يكون بسبب الصلاحيات
           if (status === 403) {
             // إذا كان المستخدم ليس مدرس أو admin، قد يكون هذا طبيعي
@@ -669,24 +648,24 @@ const CourseDetailsPage = () => {
       setCourseExamsLoading(true);
       setCourseExamsError(null);
       // استخدام endpoint مختلف للطلاب مع timestamp لمنع الـ caching
-      const baseEndpoint = (isAdmin || isTeacher) 
+      const baseEndpoint = (isAdmin || isTeacher)
         ? `api/course/${id}/course-exams`
         : `api/exams/course/${id}/student`;
       const endpoint = `${baseEndpoint}?_t=${Date.now()}`;
       const response = await baseUrl.get(endpoint, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         },
       });
-      
+
       // التحقق من وجود البيانات في response.data
       const responseData = response?.data;
-      
+
       // معالجة البيانات - التحقق من جميع الحالات الممكنة
       let examsData = null;
-      
+
       if (responseData) {
         // الحالة 1: البيانات في responseData.exams
         if (responseData.exams !== undefined && responseData.exams !== null && Array.isArray(responseData.exams)) {
@@ -697,7 +676,7 @@ const CourseDetailsPage = () => {
           examsData = responseData;
         }
       }
-      
+
       // تعيين البيانات في state
       if (examsData && Array.isArray(examsData)) {
         setCourseExams(examsData);
@@ -712,7 +691,7 @@ const CourseDetailsPage = () => {
       if (error.response) {
         const status = error.response.status;
         const errorMessage = error.response?.data?.message || error.message;
-        
+
         // إذا كان الخطأ 403 (Forbidden)، قد يكون بسبب الصلاحيات
         if (status === 403) {
           // إذا كان المستخدم ليس مدرس أو admin، قد يكون هذا طبيعي
@@ -1100,7 +1079,7 @@ const CourseDetailsPage = () => {
 
   const handleDeleteConfirm = async () => {
     const { type, id } = deleteDialog;
-    
+
     switch (type) {
       case 'lecture':
         await deleteLecture(id);
@@ -1112,7 +1091,7 @@ const CourseDetailsPage = () => {
         await deleteFile(id);
         break;
     }
-    
+
     setDeleteDialog({ isOpen: false, type: '', id: null, title: '' });
   };
 
@@ -1120,7 +1099,7 @@ const CourseDetailsPage = () => {
   const createExam = async (lectureId, data) => {
     try {
       setExamActionLoading(true);
-      
+
       // تحضير البيانات للإرسال
       const examData = {
         title: data.title,
@@ -1143,27 +1122,27 @@ const CourseDetailsPage = () => {
       await baseUrl.post(`/api/course/lecture/${lectureId}/exam`, examData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
-      toast({ 
-        title: 'تم إضافة الامتحان بنجاح', 
+
+      toast({
+        title: 'تم إضافة الامتحان بنجاح',
         description: `تم إنشاء امتحان "${data.title}" بنجاح`,
-        status: 'success', 
-        duration: 4000, 
-        isClosable: true 
+        status: 'success',
+        duration: 4000,
+        isClosable: true
       });
-      
+
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
       setExamModal({ isOpen: false, type: 'add', data: null });
     } catch (error) {
       console.error('Error creating exam:', error);
-      toast({ 
-        title: 'خطأ في إضافة الامتحان', 
-        description: error.response?.data?.message || 'حدث خطأ غير متوقع', 
-        status: 'error', 
-        duration: 4000, 
-        isClosable: true 
+      toast({
+        title: 'خطأ في إضافة الامتحان',
+        description: error.response?.data?.message || 'حدث خطأ غير متوقع',
+        status: 'error',
+        duration: 4000,
+        isClosable: true
       });
     } finally {
       setExamActionLoading(false);
@@ -1172,7 +1151,7 @@ const CourseDetailsPage = () => {
   const updateExam = async (examId, data) => {
     try {
       setExamActionLoading(true);
-      
+
       // تحضير البيانات للإرسال
       const examData = {
         title: data.title,
@@ -1195,27 +1174,27 @@ const CourseDetailsPage = () => {
       await baseUrl.patch(`api/course/lecture/exam/${examId}`, examData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
-      toast({ 
-        title: 'تم تعديل الامتحان بنجاح', 
+
+      toast({
+        title: 'تم تعديل الامتحان بنجاح',
         description: `تم تحديث امتحان "${data.title}" بنجاح`,
-        status: 'success', 
-        duration: 4000, 
-        isClosable: true 
+        status: 'success',
+        duration: 4000,
+        isClosable: true
       });
-      
+
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
       setExamModal({ isOpen: false, type: 'edit', data: null });
     } catch (error) {
       console.error('Error updating exam:', error);
-      toast({ 
-        title: 'خطأ في تعديل الامتحان', 
-        description: error.response?.data?.message || 'حدث خطأ غير متوقع', 
-        status: 'error', 
-        duration: 4000, 
-        isClosable: true 
+      toast({
+        title: 'خطأ في تعديل الامتحان',
+        description: error.response?.data?.message || 'حدث خطأ غير متوقع',
+        status: 'error',
+        duration: 4000,
+        isClosable: true
       });
     } finally {
       setExamActionLoading(false);
@@ -1241,7 +1220,7 @@ const CourseDetailsPage = () => {
   const addBulkQuestions = async (examId, data, questionType, examType) => {
     try {
       setBulkQuestionsLoading(true);
-      
+
       if (questionType === 'text') {
         // Handle text questions
         const endpoint = examType === 'comprehensive'
@@ -1256,37 +1235,37 @@ const CourseDetailsPage = () => {
         // Handle image questions
         const formData = new FormData();
         formData.append('exam_id', examId);
-        
+
         // Append each image file
         data.forEach((file, index) => {
           formData.append('images', file);
         });
-        
+
         await baseUrl.post('/api/questions/lecture-exam-question', formData, {
-          headers: { 
+          headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
           },
         });
       }
-      
-      toast({ 
-        title: 'تم إضافة الأسئلة بنجاح', 
-        status: 'success', 
-        duration: 3000, 
-        isClosable: true 
+
+      toast({
+        title: 'تم إضافة الأسئلة بنجاح',
+        status: 'success',
+        duration: 3000,
+        isClosable: true
       });
       setBulkQuestionsModal({ isOpen: false, examId: null, examTitle: '', examType: '' });
       setBulkQuestionsText('');
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
     } catch (error) {
-      toast({ 
-        title: 'خطأ في إضافة الأسئلة', 
-        description: error.response?.data?.message || 'حدث خطأ غير متوقع', 
-        status: 'error', 
-        duration: 3000, 
-        isClosable: true 
+      toast({
+        title: 'خطأ في إضافة الأسئلة',
+        description: error.response?.data?.message || 'حدث خطأ غير متوقع',
+        status: 'error',
+        duration: 3000,
+        isClosable: true
       });
     } finally {
       setBulkQuestionsLoading(false);
@@ -1345,8 +1324,8 @@ const CourseDetailsPage = () => {
     return (
       <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading} size="4xl">
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent 
-          borderRadius="3xl" 
+        <ModalContent
+          borderRadius="3xl"
           boxShadow="0 25px 50px -12px rgba(0, 0, 0, 0.25)"
           border="1px solid"
           borderColor="blue.200"
@@ -1354,11 +1333,11 @@ const CourseDetailsPage = () => {
           bg="white"
           _dark={{ bg: "gray.800", borderColor: "blue.700" }}
         >
-          <ModalHeader 
-            display="flex" 
-            alignItems="center" 
-            fontWeight="bold" 
-            fontSize="2xl" 
+          <ModalHeader
+            display="flex"
+            alignItems="center"
+            fontWeight="bold"
+            fontSize="2xl"
             color="white"
             bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
             borderRadius="3xl 3xl 0 0"
@@ -1376,10 +1355,10 @@ const CourseDetailsPage = () => {
               zIndex: -1
             }}
           >
-            <Box 
-              p={3} 
-              bg="rgba(255, 255, 255, 0.2)" 
-              borderRadius="xl" 
+            <Box
+              p={3}
+              bg="rgba(255, 255, 255, 0.2)"
+              borderRadius="xl"
               mr={4}
               boxShadow="0 4px 12px rgba(0, 0, 0, 0.15)"
             >
@@ -1394,7 +1373,7 @@ const CourseDetailsPage = () => {
               </Text>
             </VStack>
           </ModalHeader>
-          <ModalCloseButton 
+          <ModalCloseButton
             isDisabled={loading}
             color="white"
             bg="rgba(255, 255, 255, 0.2)"
@@ -1408,29 +1387,29 @@ const CourseDetailsPage = () => {
             <ModalBody py={10} px={8} bg="gray.50" _dark={{ bg: "gray.700" }}>
               <VStack spacing={8} align="stretch">
                 {/* عنوان الامتحان */}
-                <Box 
-                  p={6} 
-                  bg="white" 
-                  borderRadius="2xl" 
+                <Box
+                  p={6}
+                  bg="white"
+                  borderRadius="2xl"
                   boxShadow="0 4px 12px rgba(0, 0, 0, 0.05)"
                   border="1px solid"
                   borderColor="gray.100"
                   _dark={{ bg: "gray.800", borderColor: "gray.600" }}
                 >
                   <FormControl isRequired>
-                    <FormLabel 
-                      display="flex" 
-                      alignItems="center" 
-                      gap={3} 
-                      fontWeight="bold" 
+                    <FormLabel
+                      display="flex"
+                      alignItems="center"
+                      gap={3}
+                      fontWeight="bold"
                       color="gray.700"
                       fontSize="lg"
                       mb={4}
                       _dark={{ color: "gray.200" }}
                     >
-                      <Box 
-                        p={2} 
-                        bg="blue.100" 
+                      <Box
+                        p={2}
+                        bg="blue.100"
                         borderRadius="lg"
                         _dark={{ bg: "blue.900" }}
                       >
@@ -1438,16 +1417,16 @@ const CourseDetailsPage = () => {
                       </Box>
                       عنوان الامتحان
                     </FormLabel>
-                    <Input 
-                      value={formData.title} 
+                    <Input
+                      value={formData.title}
                       onChange={e => setFormData({ ...formData, title: e.target.value })}
                       placeholder="أدخل عنوان الامتحان"
                       isDisabled={loading}
                       borderRadius="xl"
                       border="2px solid"
                       borderColor="gray.200"
-                      _focus={{ 
-                        borderColor: "blue.400", 
+                      _focus={{
+                        borderColor: "blue.400",
                         boxShadow: "0 0 0 3px rgba(66, 153, 225, 0.1)",
                         bg: "blue.50"
                       }}
@@ -1467,10 +1446,10 @@ const CourseDetailsPage = () => {
                 </Box>
 
                 {/* الدرجة الكلية ومدة الامتحان */}
-                <Box 
-                  p={6} 
-                  bg="white" 
-                  borderRadius="2xl" 
+                <Box
+                  p={6}
+                  bg="white"
+                  borderRadius="2xl"
                   boxShadow="0 4px 12px rgba(0, 0, 0, 0.05)"
                   border="1px solid"
                   borderColor="gray.100"
@@ -1478,19 +1457,19 @@ const CourseDetailsPage = () => {
                 >
                   <HStack spacing={6}>
                     <FormControl isRequired flex={1}>
-                      <FormLabel 
-                        display="flex" 
-                        alignItems="center" 
-                        gap={3} 
-                        fontWeight="bold" 
+                      <FormLabel
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                        fontWeight="bold"
                         color="gray.700"
                         fontSize="lg"
                         mb={4}
                         _dark={{ color: "gray.200" }}
                       >
-                        <Box 
-                          p={2} 
-                          bg="yellow.100" 
+                        <Box
+                          p={2}
+                          bg="yellow.100"
                           borderRadius="lg"
                           _dark={{ bg: "yellow.900" }}
                         >
@@ -1498,9 +1477,9 @@ const CourseDetailsPage = () => {
                         </Box>
                         الدرجة الكلية
                       </FormLabel>
-                      <Input 
-                        type="number" 
-                        value={formData.total_grade} 
+                      <Input
+                        type="number"
+                        value={formData.total_grade}
                         onChange={e => setFormData({ ...formData, total_grade: parseInt(e.target.value) })}
                         placeholder="100"
                         min={1}
@@ -1509,8 +1488,8 @@ const CourseDetailsPage = () => {
                         borderRadius="xl"
                         border="2px solid"
                         borderColor="gray.200"
-                        _focus={{ 
-                          borderColor: "yellow.400", 
+                        _focus={{
+                          borderColor: "yellow.400",
                           boxShadow: "0 0 0 3px rgba(236, 201, 75, 0.1)",
                           bg: "yellow.50"
                         }}
@@ -1528,19 +1507,19 @@ const CourseDetailsPage = () => {
                       />
                     </FormControl>
                     <FormControl isRequired flex={1}>
-                      <FormLabel 
-                        display="flex" 
-                        alignItems="center" 
-                        gap={3} 
-                        fontWeight="bold" 
+                      <FormLabel
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                        fontWeight="bold"
                         color="gray.700"
                         fontSize="lg"
                         mb={4}
                         _dark={{ color: "gray.200" }}
                       >
-                        <Box 
-                          p={2} 
-                          bg="green.100" 
+                        <Box
+                          p={2}
+                          bg="green.100"
                           borderRadius="lg"
                           _dark={{ bg: "green.900" }}
                         >
@@ -1548,9 +1527,9 @@ const CourseDetailsPage = () => {
                         </Box>
                         المدة (بالدقائق)
                       </FormLabel>
-                      <Input 
-                        type="number" 
-                        value={formData.duration} 
+                      <Input
+                        type="number"
+                        value={formData.duration}
                         onChange={e => setFormData({ ...formData, duration: parseInt(e.target.value) })}
                         placeholder="60"
                         min={1}
@@ -1559,8 +1538,8 @@ const CourseDetailsPage = () => {
                         borderRadius="xl"
                         border="2px solid"
                         borderColor="gray.200"
-                        _focus={{ 
-                          borderColor: "green.400", 
+                        _focus={{
+                          borderColor: "green.400",
                           boxShadow: "0 0 0 3px rgba(56, 178, 172, 0.1)",
                           bg: "green.50"
                         }}
@@ -1581,10 +1560,10 @@ const CourseDetailsPage = () => {
                 </Box>
 
                 {/* تواريخ الظهور والإخفاء */}
-                <Box 
-                  p={6} 
-                  bg="white" 
-                  borderRadius="2xl" 
+                <Box
+                  p={6}
+                  bg="white"
+                  borderRadius="2xl"
                   boxShadow="0 4px 12px rgba(0, 0, 0, 0.05)"
                   border="1px solid"
                   borderColor="gray.100"
@@ -1592,19 +1571,19 @@ const CourseDetailsPage = () => {
                 >
                   <HStack spacing={6}>
                     <FormControl flex={1}>
-                      <FormLabel 
-                        display="flex" 
-                        alignItems="center" 
-                        gap={3} 
-                        fontWeight="bold" 
+                      <FormLabel
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                        fontWeight="bold"
                         color="gray.700"
                         fontSize="lg"
                         mb={4}
                         _dark={{ color: "gray.200" }}
                       >
-                        <Box 
-                          p={2} 
-                          bg="purple.100" 
+                        <Box
+                          p={2}
+                          bg="purple.100"
                           borderRadius="lg"
                           _dark={{ bg: "purple.900" }}
                         >
@@ -1612,16 +1591,16 @@ const CourseDetailsPage = () => {
                         </Box>
                         تاريخ الظهور
                       </FormLabel>
-                      <Input 
-                        type="datetime-local" 
-                        value={formData.show_at} 
+                      <Input
+                        type="datetime-local"
+                        value={formData.show_at}
                         onChange={e => setFormData({ ...formData, show_at: e.target.value })}
                         isDisabled={loading}
                         borderRadius="xl"
                         border="2px solid"
                         borderColor="gray.200"
-                        _focus={{ 
-                          borderColor: "purple.400", 
+                        _focus={{
+                          borderColor: "purple.400",
                           boxShadow: "0 0 0 3px rgba(147, 51, 234, 0.1)",
                           bg: "purple.50"
                         }}
@@ -1639,19 +1618,19 @@ const CourseDetailsPage = () => {
                       />
                     </FormControl>
                     <FormControl flex={1}>
-                      <FormLabel 
-                        display="flex" 
-                        alignItems="center" 
-                        gap={3} 
-                        fontWeight="bold" 
+                      <FormLabel
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                        fontWeight="bold"
                         color="gray.700"
                         fontSize="lg"
                         mb={4}
                         _dark={{ color: "gray.200" }}
                       >
-                        <Box 
-                          p={2} 
-                          bg="red.100" 
+                        <Box
+                          p={2}
+                          bg="red.100"
                           borderRadius="lg"
                           _dark={{ bg: "red.900" }}
                         >
@@ -1659,16 +1638,16 @@ const CourseDetailsPage = () => {
                         </Box>
                         تاريخ الإخفاء
                       </FormLabel>
-                      <Input 
-                        type="datetime-local" 
-                        value={formData.hide_at} 
+                      <Input
+                        type="datetime-local"
+                        value={formData.hide_at}
                         onChange={e => setFormData({ ...formData, hide_at: e.target.value })}
                         isDisabled={loading}
                         borderRadius="xl"
                         border="2px solid"
                         borderColor="gray.200"
-                        _focus={{ 
-                          borderColor: "red.400", 
+                        _focus={{
+                          borderColor: "red.400",
                           boxShadow: "0 0 0 3px rgba(239, 68, 68, 0.1)",
                           bg: "red.50"
                         }}
@@ -1689,22 +1668,22 @@ const CourseDetailsPage = () => {
                 </Box>
 
                 {/* إعدادات الإجابات */}
-                <Box 
-                  p={8} 
-                  bg="linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%)" 
-                  borderRadius="2xl" 
-                  border="2px solid" 
+                <Box
+                  p={8}
+                  bg="linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%)"
+                  borderRadius="2xl"
+                  border="2px solid"
                   borderColor="green.200"
                   boxShadow="0 8px 25px rgba(56, 178, 172, 0.1)"
-                  _dark={{ 
+                  _dark={{
                     bg: "linear-gradient(135deg, #1a202c 0%, #2d3748 100%)",
                     borderColor: "green.700"
                   }}
                 >
                   <HStack spacing={4} mb={6}>
-                    <Box 
-                      p={3} 
-                      bg="green.100" 
+                    <Box
+                      p={3}
+                      bg="green.100"
                       borderRadius="xl"
                       _dark={{ bg: "green.900" }}
                     >
@@ -1720,11 +1699,11 @@ const CourseDetailsPage = () => {
                     </VStack>
                   </HStack>
                   <VStack spacing={6} align="stretch">
-                    <Box 
-                      p={6} 
-                      bg="white" 
-                      borderRadius="xl" 
-                      border="1px solid" 
+                    <Box
+                      p={6}
+                      bg="white"
+                      borderRadius="xl"
+                      border="1px solid"
                       borderColor="green.200"
                       _dark={{ bg: "gray.800", borderColor: "green.700" }}
                     >
@@ -1737,7 +1716,7 @@ const CourseDetailsPage = () => {
                             عرض الإجابات مباشرة بعد انتهاء الامتحان
                           </Text>
                         </VStack>
-                        <Switch 
+                        <Switch
                           isChecked={formData.show_answers_immediately}
                           onChange={e => setFormData({ ...formData, show_answers_immediately: e.target.checked })}
                           colorScheme="green"
@@ -1746,30 +1725,30 @@ const CourseDetailsPage = () => {
                         />
                       </HStack>
                     </Box>
-                    
+
                     {!formData.show_answers_immediately && (
-                      <Box 
-                        p={6} 
-                        bg="white" 
-                        borderRadius="xl" 
-                        border="1px solid" 
+                      <Box
+                        p={6}
+                        bg="white"
+                        borderRadius="xl"
+                        border="1px solid"
                         borderColor="green.200"
                         _dark={{ bg: "gray.800", borderColor: "green.700" }}
                       >
                         <FormControl>
-                          <FormLabel 
-                            display="flex" 
-                            alignItems="center" 
-                            gap={3} 
-                            fontWeight="bold" 
+                          <FormLabel
+                            display="flex"
+                            alignItems="center"
+                            gap={3}
+                            fontWeight="bold"
                             color="gray.700"
                             fontSize="lg"
                             mb={4}
                             _dark={{ color: "gray.200" }}
                           >
-                            <Box 
-                              p={2} 
-                              bg="orange.100" 
+                            <Box
+                              p={2}
+                              bg="orange.100"
                               borderRadius="lg"
                               _dark={{ bg: "orange.900" }}
                             >
@@ -1777,9 +1756,9 @@ const CourseDetailsPage = () => {
                             </Box>
                             إظهار الإجابات بعد (ساعات)
                           </FormLabel>
-                          <Input 
-                            type="number" 
-                            value={formData.show_answers_after_hours} 
+                          <Input
+                            type="number"
+                            value={formData.show_answers_after_hours}
                             onChange={e => setFormData({ ...formData, show_answers_after_hours: parseInt(e.target.value) })}
                             placeholder="24"
                             min={1}
@@ -1788,8 +1767,8 @@ const CourseDetailsPage = () => {
                             borderRadius="xl"
                             border="2px solid"
                             borderColor="gray.200"
-                            _focus={{ 
-                              borderColor: "orange.400", 
+                            _focus={{
+                              borderColor: "orange.400",
                               boxShadow: "0 0 0 3px rgba(237, 137, 54, 0.1)",
                               bg: "orange.50"
                             }}
@@ -1812,22 +1791,22 @@ const CourseDetailsPage = () => {
                 </Box>
 
                 {/* إعدادات إضافية */}
-                <Box 
-                  p={8} 
-                  bg="linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%)" 
-                  borderRadius="2xl" 
-                  border="2px solid" 
+                <Box
+                  p={8}
+                  bg="linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%)"
+                  borderRadius="2xl"
+                  border="2px solid"
                   borderColor="blue.200"
                   boxShadow="0 8px 25px rgba(66, 153, 225, 0.1)"
-                  _dark={{ 
+                  _dark={{
                     bg: "linear-gradient(135deg, #1a202c 0%, #2d3748 100%)",
                     borderColor: "blue.700"
                   }}
                 >
                   <HStack spacing={4} mb={6}>
-                    <Box 
-                      p={3} 
-                      bg="blue.100" 
+                    <Box
+                      p={3}
+                      bg="blue.100"
                       borderRadius="xl"
                       _dark={{ bg: "blue.900" }}
                     >
@@ -1843,11 +1822,11 @@ const CourseDetailsPage = () => {
                     </VStack>
                   </HStack>
                   <VStack spacing={6} align="stretch">
-                    <Box 
-                      p={6} 
-                      bg="white" 
-                      borderRadius="xl" 
-                      border="1px solid" 
+                    <Box
+                      p={6}
+                      bg="white"
+                      borderRadius="xl"
+                      border="1px solid"
                       borderColor="blue.200"
                       _dark={{ bg: "gray.800", borderColor: "blue.700" }}
                     >
@@ -1860,7 +1839,7 @@ const CourseDetailsPage = () => {
                             جعل الامتحان مرئياً للطلاب
                           </Text>
                         </VStack>
-                        <Switch 
+                        <Switch
                           isChecked={formData.is_visible}
                           onChange={e => setFormData({ ...formData, is_visible: e.target.checked })}
                           colorScheme="blue"
@@ -1869,12 +1848,12 @@ const CourseDetailsPage = () => {
                         />
                       </HStack>
                     </Box>
-                    
-                    <Box 
-                      p={6} 
-                      bg="white" 
-                      borderRadius="xl" 
-                      border="1px solid" 
+
+                    <Box
+                      p={6}
+                      bg="white"
+                      borderRadius="xl"
+                      border="1px solid"
                       borderColor="blue.200"
                       _dark={{ bg: "gray.800", borderColor: "blue.700" }}
                     >
@@ -1887,7 +1866,7 @@ const CourseDetailsPage = () => {
                             منع الوصول للمحاضرات التالية حتى اجتياز الامتحان
                           </Text>
                         </VStack>
-                        <Switch 
+                        <Switch
                           isChecked={formData.lock_next_lectures}
                           onChange={e => setFormData({ ...formData, lock_next_lectures: e.target.checked })}
                           colorScheme="red"
@@ -1901,23 +1880,23 @@ const CourseDetailsPage = () => {
               </VStack>
             </ModalBody>
 
-            <ModalFooter 
-              py={8} 
+            <ModalFooter
+              py={8}
               px={8}
-              bg="linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)" 
+              bg="linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)"
               borderRadius="0 0 3xl 3xl"
               borderTop="1px solid"
               borderColor="gray.200"
-              _dark={{ 
+              _dark={{
                 bg: "linear-gradient(135deg, #2d3748 0%, #4a5568 100%)",
                 borderColor: "gray.600"
               }}
             >
               <HStack spacing={6} w="full" justify="flex-end">
-                <Button 
-                  variant="outline" 
-                  colorScheme="red" 
-                  onClick={onClose} 
+                <Button
+                  variant="outline"
+                  colorScheme="red"
+                  onClick={onClose}
                   isDisabled={loading}
                   leftIcon={<Icon as={FaTimes} />}
                   borderRadius="xl"
@@ -1926,8 +1905,8 @@ const CourseDetailsPage = () => {
                   py={6}
                   fontSize="lg"
                   fontWeight="bold"
-                  _hover={{ 
-                    transform: 'translateY(-2px)', 
+                  _hover={{
+                    transform: 'translateY(-2px)',
                     boxShadow: 'lg',
                     bg: 'red.50'
                   }}
@@ -1938,9 +1917,9 @@ const CourseDetailsPage = () => {
                 >
                   إلغاء
                 </Button>
-                <Button 
-                  colorScheme="blue" 
-                  type="submit" 
+                <Button
+                  colorScheme="blue"
+                  type="submit"
                   isLoading={loading}
                   loadingText={type === 'add' ? 'جاري الإضافة...' : 'جاري التعديل...'}
                   leftIcon={!loading ? <Icon as={FaCheck} /> : undefined}
@@ -1951,8 +1930,8 @@ const CourseDetailsPage = () => {
                   fontSize="lg"
                   fontWeight="bold"
                   bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                  _hover={{ 
-                    transform: 'translateY(-2px)', 
+                  _hover={{
+                    transform: 'translateY(-2px)',
                     boxShadow: '0 10px 25px rgba(102, 126, 234, 0.3)',
                     bg: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
                   }}
@@ -1986,7 +1965,7 @@ const CourseDetailsPage = () => {
 
     const handleImageChange = (event) => {
       const files = Array.from(event.target.files);
-      
+
       // Validate file count
       if (files.length > 10) {
         toast({
@@ -2002,7 +1981,7 @@ const CourseDetailsPage = () => {
       // Validate file types
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       const invalidFiles = files.filter(file => !validTypes.includes(file.type));
-      
+
       if (invalidFiles.length > 0) {
         toast({
           title: "خطأ في نوع الملفات",
@@ -2037,10 +2016,10 @@ const CourseDetailsPage = () => {
     const removeImage = (index) => {
       const newImages = formData.images.filter((_, i) => i !== index);
       const newPreviews = imagePreviews.filter((_, i) => i !== index);
-      
+
       // Revoke the URL to free memory
       URL.revokeObjectURL(imagePreviews[index]);
-      
+
       setFormData(prev => ({ ...prev, images: newImages }));
       setImagePreviews(newPreviews);
     };
@@ -2106,16 +2085,16 @@ const CourseDetailsPage = () => {
                     <Text fontSize="sm" color="gray.600" mb={3}>
                       أدخل الأسئلة بالشكل التالي:
                     </Text>
-                    <Box 
-                      bg="gray.50" 
-                      p={4} 
-                      borderRadius="md" 
-                      border="1px solid" 
+                    <Box
+                      bg="gray.50"
+                      p={4}
+                      borderRadius="md"
+                      border="1px solid"
                       borderColor="gray.200"
                       mb={4}
                     >
-                    <Text fontSize="sm" fontFamily="mono" color="gray.700">
-                      {`You were __________ to escape unharmed.
+                      <Text fontSize="sm" fontFamily="mono" color="gray.700">
+                        {`You were __________ to escape unharmed.
 A) unfortunately
 B) fortunately
 C) fortunate
@@ -2126,7 +2105,7 @@ A) has done
 B) have done
 C) have made
 D) has made`}
-                    </Text>
+                      </Text>
                     </Box>
                     <Textarea
                       value={formData.bulk_text}
@@ -2138,7 +2117,7 @@ D) has made`}
                       resize="vertical"
                       isRequired
                     />
-                  
+
                     <Box>
                       <Text fontSize="sm" color="blue.600" fontWeight="medium">
                         ملاحظات:
@@ -2167,7 +2146,7 @@ D) has made`}
                     <Text fontSize="sm" color="gray.600" mb={3}>
                       يمكنك رفع حتى 10 صور للأسئلة
                     </Text>
-                    
+
                     {/* File Upload Area */}
                     <Box
                       border="2px dashed"
@@ -2270,13 +2249,13 @@ D) has made`}
               <Button variant="ghost" mr={3} onClick={onClose} isDisabled={loading}>
                 إلغاء
               </Button>
-              <Button 
-                colorScheme="blue" 
-                type="submit" 
+              <Button
+                colorScheme="blue"
+                type="submit"
                 isLoading={loading}
                 loadingText="جاري إضافة الأسئلة..."
                 isDisabled={
-                  loading || 
+                  loading ||
                   (questionType === 'text' && !formData.bulk_text.trim()) ||
                   (questionType === 'images' && formData.images.length === 0)
                 }
@@ -2381,9 +2360,9 @@ D) has made`}
         tempDiv.innerHTML = `
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 3mm; width: 100%; height: 100%; align-content: start;">
             ${codesToExport
-              .slice(i, i + codesPerPage)
-              .map(
-                (code, index) => `
+            .slice(i, i + codesPerPage)
+            .map(
+              (code, index) => `
                   <div class="code" style="padding: 3mm; width: 100%; height: 100%; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; position: relative; overflow: hidden; background: #fff; display: flex; flex-direction: column; justify-content: space-between; min-height: 40mm; direction: rtl;">
                     
                     <!-- Header with Logo and Grade -->
@@ -2422,8 +2401,8 @@ D) has made`}
                       </p>
                     </div>
                   </div>`
-              )
-              .join("")}
+            )
+            .join("")}
           </div>
         `;
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -2479,57 +2458,10 @@ D) has made`}
 
   // Handle view enrollments
   const handleViewEnrollments = () => {
-    fetchEnrollments();
-    onOpen();
+    navigate(`/CourseStudentsPage/${id}`);
   };
 
-  // State for delete student confirmation
-  const [deleteStudentDialog, setDeleteStudentDialog] = useState({
-    isOpen: false,
-    studentId: null,
-    studentName: '',
-  });
 
-  // Handle delete student confirmation
-  const handleDeleteStudentConfirm = (studentId, studentName) => {
-    setDeleteStudentDialog({
-      isOpen: true,
-      studentId,
-      studentName,
-    });
-  };
-
-  // Handle delete student from course
-  const handleDeleteStudent = async () => {
-    const { studentId, studentName } = deleteStudentDialog;
-    try {
-      setActionLoading(true);
-      await baseUrl.delete(`api/course/${id}/student/${studentId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast({
-        title: "تم حذف الطالب بنجاح",
-        description: `تم حذف ${studentName} من الكورس`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      // تحديث قائمة الطلبة
-      await fetchEnrollments();
-      // إغلاق dialog التأكيد
-      setDeleteStudentDialog({ isOpen: false, studentId: null, studentName: '' });
-    } catch (error) {
-      toast({
-        title: "خطأ في حذف الطالب",
-        description: error.response?.data?.message || "حدث خطأ غير متوقع",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   // Format date function
   const formatDate = (dateString) => {
@@ -2623,8 +2555,8 @@ D) has made`}
                   </Box>
 
                   {/* Loading Description */}
-                  <Box 
-                    w="full" 
+                  <Box
+                    w="full"
                     maxW="600px"
                     p={4}
                     bg="whiteAlpha.200"
@@ -2725,7 +2657,7 @@ D) has made`}
                   <Box h="32px" w="200px" bg="gray.200" borderRadius="md" />
                   <Box h="40px" w="120px" bg="gray.200" borderRadius="lg" />
                 </HStack>
-                
+
                 <VStack spacing={4} align="stretch">
                   {[...Array(4)].map((_, index) => (
                     <Box
@@ -2765,7 +2697,7 @@ D) has made`}
             >
               <VStack spacing={6} align="stretch">
                 <Box h="32px" w="180px" bg="gray.200" borderRadius="md" />
-                
+
                 <HStack spacing={6}>
                   <Box w="80px" h="80px" bg="gray.200" borderRadius="full" />
                   <VStack align="flex-start" spacing={3} flex={1}>
@@ -2793,7 +2725,7 @@ D) has made`}
             >
               <VStack spacing={6} align="stretch">
                 <Box h="32px" w="160px" bg="gray.200" borderRadius="md" />
-                
+
                 <VStack spacing={4} align="stretch">
                   {[...Array(3)].map((_, index) => (
                     <Box
@@ -2831,7 +2763,7 @@ D) has made`}
             animation: shimmer 2s ease-in-out infinite;
           }
         `}</style>
-        <ScrollToTop/>
+        <ScrollToTop />
       </Box>
     );
   }
@@ -2844,11 +2776,11 @@ D) has made`}
           <VStack spacing={8}>
             {/* Error Icon with Animation */}
             <Box position="relative">
-              <Icon 
-                as={FaLightbulb} 
-                boxSize={20} 
+              <Icon
+                as={FaLightbulb}
+                boxSize={20}
                 color="red.500"
-                style={{ 
+                style={{
                   animation: 'shake 0.5s ease-in-out infinite',
                   filter: 'drop-shadow(0 2px 4px rgba(245, 101, 101, 0.3))'
                 }}
@@ -2865,7 +2797,7 @@ D) has made`}
                 animation="pulse 2s ease-in-out infinite"
               />
             </Box>
-            
+
             {/* Error Container */}
             <Box
               p={{ base: 8, md: 10 }}
@@ -2877,23 +2809,23 @@ D) has made`}
               textAlign="center"
               maxW={{ base: '90vw', md: '500px' }}
             >
-          <VStack spacing={6}>
-                <Text 
-                  fontSize={{ base: "lg", md: "xl" }} 
-                  color="red.600" 
+              <VStack spacing={6}>
+                <Text
+                  fontSize={{ base: "lg", md: "xl" }}
+                  color="red.600"
                   fontWeight="bold"
                 >
                   حدث خطأ أثناء تحميل البيانات
                 </Text>
-                <Text 
-                  fontSize="md" 
-                  color="red.500" 
+                <Text
+                  fontSize="md"
+                  color="red.500"
                   opacity="0.9"
                 >
-              {error}
-            </Text>
-                <Button 
-                  colorScheme="blue" 
+                  {error}
+                </Text>
+                <Button
+                  colorScheme="blue"
                   onClick={() => window.location.reload()}
                   size="lg"
                   px={8}
@@ -2901,12 +2833,12 @@ D) has made`}
                   _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
                   transition="all 0.2s"
                 >
-              إعادة المحاولة
-            </Button>
-          </VStack>
+                  إعادة المحاولة
+                </Button>
+              </VStack>
             </Box>
           </VStack>
-          
+
           {/* CSS Animations */}
           <style>{`
             @keyframes shake {
@@ -2932,17 +2864,17 @@ D) has made`}
           <VStack spacing={8}>
             {/* No Data Icon */}
             <Box position="relative">
-              <Icon 
-                as={FaSearch} 
-                boxSize={20} 
+              <Icon
+                as={FaSearch}
+                boxSize={20}
                 color="gray.500"
-                style={{ 
+                style={{
                   animation: 'float 3s ease-in-out infinite',
                   filter: 'drop-shadow(0 2px 4px rgba(113, 128, 150, 0.3))'
                 }}
               />
             </Box>
-            
+
             {/* No Data Container */}
             <Box
               p={{ base: 8, md: 10 }}
@@ -2955,22 +2887,22 @@ D) has made`}
               maxW={{ base: '90vw', md: '500px' }}
             >
               <VStack spacing={6}>
-                <Text 
-                  fontSize={{ base: "lg", md: "xl" }} 
-                  color="gray.600" 
+                <Text
+                  fontSize={{ base: "lg", md: "xl" }}
+                  color="gray.600"
                   fontWeight="bold"
                 >
                   لا توجد بيانات متاحة
                 </Text>
-                <Text 
-                  fontSize="md" 
-                  color="gray.500" 
+                <Text
+                  fontSize="md"
+                  color="gray.500"
                   opacity="0.8"
                 >
                   لم يتم العثور على معلومات الكورس المطلوب
                 </Text>
-                <Button 
-                  colorScheme="blue" 
+                <Button
+                  colorScheme="blue"
                   onClick={() => window.location.reload()}
                   size="md"
                   px={6}
@@ -2983,7 +2915,7 @@ D) has made`}
               </VStack>
             </Box>
           </VStack>
-          
+
           {/* CSS Animations */}
           <style>{`
             @keyframes float {
@@ -3000,7 +2932,7 @@ D) has made`}
   return (
     <Box minH={{ base: '100vh', md: '100vh' }} bg={pageBg} dir="rtl" className="mt-[=5 0px]">
       {/* Hero Section - Full Width Image with Overlay */}
-      <CourseHeroSection 
+      <CourseHeroSection
         course={course}
         isTeacher={isTeacher}
         isAdmin={isAdmin}
@@ -3018,32 +2950,32 @@ D) has made`}
       />
       {/* زر إنشاء أكواد للمدرس فقط */}
       {isTeacher && (
-        <Flex 
-          justify={{ base: 'center', md: 'flex-end' }} 
-          align="center" 
-          px={{ base: 4, sm: 6, md: 10 }} 
-          mt={{ base: 2, md: 4 }} 
-          mb={{ base: 0, md: -8 }} 
-          gap={{ base: 2, md: 3 }} 
+        <Flex
+          justify={{ base: 'center', md: 'flex-end' }}
+          align="center"
+          px={{ base: 4, sm: 6, md: 10 }}
+          mt={{ base: 2, md: 4 }}
+          mb={{ base: 0, md: -8 }}
+          gap={{ base: 2, md: 3 }}
           direction={{ base: 'column', sm: 'row' }}
           flexWrap="wrap"
         >
-          <Button 
-            colorScheme="purple" 
-            leftIcon={<FaKey />} 
-            borderRadius="xl" 
-            onClick={() => setCodeModalOpen(true)} 
+          <Button
+            colorScheme="purple"
+            leftIcon={<FaKey />}
+            borderRadius="xl"
+            onClick={() => setCodeModalOpen(true)}
             w={{ base: '100%', sm: 'auto' }}
             size={{ base: 'sm', md: 'md' }}
             fontSize={{ base: 'xs', md: 'sm' }}
           >
             إنشاء أكواد
           </Button>
-          <Button 
-            colorScheme="blue" 
-            leftIcon={<FaKey />} 
-            borderRadius="xl" 
-            onClick={() => { setShowCodesModal(true); fetchActivationCodes(); }} 
+          <Button
+            colorScheme="blue"
+            leftIcon={<FaKey />}
+            borderRadius="xl"
+            onClick={() => { setShowCodesModal(true); fetchActivationCodes(); }}
             w={{ base: '100%', sm: 'auto' }}
             size={{ base: 'sm', md: 'md' }}
             fontSize={{ base: 'xs', md: 'sm' }}
@@ -3133,17 +3065,17 @@ D) has made`}
                 )}
               </Box>
             )}
-            
+
             {activationCodes.length > 0 && (
               <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="gray.50">
                 <Text fontWeight="bold" mb={3}>تحديد نطاق التصدير:</Text>
                 <Flex gap={4} alignItems="center" flexWrap="wrap">
                   <Box>
                     <Text fontSize="sm" mb={1}>من الكود رقم:</Text>
-                    <NumberInput 
-                      min={1} 
-                      max={activationCodes.length} 
-                      value={exportStartIndex} 
+                    <NumberInput
+                      min={1}
+                      max={activationCodes.length}
+                      value={exportStartIndex}
                       onChange={(valueString, valueNumber) => setExportStartIndex(valueNumber)}
                       size="sm"
                       w="100px"
@@ -3157,10 +3089,10 @@ D) has made`}
                   </Box>
                   <Box>
                     <Text fontSize="sm" mb={1}>إلى الكود رقم:</Text>
-                    <NumberInput 
-                      min={1} 
-                      max={activationCodes.length} 
-                      value={exportEndIndex} 
+                    <NumberInput
+                      min={1}
+                      max={activationCodes.length}
+                      value={exportEndIndex}
                       onChange={(valueString, valueNumber) => setExportEndIndex(valueNumber)}
                       size="sm"
                       w="100px"
@@ -3172,27 +3104,27 @@ D) has made`}
                       </NumberInputStepper>
                     </NumberInput>
                   </Box>
-                  <Button 
-                    size="sm" 
-                    colorScheme="blue" 
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
                     onClick={() => {
                       setExportStartIndex(1);
                       setExportEndIndex(activationCodes.length);
                     }}
                   >
                     تحديد الكل
-              </Button>
+                  </Button>
                   <Text fontSize="sm" color="gray.600">
                     (إجمالي {activationCodes.length} كود)
                   </Text>
                 </Flex>
-                <Button 
-                  colorScheme="teal" 
-                  mt={3} 
-                  onClick={handleExportCodesPdf} 
+                <Button
+                  colorScheme="teal"
+                  mt={3}
+                  onClick={handleExportCodesPdf}
                   disabled={isExportingPdf || exportStartIndex > exportEndIndex}
                 >
-                  {isExportingPdf ? <Spinner size="sm" mr={2} /> : null} 
+                  {isExportingPdf ? <Spinner size="sm" mr={2} /> : null}
                   تصدير الأكواد من {exportStartIndex} إلى {exportEndIndex}
                 </Button>
               </Box>
@@ -3208,10 +3140,10 @@ D) has made`}
                 <Icon as={FaSearch} boxSize={12} color="gray.400" mb={4} />
                 <Text color="gray.500" fontSize="lg" mb={2}>لم يتم العثور على نتائج</Text>
                 <Text color="gray.400" fontSize="sm">لا توجد أكواد تطابق البحث: "{searchCode}"</Text>
-                <Button 
-                  size="sm" 
-                  colorScheme="blue" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  variant="outline"
                   mt={3}
                   onClick={() => setSearchCode('')}
                 >
@@ -3404,66 +3336,66 @@ D) has made`}
                         {/* Header with Logo and Grade */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px', padding: '2px 0' }}>
                           <div style={{ display: 'flex', alignItems: 'center' }}>
-                               <div style={{ marginBottom: '3px' }}>
-                           <h2 style={{ fontSize: '14px', fontWeight: 'bold', color: '#3182ce', margin: '0', textAlign: 'center' }}>
-                             {user.name || 'عمرو علي'}
-                           </h2>
-                         </div>
+                            <div style={{ marginBottom: '3px' }}>
+                              <h2 style={{ fontSize: '14px', fontWeight: 'bold', color: '#3182ce', margin: '0', textAlign: 'center' }}>
+                                {user.name || 'عمرو علي'}
+                              </h2>
                             </div>
-                            <div style={{ fontSize: '9px', color: '#3182ce', fontWeight: 'bold' }}>{code.grade_name || 'الصف الثاني الثانوي'}</div>
                           </div>
+                          <div style={{ fontSize: '9px', color: '#3182ce', fontWeight: 'bold' }}>{code.grade_name || 'الصف الثاني الثانوي'}</div>
+                        </div>
 
                         {/* Student Name */}
-                   
+
 
                         {/* Registration Steps */}
-                      
+
                         {/* QR Code and Activation Code */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                           {/* Activation Code Section - Left */}
                           <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '8px', color: '#c53030', fontWeight: 'bold', marginBottom: '2px' }}>كود التفعيل</div>
-                            <div style={{ 
-                              fontSize: '10px', 
-                              color: '#c53030', 
-                              fontWeight: 'bold', 
-                              fontFamily: 'monospace', 
-                              background: '#fef2f2', 
-                              padding: '3px 4px', 
-                              borderRadius: '3px', 
+                            <div style={{
+                              fontSize: '10px',
+                              color: '#c53030',
+                              fontWeight: 'bold',
+                              fontFamily: 'monospace',
+                              background: '#fef2f2',
+                              padding: '3px 4px',
+                              borderRadius: '3px',
                               border: '1px solid #fecaca',
                               display: 'inline-block'
                             }}>
                               {code.code}
                             </div>
                           </div>
-                          
+
                           {/* Empty Middle Space */}
                           <div style={{ flex: '1' }}></div>
-                          
+
                           {/* QR Code Section - Right */}
                           <div style={{ textAlign: 'center' }}>
                             {code.qr_code ? (
-                              <img 
-                                src={code.qr_code} 
-                                alt="QR Code" 
-                                style={{ 
-                                  width: '50px', 
-                                  height: '50px', 
-                                  border: '1px solid #ddd', 
-                                  borderRadius: '4px', 
-                                  background: 'white', 
+                              <img
+                                src={code.qr_code}
+                                alt="QR Code"
+                                style={{
+                                  width: '50px',
+                                  height: '50px',
+                                  border: '1px solid #ddd',
+                                  borderRadius: '4px',
+                                  background: 'white',
                                   padding: '2px',
                                   display: 'block',
                                   margin: '0 auto'
-                                }} 
+                                }}
                               />
                             ) : (
-                              <div style={{ 
-                                width: '50px', 
-                                height: '50px', 
-                                border: '1px dashed #ccc', 
-                                borderRadius: '4px', 
+                              <div style={{
+                                width: '50px',
+                                height: '50px',
+                                border: '1px dashed #ccc',
+                                borderRadius: '4px',
                                 background: '#f9f9f9',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -3477,7 +3409,7 @@ D) has made`}
                             )}
                           </div>
                         </div>
-                        
+
                         {/* Contact Numbers */}
                         <div style={{ marginTop: 'auto', paddingTop: '3px', borderTop: '1px solid #e2e8f0' }}>
                           <p style={{ fontSize: '7px', fontWeight: '600', color: '#3182ce', textAlign: 'center', margin: '0' }}>
@@ -3500,7 +3432,7 @@ D) has made`}
         </ModalContent>
       </Modal>
 
-     
+
 
       <VStack
         spacing={{ base: 4, sm: 6, md: 12, lg: 16 }}
@@ -3508,7 +3440,7 @@ D) has made`}
         maxW="container.xl"
         mx="auto"
         py={{ base: 4, sm: 6, md: 16 }}
-       className="lecture_container"
+        className="lecture_container"
         gap={{ base: 4, sm: 6, md: 8 }}
       >
         <MotionBox
@@ -3518,7 +3450,7 @@ D) has made`}
           bg={sectionBg}
           borderRadius={{ base: 'xl', md: '2xl' }}
           shadow={{ base: 'lg', md: 'xl' }}
-        
+
           w="100%"
           minW={0}
           overflowX="hidden"
@@ -3532,7 +3464,7 @@ D) has made`}
             onChange={setTabIndex}
             size={{ base: 'sm', md: 'md' }}
           >
-        
+
             <TabPanels p={{ base: 3, sm: 4, md: 6, lg: 8 }}>
               <Box
                 bg={useColorModeValue("white", "gray.800")}
@@ -3552,68 +3484,68 @@ D) has made`}
                   zIndex: -1
                 }}
               >
-              {/* Tab Panel للمحاضرات */}
-              <TabPanel>
-                <LecturesTab
-                  lectures={lectures}
-                  isTeacher={isTeacher}
-                  isAdmin={isAdmin}
-                  expandedLecture={expandedLecture}
-                  setExpandedLecture={setExpandedLecture}
-                  handleAddLecture={handleAddLecture}
-                  handleEditLecture={handleEditLecture}
-                  handleDeleteLecture={handleDeleteLecture}
-                  handleAddVideo={handleAddVideo}
-                  handleEditVideo={handleEditVideo}
-                  handleDeleteVideo={handleDeleteVideo}
-                  handleAddFile={handleAddFile}
-                  handleEditFile={handleEditFile}
-                  handleDeleteFile={handleDeleteFile}
-                  setExamModal={setExamModal}
-                  setDeleteExamDialog={setDeleteExamDialog}
-                  examActionLoading={actionLoading}
-                  itemBg={itemBg}
-                  sectionBg={sectionBg}
-                  headingColor={headingColor}
-                  subTextColor={subTextColor}
-                  borderColor={borderColor}
-                  dividerColor={dividerColor}
-                  textColor={textColor}
-                  formatDate={formatDate}
-                  onAddBulkQuestions={handleOpenBulkQuestionsModal}
-                  handleOpenVideo={handleOpenVideo}
-                />
-              </TabPanel>
+                {/* Tab Panel للمحاضرات */}
+                <TabPanel>
+                  <LecturesTab
+                    lectures={lectures}
+                    isTeacher={isTeacher}
+                    isAdmin={isAdmin}
+                    expandedLecture={expandedLecture}
+                    setExpandedLecture={setExpandedLecture}
+                    handleAddLecture={handleAddLecture}
+                    handleEditLecture={handleEditLecture}
+                    handleDeleteLecture={handleDeleteLecture}
+                    handleAddVideo={handleAddVideo}
+                    handleEditVideo={handleEditVideo}
+                    handleDeleteVideo={handleDeleteVideo}
+                    handleAddFile={handleAddFile}
+                    handleEditFile={handleEditFile}
+                    handleDeleteFile={handleDeleteFile}
+                    setExamModal={setExamModal}
+                    setDeleteExamDialog={setDeleteExamDialog}
+                    examActionLoading={actionLoading}
+                    itemBg={itemBg}
+                    sectionBg={sectionBg}
+                    headingColor={headingColor}
+                    subTextColor={subTextColor}
+                    borderColor={borderColor}
+                    dividerColor={dividerColor}
+                    textColor={textColor}
+                    formatDate={formatDate}
+                    onAddBulkQuestions={handleOpenBulkQuestionsModal}
+                    handleOpenVideo={handleOpenVideo}
+                  />
+                </TabPanel>
 
-              {/* Tab Panel للجلسات المباشرة */}
-              {(isAdmin || isTeacher) ? <CourseStreams courseId={id} /> : <StudentStreamsList courseId={id}/>}
-              
+                {/* Tab Panel للجلسات المباشرة */}
+                {(isAdmin || isTeacher) ? <CourseStreams courseId={id} /> : <StudentStreamsList courseId={id} />}
 
-              {/* Tab Panel للامتحانات */}
-              <TabPanel>
-                <CourseExamsTab
-                  courseExams={courseExams}
-                  courseExamsLoading={courseExamsLoading}
-                  courseExamsError={courseExamsError}
-                  headingColor={headingColor}
-                  sectionBg={sectionBg}
-                  dividerColor={dividerColor}
-                  formatDate={formatDate}
-                  isTeacher={isTeacher}
-                  token={token}
-                  courseId={id}
-                  refreshExams={refreshExams}
-                  onAddBulkQuestions={handleOpenBulkQuestionsModal}
-                />
-              </TabPanel>
-                            </Box>
-              </TabPanels>
-            </Tabs>
-          </MotionBox>
+
+                {/* Tab Panel للامتحانات */}
+                <TabPanel>
+                  <CourseExamsTab
+                    courseExams={courseExams}
+                    courseExamsLoading={courseExamsLoading}
+                    courseExamsError={courseExamsError}
+                    headingColor={headingColor}
+                    sectionBg={sectionBg}
+                    dividerColor={dividerColor}
+                    formatDate={formatDate}
+                    isTeacher={isTeacher}
+                    token={token}
+                    courseId={id}
+                    refreshExams={refreshExams}
+                    onAddBulkQuestions={handleOpenBulkQuestionsModal}
+                  />
+                </TabPanel>
+              </Box>
+            </TabPanels>
+          </Tabs>
+        </MotionBox>
       </VStack>
 
       {/* Lecture Modal */}
-      <LectureModal 
+      <LectureModal
         isOpen={lectureModal.isOpen}
         onClose={() => setLectureModal({ isOpen: false, type: 'add', data: null })}
         type={lectureModal.type}
@@ -3623,7 +3555,7 @@ D) has made`}
       />
 
       {/* Video Modal */}
-      <VideoModal 
+      <VideoModal
         isOpen={videoModal.isOpen}
         onClose={() => setVideoModal({ isOpen: false, type: 'add', lectureId: null, data: null })}
         type={videoModal.type}
@@ -3634,7 +3566,7 @@ D) has made`}
       />
 
       {/* File Modal */}
-      <FileModal 
+      <FileModal
         isOpen={fileModal.isOpen}
         onClose={() => setFileModal({ isOpen: false, type: 'add', lectureId: null, data: null })}
         type={fileModal.type}
@@ -3715,221 +3647,9 @@ D) has made`}
       {console.log('BulkQuestionsModal state:', bulkQuestionsModal)}
       {console.log('BulkQuestionsModal isOpen:', bulkQuestionsModal.isOpen)}
 
-      {/* Enrollments Modal */}
-      <Modal isOpen={isOpen} onClose={() => {
-        onClose();
-        setSearchStudent('');
-      }} size="6xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            <Flex align="center" spacing={3}>
-              <Icon as={FaUserGraduate} color="blue.500" mr={3} />
-              <Text>قائمة الطلاب المشتركين في الكورس</Text>
-              {!enrollmentsLoading && (
-                <Badge colorScheme="blue" fontSize="md" px={3} py={1} borderRadius="full" ml={2}>
-                  {enrollments.length} طالب
-                </Badge>
-              )}
-            </Flex>
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {/* حقل البحث في الطلاب */}
-            {enrollments.length > 0 && (
-              <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="blue.500">
-                <Text fontWeight="bold" mb={3} color="white">البحث في الطلاب:</Text>
-                <InputGroup>
-                  <InputLeftElement>
-                    <Icon as={FaSearch} color="green.500" />
-                  </InputLeftElement>
-                  <Input
-                    placeholder="ابحث بالاسم، الهاتف، البريد الإلكتروني، أو كود التفعيل..."
-                    value={searchStudent}
-                    onChange={(e) => setSearchStudent(e.target.value)}
-                    bg="white"
-                    borderColor="green.200"
-                    _focus={{ borderColor: "green.400", boxShadow: "0 0 0 1px green.400" }}
-                  />
-                  {searchStudent && (
-                    <InputRightElement>
-                      <IconButton
-                        size="sm"
-                        variant="ghost"
-                        icon={<Icon as={FaTimes} />}
-                        onClick={() => setSearchStudent('')}
-                        aria-label="مسح البحث"
-                      />
-                    </InputRightElement>
-                  )}
-                </InputGroup>
-                {searchStudent && (
-                  <Text fontSize="sm" color="green.600" mt={2}>
-                    تم العثور على {filteredEnrollments.length} طالب من أصل {enrollments.length}
-                  </Text>
-                )}
-              </Box>
-            )}
 
-            {enrollmentsLoading ? (
-              <Center py={10}>
-                <VStack spacing={4}>
-                  <Spinner size="xl" color="blue.500" />
-                  <Text>جاري تحميل بيانات الطلاب...</Text>
-                </VStack>
-              </Center>
-            ) : enrollments.length > 0 ? (
-              filteredEnrollments.length === 0 && searchStudent ? (
-                <Box textAlign="center" py={8}>
-                  <Icon as={FaSearch} boxSize={12} color="gray.400" mb={4} />
-                  <Text color="gray.500" fontSize="lg" mb={2}>لم يتم العثور على نتائج</Text>
-                  <Text color="gray.400" fontSize="sm">لا يوجد طلاب يطابقون البحث: "{searchStudent}"</Text>
-                  <Button 
-                    size="sm" 
-                    colorScheme="green" 
-                    variant="outline" 
-                    mt={3}
-                    onClick={() => setSearchStudent('')}
-                  >
-                    مسح البحث
-                  </Button>
-                </Box>
-              ) : (
-              <TableContainer>
-                <Table variant="simple">
-                  <Thead>
-                    <Tr>
-                      <Th>الطالب</Th>
-                      <Th>رقم الهاتف</Th>
-                      <Th>البريد الإلكتروني</Th>
-                      <Th>تاريخ الاشتراك</Th>
-                      <Th>كود التفعيل</Th>
-                      <Th>الإجراءات</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {filteredEnrollments.map((student) => (
-                      <Tr key={student.id}>
-                        <Td>
-                          <HStack spacing={3}>
-                            <Avatar 
-                              size="sm" 
-                              name={student.name}
-                              src={student.avatar}
-                              bg="blue.500"
-                            />
-                            <Text fontWeight="medium">{student.name}</Text>
-                          </HStack>
-                        </Td>
-                        <Td>
-                          <HStack spacing={2}>
-                            <Icon as={FaPhone} color="green.500" />
-                            <Text>{student.phone || "غير متوفر"}</Text>
-                          </HStack>
-                        </Td>
-                        <Td>
-                          <HStack spacing={2}>
-                            <Icon as={FaEnvelope} color="blue.500" />
-                            <Text>{student.email || "غير متوفر"}</Text>
-                          </HStack>
-                        </Td>
-                        <Td>
-                          <HStack spacing={2}>
-                            <Icon as={FaCalendar} color="orange.500" />
-                            <Text>{formatDate(student.enrolled_at)}</Text>
-                          </HStack>
-                        </Td>
-                        <Td>
-                          <HStack spacing={2}>
-                            <Icon as={FaKey} color="purple.500" />
-                            <Text fontFamily="mono" fontSize="sm">
-                              {student.activation_code}
-                            </Text>
-                          </HStack>
-                        </Td>
-                        <Td>
-                          <Tooltip label="حذف الطالب من الكورس" hasArrow>
-                            <IconButton
-                              size="sm"
-                              colorScheme="red"
-                              variant="ghost"
-                              icon={<Icon as={FaTrash} boxSize={4} />}
-                              onClick={() => handleDeleteStudentConfirm(student.id, student.name)}
-                              isLoading={actionLoading}
-                              _hover={{ bg: 'red.50' }}
-                              aria-label="حذف الطالب"
-                            />
-                          </Tooltip>
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              </TableContainer>
-              )
-            ) : (
-              <Center py={10}>
-                <VStack spacing={4}>
-                  <Icon as={FaUserGraduate} boxSize={12} color="gray.400" />
-                  <Text color="gray.500">لا يوجد طلاب مشتركين في هذا الكورس</Text>
-                </VStack>
-              </Center>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={() => {
-              onClose();
-              setSearchStudent('');
-            }}>
-              إغلاق
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
 
-      {/* Delete Student Confirmation Dialog */}
-      <AlertDialog
-        isOpen={deleteStudentDialog.isOpen}
-        onClose={() => setDeleteStudentDialog({ isOpen: false, studentId: null, studentName: '' })}
-        isCentered
-      >
-        <AlertDialogOverlay />
-        <AlertDialogContent>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            تأكيد حذف الطالب
-          </AlertDialogHeader>
-
-          <AlertDialogBody>
-            هل أنت متأكد من حذف الطالب{" "}
-            <Text as="span" fontWeight="bold" color="red.500">
-              {deleteStudentDialog.studentName}
-            </Text>{" "}
-            من هذا الكورس؟
-            <Text fontSize="sm" color="gray.600" mt={2}>
-              هذا الإجراء لا يمكن التراجع عنه.
-            </Text>
-          </AlertDialogBody>
-
-          <AlertDialogFooter>
-            <Button
-              onClick={() => setDeleteStudentDialog({ isOpen: false, studentId: null, studentName: '' })}
-              isDisabled={actionLoading}
-            >
-              إلغاء
-            </Button>
-            <Button
-              colorScheme="red"
-              onClick={handleDeleteStudent}
-              isLoading={actionLoading}
-              loadingText="جاري الحذف..."
-              mr={3}
-            >
-              حذف
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <ScrollToTop/>
+      <ScrollToTop />
     </Box>
   );
 };

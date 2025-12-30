@@ -248,11 +248,26 @@ const TeacherDashboardHome = () => {
     }
   };
 
-  // Fetch available subjects
+  const WEEKDAY_LABELS = {
+    sat: "السبت",
+    sun: "الأحد",
+    mon: "الاثنين",
+    tue: "الثلاثاء",
+    wed: "الأربعاء",
+    thu: "الخميس",
+    fri: "الجمعة",
+  };
+
+  const formatDays = (days) => {
+    if (!Array.isArray(days) || days.length === 0) return "";
+    return days.map((d) => WEEKDAY_LABELS[d] || d).join(" - ");
+  };
+
+  // Fetch teacher package subjects with groups
   const fetchSubjects = async () => {
     try {
       setSubjectsLoading(true);
-      const response = await baseUrl.get('/api/packages/subjects/available', {
+      const response = await baseUrl.get('/api/teacher/package-subjects/groups', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSubjects(response.data.subjects || []);
@@ -729,7 +744,7 @@ const TeacherDashboardHome = () => {
           </MotionBox>
 
           {/* Subjects Section */}
-          {subjects.length > 0 && (
+          {(subjectsLoading || subjects.length > 0) && (
             <MotionBox w="full" variants={itemVariants}>
               <VStack spacing={{ base: 3, sm: 4, md: 6 }} align="stretch" mb={{ base: 4, sm: 5, md: 6, lg: 8 }}>
                 <MotionHeading 
@@ -738,7 +753,7 @@ const TeacherDashboardHome = () => {
                   textAlign={{ base: "center",  }}
                   fontWeight={{ base: "semibold", md: "bold" }}
                 >
-                  موادي
+                  موادي داخل الباقات (المجموعات)
                 </MotionHeading>
 
                 {subjectsLoading ? (
@@ -746,6 +761,15 @@ const TeacherDashboardHome = () => {
                     <VStack spacing={4}>
                       <Spinner size="xl" color="blue.500" thickness="4px" />
                       <Text color={textColor}>جاري تحميل المواد...</Text>
+                    </VStack>
+                  </MotionCenter>
+                ) : subjects.length === 0 ? (
+                  <MotionCenter py={10} variants={itemVariants}>
+                    <VStack spacing={3}>
+                      <Icon as={FaBookOpen} boxSize={12} color="gray.400" />
+                      <Text color={textColor} fontSize="md">
+                        لا توجد مواد مرتبطة بمجموعات حالياً
+                      </Text>
                     </VStack>
                   </MotionCenter>
                 ) : (
@@ -812,7 +836,7 @@ const TeacherDashboardHome = () => {
                             <VStack align="flex-start" spacing={{ base: 1, sm: 2 }} flex={1} minW={0} w="full">
                               <Heading 
                                 size={{ base: "xs", sm: "sm", md: "md" }} 
-                                color="purple.500"
+                                color="blue.500"
                                 noOfLines={2}
                                 w="full"
                                 lineHeight={{ base: 1.3, md: 1.4 }}
@@ -826,7 +850,7 @@ const TeacherDashboardHome = () => {
                                 w="full"
                                 lineHeight={{ base: 1.4, md: 1.5 }}
                               >
-                                {subject.package_name}
+                                {subject.package_name || "—"}
                               </Text>
                               <Text 
                                 fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
@@ -835,7 +859,7 @@ const TeacherDashboardHome = () => {
                                 noOfLines={1}
                                 w="full"
                               >
-                                {subject.grade_name}
+                                الصف: {subject.grade_name || subject.grade_id || "—"}
                               </Text>
                             </VStack>
                           </VStack>
@@ -845,28 +869,28 @@ const TeacherDashboardHome = () => {
                           <VStack spacing={{ base: 2, sm: 3, md: 4 }} align="stretch">
                             <HStack justify="space-between" flexWrap="wrap" gap={2}>
                               <HStack spacing={1} minW={0} flex={1}>
-                                <Icon as={FaBookOpen} color="purple.500" boxSize={{ base: 3, sm: 3, md: 4 }} />
+                                <Icon as={FaUsers} color="blue.500" boxSize={{ base: 3, sm: 3, md: 4 }} />
                                 <Text 
                                   fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
                                   color={textColor}
                                   noOfLines={1}
                                 >
-                                  {subject.courses_count || 0} كورس
+                                  {subject.groups_count || 0} مجموعة
                                 </Text>
                               </HStack>
                               <Badge 
-                                colorScheme="purple" 
+                                colorScheme="blue" 
                                 px={{ base: 1, sm: 2, md: 3 }} 
                                 py={1} 
                                 borderRadius="full"
                                 fontSize={{ base: "2xs", sm: "xs", md: "sm" }}
                               >
-                                {subject.courses_count || 0} كورس
+                                {subject.groups_count || 0} مجموعة
                               </Badge>
                             </HStack>
                             
-                            {/* Courses List */}
-                            {subject.courses && subject.courses.length > 0 && (
+                            {/* Groups List */}
+                            {subject.groups && subject.groups.length > 0 && (
                               <>
                                 <Divider />
                                 <VStack align="stretch" spacing={2}>
@@ -875,27 +899,17 @@ const TeacherDashboardHome = () => {
                                     color={textColor}
                                     fontWeight="medium"
                                   >
-                                    الكورسات:
+                                    المجموعات:
                                   </Text>
-                                  {subject.courses.slice(0, 3).map((course) => (
+                                  {subject.groups.slice(0, 3).map((group) => (
                                     <HStack 
-                                      key={course.id}
+                                      key={group.id}
                                       spacing={2}
                                       p={2}
                                       bg={useColorModeValue("gray.50", "gray.700")}
                                       borderRadius="md"
                                       _hover={{ bg: useColorModeValue("gray.100", "gray.600") }}
                                     >
-                                      {course.avatar && (
-                                        <Image
-                                          src={course.avatar}
-                                          alt={course.title}
-                                          w="40px"
-                                          h="40px"
-                                          borderRadius="md"
-                                          objectFit="cover"
-                                        />
-                                      )}
                                       <VStack align="start" spacing={0} flex={1} minW={0}>
                                         <Text 
                                           fontSize={{ base: "2xs", sm: "xs" }} 
@@ -903,31 +917,26 @@ const TeacherDashboardHome = () => {
                                           fontWeight="medium"
                                           noOfLines={1}
                                         >
-                                          {course.title}
+                                          {group.name}
                                         </Text>
                                         <Text 
                                           fontSize={{ base: "2xs", sm: "xs" }} 
                                           color="blue.500"
                                           noOfLines={1}
                                         >
-                                          {course.price} ج.م
+                                          {(group.schedule_days?.length ? `${formatDays(group.schedule_days)} • ` : "") + (group.schedule_time || "") || "—"}
                                         </Text>
                                       </VStack>
-                                      {course.is_visible ? (
-                                        <Icon as={FaEye} color="green.500" boxSize={3} />
-                                      ) : (
-                                        <Icon as={FaEyeSlash} color="gray.400" boxSize={3} />
-                                      )}
                                     </HStack>
                                   ))}
-                                  {subject.courses.length > 3 && (
+                                  {subject.groups.length > 3 && (
                                     <Text 
                                       fontSize={{ base: "2xs", sm: "xs" }} 
                                       color="blue.500"
                                       textAlign="center"
                                       fontWeight="medium"
                                     >
-                                      +{subject.courses.length - 3} كورس آخر
+                                      +{subject.groups.length - 3} مجموعة أخرى
                                     </Text>
                                   )}
                                 </VStack>
@@ -937,7 +946,7 @@ const TeacherDashboardHome = () => {
                             <Divider />
                             
                             <Button 
-                              colorScheme="purple" 
+                              colorScheme="blue" 
                               w="full"
                               size={{ base: "md", sm: "md", md: "md" }}
                               borderRadius={{ base: "md", md: "lg" }}

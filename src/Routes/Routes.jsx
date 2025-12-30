@@ -27,6 +27,7 @@ import AllComps from "../components/admin/AllComps";
 import PackagesManagement from "../components/admin/PackagesManagement";
 import PackageDetails from "../pages/package/PackageDetails";
 import SubjectDetails from "../pages/package/SubjectDetails";
+import GroupDetails from "../pages/package/GroupDetails";
 import AssignmentQuestions from "../pages/package/AssignmentQuestions";
 import AdminStreamsList from "../components/stream/adminList";
 import GeneralCourses from "../components/admin/GeneralCourses";
@@ -77,6 +78,7 @@ import AllCourses from "../pages/teacherCourses/AllCourses";
 import CourseDetailsPage from "../pages/course/CourseDetailsPage";
 import CourseStatisticsPage from "../pages/course/CourseStatisticsPage";
 import CourseStatistics from "../pages/courseStatistics/CourseStatistics";
+import CourseStudentsPage from "../pages/course/CourseStudentsPage";
 
 // Chat Components
 import ChatPage from "../pages/chat/ChatPage";
@@ -122,7 +124,7 @@ import MeetingRoom from "../pages/meeting/MeetingRoom";
 
 const AppRouter = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
-  
+
   return (
     <div>
       <Routes>
@@ -141,10 +143,10 @@ const AppRouter = () => {
           }
         />
 
-      
-    
+
+
         <Route path="/welcome" element={<WelcomePage />} />
-      
+
         <Route
           path="/signup"
           element={
@@ -214,6 +216,14 @@ const AppRouter = () => {
           }
         />
         <Route
+          path="/subject/:subjectId/groups/:groupId"
+          element={
+            <ProtectedRoute auth={isAdmin || isTeacher}>
+              <GroupDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/assignment/:assignmentId/questions"
           element={
             <ProtectedRoute auth={isAdmin || isTeacher || student}>
@@ -252,13 +262,13 @@ const AppRouter = () => {
             <Route path="create_code" element={<AdminCreateCode />} />
             <Route path="cridet" element={<AdminTeacherBalances />} />
             <Route path="open_phone" element={<OpenPhone />} />
-           
+
           </Route>
-          
+
           {/* Teacher Routes */}
-         
+
         </Route>
- <Route path="video/:videoId/:token?" element={<Vedio />} />
+        <Route path="video/:videoId/:token?" element={<Vedio />} />
         {/* Main App Routes */}
         <Route
           path="/*"
@@ -295,20 +305,20 @@ const AppRouter = () => {
           <Route path="lectures_taple" element={<LecturesTaple />} />
 
           {/* Courses */}
-         
-          
-        
-          
-         
+
+
+
+
+
 
           {/* Groups */}
-        
+
 
           {/* Competitions */}
           <Route path="competitions" element={<Competitions />} />
           <Route path="competition/:id" element={<CompetitionDetails />} />
           <Route path="the_Firsts" element={<TheFirsts />} />
- <Route path="general-courses" element={<GeneralCourses />} />
+          <Route path="general-courses" element={<GeneralCourses />} />
           {/* Question Bank */}
           <Route path="question-bank/:id" element={<QuestionBank />} />
           <Route path="question_bank" element={<QuestionBank />} />
@@ -323,13 +333,13 @@ const AppRouter = () => {
 
           {/* Exams */}
           <Route path="Platform_exams" element={<PlatformExams />} />
-          
-         
-           <Route path="essay-exam/:id" element={<EssayExam/>} />
-        
-         
-          
-        
+
+
+          <Route path="essay-exam/:id" element={<EssayExam />} />
+
+
+
+
           <Route path="exam/:examId" element={<Exam />} />
           <Route path="exam_grades" element={<ExamGrades />} />
           <Route path="ComprehensiveExam/:id" element={<ComprehensiveExam />} />
@@ -358,8 +368,9 @@ const AppRouter = () => {
 
           {/* Course Details */}
           <Route path="CourseDetailsPage/:id" element={<CourseDetailsPage />} />
+          <Route path="CourseStudentsPage/:id" element={<CourseStudentsPage />} />
           <Route path="CourseStatisticsPage/:id" element={<CourseStatisticsPage />} />
-          
+
           {/* Meeting Room */}
           <Route path="meeting/:meetingId" element={<MeetingRoom />} />
 
@@ -370,7 +381,7 @@ const AppRouter = () => {
           {/* Admin/Teacher Competition Management */}
           <Route path="create_comp" element={<CreateComp />} />
           <Route path="allComps" element={<AllComps />} />
-          
+
         </Route>
 
         {/* Teacher Specific Routes */}
@@ -389,13 +400,13 @@ const AppRouter = () => {
         <Route element={<ProtectedRoute auth={student} />}>
           <Route path="studentStats" element={<StudentStats />} />
           <Route path="course_statistics" element={<CourseStatistics />} />
-        
+
         </Route>
 
         {/* Shared Routes */}
         <Route element={<ProtectedRoute auth={isTeacher || student} />}>
-       
-          
+
+
           <Route path="video/:videoId/:token?" element={<Vedio />} />
         </Route>
       </Routes>

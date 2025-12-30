@@ -67,14 +67,15 @@ const AssignmentQuestions = () => {
   const [userData, isAdmin, isTeacher, student] = UserType();
   const toast = useToast();
 
-  // Color mode values
-  const bg = useColorModeValue('gray.50', 'gray.900');
+  // Color mode values - هادئة ومريحة للعين
+  const bg = useColorModeValue('blue.50', 'gray.900');
   const cardBg = useColorModeValue('white', 'gray.800');
-  const textColor = useColorModeValue('gray.800', 'white');
-  const subTextColor = useColorModeValue('gray.600', 'gray.400');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const primaryColor = useColorModeValue('blue.500', 'blue.300');
-  const blueLight = useColorModeValue('blue.50', 'gray.700');
+  const textColor = useColorModeValue('gray.700', 'gray.100');
+  const subTextColor = useColorModeValue('gray.500', 'gray.400');
+  const borderColor = useColorModeValue('blue.100', 'gray.700');
+  const primaryColor = 'blue.500';
+  const blueLight = useColorModeValue('blue.50', 'blue.900');
+  const blueSoft = useColorModeValue('blue.100', 'blue.800');
 
   // States
   const [assignment, setAssignment] = useState(null);
@@ -366,34 +367,39 @@ const AssignmentQuestions = () => {
     <Box minH="100vh" mt="80px" bg={bg}>
       <Container maxW="container.xl" py={8}>
         {/* Header */}
-        <Card bg={cardBg} border="1px solid" borderColor={borderColor} borderRadius="xl" mb={6}>
+        <Card bg={cardBg} border="none" borderRadius="2xl" mb={6} boxShadow="sm">
           <CardBody p={6}>
-            <HStack justify="space-between" flexWrap="wrap" spacing={4}>
-              <VStack align="start" spacing={2}>
+            <VStack align="start" spacing={4}>
+              <HStack spacing={3} w="full" justify="space-between" flexWrap="wrap">
                 <HStack spacing={3}>
                   <Button
                     leftIcon={<Icon as={FiArrowLeft} />}
-                    variant="outline"
+                    variant="ghost"
                     colorScheme="blue"
                     onClick={() => navigate(-1)}
-                    borderRadius="xl"
+                    borderRadius="lg"
+                    size="sm"
                   >
                     العودة
                   </Button>
-                  <Heading size="lg" color={textColor}>
-                    أسئلة الواجب: {assignment?.name || 'الواجب'}
+                  <Heading size="lg" color={textColor} fontWeight="600">
+                    {assignment?.name || 'الواجب'}
                   </Heading>
                 </HStack>
                 {assignment && (
                   <HStack spacing={4} fontSize="sm" color={subTextColor}>
-                    <Text>{questions.length} سؤال</Text>
+                    <Badge colorScheme="blue" variant="subtle" px={3} py={1} borderRadius="full">
+                      {questions.length} سؤال
+                    </Badge>
                     {assignment.duration_minutes && (
-                      <Text>{assignment.duration_minutes} دقيقة</Text>
+                      <Badge colorScheme="blue" variant="subtle" px={3} py={1} borderRadius="full">
+                        {assignment.duration_minutes} دقيقة
+                      </Badge>
                     )}
                   </HStack>
                 )}
-              </VStack>
-            </HStack>
+              </HStack>
+            </VStack>
           </CardBody>
         </Card>
 
@@ -401,28 +407,29 @@ const AssignmentQuestions = () => {
         {questions.length > 0 ? (
           <VStack spacing={4} align="stretch">
             {questions.map((question, index) => (
-              <Card key={question.id} bg={cardBg} border="2px solid" borderColor="green.500" borderRadius="xl">
+              <Card key={question.id} bg={cardBg} border="1px solid" borderColor={borderColor} borderRadius="2xl" boxShadow="sm" _hover={{ boxShadow: 'md', borderColor: primaryColor }} transition="all 0.2s">
                 <CardBody p={6}>
-                  <VStack spacing={4} align="stretch">
+                  <VStack spacing={5} align="stretch">
                     {/* Question Header */}
-                    <HStack justify="space-between" flexWrap="wrap">
+                    <HStack justify="space-between" flexWrap="wrap" spacing={3}>
                       <HStack spacing={3}>
                         <Box
-                          bg="green.500"
+                          bg={primaryColor}
                           color="white"
-                          borderRadius="full"
-                          p={2}
+                          borderRadius="lg"
+                          px={3}
+                          py={1.5}
                           minW="40px"
                           textAlign="center"
-                          fontWeight="bold"
-                          fontSize="md"
+                          fontWeight="600"
+                          fontSize="sm"
                         >
                           {index + 1}
                         </Box>
-                        <Badge colorScheme={question.question_type === 'image' ? 'pink' : 'purple'} fontSize="sm" px={3} py={1}>
+                        <Badge colorScheme="blue" variant="subtle" fontSize="xs" px={2} py={1} borderRadius="md">
                           {question.question_type === 'image' ? 'صورة' : 'نصي'}
                         </Badge>
-                        <Badge colorScheme="green" fontSize="sm" px={3} py={1}>
+                        <Badge colorScheme="blue" variant="outline" fontSize="xs" px={2} py={1} borderRadius="md">
                           الإجابة: {question.correct_answer?.toUpperCase()}
                         </Badge>
                       </HStack>
@@ -461,12 +468,12 @@ const AssignmentQuestions = () => {
                       )}
                     </HStack>
 
-                    <Divider />
+                    <Divider borderColor={borderColor} />
 
                     {/* Question Content */}
                     {question.question_type === 'image' && question.images && question.images.length > 0 ? (
                       <Box>
-                        <Text fontWeight="bold" color={textColor} fontSize="md" mb={3}>
+                        <Text fontWeight="600" color={subTextColor} fontSize="sm" mb={3}>
                           الصور:
                         </Text>
                         <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={3}>
@@ -475,14 +482,15 @@ const AssignmentQuestions = () => {
                               <Image
                                 src={img.image_url}
                                 alt={`صورة ${imgIdx + 1}`}
-                                borderRadius="md"
+                                borderRadius="lg"
                                 w="100%"
                                 h="150px"
                                 objectFit="cover"
-                                border="2px solid"
+                                border="1px solid"
                                 borderColor={borderColor}
                                 cursor="pointer"
-                                _hover={{ borderColor: primaryColor }}
+                                _hover={{ borderColor: primaryColor, transform: 'scale(1.02)' }}
+                                transition="all 0.2s"
                                 onClick={() => window.open(img.image_url, '_blank')}
                               />
                             </Box>
@@ -491,79 +499,139 @@ const AssignmentQuestions = () => {
                       </Box>
                     ) : (
                       <Box>
-                        <Text fontWeight="bold" color={textColor} fontSize="md" mb={2}>
+                        <Text fontWeight="600" color={subTextColor} fontSize="sm" mb={2}>
                           نص السؤال:
                         </Text>
-                        <Text color={textColor} fontSize="md" p={3} bg={blueLight} borderRadius="md" border="1px solid" borderColor={borderColor}>
+                        <Text color={textColor} fontSize="md" p={4} bg={blueLight} borderRadius="lg" border="1px solid" borderColor={borderColor} lineHeight="1.7">
                           {question.question_text || 'لا يوجد نص'}
                         </Text>
                       </Box>
                     )}
 
-                    <Divider />
+                    <Divider borderColor={borderColor} />
 
                     {/* Options */}
                     <Box>
-                      <Text fontWeight="bold" color={textColor} fontSize="md" mb={3}>
+                      <Text fontWeight="600" color={subTextColor} fontSize="sm" mb={3}>
                         الخيارات:
                       </Text>
                       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-                        <Card bg={question.correct_answer === 'a' ? 'green.50' : cardBg} border="2px solid" borderColor={question.correct_answer === 'a' ? 'green.500' : borderColor}>
-                          <CardBody p={3}>
-                            <HStack spacing={2}>
-                              <Badge colorScheme={question.correct_answer === 'a' ? 'green' : 'gray'} fontSize="sm">
+                        <Card 
+                          bg={question.correct_answer === 'a' ? blueLight : cardBg} 
+                          border="1px solid" 
+                          borderColor={question.correct_answer === 'a' ? primaryColor : borderColor}
+                          borderRadius="lg"
+                          _hover={{ borderColor: primaryColor }}
+                          transition="all 0.2s"
+                        >
+                          <CardBody p={4}>
+                            <HStack spacing={3}>
+                              <Badge 
+                                bg={question.correct_answer === 'a' ? primaryColor : 'gray.300'} 
+                                color={question.correct_answer === 'a' ? 'white' : 'gray.700'} 
+                                fontSize="xs" 
+                                px={2.5}
+                                py={1}
+                                borderRadius="md"
+                                fontWeight="600"
+                              >
                                 أ
                               </Badge>
-                              <Text color={textColor} fontSize="sm" flex={1}>
+                              <Text color={textColor} fontSize="sm" flex={1} lineHeight="1.6">
                                 {question.option_a}
                               </Text>
                               {question.correct_answer === 'a' && (
-                                <Icon as={FiCheckCircle} color="green.500" boxSize={5} />
+                                <Icon as={FiCheckCircle} color={primaryColor} boxSize={4} />
                               )}
                             </HStack>
                           </CardBody>
                         </Card>
-                        <Card bg={question.correct_answer === 'b' ? 'green.50' : cardBg} border="2px solid" borderColor={question.correct_answer === 'b' ? 'green.500' : borderColor}>
-                          <CardBody p={3}>
-                            <HStack spacing={2}>
-                              <Badge colorScheme={question.correct_answer === 'b' ? 'green' : 'gray'} fontSize="sm">
+                        <Card 
+                          bg={question.correct_answer === 'b' ? blueLight : cardBg} 
+                          border="1px solid" 
+                          borderColor={question.correct_answer === 'b' ? primaryColor : borderColor}
+                          borderRadius="lg"
+                          _hover={{ borderColor: primaryColor }}
+                          transition="all 0.2s"
+                        >
+                          <CardBody p={4}>
+                            <HStack spacing={3}>
+                              <Badge 
+                                bg={question.correct_answer === 'b' ? primaryColor : 'gray.300'} 
+                                color={question.correct_answer === 'b' ? 'white' : 'gray.700'} 
+                                fontSize="xs" 
+                                px={2.5}
+                                py={1}
+                                borderRadius="md"
+                                fontWeight="600"
+                              >
                                 ب
                               </Badge>
-                              <Text color={textColor} fontSize="sm" flex={1}>
+                              <Text color={textColor} fontSize="sm" flex={1} lineHeight="1.6">
                                 {question.option_b}
                               </Text>
                               {question.correct_answer === 'b' && (
-                                <Icon as={FiCheckCircle} color="green.500" boxSize={5} />
+                                <Icon as={FiCheckCircle} color={primaryColor} boxSize={4} />
                               )}
                             </HStack>
                           </CardBody>
                         </Card>
-                        <Card bg={question.correct_answer === 'c' ? 'green.50' : cardBg} border="2px solid" borderColor={question.correct_answer === 'c' ? 'green.500' : borderColor}>
-                          <CardBody p={3}>
-                            <HStack spacing={2}>
-                              <Badge colorScheme={question.correct_answer === 'c' ? 'green' : 'gray'} fontSize="sm">
+                        <Card 
+                          bg={question.correct_answer === 'c' ? blueLight : cardBg} 
+                          border="1px solid" 
+                          borderColor={question.correct_answer === 'c' ? primaryColor : borderColor}
+                          borderRadius="lg"
+                          _hover={{ borderColor: primaryColor }}
+                          transition="all 0.2s"
+                        >
+                          <CardBody p={4}>
+                            <HStack spacing={3}>
+                              <Badge 
+                                bg={question.correct_answer === 'c' ? primaryColor : 'gray.300'} 
+                                color={question.correct_answer === 'c' ? 'white' : 'gray.700'} 
+                                fontSize="xs" 
+                                px={2.5}
+                                py={1}
+                                borderRadius="md"
+                                fontWeight="600"
+                              >
                                 ج
                               </Badge>
-                              <Text color={textColor} fontSize="sm" flex={1}>
+                              <Text color={textColor} fontSize="sm" flex={1} lineHeight="1.6">
                                 {question.option_c}
                               </Text>
                               {question.correct_answer === 'c' && (
-                                <Icon as={FiCheckCircle} color="green.500" boxSize={5} />
+                                <Icon as={FiCheckCircle} color={primaryColor} boxSize={4} />
                               )}
                             </HStack>
                           </CardBody>
                         </Card>
-                        <Card bg={question.correct_answer === 'd' ? 'green.50' : cardBg} border="2px solid" borderColor={question.correct_answer === 'd' ? 'green.500' : borderColor}>
-                          <CardBody p={3}>
-                            <HStack spacing={2}>
-                              <Badge colorScheme={question.correct_answer === 'd' ? 'green' : 'gray'} fontSize="sm">
+                        <Card 
+                          bg={question.correct_answer === 'd' ? blueLight : cardBg} 
+                          border="1px solid" 
+                          borderColor={question.correct_answer === 'd' ? primaryColor : borderColor}
+                          borderRadius="lg"
+                          _hover={{ borderColor: primaryColor }}
+                          transition="all 0.2s"
+                        >
+                          <CardBody p={4}>
+                            <HStack spacing={3}>
+                              <Badge 
+                                bg={question.correct_answer === 'd' ? primaryColor : 'gray.300'} 
+                                color={question.correct_answer === 'd' ? 'white' : 'gray.700'} 
+                                fontSize="xs" 
+                                px={2.5}
+                                py={1}
+                                borderRadius="md"
+                                fontWeight="600"
+                              >
                                 د
                               </Badge>
-                              <Text color={textColor} fontSize="sm" flex={1}>
+                              <Text color={textColor} fontSize="sm" flex={1} lineHeight="1.6">
                                 {question.option_d}
                               </Text>
                               {question.correct_answer === 'd' && (
-                                <Icon as={FiCheckCircle} color="green.500" boxSize={5} />
+                                <Icon as={FiCheckCircle} color={primaryColor} boxSize={4} />
                               )}
                             </HStack>
                           </CardBody>
@@ -594,11 +662,11 @@ const AssignmentQuestions = () => {
         <Modal isOpen={isEditQuestionModalOpen} onClose={onEditQuestionModalClose} size={{ base: "full", sm: "md", md: "lg", lg: "xl" }} isCentered>
           <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
           <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-            <Box bg="linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%)" p={{ base: 4, md: 6 }} color="white">
+            <Box bg={primaryColor} p={{ base: 4, md: 6 }} color="white">
               <ModalHeader p={0}>
                 <HStack spacing={{ base: 2, md: 3 }}>
                   <Icon as={FiEdit} boxSize={{ base: 5, md: 6 }} />
-                  <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
+                  <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="600">
                     تعديل السؤال
                   </Text>
                 </HStack>
@@ -778,22 +846,23 @@ const AssignmentQuestions = () => {
                   إلغاء
                 </Button>
                 <Button
-                  bg="linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%)"
+                  bg={primaryColor}
                   color="white"
                   onClick={handleUpdateQuestion}
                   isLoading={editingQuestion}
                   loadingText="جاري التحديث..."
                   size={{ base: "md", md: "lg" }}
                   px={{ base: 6, md: 8 }}
-                  borderRadius="xl"
-                  fontWeight="bold"
+                  borderRadius="lg"
+                  fontWeight="600"
                   leftIcon={<Icon as={FiEdit} />}
                   fontSize={{ base: "sm", md: "md" }}
                   _hover={{
-                    transform: 'translateY(-2px)',
-                    shadow: 'xl',
+                    bg: 'blue.600',
+                    transform: 'translateY(-1px)',
+                    boxShadow: 'md',
                   }}
-                  transition="all 0.3s ease"
+                  transition="all 0.2s"
                 >
                   حفظ التغييرات
                 </Button>
@@ -806,11 +875,11 @@ const AssignmentQuestions = () => {
         <Modal isOpen={isUpdateCorrectAnswerOpen} onClose={onUpdateCorrectAnswerClose} size={{ base: "full", sm: "md", md: "lg" }} isCentered>
           <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
           <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-            <Box bg="linear-gradient(135deg, #38A169 0%, #2F855A 100%)" p={{ base: 4, md: 6 }} color="white">
+            <Box bg={primaryColor} p={{ base: 4, md: 6 }} color="white">
               <ModalHeader p={0}>
                 <HStack spacing={{ base: 2, md: 3 }}>
                   <Icon as={FiCheckCircle} boxSize={{ base: 5, md: 6 }} />
-                  <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
+                  <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="600">
                     تحديث الإجابة الصحيحة
                   </Text>
                 </HStack>
@@ -869,22 +938,23 @@ const AssignmentQuestions = () => {
                   إلغاء
                 </Button>
                 <Button
-                  bg="linear-gradient(135deg, #38A169 0%, #2F855A 100%)"
+                  bg={primaryColor}
                   color="white"
                   onClick={handleUpdateCorrectAnswer}
                   isLoading={updatingCorrectAnswer}
                   loadingText="جاري التحديث..."
                   size={{ base: "md", md: "lg" }}
                   px={{ base: 6, md: 8 }}
-                  borderRadius="xl"
-                  fontWeight="bold"
+                  borderRadius="lg"
+                  fontWeight="600"
                   leftIcon={<Icon as={FiCheckCircle} />}
                   fontSize={{ base: "sm", md: "md" }}
                   _hover={{
-                    transform: 'translateY(-2px)',
-                    shadow: 'xl',
+                    bg: 'blue.600',
+                    transform: 'translateY(-1px)',
+                    boxShadow: 'md',
                   }}
-                  transition="all 0.3s ease"
+                  transition="all 0.2s"
                 >
                   تحديث الإجابة
                 </Button>

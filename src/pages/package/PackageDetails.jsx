@@ -98,30 +98,16 @@ const PackageDetails = () => {
   const { isOpen: isStudentsModalOpen, onOpen: onStudentsModalOpen, onClose: onStudentsModalClose } = useDisclosure();
   const toast = useToast();
 
-  // Color mode values
-  const bg = useColorModeValue('gray.50', 'gray.900');
+  // Color mode values - هادئة ومريحة للعين
+  const bg = useColorModeValue('blue.50', 'gray.900');
   const cardBg = useColorModeValue('white', 'gray.800');
-  const textColor = useColorModeValue('gray.800', 'white');
-  const subTextColor = useColorModeValue('gray.600', 'gray.400');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const primaryColor = useColorModeValue('blue.500', 'blue.400');
-  const primaryGradient = useColorModeValue(
-    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-  );
-  const blueGradient = useColorModeValue(
-    'linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%)',
-    'linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%)'
-  );
-  const purpleGradient = useColorModeValue(
-    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-  );
-  const greenGradient = useColorModeValue(
-    'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
-    'linear-gradient(135deg, #48bb78 0%, #38a169 100%)'
-  );
-  const cardHoverBg = useColorModeValue('gray.50', 'gray.750');
+  const textColor = useColorModeValue('gray.700', 'gray.100');
+  const subTextColor = useColorModeValue('gray.500', 'gray.400');
+  const borderColor = useColorModeValue('blue.100', 'gray.700');
+  const primaryColor = 'blue.500';
+  const blueLight = useColorModeValue('blue.50', 'blue.900');
+  const blueSoft = useColorModeValue('blue.100', 'blue.800');
+  const cardHoverBg = useColorModeValue('blue.50', 'gray.750');
 
   // جلب بيانات الباقة
   const fetchPackageDetails = async () => {
@@ -571,151 +557,225 @@ const PackageDetails = () => {
   return (
     <Box minH="100vh" bg={bg} pt="80px" pb={12}>
       <Container maxW="7xl">
-        {/* Hero Section */}
-        <Box
+        {/* Hero Section - تصميم جديد */}
+        <Card 
+          bg={cardBg} 
+          borderRadius="2xl" 
+          mb={8} 
+          overflow="hidden" 
+          border="none"
+          boxShadow="lg"
           position="relative"
-          mb={10}
-          borderRadius="3xl"
-          overflow="hidden"
-            bg={blueGradient}
-          boxShadow="2xl"
         >
+          {/* Background Pattern */}
           <Box
             position="absolute"
             top={0}
             left={0}
             right={0}
             bottom={0}
-            bgImage={packageData.image ? `url(${packageData.image})` : 'none'}
-            bgSize="cover"
-            bgPosition="center"
-            opacity={0.15}
-            filter="blur(20px)"
+            bgGradient="linear(to-br, blue.50, blue.100)"
+            opacity={0.5}
+            zIndex={0}
           />
-          <Box position="relative" p={{ base: 6, md: 12 }} color="white">
-            <HStack spacing={4} mb={6} flexWrap="wrap">
-              <Button
-                leftIcon={<Icon as={FiArrowLeft} />}
-                variant="ghost"
-                color="white"
-                _hover={{ bg: 'whiteAlpha.200' }}
-                onClick={() => navigate('/packages-management')}
-                size="md"
-              >
-                العودة
-              </Button>
-              <Button
-                leftIcon={<Icon as={FiUsers} />}
-                variant="ghost"
-                color="white"
-                _hover={{ bg: 'whiteAlpha.200' }}
-                onClick={handleOpenStudentsModal}
-                size="md"
-              >
-                الطلاب المشتركين
-              </Button>
-            </HStack>
-            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8} alignItems="center">
-              <VStack align="start" spacing={6}>
-                <Box>
-                  <Badge
-                    bg="whiteAlpha.300"
-                    color="white"
-                    px={4}
-                    py={2}
-                    borderRadius="full"
-                    fontSize="sm"
-                    mb={4}
-                  >
-                    {packageData.grade_name}
-                  </Badge>
-                  <Heading size="2xl" fontWeight="bold" mb={4} lineHeight="1.2">
-                    {packageData.name}
-                  </Heading>
-                  <Text fontSize="lg" color="whiteAlpha.900" maxW="md">
-                    باقة تعليمية شاملة تحتوي على جميع المواد الدراسية
-                  </Text>
-                </Box>
-                <HStack spacing={6} flexWrap="wrap">
-                  <VStack align="start" spacing={1}>
-                    <HStack spacing={2}>
-                      <Icon as={FiDollarSign} boxSize={5} />
-                      <Text fontSize="sm" color="whiteAlpha.800">
-                        السعر
-                      </Text>
-                    </HStack>
-                    <Text fontSize="2xl" fontWeight="bold">
-                      {packageData.price} ج.م
-                    </Text>
-                  </VStack>
-                  <VStack align="start" spacing={1}>
-                    <HStack spacing={2}>
-                      <Icon as={FiBookOpen} boxSize={5} />
-                      <Text fontSize="sm" color="whiteAlpha.800">
-                        المواد
-                      </Text>
-                    </HStack>
-                    <Text fontSize="2xl" fontWeight="bold">
-                      {packageData.subjects?.length || 0}
-                    </Text>
-                  </VStack>
-                  <VStack align="start" spacing={1}>
-                    <HStack spacing={2}>
-                      <Icon as={FiCalendar} boxSize={5} />
-                      <Text fontSize="sm" color="whiteAlpha.800">
-                        تاريخ الإنشاء
-                      </Text>
-                    </HStack>
-                    <Text fontSize="sm" fontWeight="medium">
-                      {new Date(packageData.created_at).toLocaleDateString('ar-EG', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </Text>
-                  </VStack>
-                </HStack>
-              </VStack>
-              {packageData.image && (
-                <Box>
-                  <AspectRatio ratio={16 / 9}>
-                    <Box
-                      borderRadius="2xl"
-                      overflow="hidden"
-                      boxShadow="xl"
-                      border="4px solid"
-                      borderColor="whiteAlpha.300"
-                    >
-                      <Image
-                        src={packageData.image}
-                        alt={packageData.name}
-                        objectFit="cover"
-                        w="100%"
-                        h="100%"
-                      />
-                    </Box>
-                  </AspectRatio>
-                </Box>
-              )}
-            </SimpleGrid>
-          </Box>
-        </Box>
+          
+          <CardBody p={0} position="relative" zIndex={1}>
+            <Box p={{ base: 6, md: 10 }}>
+              {/* Header Actions */}
+              <HStack justify="space-between" mb={6} flexWrap="wrap" spacing={4}>
+                <Button
+                  leftIcon={<Icon as={FiArrowLeft} />}
+                  variant="ghost"
+                  colorScheme="blue"
+                  onClick={() => navigate('/packages-management')}
+                  size="md"
+                  borderRadius="lg"
+                >
+                  العودة
+                </Button>
+                <Button
+                  leftIcon={<Icon as={FiUsers} />}
+                  bg={primaryColor}
+                  color="white"
+                  _hover={{ bg: 'blue.600' }}
+                  onClick={handleOpenStudentsModal}
+                  size="md"
+                  borderRadius="lg"
+                  fontWeight="600"
+                >
+                  الطلاب المشتركين
+                </Button>
+              </HStack>
 
-        {/* Subjects Section */}
-        <Card bg={cardBg} shadow="xl" borderRadius="2xl" mb={8} overflow="hidden">
-          <Box bg={blueGradient} p={6} color="white">
-            <HStack justify="space-between" flexWrap="wrap" spacing={4}>
+              <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8} alignItems="center">
+                {/* Left Side - Info */}
+                <VStack align="start" spacing={6}>
+                  <Box>
+                    <Badge
+                      bg={primaryColor}
+                      color="white"
+                      px={4}
+                      py={1.5}
+                      borderRadius="full"
+                      fontSize="sm"
+                      mb={4}
+                      fontWeight="600"
+                    >
+                      {packageData.grade_name}
+                    </Badge>
+                    <Heading 
+                      size={{ base: "xl", md: "2xl" }} 
+                      fontWeight="700" 
+                      mb={4} 
+                      lineHeight="1.3"
+                      color={textColor}
+                    >
+                      {packageData.name}
+                    </Heading>
+                    <Text 
+                      fontSize={{ base: "md", md: "lg" }} 
+                      color={subTextColor} 
+                      maxW="md"
+                      lineHeight="1.7"
+                    >
+                      باقة تعليمية شاملة تحتوي على جميع المواد الدراسية
+                    </Text>
+                  </Box>
+
+                  {/* Stats Cards */}
+                  <SimpleGrid columns={3} spacing={4} w="full">
+                    <Card bg={blueLight} border="1px solid" borderColor={borderColor} borderRadius="lg" p={4}>
+                      <VStack spacing={2}>
+                        <Box
+                          bg={primaryColor}
+                          borderRadius="lg"
+                          p={2}
+                          color="white"
+                        >
+                          <Icon as={FiDollarSign} boxSize={5} />
+                        </Box>
+                        <Text fontSize="xs" color={subTextColor} fontWeight="500">
+                          السعر
+                        </Text>
+                        <Text fontSize="lg" fontWeight="700" color={textColor}>
+                          {packageData.price}
+                        </Text>
+                        <Text fontSize="xs" color={subTextColor}>
+                          ج.م
+                        </Text>
+                      </VStack>
+                    </Card>
+
+                    <Card bg={blueLight} border="1px solid" borderColor={borderColor} borderRadius="lg" p={4}>
+                      <VStack spacing={2}>
+                        <Box
+                          bg={primaryColor}
+                          borderRadius="lg"
+                          p={2}
+                          color="white"
+                        >
+                          <Icon as={FiBookOpen} boxSize={5} />
+                        </Box>
+                        <Text fontSize="xs" color={subTextColor} fontWeight="500">
+                          المواد
+                        </Text>
+                        <Text fontSize="lg" fontWeight="700" color={textColor}>
+                          {packageData.subjects?.length || 0}
+                        </Text>
+                        <Text fontSize="xs" color={subTextColor}>
+                          مادة
+                        </Text>
+                      </VStack>
+                    </Card>
+
+                    <Card bg={blueLight} border="1px solid" borderColor={borderColor} borderRadius="lg" p={4}>
+                      <VStack spacing={2}>
+                        <Box
+                          bg={primaryColor}
+                          borderRadius="lg"
+                          p={2}
+                          color="white"
+                        >
+                          <Icon as={FiCalendar} boxSize={5} />
+                        </Box>
+                        <Text fontSize="xs" color={subTextColor} fontWeight="500">
+                          التاريخ
+                        </Text>
+                        <Text fontSize="xs" fontWeight="600" color={textColor} textAlign="center">
+                          {new Date(packageData.created_at).toLocaleDateString('ar-EG', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </Text>
+                      </VStack>
+                    </Card>
+                  </SimpleGrid>
+                </VStack>
+
+                {/* Right Side - Image */}
+                {packageData.image && (
+                  <Box>
+                    <AspectRatio ratio={16 / 9}>
+                      <Box
+                        borderRadius="2xl"
+                        overflow="hidden"
+                        boxShadow="xl"
+                        border="2px solid"
+                        borderColor={borderColor}
+                        _hover={{
+                          transform: 'scale(1.02)',
+                          transition: 'transform 0.3s'
+                        }}
+                      >
+                        <Image
+                          src={packageData.image}
+                          alt={packageData.name}
+                          objectFit="cover"
+                          w="100%"
+                          h="100%"
+                        />
+                      </Box>
+                    </AspectRatio>
+                  </Box>
+                )}
+              </SimpleGrid>
+            </Box>
+          </CardBody>
+        </Card>
+
+        {/* Subjects Section - تصميم جديد */}
+        <Card bg={cardBg} shadow="sm" borderRadius="2xl" mb={8} overflow="hidden" border="1px solid" borderColor={borderColor}>
+          {/* Header */}
+          <Box 
+            bgGradient="linear(to-r, blue.500, blue.600)" 
+            p={6} 
+            color="white"
+            position="relative"
+            overflow="hidden"
+          >
+            <Box
+              position="absolute"
+              top="-50%"
+              right="-10%"
+              w="200px"
+              h="200px"
+              bg="whiteAlpha.100"
+              borderRadius="full"
+              filter="blur(40px)"
+            />
+            <HStack justify="space-between" flexWrap="wrap" spacing={4} position="relative" zIndex={1}>
               <HStack spacing={4}>
                 <Box
                   bg="whiteAlpha.200"
-                  borderRadius="full"
+                  borderRadius="xl"
                   p={3}
                   backdropFilter="blur(10px)"
                 >
                   <Icon as={FiBookOpen} boxSize={6} />
                 </Box>
-                <VStack align="start" spacing={0}>
-                  <Heading size="lg" fontWeight="bold">
+                <VStack align="start" spacing={1}>
+                  <Heading size="lg" fontWeight="700">
                     المواد المدرجة
                   </Heading>
                   <Text fontSize="sm" color="whiteAlpha.900">
@@ -726,12 +786,18 @@ const PackageDetails = () => {
               {isAdmin && (
                 <Button
                   leftIcon={<Icon as={FiPlus} />}
-                  bg="whiteAlpha.200"
-                  color="white"
-                  _hover={{ bg: 'whiteAlpha.300', transform: 'translateY(-2px)' }}
+                  bg="white"
+                  color={primaryColor}
+                  _hover={{ 
+                    bg: 'whiteAlpha.900', 
+                    transform: 'translateY(-2px)',
+                    boxShadow: 'lg'
+                  }}
                   onClick={onSubjectModalOpen}
-                  borderRadius="xl"
-                  size="lg"
+                  borderRadius="lg"
+                  size="md"
+                  fontWeight="600"
+                  transition="all 0.2s"
                 >
                   إضافة مادة
                 </Button>
@@ -739,52 +805,55 @@ const PackageDetails = () => {
             </HStack>
           </Box>
 
-          <CardBody p={8}>
+          <CardBody p={{ base: 4, md: 8 }}>
             {packageData.subjects && packageData.subjects.length > 0 ? (
-              <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={5}>
                 {packageData.subjects.map((subject, index) => (
                   <Card
                     key={subject.id}
                     bg={cardBg}
-                    border="2px solid"
+                    border="1px solid"
                     borderColor={borderColor}
-                    borderRadius="2xl"
+                    borderRadius="xl"
                     position="relative"
                     overflow="hidden"
                     _hover={{
-                      transform: 'translateY(-8px)',
-                      shadow: '2xl',
+                      transform: 'translateY(-4px)',
+                      boxShadow: 'lg',
                       borderColor: primaryColor,
                     }}
-                    transition="all 0.3s ease"
+                    transition="all 0.2s ease"
                     cursor="pointer"
+                    boxShadow="sm"
                   >
                     {isAdmin && (
-                      <Box position="absolute" top={3} right={3} zIndex={10}>
-                        <HStack spacing={2}>
+                      <Box position="absolute" top={2} right={2} zIndex={10}>
+                        <HStack spacing={1}>
                           <Tooltip label="تعديل" hasArrow>
                             <IconButton
                               icon={<Icon as={FiEdit} />}
-                              size="sm"
+                              size="xs"
                               colorScheme="blue"
                               bg="white"
                               boxShadow="md"
+                              borderRadius="md"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 handleEditSubjectOpen(subject);
                               }}
                               aria-label="تعديل"
-                              _hover={{ transform: 'scale(1.1)' }}
+                              _hover={{ transform: 'scale(1.1)', bg: 'blue.50' }}
                             />
                           </Tooltip>
                           <Tooltip label="حذف" hasArrow>
                             <IconButton
                               icon={<Icon as={FiTrash2} />}
-                              size="sm"
+                              size="xs"
                               colorScheme="red"
                               bg="white"
                               boxShadow="md"
+                              borderRadius="md"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -792,7 +861,7 @@ const PackageDetails = () => {
                                 onDeleteSubjectOpen();
                               }}
                               aria-label="حذف"
-                              _hover={{ transform: 'scale(1.1)' }}
+                              _hover={{ transform: 'scale(1.1)', bg: 'red.50' }}
                             />
                           </Tooltip>
                         </HStack>
@@ -801,8 +870,9 @@ const PackageDetails = () => {
                     <Link to={`/subject/${subject.id}`} style={{ textDecoration: 'none' }}>
                       <CardBody p={0}>
                         <VStack spacing={0} align="stretch">
+                          {/* Image Section */}
                           {subject.image ? (
-                            <Box position="relative" h="180px" overflow="hidden">
+                            <Box position="relative" h="160px" overflow="hidden">
                               <Image
                                 src={subject.image}
                                 alt={subject.name}
@@ -816,72 +886,76 @@ const PackageDetails = () => {
                                 position="absolute"
                                 top={2}
                                 left={2}
-                                bg="blackAlpha.600"
+                                bg={primaryColor}
                                 color="white"
-                                px={3}
+                                px={2.5}
                                 py={1}
-                                borderRadius="full"
+                                borderRadius="md"
                                 fontSize="xs"
-                                fontWeight="bold"
-                                backdropFilter="blur(10px)"
+                                fontWeight="700"
                               >
                                 #{index + 1}
                               </Box>
                             </Box>
                           ) : (
                             <Box
-                              h="180px"
-                              bg={purpleGradient}
+                              h="160px"
+                              bgGradient="linear(to-br, blue.50, blue.100)"
                               display="flex"
                               alignItems="center"
                               justifyContent="center"
                               position="relative"
                             >
-                              <Icon as={FiBookOpen} boxSize={12} color="white" opacity={0.5} />
+                              <Icon as={FiBookOpen} boxSize={10} color={primaryColor} opacity={0.5} />
                               <Box
                                 position="absolute"
                                 top={2}
                                 left={2}
-                                bg="blackAlpha.600"
+                                bg={primaryColor}
                                 color="white"
-                                px={3}
+                                px={2.5}
                                 py={1}
-                                borderRadius="full"
+                                borderRadius="md"
                                 fontSize="xs"
-                                fontWeight="bold"
-                                backdropFilter="blur(10px)"
+                                fontWeight="700"
                               >
                                 #{index + 1}
                               </Box>
                             </Box>
                           )}
-                          <Box p={5} bg={cardBg}>
-                            <HStack justify="space-between" mb={2}>
+                          
+                          {/* Content Section */}
+                          <Box p={4} bg={cardBg}>
+                            <HStack justify="space-between" mb={2} align="start">
                               <Text
-                                fontSize="lg"
-                                fontWeight="bold"
+                                fontSize="md"
+                                fontWeight="700"
                                 color={textColor}
-                                noOfLines={1}
+                                noOfLines={2}
                                 flex={1}
+                                lineHeight="1.4"
                               >
                                 {subject.name}
                               </Text>
-                              <Icon as={FiCheckCircle} color="green.500" boxSize={5} />
+                              <Icon as={FiCheckCircle} color={primaryColor} boxSize={4} mt={1} />
                             </HStack>
                             {subject.description && (
-                              <Text fontSize="sm" color={subTextColor} noOfLines={2} mb={3}>
+                              <Text fontSize="xs" color={subTextColor} noOfLines={2} mb={3} lineHeight="1.5">
                                 {subject.description}
                               </Text>
                             )}
                             <Button
                               size="sm"
-                              bg={blueGradient}
+                              bg={primaryColor}
                               color="white"
                               w="full"
-                              borderRadius="xl"
+                              borderRadius="lg"
+                              fontWeight="600"
+                              fontSize="sm"
                               _hover={{
-                                transform: 'translateY(-2px)',
-                                shadow: 'lg',
+                                bg: 'blue.600',
+                                transform: 'translateY(-1px)',
+                                boxShadow: 'md',
                               }}
                               transition="all 0.2s"
                             >
@@ -896,51 +970,80 @@ const PackageDetails = () => {
               </SimpleGrid>
             ) : (
               <Center py={16}>
-                <VStack spacing={4}>
-                  <Box
-                    bg={blueGradient}
-                    borderRadius="full"
-                    p={6}
-                    color="white"
-                  >
-                    <Icon as={FiBookOpen} boxSize={12} />
-                  </Box>
-                  <Text color={subTextColor} fontSize="lg" fontWeight="medium">
-                    لا توجد مواد مدرجة في الباقة
-                  </Text>
-                  {isAdmin && (
-                    <Button
-                      leftIcon={<Icon as={FiPlus} />}
-                      bg={blueGradient}
-                      color="white"
-                      onClick={onSubjectModalOpen}
-                      borderRadius="xl"
+                  <VStack spacing={5}>
+                    <Box
+                      bgGradient="linear(to-br, blue.100, blue.200)"
+                      borderRadius="full"
+                      p={8}
+                      color={primaryColor}
                     >
-                      إضافة مادة جديدة
-                    </Button>
-                  )}
-                </VStack>
+                      <Icon as={FiBookOpen} boxSize={12} />
+                    </Box>
+                    <VStack spacing={2}>
+                      <Text color={textColor} fontSize="lg" fontWeight="600">
+                        لا توجد مواد مدرجة في الباقة
+                      </Text>
+                      <Text color={subTextColor} fontSize="sm">
+                        ابدأ بإضافة المواد الدراسية للباقة
+                      </Text>
+                    </VStack>
+                    {isAdmin && (
+                      <Button
+                        leftIcon={<Icon as={FiPlus} />}
+                        bg={primaryColor}
+                        color="white"
+                        onClick={onSubjectModalOpen}
+                        borderRadius="lg"
+                        fontWeight="600"
+                        size="md"
+                        _hover={{ 
+                          bg: 'blue.600',
+                          transform: 'translateY(-2px)',
+                          boxShadow: 'lg'
+                        }}
+                        transition="all 0.2s"
+                      >
+                        إضافة مادة جديدة
+                      </Button>
+                    )}
+                  </VStack>
               </Center>
             )}
           </CardBody>
         </Card>
 
-        {/* Admin Section - Activation Codes */}
+        {/* Admin Section - Activation Codes - تصميم جديد */}
         {isAdmin && (
-          <Card bg={cardBg} shadow="xl" borderRadius="2xl" mb={8} overflow="hidden">
-            <Box bg={greenGradient} p={6} color="white">
-              <HStack justify="space-between" flexWrap="wrap" spacing={4}>
+          <Card bg={cardBg} shadow="sm" borderRadius="2xl" mb={8} overflow="hidden" border="1px solid" borderColor={borderColor}>
+            <Box 
+              bgGradient="linear(to-r, blue.500, blue.600)" 
+              p={6} 
+              color="white"
+              position="relative"
+              overflow="hidden"
+            >
+              <Box
+                position="absolute"
+                top="-50%"
+                right="-10%"
+                w="200px"
+                h="200px"
+                bg="whiteAlpha.100"
+                borderRadius="full"
+                filter="blur(40px)"
+              />
+              <HStack justify="space-between" flexWrap="wrap" spacing={4} position="relative" zIndex={1}>
                 <HStack spacing={4}>
                   <Box
                     bg="whiteAlpha.200"
-                    borderRadius="full"
+                    borderRadius="xl"
                     p={3}
                     backdropFilter="blur(10px)"
                   >
                     <Icon as={FiKey} boxSize={6} />
                   </Box>
-                  <VStack align="start" spacing={0}>
-                    <Heading size="lg" fontWeight="bold">
+                  <VStack align="start" spacing={1}>
+                    <Heading size="lg" fontWeight="700">
                       أكواد التفعيل
                     </Heading>
                     <Text fontSize="sm" color="whiteAlpha.900">
@@ -950,145 +1053,177 @@ const PackageDetails = () => {
                 </HStack>
                 <Button
                   leftIcon={<Icon as={FiPlus} />}
-                  bg="whiteAlpha.200"
-                  color="white"
-                  _hover={{ bg: 'whiteAlpha.300', transform: 'translateY(-2px)' }}
+                  bg="white"
+                  color={primaryColor}
+                  _hover={{ 
+                    bg: 'whiteAlpha.900', 
+                    transform: 'translateY(-2px)',
+                    boxShadow: 'lg'
+                  }}
                   onClick={onOpen}
-                  borderRadius="xl"
-                  size="lg"
+                  borderRadius="lg"
+                  size="md"
+                  fontWeight="600"
+                  transition="all 0.2s"
                 >
                   إنشاء أكواد جديدة
                 </Button>
               </HStack>
             </Box>
 
-            <CardBody p={8}>
+            <CardBody p={{ base: 4, md: 8 }}>
               {activationCodes.length > 0 ? (
                 <VStack spacing={6} align="stretch">
-                  <HStack justify="space-between">
-                    <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                  <HStack justify="space-between" flexWrap="wrap" spacing={4}>
+                    <Text fontSize="lg" fontWeight="700" color={textColor}>
                       الأكواد المنشأة
                     </Text>
-                    <Badge colorScheme="green" fontSize="md" px={4} py={2} borderRadius="full">
+                    <Badge 
+                      bg={primaryColor} 
+                      color="white" 
+                      fontSize="sm" 
+                      px={4} 
+                      py={1.5} 
+                      borderRadius="full"
+                      fontWeight="600"
+                    >
                       {activationCodes.length} كود
                     </Badge>
                   </HStack>
-                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={5}>
                     {activationCodes.map((codeData) => (
                       <Card
                         key={codeData.id}
                         bg={cardBg}
-                        border="2px solid"
-                        borderColor={codeData.uses >= codeData.max_uses ? 'red.300' : 'green.300'}
-                        borderRadius="2xl"
+                        border="1px solid"
+                        borderColor={codeData.uses >= codeData.max_uses ? 'red.200' : borderColor}
+                        borderRadius="xl"
                         overflow="hidden"
+                        boxShadow="sm"
                         _hover={{
-                          transform: 'translateY(-4px)',
-                          shadow: 'xl',
+                          transform: 'translateY(-2px)',
+                          boxShadow: 'lg',
+                          borderColor: codeData.uses >= codeData.max_uses ? 'red.300' : primaryColor,
                         }}
-                        transition="all 0.3s ease"
+                        transition="all 0.2s ease"
                       >
-                        <CardBody p={6}>
+                        <CardBody p={5}>
                           <VStack spacing={4} align="stretch">
+                            {/* QR Code */}
                             {codeData.qr_code && (
                               <Box
-                                bg="white"
+                                bg={blueLight}
                                 p={4}
-                                borderRadius="xl"
+                                borderRadius="lg"
                                 display="flex"
                                 justifyContent="center"
                                 alignItems="center"
-                                border="2px solid"
+                                border="1px solid"
                                 borderColor={borderColor}
                               >
                                 <Image
                                   src={codeData.qr_code}
                                   alt={`QR Code for ${codeData.code}`}
-                                  maxH="180px"
-                                  maxW="180px"
+                                  maxH="160px"
+                                  maxW="160px"
                                 />
                               </Box>
                             )}
+                            
+                            {/* Code Display */}
                             <Box
-                              bg={codeData.uses >= codeData.max_uses ? 'red.50' : 'green.50'}
+                              bg={codeData.uses >= codeData.max_uses ? 'red.50' : blueLight}
                               p={4}
-                              borderRadius="xl"
-                              border="2px solid"
-                              borderColor={codeData.uses >= codeData.max_uses ? 'red.200' : 'green.200'}
+                              borderRadius="lg"
+                              border="1px solid"
+                              borderColor={codeData.uses >= codeData.max_uses ? 'red.200' : borderColor}
                             >
                               <VStack spacing={2} align="stretch">
-                                <Text fontSize="xs" color={subTextColor} fontWeight="medium">
+                                <Text fontSize="xs" color={subTextColor} fontWeight="600" mb={1}>
                                   كود التفعيل
                                 </Text>
                                 <HStack spacing={2}>
                                   <Box
                                     bg="white"
                                     px={4}
-                                    py={3}
+                                    py={2.5}
                                     borderRadius="lg"
                                     flex={1}
-                                    border="2px solid"
+                                    border="1px solid"
                                     borderColor={primaryColor}
                                   >
                                     <Text
-                                      fontSize="lg"
-                                      fontWeight="bold"
+                                      fontSize="md"
+                                      fontWeight="700"
                                       color={primaryColor}
                                       fontFamily="mono"
                                       textAlign="center"
-                                      letterSpacing="2px"
+                                      letterSpacing="1px"
                                     >
                                       {codeData.code}
                                     </Text>
                                   </Box>
                                   <IconButton
                                     icon={<Icon as={FiCopy} />}
-                                    colorScheme="blue"
+                                    bg={primaryColor}
+                                    color="white"
+                                    _hover={{ bg: 'blue.600' }}
                                     onClick={() => handleCopyCode(codeData.code)}
                                     aria-label="نسخ الكود"
                                     borderRadius="lg"
+                                    size="md"
                                   />
                                 </HStack>
                               </VStack>
                             </Box>
+                            
+                            {/* Info */}
                             <VStack spacing={2} align="stretch" fontSize="sm">
-                              <HStack justify="space-between" p={2} bg={cardHoverBg} borderRadius="md">
-                                <Text color={subTextColor}>الحالة:</Text>
+                              <HStack justify="space-between" p={2.5} bg={blueLight} borderRadius="lg">
+                                <Text color={subTextColor} fontSize="xs" fontWeight="500">الحالة:</Text>
                                 <Badge
-                                  colorScheme={codeData.uses >= codeData.max_uses ? 'red' : 'green'}
-                                  px={3}
-                                  py={1}
-                                  borderRadius="full"
+                                  bg={codeData.uses >= codeData.max_uses ? 'red.500' : primaryColor}
+                                  color="white"
+                                  px={2.5}
+                                  py={0.5}
+                                  borderRadius="md"
+                                  fontSize="xs"
+                                  fontWeight="600"
                                 >
                                   {codeData.uses >= codeData.max_uses ? 'مستخدم' : 'متاح'}
                                 </Badge>
                               </HStack>
-                              <HStack justify="space-between" p={2} bg={cardHoverBg} borderRadius="md">
-                                <Text color={subTextColor}>الاستخدام:</Text>
-                                <Text fontWeight="bold" color={textColor}>
+                              <HStack justify="space-between" p={2.5} bg={blueLight} borderRadius="lg">
+                                <Text color={subTextColor} fontSize="xs" fontWeight="500">الاستخدام:</Text>
+                                <Text fontWeight="700" color={textColor} fontSize="sm">
                                   {codeData.uses} / {codeData.max_uses}
                                 </Text>
                               </HStack>
                               {codeData.expires_at && (
-                                <HStack justify="space-between" p={2} bg={cardHoverBg} borderRadius="md">
-                                  <Text color={subTextColor}>انتهاء الصلاحية:</Text>
-                                  <Text fontWeight="bold" color={textColor} fontSize="xs">
+                                <HStack justify="space-between" p={2.5} bg={blueLight} borderRadius="lg">
+                                  <Text color={subTextColor} fontSize="xs" fontWeight="500">انتهاء الصلاحية:</Text>
+                                  <Text fontWeight="600" color={textColor} fontSize="xs">
                                     {new Date(codeData.expires_at).toLocaleDateString('ar-EG')}
                                   </Text>
                                 </HStack>
                               )}
                             </VStack>
+                            
+                            {/* Download Button */}
                             {codeData.qr_code && (
                               <Button
                                 leftIcon={<Icon as={FiDownload} />}
-                                bg={blueGradient}
+                                bg={primaryColor}
                                 color="white"
-                                size="md"
+                                size="sm"
                                 onClick={() => handleDownloadQR(codeData.qr_code, codeData.code)}
-                                borderRadius="xl"
+                                borderRadius="lg"
+                                fontWeight="600"
+                                fontSize="sm"
                                 _hover={{
-                                  transform: 'translateY(-2px)',
-                                  shadow: 'lg',
+                                  bg: 'blue.600',
+                                  transform: 'translateY(-1px)',
+                                  boxShadow: 'md',
                                 }}
                                 transition="all 0.2s"
                               >
@@ -1103,24 +1238,37 @@ const PackageDetails = () => {
                 </VStack>
               ) : (
                 <Center py={16}>
-                  <VStack spacing={4}>
+                  <VStack spacing={5}>
                     <Box
-                      bg={greenGradient}
+                      bgGradient="linear(to-br, blue.100, blue.200)"
                       borderRadius="full"
-                      p={6}
-                      color="white"
+                      p={8}
+                      color={primaryColor}
                     >
                       <Icon as={FiKey} boxSize={12} />
                     </Box>
-                    <Text color={subTextColor} fontSize="lg" fontWeight="medium">
-                      لا توجد أكواد تفعيل منشأة
-                    </Text>
+                    <VStack spacing={2}>
+                      <Text color={textColor} fontSize="lg" fontWeight="600">
+                        لا توجد أكواد تفعيل منشأة
+                      </Text>
+                      <Text color={subTextColor} fontSize="sm">
+                        قم بإنشاء أكواد تفعيل جديدة للباقة
+                      </Text>
+                    </VStack>
                     <Button
                       leftIcon={<Icon as={FiPlus} />}
-                      bg={greenGradient}
+                      bg={primaryColor}
                       color="white"
                       onClick={onOpen}
-                      borderRadius="xl"
+                      borderRadius="lg"
+                      fontWeight="600"
+                      size="md"
+                      _hover={{ 
+                        bg: 'blue.600',
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'lg'
+                      }}
+                      transition="all 0.2s"
                     >
                       إنشاء أكواد جديدة
                     </Button>
@@ -1131,8 +1279,8 @@ const PackageDetails = () => {
           </Card>
         )}
 
-        {/* Action Buttons */}
-        <Flex justify="center" gap={4} flexWrap="wrap">
+        {/* Action Buttons - تصميم جديد */}
+        <Flex justify="center" gap={4} flexWrap="wrap" mt={8}>
           <Button
             leftIcon={<Icon as={FiArrowLeft} />}
             variant="outline"
@@ -1140,8 +1288,14 @@ const PackageDetails = () => {
             size="lg"
             px={8}
             onClick={() => navigate('/packages-management')}
-            borderRadius="xl"
-            _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }}
+            borderRadius="lg"
+            fontWeight="600"
+            borderWidth="2px"
+            _hover={{ 
+              transform: 'translateY(-2px)', 
+              boxShadow: 'md',
+              bg: blueLight
+            }}
             transition="all 0.2s"
           >
             العودة للباقات
@@ -1149,17 +1303,18 @@ const PackageDetails = () => {
           {!isAdmin && (
             <Button
               rightIcon={<Icon as={FiArrowRight} />}
-              bg={purpleGradient}
+              bg={primaryColor}
               color="white"
               size="lg"
               px={8}
-              borderRadius="xl"
-              fontWeight="bold"
+              borderRadius="lg"
+              fontWeight="600"
               _hover={{
+                bg: 'blue.600',
                 transform: 'translateY(-2px)',
-                shadow: 'xl',
+                boxShadow: 'lg',
               }}
-              transition="all 0.3s ease"
+              transition="all 0.2s"
             >
               الاشتراك في الباقة
             </Button>
@@ -1167,20 +1322,43 @@ const PackageDetails = () => {
         </Flex>
       </Container>
 
-      {/* Create Activation Codes Modal */}
+      {/* Create Activation Codes Modal - تصميم جديد */}
       <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius="2xl" overflow="hidden">
-          <Box bg={greenGradient} p={6} color="white">
-            <ModalHeader p={0}>
+        <ModalContent borderRadius="2xl" overflow="hidden" boxShadow="2xl">
+          <Box 
+            bgGradient="linear(to-r, blue.500, blue.600)" 
+            p={6} 
+            color="white"
+            position="relative"
+            overflow="hidden"
+          >
+            <Box
+              position="absolute"
+              top="-50%"
+              right="-10%"
+              w="200px"
+              h="200px"
+              bg="whiteAlpha.100"
+              borderRadius="full"
+              filter="blur(40px)"
+            />
+            <ModalHeader p={0} position="relative" zIndex={1}>
               <HStack spacing={3}>
-                <Icon as={FiKey} boxSize={6} />
-                <Text fontSize="xl" fontWeight="bold">
+                <Box
+                  bg="whiteAlpha.200"
+                  borderRadius="xl"
+                  p={2}
+                  backdropFilter="blur(10px)"
+                >
+                  <Icon as={FiKey} boxSize={6} />
+                </Box>
+                <Text fontSize="xl" fontWeight="700">
                   إنشاء أكواد التفعيل
                 </Text>
               </HStack>
             </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size="lg" />
+            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size="lg" position="relative" zIndex={1} />
           </Box>
 
           <ModalBody p={6} bg={cardBg}>
@@ -1197,7 +1375,7 @@ const PackageDetails = () => {
                   }
                   placeholder="من 1 إلى 100"
                   borderColor={borderColor}
-                  borderRadius="xl"
+                  borderRadius="lg"
                   size="lg"
                   min={1}
                   max={100}
@@ -1210,7 +1388,7 @@ const PackageDetails = () => {
               </FormControl>
 
               <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
+                <FormLabel fontWeight="600" color={textColor} fontSize="md" mb={2}>
                   تاريخ انتهاء الصلاحية (اختياري)
                 </FormLabel>
                 <Input
@@ -1220,7 +1398,7 @@ const PackageDetails = () => {
                     setFormData((prev) => ({ ...prev, expires_at: e.target.value }))
                   }
                   borderColor={borderColor}
-                  borderRadius="xl"
+                  borderRadius="lg"
                   size="lg"
                   _focus={{
                     borderColor: primaryColor,
@@ -1234,25 +1412,35 @@ const PackageDetails = () => {
 
           <ModalFooter p={6} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
             <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onClose} variant="outline" size="lg" borderRadius="xl" px={6}>
+              <Button 
+                onClick={onClose} 
+                variant="outline" 
+                size="lg" 
+                borderRadius="lg" 
+                px={6}
+                fontWeight="600"
+                borderWidth="2px"
+                _hover={{ bg: blueLight }}
+              >
                 إلغاء
               </Button>
               <Button
-                bg={greenGradient}
+                bg={primaryColor}
                 color="white"
                 onClick={handleCreateActivationCodes}
                 isLoading={creatingCodes}
                 loadingText="جاري الإنشاء..."
                 size="lg"
                 px={8}
-                borderRadius="xl"
-                fontWeight="bold"
+                borderRadius="lg"
+                fontWeight="600"
                 leftIcon={<Icon as={FiKey} />}
                 _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
+                  bg: 'blue.600',
+                  transform: 'translateY(-1px)',
+                  boxShadow: 'md',
                 }}
-                transition="all 0.3s ease"
+                transition="all 0.2s"
               >
                 إنشاء الأكواد
               </Button>
@@ -1261,20 +1449,43 @@ const PackageDetails = () => {
         </ModalContent>
       </Modal>
 
-      {/* Add Subject Modal */}
+      {/* Add Subject Modal - تصميم جديد */}
       <Modal isOpen={isSubjectModalOpen} onClose={onSubjectModalClose} size="lg" isCentered>
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius="2xl" overflow="hidden">
-          <Box bg={blueGradient} p={6} color="white">
-            <ModalHeader p={0}>
+        <ModalContent borderRadius="2xl" overflow="hidden" boxShadow="2xl">
+          <Box 
+            bgGradient="linear(to-r, blue.500, blue.600)" 
+            p={6} 
+            color="white"
+            position="relative"
+            overflow="hidden"
+          >
+            <Box
+              position="absolute"
+              top="-50%"
+              right="-10%"
+              w="200px"
+              h="200px"
+              bg="whiteAlpha.100"
+              borderRadius="full"
+              filter="blur(40px)"
+            />
+            <ModalHeader p={0} position="relative" zIndex={1}>
               <HStack spacing={3}>
-                <Icon as={FiBookOpen} boxSize={6} />
-                <Text fontSize="xl" fontWeight="bold">
+                <Box
+                  bg="whiteAlpha.200"
+                  borderRadius="xl"
+                  p={2}
+                  backdropFilter="blur(10px)"
+                >
+                  <Icon as={FiBookOpen} boxSize={6} />
+                </Box>
+                <Text fontSize="xl" fontWeight="700">
                   إضافة مادة جديدة
                 </Text>
               </HStack>
             </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size="lg" />
+            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size="lg" position="relative" zIndex={1} />
           </Box>
 
           <ModalBody p={6} bg={cardBg}>
@@ -1347,10 +1558,10 @@ const PackageDetails = () => {
                     <Box
                       border="2px solid"
                       borderColor={primaryColor}
-                      borderRadius="xl"
+                      borderRadius="lg"
                       p={4}
                       textAlign="center"
-                      bg={useColorModeValue("blue.50", "blue.900")}
+                      bg={blueLight}
                     >
                       <Image
                         src={subjectImagePreview}
@@ -1358,7 +1569,7 @@ const PackageDetails = () => {
                         maxH="200px"
                         mx="auto"
                         borderRadius="lg"
-                        boxShadow="md"
+                        boxShadow="sm"
                       />
                     </Box>
                   )}
@@ -1369,25 +1580,35 @@ const PackageDetails = () => {
 
           <ModalFooter p={6} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
             <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onSubjectModalClose} variant="outline" size="lg" borderRadius="xl" px={6}>
+              <Button 
+                onClick={onSubjectModalClose} 
+                variant="outline" 
+                size="lg" 
+                borderRadius="lg" 
+                px={6}
+                fontWeight="600"
+                borderWidth="2px"
+                _hover={{ bg: blueLight }}
+              >
                 إلغاء
               </Button>
               <Button
-                bg={blueGradient}
+                bg={primaryColor}
                 color="white"
                 onClick={handleAddSubject}
                 isLoading={addingSubject}
                 loadingText="جاري الإضافة..."
                 size="lg"
                 px={8}
-                borderRadius="xl"
-                fontWeight="bold"
+                borderRadius="lg"
+                fontWeight="600"
                 leftIcon={<Icon as={FiPlus} />}
                 _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
+                  bg: 'blue.600',
+                  transform: 'translateY(-1px)',
+                  boxShadow: 'md',
                 }}
-                transition="all 0.3s ease"
+                transition="all 0.2s"
               >
                 إضافة المادة
               </Button>
@@ -1396,20 +1617,43 @@ const PackageDetails = () => {
         </ModalContent>
       </Modal>
 
-      {/* Edit Subject Modal */}
+      {/* Edit Subject Modal - تصميم جديد */}
       <Modal isOpen={isEditSubjectModalOpen} onClose={onEditSubjectModalClose} size="lg" isCentered>
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius="2xl" overflow="hidden">
-          <Box bg={blueGradient} p={6} color="white">
-            <ModalHeader p={0}>
+        <ModalContent borderRadius="2xl" overflow="hidden" boxShadow="2xl">
+          <Box 
+            bgGradient="linear(to-r, blue.500, blue.600)" 
+            p={6} 
+            color="white"
+            position="relative"
+            overflow="hidden"
+          >
+            <Box
+              position="absolute"
+              top="-50%"
+              right="-10%"
+              w="200px"
+              h="200px"
+              bg="whiteAlpha.100"
+              borderRadius="full"
+              filter="blur(40px)"
+            />
+            <ModalHeader p={0} position="relative" zIndex={1}>
               <HStack spacing={3}>
-                <Icon as={FiEdit} boxSize={6} />
-                <Text fontSize="xl" fontWeight="bold">
+                <Box
+                  bg="whiteAlpha.200"
+                  borderRadius="xl"
+                  p={2}
+                  backdropFilter="blur(10px)"
+                >
+                  <Icon as={FiEdit} boxSize={6} />
+                </Box>
+                <Text fontSize="xl" fontWeight="700">
                   تعديل المادة
                 </Text>
               </HStack>
             </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size="lg" />
+            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size="lg" position="relative" zIndex={1} />
           </Box>
 
           <ModalBody p={6} bg={cardBg}>
@@ -1482,10 +1726,10 @@ const PackageDetails = () => {
                     <Box
                       border="2px solid"
                       borderColor={primaryColor}
-                      borderRadius="xl"
+                      borderRadius="lg"
                       p={4}
                       textAlign="center"
-                      bg={useColorModeValue("blue.50", "blue.900")}
+                      bg={blueLight}
                     >
                       <Image
                         src={subjectImagePreview}
@@ -1493,7 +1737,7 @@ const PackageDetails = () => {
                         maxH="200px"
                         mx="auto"
                         borderRadius="lg"
-                        boxShadow="md"
+                        boxShadow="sm"
                       />
                     </Box>
                   )}
@@ -1504,25 +1748,35 @@ const PackageDetails = () => {
 
           <ModalFooter p={6} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
             <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onEditSubjectModalClose} variant="outline" size="lg" borderRadius="xl" px={6}>
+              <Button 
+                onClick={onEditSubjectModalClose} 
+                variant="outline" 
+                size="lg" 
+                borderRadius="lg" 
+                px={6}
+                fontWeight="600"
+                borderWidth="2px"
+                _hover={{ bg: blueLight }}
+              >
                 إلغاء
               </Button>
               <Button
-                bg={blueGradient}
+                bg={primaryColor}
                 color="white"
                 onClick={handleEditSubject}
                 isLoading={editingSubject}
                 loadingText="جاري التحديث..."
                 size="lg"
                 px={8}
-                borderRadius="xl"
-                fontWeight="bold"
+                borderRadius="lg"
+                fontWeight="600"
                 leftIcon={<Icon as={FiEdit} />}
                 _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
+                  bg: 'blue.600',
+                  transform: 'translateY(-1px)',
+                  boxShadow: 'md',
                 }}
-                transition="all 0.3s ease"
+                transition="all 0.2s"
               >
                 تحديث المادة
               </Button>
@@ -1531,20 +1785,43 @@ const PackageDetails = () => {
         </ModalContent>
       </Modal>
 
-      {/* Students Modal */}
+      {/* Students Modal - تصميم جديد */}
       <Modal isOpen={isStudentsModalOpen} onClose={onStudentsModalClose} size="4xl" isCentered>
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius="2xl" overflow="hidden" maxH="90vh">
-          <Box bg={purpleGradient} p={6} color="white">
-            <ModalHeader p={0}>
+        <ModalContent borderRadius="2xl" overflow="hidden" maxH="90vh" boxShadow="2xl">
+          <Box 
+            bgGradient="linear(to-r, blue.500, blue.600)" 
+            p={6} 
+            color="white"
+            position="relative"
+            overflow="hidden"
+          >
+            <Box
+              position="absolute"
+              top="-50%"
+              right="-10%"
+              w="200px"
+              h="200px"
+              bg="whiteAlpha.100"
+              borderRadius="full"
+              filter="blur(40px)"
+            />
+            <ModalHeader p={0} position="relative" zIndex={1}>
               <HStack spacing={3}>
-                <Icon as={FiUsers} boxSize={6} />
-                <Text fontSize="xl" fontWeight="bold">
+                <Box
+                  bg="whiteAlpha.200"
+                  borderRadius="xl"
+                  p={2}
+                  backdropFilter="blur(10px)"
+                >
+                  <Icon as={FiUsers} boxSize={6} />
+                </Box>
+                <Text fontSize="xl" fontWeight="700">
                   الطلاب المشتركين في الباقة
                 </Text>
               </HStack>
             </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size="lg" />
+            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size="lg" position="relative" zIndex={1} />
           </Box>
 
           <ModalBody p={6} bg={cardBg} overflowY="auto">
@@ -1567,15 +1844,16 @@ const PackageDetails = () => {
                     <Card
                       key={student.id}
                       bg={cardBg}
-                      border="2px solid"
-                      borderColor={student.is_active ? 'green.300' : 'gray.300'}
+                      border="1px solid"
+                      borderColor={student.is_active ? 'green.200' : borderColor}
                       borderRadius="xl"
+                      boxShadow="sm"
                       _hover={{
-                        transform: 'translateY(-4px)',
-                        shadow: 'xl',
-                        borderColor: student.is_active ? 'green.400' : 'gray.400',
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'lg',
+                        borderColor: student.is_active ? 'green.300' : primaryColor,
                       }}
-                      transition="all 0.3s ease"
+                      transition="all 0.2s ease"
                     >
                       <CardBody p={5}>
                         <HStack spacing={4} align="start">
@@ -1583,58 +1861,60 @@ const PackageDetails = () => {
                             <Image
                               src={student.avatar}
                               alt={student.name}
-                              boxSize="60px"
-                              borderRadius="full"
+                              boxSize="56px"
+                              borderRadius="xl"
                               objectFit="cover"
-                              border="3px solid"
-                              borderColor={student.is_active ? 'green.400' : 'gray.400'}
+                              border="2px solid"
+                              borderColor={student.is_active ? 'green.300' : borderColor}
                             />
                           ) : (
                             <Box
-                              boxSize="60px"
-                              borderRadius="full"
-                              bg={purpleGradient}
+                              boxSize="56px"
+                              borderRadius="xl"
+                              bg={primaryColor}
                               display="flex"
                               alignItems="center"
                               justifyContent="center"
                               color="white"
-                              fontWeight="bold"
-                              fontSize="xl"
+                              fontWeight="700"
+                              fontSize="lg"
                             >
                               {student.name?.charAt(0) || '?'}
                             </Box>
                           )}
                           <VStack align="start" spacing={2} flex={1}>
-                            <HStack justify="space-between" w="full">
-                              <Text fontSize="lg" fontWeight="bold" color={textColor} noOfLines={1}>
+                            <HStack justify="space-between" w="full" align="start">
+                              <Text fontSize="md" fontWeight="700" color={textColor} noOfLines={1} flex={1}>
                                 {student.name}
                               </Text>
                               <Badge
-                                colorScheme={student.is_active ? 'green' : 'gray'}
-                                px={3}
-                                py={1}
-                                borderRadius="full"
+                                bg={student.is_active ? 'green.500' : 'gray.400'}
+                                color="white"
+                                px={2.5}
+                                py={0.5}
+                                borderRadius="md"
                                 fontSize="xs"
+                                fontWeight="600"
                               >
                                 {student.is_active ? 'نشط' : 'غير نشط'}
                               </Badge>
                             </HStack>
-                            <VStack align="start" spacing={1} fontSize="sm" w="full">
-                              <HStack spacing={2}>
-                                <Icon as={FiUsers} boxSize={4} color={subTextColor} />
-                                <Text color={subTextColor} noOfLines={1}>
+                            <VStack align="start" spacing={1.5} fontSize="xs" w="full">
+                              <HStack spacing={2} w="full">
+                                <Icon as={FiUsers} boxSize={3.5} color={subTextColor} />
+                                <Text color={subTextColor} noOfLines={1} flex={1}>
                                   {student.email}
                                 </Text>
                               </HStack>
                               {student.phone && (
                                 <HStack spacing={2}>
-                                  <Icon as={FiClock} boxSize={4} color={subTextColor} />
+                                  <Icon as={FiClock} boxSize={3.5} color={subTextColor} />
                                   <Text color={subTextColor}>{student.phone}</Text>
                                 </HStack>
                               )}
                               {student.activated_at && (
-                                <HStack spacing={2}>
-                                  <Icon as={FiCalendar} boxSize={4} color={subTextColor} />
+                                <HStack spacing={2} flexWrap="wrap">
+                                  <Icon as={FiCalendar} boxSize={3.5} color={subTextColor} />
                                   <Text color={subTextColor} fontSize="xs">
                                     تم التفعيل: {new Date(student.activated_at).toLocaleDateString('ar-EG', {
                                       year: 'numeric',
@@ -1650,18 +1930,19 @@ const PackageDetails = () => {
                             {isAdmin && !student.is_active && (
                               <Button
                                 size="sm"
-                                bg={greenGradient}
+                                bg={primaryColor}
                                 color="white"
                                 leftIcon={<Icon as={FiCheckCircle} />}
                                 onClick={() => handleActivateStudent(student.id, student.name)}
                                 isLoading={activatingStudent === student.id}
                                 loadingText="جاري التفعيل..."
                                 w="full"
-                                borderRadius="xl"
-                                fontWeight="bold"
+                                borderRadius="lg"
+                                fontWeight="600"
                                 _hover={{
-                                  transform: 'translateY(-2px)',
-                                  shadow: 'lg',
+                                  bg: 'blue.600',
+                                  transform: 'translateY(-1px)',
+                                  boxShadow: 'md',
                                 }}
                                 transition="all 0.2s"
                               >
@@ -1670,13 +1951,15 @@ const PackageDetails = () => {
                             )}
                             {isAdmin && student.is_active && (
                               <Badge
-                                colorScheme="green"
+                                bg="green.500"
+                                color="white"
                                 px={3}
                                 py={1}
-                                borderRadius="full"
+                                borderRadius="md"
                                 fontSize="xs"
                                 w="full"
                                 textAlign="center"
+                                fontWeight="600"
                               >
                                 ✓ الباقة مفعلة
                               </Badge>
@@ -1690,25 +1973,39 @@ const PackageDetails = () => {
               </VStack>
             ) : (
               <Center py={12}>
-                <VStack spacing={4}>
+                <VStack spacing={5}>
                   <Box
-                    bg={purpleGradient}
+                    bgGradient="linear(to-br, blue.100, blue.200)"
                     borderRadius="full"
-                    p={6}
-                    color="white"
+                    p={8}
+                    color={primaryColor}
                   >
                     <Icon as={FiUsers} boxSize={12} />
                   </Box>
-                  <Text color={subTextColor} fontSize="lg" fontWeight="medium">
-                    لا يوجد طلاب مشتركين في هذه الباقة
-                  </Text>
+                  <VStack spacing={2}>
+                    <Text color={textColor} fontSize="lg" fontWeight="600">
+                      لا يوجد طلاب مشتركين في هذه الباقة
+                    </Text>
+                    <Text color={subTextColor} fontSize="sm">
+                      لم يتم تسجيل أي طلاب في هذه الباقة بعد
+                    </Text>
+                  </VStack>
                 </VStack>
               </Center>
             )}
           </ModalBody>
 
           <ModalFooter p={6} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
-            <Button onClick={onStudentsModalClose} variant="outline" size="lg" borderRadius="xl" px={6}>
+            <Button 
+              onClick={onStudentsModalClose} 
+              variant="outline" 
+              size="lg" 
+              borderRadius="lg" 
+              px={6}
+              fontWeight="600"
+              borderWidth="2px"
+              _hover={{ bg: blueLight }}
+            >
               إغلاق
             </Button>
           </ModalFooter>

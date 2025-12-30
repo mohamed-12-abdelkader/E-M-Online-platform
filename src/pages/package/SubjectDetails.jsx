@@ -1,3563 +1,1573 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import dayjs from 'dayjs';
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Button,
-  Flex,
-  VStack,
-  HStack,
-  Card,
-  CardBody,
-  Image,
-  Badge,
-  Spinner,
-  Center,
-  useColorModeValue,
-  Icon,
-  SimpleGrid,
-  Divider,
-  IconButton,
-  useToast,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton,
-  FormControl,
-  FormLabel,
-  Select,
-  Avatar,
-  Input,
-  Textarea,
-  Checkbox,
-  useDisclosure,
+  Alert,
   AlertDialog,
   AlertDialogBody,
+  AlertDialogContent,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogContent,
   AlertDialogOverlay,
-  Tooltip,
-  Collapse,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
-  Alert,
+  AlertDescription,
   AlertIcon,
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  Card,
+  CardBody,
+  Checkbox,
+  CheckboxGroup,
+  Container,
+  Divider,
+  Flex,
+  FormControl,
+  FormHelperText,
+  FormLabel,
+  Heading,
+  HStack,
+  IconButton,
+  Input,
+  InputGroup,
+  InputRightElement,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Select,
+  SimpleGrid,
+  Skeleton,
+  SkeletonText,
+  Spinner,
+  Stack,
+  Table,
+  Tbody,
+  Td,
+  Tag,
+  TagLabel,
+  Text,
+  Textarea,
+  Th,
+  Thead,
+  Tr,
+  Wrap,
+  WrapItem,
+  useColorModeValue,
+  useDisclosure,
+  useToast,
+  VStack,
 } from '@chakra-ui/react';
-import {
-  FiArrowLeft,
-  FiBookOpen,
-  FiPackage,
-  FiDollarSign,
-  FiCalendar,
-  FiUser,
-  FiPlus,
-  FiTrash2,
-  FiCheckCircle,
-  FiXCircle,
-  FiImage,
-  FiEdit,
-  FiVideo,
-  FiFileText,
-  FiChevronDown,
-  FiChevronUp,
-  FiHelpCircle,
-} from 'react-icons/fi';
+import { FiPlus, FiRefreshCw, FiUsers, FiList, FiMoreVertical, FiSearch } from 'react-icons/fi';
 import baseUrl from '../../api/baseUrl';
-import ScrollToTop from '../../components/scollToTop/ScrollToTop';
 import UserType from '../../Hooks/auth/userType';
 
+const WEEKDAY_LABELS = {
+  sat: 'السبت',
+  sun: 'الأحد',
+  mon: 'الاثنين',
+  tue: 'الثلاثاء',
+  wed: 'الأربعاء',
+  thu: 'الخميس',
+  fri: 'الجمعة',
+};
+
+const ROLE_META = {
+  admin: {
+    label: 'مسؤول',
+    colorScheme: 'purple',
+    hint: 'إدارة مجموعات المادة وإنشاء مجموعات وإضافة طلاب.',
+  },
+  teacher: {
+    label: 'مدرس',
+    colorScheme: 'blue',
+    hint: 'عرض مجموعاتك فقط داخل هذه المادة وعرض طلاب كل مجموعة.',
+  },
+  student: {
+    label: 'طالب',
+    colorScheme: 'green',
+    hint: 'عرض مجموعتك فقط والجدول الخاص بك.',
+  },
+  unknown: {
+    label: 'مستخدم',
+    colorScheme: 'gray',
+    hint: '',
+  },
+};
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
+const safeNumber = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+const parseStudentIds = (text) => {
+  // supports: "1,2 3\n4"
+  const parts = String(text || '')
+    .split(/[\s,]+/g)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const ids = parts
+    .map((p) => safeNumber(p))
+    .filter((n) => n !== null)
+    .map((n) => Math.trunc(n))
+    .filter((n) => n > 0);
+
+  // de-dup
+  return Array.from(new Set(ids));
+};
+
+const normalizeGroup = (raw) => {
+  if (!raw || typeof raw !== 'object') return null;
+  const teacher = raw.teacher || raw.teacher_data || raw.teacherInfo || null;
+  const teacherName = teacher?.name || raw.teacher_name || raw.teacherName || null;
+  return {
+    id: raw.id ?? raw.group_id ?? raw.groupId,
+    name: raw.name ?? raw.group_name ?? '—',
+    createdAt: raw.created_at ?? raw.createdAt ?? raw.created_at_human ?? null,
+    teacher: teacher,
+    teacherName: teacherName,
+    raw,
+  };
+};
+
+const normalizeStudent = (raw) => {
+  if (!raw || typeof raw !== 'object') return null;
+  return {
+    id: raw.id ?? raw.student_id ?? raw.studentId,
+    name: raw.name ?? raw.student_name ?? '—',
+    phone: raw.phone ?? raw.student_phone ?? '—',
+    addedAt: raw.added_at ?? raw.created_at ?? raw.joined_at ?? null,
+    raw,
+  };
+};
+
+const get403StudentMessage = (apiMessage) => {
+  const msg = String(apiMessage || '').toLowerCase();
+  const arabic = String(apiMessage || '');
+
+  // best-effort classification based on typical backend messages
+  const looksNotActive =
+    msg.includes('active') ||
+    msg.includes('activate') ||
+    msg.includes('not active') ||
+    arabic.includes('غير مفع') ||
+    arabic.includes('غير مفعل') ||
+    arabic.includes('غير مُفع') ||
+    arabic.includes('غير مُفعل') ||
+    arabic.includes('تفعيل');
+
+  if (looksNotActive) {
+    return 'الباقة غير مفعّلة لهذه المادة. لو معاك كود تفعيل فعّل الباقة ثم أعد المحاولة.';
+  }
+
+  return 'لم يتم إضافتك لأي مجموعة داخل هذه المادة حتى الآن. تواصل مع الإدارة/المدرس.';
+};
+
+const formatScheduleDays = (days) => {
+  if (!Array.isArray(days) || days.length === 0) return null;
+  return days.map((d) => WEEKDAY_LABELS[d] || d).join(' - ');
+};
+
+const formatScheduleTime = (time) => {
+  const t = String(time || '').trim();
+  return t || null;
+};
+
+const EmptyState = ({ title, description, onRetry, retryLabel = 'إعادة المحاولة' }) => (
+  <Card borderRadius="2xl">
+    <CardBody>
+      <Stack spacing={2} align="center" textAlign="center" py={6}>
+        <Heading size="sm">{title}</Heading>
+        {description && (
+          <Text fontSize="sm" color="gray.500">
+            {description}
+          </Text>
+        )}
+        {onRetry && (
+          <Button mt={2} size="sm" leftIcon={<FiRefreshCw />} variant="outline" onClick={onRetry}>
+            {retryLabel}
+          </Button>
+        )}
+      </Stack>
+    </CardBody>
+  </Card>
+);
+
+const SectionHeader = ({ title, description, right }) => (
+  <HStack justify="space-between" align="start" spacing={3} flexWrap="wrap">
+    <Box>
+      <Heading size="md">{title}</Heading>
+      {description && (
+        <Text mt={1} fontSize="sm" color="gray.500">
+          {description}
+        </Text>
+      )}
+    </Box>
+    {right}
+  </HStack>
+);
+
 const SubjectDetails = () => {
-  const { id } = useParams();
+  const { id: subjectIdParam } = useParams();
+  const subjectId = useMemo(() => String(subjectIdParam || ''), [subjectIdParam]);
   const navigate = useNavigate();
-  const [userData, isAdmin, isTeacher, student] = UserType();
-  const [subjectData, setSubjectData] = useState(null);
-  const [permissions, setPermissions] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [lessons, setLessons] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [permissionsLoading, setPermissionsLoading] = useState(false);
-  const [teachersLoading, setTeachersLoading] = useState(false);
-  const [lessonsLoading, setLessonsLoading] = useState(false);
-  const [addingPermission, setAddingPermission] = useState(false);
-  const [deletingPermission, setDeletingPermission] = useState(false);
-  const [selectedTeacherId, setSelectedTeacherId] = useState('');
-  const [selectedPermission, setSelectedPermission] = useState(null);
-  
-  // Lessons states
-  const [selectedLesson, setSelectedLesson] = useState(null);
-  const [lessonFormData, setLessonFormData] = useState({
-    title: '',
-    description: '',
-  });
-  const [addingLesson, setAddingLesson] = useState(false);
-  const [editingLesson, setEditingLesson] = useState(false);
-  const [deletingLesson, setDeletingLesson] = useState(false);
-  const [togglingVisibility, setTogglingVisibility] = useState(false);
-  
-  // Videos states
-  const [selectedVideo, setSelectedVideo] = useState(null);
-  const [videoFormData, setVideoFormData] = useState({
-    title: '',
-    video_url: '',
-    duration_minutes: 0,
-    order_index: 0,
-  });
-  const [addingVideo, setAddingVideo] = useState(false);
-  const [editingVideo, setEditingVideo] = useState(false);
-  const [deletingVideo, setDeletingVideo] = useState(false);
-  
-  // Assignments states
-  const [selectedAssignment, setSelectedAssignment] = useState(null);
-  const [assignmentFormData, setAssignmentFormData] = useState({
-    name: '',
-    questions_count: 0,
-    duration_minutes: 0,
-  });
-  const [addingAssignment, setAddingAssignment] = useState(false);
-  const [editingAssignment, setEditingAssignment] = useState(false);
-  const [deletingAssignment, setDeletingAssignment] = useState(false);
-  const [togglingAssignmentVisibility, setTogglingAssignmentVisibility] = useState(false);
-  
-  // Questions states
-  const [assignmentQuestions, setAssignmentQuestions] = useState({}); // { assignmentId: [questions] }
-  const [loadingQuestions, setLoadingQuestions] = useState({}); // { assignmentId: boolean }
-  const [questionFormData, setQuestionFormData] = useState({
-    question_text: '',
-    option_a: '',
-    option_b: '',
-    option_c: '',
-    option_d: '',
-    correct_answer: 'a',
-    order_index: 0,
-  });
-  const [addingQuestion, setAddingQuestion] = useState(false);
-  
-  // Image Question states
-  const [imageQuestionFormData, setImageQuestionFormData] = useState({
-    order_index: 0,
-  });
-  const [selectedImages, setSelectedImages] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [addingImageQuestion, setAddingImageQuestion] = useState(false);
-  
-  
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { 
-    isOpen: isDeleteOpen, 
-    onOpen: onDeleteOpen, 
-    onClose: onDeleteClose 
-  } = useDisclosure();
-  
-  // Lessons modals
-  const { isOpen: isLessonModalOpen, onOpen: onLessonModalOpen, onClose: onLessonModalClose } = useDisclosure();
-  const { isOpen: isEditLessonModalOpen, onOpen: onEditLessonModalOpen, onClose: onEditLessonModalClose } = useDisclosure();
-  const { isOpen: isDeleteLessonOpen, onOpen: onDeleteLessonOpen, onClose: onDeleteLessonClose } = useDisclosure();
-  
-  // Videos modals
-  const { isOpen: isVideoModalOpen, onOpen: onVideoModalOpen, onClose: onVideoModalClose } = useDisclosure();
-  const { isOpen: isEditVideoModalOpen, onOpen: onEditVideoModalOpen, onClose: onEditVideoModalClose } = useDisclosure();
-  const { isOpen: isDeleteVideoOpen, onOpen: onDeleteVideoOpen, onClose: onDeleteVideoClose } = useDisclosure();
-  
-  // Assignments modals
-  const { isOpen: isAssignmentModalOpen, onOpen: onAssignmentModalOpen, onClose: onAssignmentModalClose } = useDisclosure();
-  const { isOpen: isEditAssignmentModalOpen, onOpen: onEditAssignmentModalOpen, onClose: onEditAssignmentModalClose } = useDisclosure();
-  const { isOpen: isDeleteAssignmentOpen, onOpen: onDeleteAssignmentOpen, onClose: onDeleteAssignmentClose } = useDisclosure();
-  
-  // Questions modals
-  const { isOpen: isQuestionModalOpen, onOpen: onQuestionModalOpen, onClose: onQuestionModalClose } = useDisclosure();
-  const { isOpen: isImageQuestionModalOpen, onOpen: onImageQuestionModalOpen, onClose: onImageQuestionModalClose } = useDisclosure();
-  
-  const cancelRef = React.useRef();
   const toast = useToast();
+  const [userData, isAdmin, isTeacher, isStudent] = UserType();
 
-  // Color mode values
-  const bgGradient = useColorModeValue(
-    "linear-gradient(135deg, #EBF8FF 0%, #BEE3F8 100%)",
-    "linear-gradient(135deg, #1a202c 0%, #2d3748 100%)"
-  );
-  const cardBg = useColorModeValue("white", "gray.800");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-  const subTextColor = useColorModeValue("gray.600", "gray.400");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const primaryColor = "blue.500";
-  const blueGradient = "linear-gradient(135deg, #3182CE 0%, #2B6CB0 100%)";
-  const blueLight = useColorModeValue("blue.50", "blue.900");
+  const role = useMemo(() => {
+    if (isAdmin) return 'admin';
+    if (isTeacher) return 'teacher';
+    if (isStudent) return 'student';
+    return userData?.role || 'unknown';
+  }, [isAdmin, isTeacher, isStudent, userData?.role]);
 
-  // جلب تفاصيل المادة
-  const fetchSubjectDetails = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
+  // Theme
+  const pageBg = useColorModeValue('#F6F8FF', 'gray.950');
+  const cardBg = useColorModeValue('white', 'gray.900');
+  const borderColor = useColorModeValue('blackAlpha.200', 'whiteAlpha.200');
+  const muted = useColorModeValue('gray.600', 'gray.400');
+  const heroBg = useColorModeValue('white', 'gray.900');
+  const heroBorder = useColorModeValue('blackAlpha.200', 'whiteAlpha.200');
+  const primary = useColorModeValue('blue.600', 'blue.300');
+  const primarySoftBg = useColorModeValue('blue.50', 'whiteAlpha.50');
+  const headerText = useColorModeValue('white', 'white');
+  const elevatedShadow = useColorModeValue('0 12px 30px rgba(15, 23, 42, 0.10)', '0 12px 30px rgba(0,0,0,0.40)');
 
-      const response = await baseUrl.get(`/api/packages/subjects/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+  // Data states
+  const [groups, setGroups] = useState([]);
+  const [groupsLoading, setGroupsLoading] = useState(false);
+  const [groupsError, setGroupsError] = useState(null);
+  const [groupQuery, setGroupQuery] = useState('');
 
-      if (response.data?.subject) {
-        setSubjectData(response.data.subject);
-        
-        // إذا كان admin، جلب الصلاحيات
-        if (isAdmin && response.data.permissions) {
-          setPermissions(response.data.permissions);
-        }
-      } else {
-        toast({
-          title: 'خطأ',
-          description: 'المادة غير موجودة',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        navigate('/packages-management');
-      }
-    } catch (error) {
-      console.error('Error fetching subject details:', error);
-      toast({
-        title: 'خطأ',
-        description: error.response?.data?.error || error.response?.data?.message || 'فشل في جلب بيانات المادة',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      navigate('/packages-management');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [studentGroup, setStudentGroup] = useState(null);
+  const [studentSchedule, setStudentSchedule] = useState([]);
+  const [studentLoading, setStudentLoading] = useState(false);
+  const [studentError, setStudentError] = useState(null);
+  const [studentEmptyMessage, setStudentEmptyMessage] = useState(null);
 
-  // جلب قائمة المدرسين المصرح لهم (للمسؤول فقط)
-  const fetchPermissions = async () => {
-    if (!isAdmin) return;
-    
-    try {
-      setPermissionsLoading(true);
-      const token = localStorage.getItem('token');
+  // Teachers (Admin create group)
+  const [teachers, setTeachers] = useState([]);
+  const [teachersLoading, setTeachersLoading] = useState(false);
 
-      const response = await baseUrl.get(`/api/packages/subjects/${id}/permissions`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+  // Create group modal
+  const {
+    isOpen: isCreateOpen,
+    onOpen: onCreateOpen,
+    onClose: onCreateClose,
+  } = useDisclosure();
+  const [createSaving, setCreateSaving] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    teacher_id: '',
+    schedule_days: [],
+    schedule_time: '',
+  });
 
-      if (response.data?.permissions) {
-        setPermissions(response.data.permissions);
-      }
-    } catch (error) {
-      console.error('Error fetching permissions:', error);
-      toast({
-        title: 'خطأ',
-        description: error.response?.data?.error || 'فشل في جلب قائمة الصلاحيات',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setPermissionsLoading(false);
-    }
-  };
+  // Edit group modal (Admin)
+  const {
+    isOpen: isEditOpen,
+    onOpen: onEditOpen,
+    onClose: onEditClose,
+  } = useDisclosure();
+  const [editSaving, setEditSaving] = useState(false);
+  const [editGroup, setEditGroup] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    teacher_id: '',
+    schedule_days: [],
+    schedule_time: '',
+  });
 
-  // جلب قائمة جميع المدرسين
+  // Delete group confirm (Admin)
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
+  const [deleteGroup, setDeleteGroup] = useState(null);
+  const [deleteSaving, setDeleteSaving] = useState(false);
+
+  // Manage students modal (Admin)
+  const {
+    isOpen: isManageStudentsOpen,
+    onOpen: onManageStudentsOpen,
+    onClose: onManageStudentsClose,
+  } = useDisclosure();
+  const [manageGroup, setManageGroup] = useState(null);
+  const [studentIdsText, setStudentIdsText] = useState('');
+  const [addStudentsSaving, setAddStudentsSaving] = useState(false);
+
+  // View students modal (Admin + Teacher)
+  const {
+    isOpen: isViewStudentsOpen,
+    onOpen: onViewStudentsOpen,
+    onClose: onViewStudentsClose,
+  } = useDisclosure();
+  const [viewGroup, setViewGroup] = useState(null);
+  const [groupStudents, setGroupStudents] = useState([]);
+  const [groupStudentsLoading, setGroupStudentsLoading] = useState(false);
+  const [groupStudentsError, setGroupStudentsError] = useState(null);
+
+  const cancelRef = useRef();
+  const deleteCancelRef = useRef();
+
   const fetchTeachers = async () => {
     try {
       setTeachersLoading(true);
-      const token = localStorage.getItem('token');
-
-      const response = await baseUrl.get('/api/users/teachers', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      const res = await baseUrl.get(`/api/users/teachers`, {
+        headers: getAuthHeaders(),
       });
-
-      if (response.data?.teachers) {
-        // استبعاد المدرسين المصرح لهم بالفعل
-        const permittedTeacherIds = permissions.map(p => p.teacher_id);
-        const availableTeachers = response.data.teachers.filter(
-          teacher => !permittedTeacherIds.includes(teacher.id)
-        );
-        setTeachers(availableTeachers);
-      }
-    } catch (error) {
-      console.error('Error fetching teachers:', error);
+      setTeachers(res.data?.teachers || []);
+    } catch (e) {
       toast({
-        title: 'خطأ',
-        description: 'فشل في جلب قائمة المدرسين',
+        title: 'تعذر جلب المدرسين',
+        description: e?.response?.data?.message || 'حدث خطأ أثناء تحميل قائمة المدرسين',
         status: 'error',
-        duration: 3000,
+        duration: 4000,
         isClosable: true,
+        position: 'top-right',
       });
     } finally {
       setTeachersLoading(false);
     }
   };
 
-  // إضافة صلاحية لمدرس
-  const handleAddPermission = async () => {
-    if (!selectedTeacherId) {
-      toast({
-        title: 'حقول مطلوبة! ⚠️',
-        description: 'يرجى اختيار مدرس',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-        position: 'top-right',
-      });
-      return;
-    }
-
+  const fetchGroupsForRole = async () => {
+    if (!subjectId) return;
+    setGroupsError(null);
+    setGroupsLoading(true);
     try {
-      setAddingPermission(true);
-      const token = localStorage.getItem('token');
+      const url =
+        role === 'admin'
+          ? `/api/subjects/${subjectId}/groups`
+          : role === 'teacher'
+            ? `/api/subjects/${subjectId}/groups/mine`
+            : null;
 
-      const response = await baseUrl.post(
-        `/api/packages/subjects/${id}/permissions`,
-        { teacher_id: parseInt(selectedTeacherId) },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      if (!url) return;
 
-      if (response.data?.permission) {
-        // جلب الصلاحيات المحدثة
-        await fetchPermissions();
-        // تحديث قائمة المدرسين المتاحة
-        await fetchTeachers();
-        
-        toast({
-          title: 'تم الإضافة بنجاح! 🎉',
-          description: 'تم منح الصلاحية للمدرس بنجاح',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-          position: 'top-right',
-        });
+      const res = await baseUrl.get(url, { headers: getAuthHeaders() });
+      const rawGroups = res.data?.groups || res.data?.data?.groups || [];
+      const normalized = rawGroups.map(normalizeGroup).filter(Boolean);
+      setGroups(normalized);
+    } catch (e) {
+      setGroupsError(e?.response?.data?.message || 'حدث خطأ أثناء تحميل المجموعات');
+      setGroups([]);
+    } finally {
+      setGroupsLoading(false);
+    }
+  };
 
-        onClose();
-        setSelectedTeacherId('');
+  const fetchMyStudentGroup = async () => {
+    if (!subjectId) return;
+    setStudentError(null);
+    setStudentEmptyMessage(null);
+    setStudentLoading(true);
+    try {
+      const res = await baseUrl.get(`/api/subjects/${subjectId}/my-group`, {
+        headers: getAuthHeaders(),
+      });
+
+      const g = normalizeGroup(res.data?.group);
+      const schedule = Array.isArray(res.data?.schedule) ? res.data.schedule : [];
+      setStudentGroup(g);
+      setStudentSchedule(schedule);
+
+      if (!g) {
+        setStudentEmptyMessage('لم يتم العثور على مجموعة مرتبطة بحسابك في هذه المادة.');
       }
-    } catch (error) {
-      console.error('Error adding permission:', error);
-      toast({
-        title: 'فشل الإضافة! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء إضافة الصلاحية',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top-right',
-      });
+    } catch (e) {
+      const status = e?.response?.status;
+      const apiMessage = e?.response?.data?.message;
+      if (status === 403) {
+        setStudentEmptyMessage(get403StudentMessage(apiMessage));
+      } else {
+        setStudentError(apiMessage || 'حدث خطأ أثناء تحميل مجموعة الطالب');
+      }
+      setStudentGroup(null);
+      setStudentSchedule([]);
     } finally {
-      setAddingPermission(false);
+      setStudentLoading(false);
     }
   };
 
-  // حذف صلاحية
-  const handleDeletePermission = async () => {
-    if (!selectedPermission) return;
-
-    try {
-      setDeletingPermission(true);
-      const token = localStorage.getItem('token');
-
-      await baseUrl.delete(
-        `/api/packages/subjects/${id}/permissions/${selectedPermission.teacher_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-
-      toast({
-        title: 'تم الحذف بنجاح! ✅',
-        description: 'تم إزالة الصلاحية بنجاح',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-        position: 'top-right',
-      });
-
-      // تحديث القوائم
-      await fetchPermissions();
-      await fetchTeachers();
-      
-      onDeleteClose();
-      setSelectedPermission(null);
-    } catch (error) {
-      console.error('Error deleting permission:', error);
-      toast({
-        title: 'فشل الحذف! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء حذف الصلاحية',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top-right',
-      });
-    } finally {
-      setDeletingPermission(false);
-    }
+  const refresh = async () => {
+    if (role === 'student') return fetchMyStudentGroup();
+    return fetchGroupsForRole();
   };
 
-  // فتح حوار الحذف
-  const openDeleteDialog = (permission) => {
-    setSelectedPermission(permission);
+  useEffect(() => {
+    if (!subjectId) return;
+    if (role === 'student') {
+      fetchMyStudentGroup();
+    } else if (role === 'admin' || role === 'teacher') {
+      fetchGroupsForRole();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectId, role]);
+
+  useEffect(() => {
+    if (isCreateOpen && role === 'admin' && teachers.length === 0) {
+      fetchTeachers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCreateOpen, role]);
+
+  useEffect(() => {
+    if (isEditOpen && role === 'admin' && teachers.length === 0) {
+      fetchTeachers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditOpen, role]);
+
+  const openManageStudents = (group) => {
+    setManageGroup(group);
+    setStudentIdsText('');
+    onManageStudentsOpen();
+  };
+
+  const openEditGroup = (group) => {
+    setEditGroup(group);
+    setEditForm({
+      name: String(group?.name || ''),
+      teacher_id: group?.raw?.teacher_id ? String(group.raw.teacher_id) : '',
+      schedule_days: Array.isArray(group?.raw?.schedule_days) ? group.raw.schedule_days : [],
+      schedule_time: group?.raw?.schedule_time ? String(group.raw.schedule_time) : '',
+    });
+    onEditOpen();
+  };
+
+  const openDeleteGroup = (group) => {
+    setDeleteGroup(group);
     onDeleteOpen();
   };
 
-  // جلب الدروس
-  const fetchLessons = async () => {
+  const openViewStudents = async (group) => {
+    setViewGroup(group);
+    setGroupStudents([]);
+    setGroupStudentsError(null);
+    onViewStudentsOpen();
+
+    setGroupStudentsLoading(true);
     try {
-      setLessonsLoading(true);
-      const token = localStorage.getItem('token');
-
-      const response = await baseUrl.get(`/api/subjects/${id}/lessons`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (response.data?.success && response.data?.lessons) {
-        setLessons(response.data.lessons);
-      }
-    } catch (error) {
-      console.error('Error fetching lessons:', error);
-      toast({
-        title: 'خطأ',
-        description: error.response?.data?.error || error.response?.data?.message || 'فشل في جلب قائمة الدروس',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setLessonsLoading(false);
-    }
-  };
-
-  // ========== Lessons Functions ==========
-  const handleAddLesson = async () => {
-    if (!lessonFormData.title.trim()) {
-      toast({
-        title: 'حقول مطلوبة! ⚠️',
-        description: 'يرجى إدخال عنوان الدرس',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      setAddingLesson(true);
-      const token = localStorage.getItem('token');
-
-      const response = await baseUrl.post(
-        `/api/subjects/${id}/lessons`,
-        lessonFormData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+      const res = await baseUrl.get(
+        `/api/subjects/${subjectId}/groups/${group.id}/students`,
+        { headers: getAuthHeaders() }
       );
-
-      if (response.data?.success) {
-        await fetchLessons();
+      const rawStudents = res.data?.students || res.data?.data?.students || [];
+      const normalized = rawStudents.map(normalizeStudent).filter(Boolean);
+      setGroupStudents(normalized);
+    } catch (e) {
+      const status = e?.response?.status;
+      const msg = e?.response?.data?.message || 'تعذر تحميل طلاب المجموعة';
+      setGroupStudentsError(msg);
+      if (status === 403) {
         toast({
-          title: 'تم الإضافة بنجاح! 🎉',
-          description: `تم إنشاء الدرس "${lessonFormData.title}" بنجاح`,
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-        onLessonModalClose();
-        setLessonFormData({ title: '', description: '' });
-      }
-    } catch (error) {
-      console.error('Error adding lesson:', error);
-      toast({
-        title: 'فشل الإضافة! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء إضافة الدرس',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setAddingLesson(false);
-    }
-  };
-
-  const openEditLessonModal = (lesson) => {
-    setSelectedLesson(lesson);
-    setLessonFormData({
-      title: lesson.title,
-      description: lesson.description || '',
-    });
-    onEditLessonModalOpen();
-  };
-
-  const handleEditLesson = async () => {
-    if (!lessonFormData.title.trim()) {
-      toast({
-        title: 'حقول مطلوبة! ⚠️',
-        description: 'يرجى إدخال عنوان الدرس',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      setEditingLesson(true);
-      const token = localStorage.getItem('token');
-
-      const response = await baseUrl.put(
-        `/api/lessons/${selectedLesson.id}`,
-        lessonFormData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        await fetchLessons();
-        toast({
-          title: 'تم التحديث بنجاح! ✅',
-          description: `تم تحديث الدرس "${lessonFormData.title}" بنجاح`,
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-        onEditLessonModalClose();
-        setSelectedLesson(null);
-        setLessonFormData({ title: '', description: '' });
-      }
-    } catch (error) {
-      console.error('Error editing lesson:', error);
-      toast({
-        title: 'فشل التحديث! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء تحديث الدرس',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setEditingLesson(false);
-    }
-  };
-
-  const handleDeleteLesson = async () => {
-    if (!selectedLesson) return;
-
-    try {
-      setDeletingLesson(true);
-      const token = localStorage.getItem('token');
-
-      await baseUrl.delete(`/api/lessons/${selectedLesson.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      toast({
-        title: 'تم الحذف بنجاح! ✅',
-        description: 'تم حذف الدرس بنجاح',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-
-      await fetchLessons();
-      onDeleteLessonClose();
-      setSelectedLesson(null);
-    } catch (error) {
-      console.error('Error deleting lesson:', error);
-      toast({
-        title: 'فشل الحذف! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء حذف الدرس',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setDeletingLesson(false);
-    }
-  };
-
-  // Toggle lesson visibility
-  const handleToggleVisibility = async (lesson) => {
-    try {
-      setTogglingVisibility(true);
-      const token = localStorage.getItem('token');
-
-      const response = await baseUrl.patch(
-        `/api/lessons/${lesson.id}/visibility`,
-        { is_visible: !lesson.is_visible },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        await fetchLessons();
-        toast({
-          title: 'تم التحديث بنجاح! ✅',
-          description: lesson.is_visible 
-            ? 'تم إخفاء الدرس بنجاح' 
-            : 'تم إظهار الدرس بنجاح',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      console.error('Error toggling visibility:', error);
-      toast({
-        title: 'فشل التحديث! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء تغيير حالة الظهور',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setTogglingVisibility(false);
-    }
-  };
-
-  // ========== Videos Functions ==========
-  const openAddVideoModal = (lesson) => {
-    setSelectedLesson(lesson);
-    setVideoFormData({ title: '', video_url: '', duration_minutes: 0, order_index: 0 });
-    onVideoModalOpen();
-  };
-
-  const handleAddVideo = async () => {
-    if (!videoFormData.title.trim() || !videoFormData.video_url.trim()) {
-      toast({
-        title: 'حقول مطلوبة! ⚠️',
-        description: 'يرجى إدخال عنوان الفيديو ورابط الفيديو',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      setAddingVideo(true);
-      const token = localStorage.getItem('token');
-
-      const response = await baseUrl.post(
-        `/api/lessons/${selectedLesson.id}/videos`,
-        videoFormData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        await fetchLessons();
-        toast({
-          title: 'تم الإضافة بنجاح! 🎉',
-          description: 'تم إضافة الفيديو بنجاح',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-        onVideoModalClose();
-        setVideoFormData({ title: '', video_url: '', duration_minutes: 0, order_index: 0 });
-      }
-    } catch (error) {
-      console.error('Error adding video:', error);
-      toast({
-        title: 'فشل الإضافة! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء إضافة الفيديو',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setAddingVideo(false);
-    }
-  };
-
-  const openEditVideoModal = (video, lesson) => {
-    setSelectedVideo(video);
-    setSelectedLesson(lesson);
-    setVideoFormData({
-      title: video.title,
-      video_url: video.video_url,
-      duration_minutes: video.duration_minutes || 0,
-      order_index: video.order_index || 0,
-    });
-    onEditVideoModalOpen();
-  };
-
-  const handleEditVideo = async () => {
-    if (!videoFormData.title.trim() || !videoFormData.video_url.trim()) {
-      toast({
-        title: 'حقول مطلوبة! ⚠️',
-        description: 'يرجى إدخال عنوان الفيديو ورابط الفيديو',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      setEditingVideo(true);
-      const token = localStorage.getItem('token');
-
-      const response = await baseUrl.put(
-        `/api/videos/${selectedVideo.id}`,
-        videoFormData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        await fetchLessons();
-        toast({
-          title: 'تم التحديث بنجاح! ✅',
-          description: 'تم تحديث الفيديو بنجاح',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-        onEditVideoModalClose();
-        setSelectedVideo(null);
-        setVideoFormData({ title: '', video_url: '', duration_minutes: 0, order_index: 0 });
-      }
-    } catch (error) {
-      console.error('Error editing video:', error);
-      toast({
-        title: 'فشل التحديث! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء تحديث الفيديو',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setEditingVideo(false);
-    }
-  };
-
-  const handleDeleteVideo = async () => {
-    if (!selectedVideo) return;
-
-    try {
-      setDeletingVideo(true);
-      const token = localStorage.getItem('token');
-
-      await baseUrl.delete(`/api/videos/${selectedVideo.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      toast({
-        title: 'تم الحذف بنجاح! ✅',
-        description: 'تم حذف الفيديو بنجاح',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-
-      await fetchLessons();
-      onDeleteVideoClose();
-      setSelectedVideo(null);
-    } catch (error) {
-      console.error('Error deleting video:', error);
-      toast({
-        title: 'فشل الحذف! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء حذف الفيديو',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setDeletingVideo(false);
-    }
-  };
-
-  // ========== Assignments Functions ==========
-  const openAddAssignmentModal = (lesson) => {
-    setSelectedLesson(lesson);
-    setAssignmentFormData({ name: '', questions_count: 0, duration_minutes: 0 });
-    onAssignmentModalOpen();
-  };
-
-  const handleAddAssignment = async () => {
-    if (!assignmentFormData.name.trim()) {
-      toast({
-        title: 'حقول مطلوبة! ⚠️',
-        description: 'يرجى إدخال اسم الواجب',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      setAddingAssignment(true);
-      const token = localStorage.getItem('token');
-
-      const response = await baseUrl.post(
-        `/api/lessons/${selectedLesson.id}/assignments`,
-        assignmentFormData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        await fetchLessons();
-        toast({
-          title: 'تم الإضافة بنجاح! 🎉',
-          description: 'تم إضافة الواجب بنجاح',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-        onAssignmentModalClose();
-        setAssignmentFormData({ name: '', questions_count: 0, duration_minutes: 0 });
-      }
-    } catch (error) {
-      console.error('Error adding assignment:', error);
-      toast({
-        title: 'فشل الإضافة! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء إضافة الواجب',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setAddingAssignment(false);
-    }
-  };
-
-  const openEditAssignmentModal = (assignment, lesson) => {
-    setSelectedAssignment(assignment);
-    setSelectedLesson(lesson);
-    setAssignmentFormData({
-      name: assignment.name,
-      questions_count: assignment.questions_count || 0,
-      duration_minutes: assignment.duration_minutes || 0,
-    });
-    onEditAssignmentModalOpen();
-  };
-
-  const handleEditAssignment = async () => {
-    if (!assignmentFormData.name.trim()) {
-      toast({
-        title: 'حقول مطلوبة! ⚠️',
-        description: 'يرجى إدخال اسم الواجب',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      setEditingAssignment(true);
-      const token = localStorage.getItem('token');
-
-      const response = await baseUrl.put(
-        `/api/assignments/${selectedAssignment.id}`,
-        assignmentFormData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        await fetchLessons();
-        toast({
-          title: 'تم التحديث بنجاح! ✅',
-          description: 'تم تحديث الواجب بنجاح',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-        onEditAssignmentModalClose();
-        setSelectedAssignment(null);
-        setAssignmentFormData({ name: '', questions_count: 0, duration_minutes: 0 });
-      }
-    } catch (error) {
-      console.error('Error editing assignment:', error);
-      toast({
-        title: 'فشل التحديث! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء تحديث الواجب',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setEditingAssignment(false);
-    }
-  };
-
-  const handleDeleteAssignment = async () => {
-    if (!selectedAssignment) return;
-
-    try {
-      setDeletingAssignment(true);
-      const token = localStorage.getItem('token');
-
-      await baseUrl.delete(`/api/assignments/${selectedAssignment.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      toast({
-        title: 'تم الحذف بنجاح! ✅',
-        description: 'تم حذف الواجب بنجاح',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-
-      await fetchLessons();
-      onDeleteAssignmentClose();
-      setSelectedAssignment(null);
-    } catch (error) {
-      console.error('Error deleting assignment:', error);
-      toast({
-        title: 'فشل الحذف! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء حذف الواجب',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setDeletingAssignment(false);
-    }
-  };
-
-  // ========== Questions Functions ==========
-  // جلب أسئلة الواجب
-  const fetchAssignmentQuestions = async (assignmentId) => {
-    if (!assignmentId) return;
-    
-    try {
-      setLoadingQuestions(prev => ({ ...prev, [assignmentId]: true }));
-      const token = localStorage.getItem('token');
-
-      const response = await baseUrl.get(`/api/assignments/${assignmentId}/questions`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (response.data?.success && response.data?.questions) {
-        setAssignmentQuestions(prev => ({
-          ...prev,
-          [assignmentId]: response.data.questions
-        }));
-      } else {
-        setAssignmentQuestions(prev => ({
-          ...prev,
-          [assignmentId]: []
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching assignment questions:', error);
-      // إذا كان الخطأ 404، يعني لا توجد أسئلة بعد
-      if (error.response?.status !== 404) {
-        toast({
-          title: 'خطأ',
-          description: error.response?.data?.error || error.response?.data?.message || 'فشل في جلب أسئلة الواجب',
+          title: 'غير مسموح',
+          description: msg || 'ليس لديك صلاحية لعرض طلاب هذه المجموعة',
           status: 'error',
-          duration: 3000,
+          duration: 4000,
           isClosable: true,
+          position: 'top-right',
         });
       }
-      setAssignmentQuestions(prev => ({
-        ...prev,
-        [assignmentId]: []
-      }));
     } finally {
-      setLoadingQuestions(prev => ({ ...prev, [assignmentId]: false }));
+      setGroupStudentsLoading(false);
     }
   };
 
-
-  // فتح modal إضافة سؤال
-  const openAddQuestionModal = (assignment) => {
-    setSelectedAssignment(assignment);
-    setQuestionFormData({
-      question_text: '',
-      option_a: '',
-      option_b: '',
-      option_c: '',
-      option_d: '',
-      correct_answer: 'a',
-      order_index: assignmentQuestions[assignment.id]?.length || 0,
-    });
-    onQuestionModalOpen();
-  };
-
-  // إضافة سؤال نصي
-  const handleAddQuestion = async () => {
-    if (!questionFormData.question_text.trim() || 
-        !questionFormData.option_a.trim() || 
-        !questionFormData.option_b.trim() || 
-        !questionFormData.option_c.trim() || 
-        !questionFormData.option_d.trim()) {
+  const handleCreateGroup = async () => {
+    if (!createForm.name.trim()) {
       toast({
-        title: 'حقول مطلوبة! ⚠️',
-        description: 'يرجى إدخال جميع الحقول المطلوبة',
+        title: 'بيانات ناقصة',
+        description: 'اسم المجموعة مطلوب',
         status: 'warning',
         duration: 3000,
         isClosable: true,
+        position: 'top-right',
       });
       return;
     }
 
-    if (!selectedAssignment) return;
+    const payload = {
+      name: createForm.name.trim(),
+    };
+
+    const teacherId = safeNumber(createForm.teacher_id);
+    if (teacherId) payload.teacher_id = teacherId;
+
+    if (Array.isArray(createForm.schedule_days) && createForm.schedule_days.length > 0) {
+      payload.schedule_days = createForm.schedule_days;
+    }
+
+    if (String(createForm.schedule_time || '').trim()) {
+      payload.schedule_time = String(createForm.schedule_time).trim();
+    }
 
     try {
-      setAddingQuestion(true);
-      const token = localStorage.getItem('token');
+      setCreateSaving(true);
+      await baseUrl.post(`/api/subjects/${subjectId}/groups`, payload, {
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+      });
+      toast({
+        title: 'تم إنشاء المجموعة',
+        description: 'تم الحفظ بنجاح',
+        status: 'success',
+        duration: 3500,
+        isClosable: true,
+        position: 'top-right',
+      });
+      onCreateClose();
+      setCreateForm({
+        name: '',
+        teacher_id: '',
+        schedule_days: [],
+        schedule_time: '',
+      });
+      await fetchGroupsForRole();
+    } catch (e) {
+      toast({
+        title: 'فشل إنشاء المجموعة',
+        description: e?.response?.data?.message || 'حدث خطأ أثناء الحفظ',
+        status: 'error',
+        duration: 4500,
+        isClosable: true,
+        position: 'top-right',
+      });
+    } finally {
+      setCreateSaving(false);
+    }
+  };
 
-      const response = await baseUrl.post(
-        `/api/assignments/${selectedAssignment.id}/questions/text`,
-        questionFormData,
+  const handleUpdateGroup = async () => {
+    if (!editGroup?.id) return;
+
+    const payload = {};
+    if (String(editForm.name || '').trim()) payload.name = String(editForm.name).trim();
+
+    const teacherId = safeNumber(editForm.teacher_id);
+    if (teacherId) payload.teacher_id = teacherId;
+    if (editForm.teacher_id === '') {
+      // If you want to clear teacher, backend may or may not accept null.
+      // We won't send teacher_id in that case to avoid accidental clearing.
+    }
+
+    if (Array.isArray(editForm.schedule_days) && editForm.schedule_days.length > 0) {
+      payload.schedule_days = editForm.schedule_days;
+    }
+
+    if (String(editForm.schedule_time || '').trim()) {
+      payload.schedule_time = String(editForm.schedule_time).trim();
+    }
+
+    if (Object.keys(payload).length === 0) {
+      toast({
+        title: 'لا توجد تغييرات',
+        description: 'قم بتعديل حقل واحد على الأقل ثم احفظ.',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+        position: 'top-right',
+      });
+      return;
+    }
+
+    try {
+      setEditSaving(true);
+      await baseUrl.put(`/api/subjects/${subjectId}/groups/${editGroup.id}`, payload, {
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      toast({
+        title: 'تم تحديث المجموعة',
+        description: 'تم الحفظ بنجاح',
+        status: 'success',
+        duration: 3500,
+        isClosable: true,
+        position: 'top-right',
+      });
+      onEditClose();
+      setEditGroup(null);
+      await fetchGroupsForRole();
+    } catch (e) {
+      toast({
+        title: 'فشل تحديث المجموعة',
+        description: e?.response?.data?.message || 'حدث خطأ أثناء الحفظ',
+        status: 'error',
+        duration: 4500,
+        isClosable: true,
+        position: 'top-right',
+      });
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!deleteGroup?.id) return;
+    try {
+      setDeleteSaving(true);
+      await baseUrl.delete(`/api/subjects/${subjectId}/groups/${deleteGroup.id}`, {
+        headers: getAuthHeaders(),
+      });
+      toast({
+        title: 'تم حذف المجموعة',
+        description: 'تم الحذف بنجاح',
+        status: 'success',
+        duration: 3500,
+        isClosable: true,
+        position: 'top-right',
+      });
+      onDeleteClose();
+      setDeleteGroup(null);
+      await fetchGroupsForRole();
+    } catch (e) {
+      toast({
+        title: 'فشل حذف المجموعة',
+        description: e?.response?.data?.message || 'حدث خطأ أثناء الحذف',
+        status: 'error',
+        duration: 4500,
+        isClosable: true,
+        position: 'top-right',
+      });
+    } finally {
+      setDeleteSaving(false);
+    }
+  };
+
+  const handleAddStudents = async () => {
+    if (!manageGroup?.id) return;
+    const ids = parseStudentIds(studentIdsText);
+    if (ids.length === 0) {
+      toast({
+        title: 'بيانات ناقصة',
+        description: 'أدخل Student IDs (مثال: 108, 109)',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+        position: 'top-right',
+      });
+      return;
+    }
+
+    try {
+      setAddStudentsSaving(true);
+      await baseUrl.post(
+        `/api/subjects/${subjectId}/groups/${manageGroup.id}/students`,
+        { student_ids: ids },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            ...getAuthHeaders(),
             'Content-Type': 'application/json',
           },
         }
       );
-
-      if (response.data?.success) {
-        // تحديث قائمة الأسئلة
-        await fetchAssignmentQuestions(selectedAssignment.id);
-        // تحديث قائمة الدروس (لتحديث عدد الأسئلة)
-        await fetchLessons();
-        
-        toast({
-          title: 'تم الإضافة بنجاح! 🎉',
-          description: 'تم إضافة السؤال بنجاح',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-        onQuestionModalClose();
-        setQuestionFormData({
-          question_text: '',
-          option_a: '',
-          option_b: '',
-          option_c: '',
-          option_d: '',
-          correct_answer: 'a',
-          order_index: 0,
-        });
-      }
-    } catch (error) {
-      console.error('Error adding question:', error);
       toast({
-        title: 'فشل الإضافة! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء إضافة السؤال',
-        status: 'error',
-        duration: 3000,
+        title: 'تمت إضافة الطلاب',
+        description: `تمت إضافة ${ids.length} طالب/طلاب بنجاح`,
+        status: 'success',
+        duration: 4000,
         isClosable: true,
+        position: 'top-right',
+      });
+      onManageStudentsClose();
+    } catch (e) {
+      toast({
+        title: 'فشل إضافة الطلاب',
+        description: e?.response?.data?.message || 'حدث خطأ أثناء الإضافة',
+        status: 'error',
+        duration: 4500,
+        isClosable: true,
+        position: 'top-right',
       });
     } finally {
-      setAddingQuestion(false);
+      setAddStudentsSaving(false);
     }
   };
 
-  // فتح modal إضافة سؤال بصورة
-  const openAddImageQuestionModal = (assignment) => {
-    setSelectedAssignment(assignment);
-    setImageQuestionFormData({
-      order_index: assignmentQuestions[assignment.id]?.length || 0,
+  const roleMeta = ROLE_META[role] || ROLE_META.unknown;
+  const filteredGroups = useMemo(() => {
+    const q = String(groupQuery || '').trim().toLowerCase();
+    if (!q) return groups;
+    return groups.filter((g) => {
+      const name = String(g?.name || '').toLowerCase();
+      const teacher = String(g?.teacherName || '').toLowerCase();
+      return name.includes(q) || teacher.includes(q) || String(g?.id || '').includes(q);
     });
-    setSelectedImages([]);
-    setImagePreviews([]);
-    onImageQuestionModalOpen();
-  };
+  }, [groups, groupQuery]);
 
-  // معالجة اختيار الصور
-  const handleImageSelect = (e) => {
-    const files = Array.from(e.target.files);
-    
-    // التحقق من عدد الصور (حد أقصى 10)
-    if (selectedImages.length + files.length > 10) {
-      toast({
-        title: 'حد أقصى للصور! ⚠️',
-        description: 'يمكنك رفع 10 صور كحد أقصى',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
+  const stats = useMemo(() => {
+    if (role === 'student') {
+      const hasGroup = Boolean(studentGroup);
+      return [
+        { label: 'الحالة', value: hasGroup ? 'داخل مجموعة' : 'بدون مجموعة' },
+        { label: 'عدد المحاضرات', value: String(studentSchedule?.length || 0) },
+      ];
     }
 
-    // التحقق من حجم كل صورة (5MB)
-    const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
-    if (oversizedFiles.length > 0) {
-      toast({
-        title: 'حجم الصورة كبير! ⚠️',
-        description: 'الحد الأقصى لحجم كل صورة هو 5MB',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    // التحقق من نوع الملف
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
-    if (invalidFiles.length > 0) {
-      toast({
-        title: 'نوع ملف غير مدعوم! ⚠️',
-        description: 'الأنواع المدعومة: JPEG, JPG, PNG, GIF, WebP',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    setSelectedImages(prev => [...prev, ...files]);
-    
-    // إنشاء معاينات للصور
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews(prev => [...prev, { file, preview: reader.result }]);
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  // حذف صورة من القائمة
-  const handleRemoveImage = (index) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // إضافة سؤال بصورة
-  const handleAddImageQuestion = async () => {
-    if (selectedImages.length === 0) {
-      toast({
-        title: 'حقول مطلوبة! ⚠️',
-        description: 'يرجى رفع صورة واحدة على الأقل',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    if (!selectedAssignment) return;
-
-    try {
-      setAddingImageQuestion(true);
-      const token = localStorage.getItem('token');
-
-      // إنشاء FormData
-      const formData = new FormData();
-      
-      // إضافة الصور
-      selectedImages.forEach((image) => {
-        formData.append('images', image);
-      });
-
-      // إضافة ترتيب السؤال فقط
-      formData.append('order_index', imageQuestionFormData.order_index);
-
-      const response = await baseUrl.post(
-        `/api/assignments/${selectedAssignment.id}/questions/image`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        // تحديث قائمة الأسئلة
-        await fetchAssignmentQuestions(selectedAssignment.id);
-        // تحديث قائمة الدروس (لتحديث عدد الأسئلة)
-        await fetchLessons();
-        
-        toast({
-          title: 'تم الإضافة بنجاح! 🎉',
-          description: 'تم إضافة السؤال بالصورة بنجاح',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-        onImageQuestionModalClose();
-        setImageQuestionFormData({
-          order_index: 0,
-        });
-        setSelectedImages([]);
-        setImagePreviews([]);
-      }
-    } catch (error) {
-      console.error('Error adding image question:', error);
-      toast({
-        title: 'فشل الإضافة! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء إضافة السؤال',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setAddingImageQuestion(false);
-    }
-  };
-
-  // Toggle assignment visibility
-  const handleToggleAssignmentVisibility = async (assignment) => {
-    if (!assignment || !assignment.id) {
-      toast({
-        title: 'خطأ',
-        description: 'بيانات الواجب غير صحيحة',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      setTogglingAssignmentVisibility(true);
-      const token = localStorage.getItem('token');
-      
-      const currentVisibility = assignment.is_visible ?? false;
-      const newVisibility = !currentVisibility;
-
-      console.log('Toggling assignment visibility:', {
-        assignmentId: assignment.id,
-        currentVisibility,
-        newVisibility
-      });
-
-      const response = await baseUrl.patch(
-        `/api/assignments/${assignment.id}/visibility`,
-        { is_visible: newVisibility },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      console.log('Response:', response.data);
-
-      if (response.data?.success || response.data) {
-        await fetchLessons();
-        toast({
-          title: 'تم التحديث بنجاح! ✅',
-          description: currentVisibility 
-            ? 'تم إخفاء الواجب بنجاح' 
-            : 'تم إظهار الواجب بنجاح',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      console.error('Error toggling assignment visibility:', error);
-      console.error('Error response:', error.response?.data);
-      toast({
-        title: 'فشل التحديث! ❌',
-        description: error.response?.data?.error || error.response?.data?.message || 'حدث خطأ أثناء تغيير حالة الظهور',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setTogglingAssignmentVisibility(false);
-    }
-  };
-
-  useEffect(() => {
-    if (id) {
-      fetchSubjectDetails();
-    }
-  }, [id, isAdmin]);
-
-  useEffect(() => {
-    if (isAdmin && subjectData) {
-      fetchPermissions();
-    }
-  }, [isAdmin, subjectData]);
-
-  useEffect(() => {
-    if (isAdmin && isOpen) {
-      fetchTeachers();
-    }
-  }, [isAdmin, isOpen, permissions]);
-
-  useEffect(() => {
-    if (subjectData) {
-      fetchLessons();
-    }
-  }, [subjectData, id]);
-
-  if (loading) {
-    return (
-      <Box
-        minH="100vh"
-        bg={bgGradient}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <VStack spacing={6}>
-          <Spinner
-            size="xl"
-            thickness="4px"
-            speed="0.65s"
-            color={primaryColor}
-            emptyColor="gray.200"
-          />
-          <VStack spacing={2}>
-            <Text fontSize="xl" fontWeight="bold" color={textColor}>
-              جاري تحميل بيانات المادة...
-            </Text>
-            <Text fontSize="sm" color={subTextColor}>
-              يرجى الانتظار قليلاً
-            </Text>
-          </VStack>
-        </VStack>
-      </Box>
-    );
-  }
-
-  if (!subjectData) {
-    return null;
-  }
+    const total = groups.length;
+    const withTeachers = groups.filter((g) => Boolean(g.teacherName)).length;
+    const withoutTeachers = total - withTeachers;
+    return [
+      { label: 'إجمالي المجموعات', value: String(total) },
+      { label: 'مع مدرس', value: String(withTeachers) },
+      { label: 'بدون مدرس', value: String(withoutTeachers) },
+    ];
+  }, [groups, role, studentGroup, studentSchedule]);
 
   return (
-    <Box minH="100vh" bg={bgGradient} pt={{ base: "100px", md: "80px" }} pb={{ base: 6, md: 12 }} px={{ base: 2, sm: 4 }}>
-      <Container maxW="6xl" px={{ base: 2, sm: 4 }}>
-        {/* Back Button */}
-        <Button
-          leftIcon={<Icon as={FiArrowLeft} />}
-          variant="ghost"
-          colorScheme="blue"
-          mb={{ base: 4, md: 6 }}
-          size={{ base: "sm", md: "md" }}
-          fontSize={{ base: "sm", md: "md" }}
-          onClick={() => navigate(`/package/${subjectData.package_id}`)}
-          _hover={{ bg: blueLight }}
+    <Box minH="100vh" py={10} bg={pageBg} dir="rtl" className='mt-[80px]'>
+      <Container maxW="6xl">
+        {/* Hero */}
+        <Card
+          bg={heroBg}
+          borderRadius="3xl"
+          border="1px solid"
+          borderColor={heroBorder}
+          overflow="hidden"
+          mb={6}
         >
-          العودة للباقة
-        </Button>
-
-        {/* Header Section */}
-        <Card bg={cardBg} shadow="xl" borderRadius={{ base: "xl", md: "2xl" }} mb={{ base: 6, md: 8 }} overflow="hidden">
           <Box
-            bg={blueGradient}
-            p={{ base: 4, md: 8 }}
-            color="white"
-            position="relative"
-            overflow="hidden"
-          >
-            <HStack spacing={{ base: 2, md: 4 }} mb={{ base: 2, md: 4 }} flexWrap="wrap">
-              <Box
-                bg="whiteAlpha.200"
-                borderRadius="full"
-                p={{ base: 2, md: 3 }}
-                backdropFilter="blur(10px)"
-              >
-                <Icon as={FiBookOpen} boxSize={{ base: 6, md: 8 }} />
-              </Box>
-              <VStack align="start" spacing={1}>
-                <Heading size={{ base: "lg", md: "2xl" }} fontWeight="bold">
-                  {subjectData.name}
-                </Heading>
-                <Text fontSize={{ base: "sm", md: "lg" }} color="whiteAlpha.900">
-                  تفاصيل المادة الدراسية
-                </Text>
-              </VStack>
-            </HStack>
-          </Box>
-
-          <CardBody p={{ base: 4, md: 8 }}>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 4, md: 8 }}>
-              {/* Subject Image */}
-              <Box>
-                <Image
-                  src={subjectData.image || 'https://via.placeholder.com/500x300?text=صورة+المادة'}
-                  alt={subjectData.name}
-                  borderRadius={{ base: "lg", md: "xl" }}
-                  objectFit="cover"
-                  w="100%"
-                  h={{ base: "200px", md: "300px" }}
-                  fallbackSrc="https://via.placeholder.com/500x300?text=صورة+المادة"
-                  boxShadow="lg"
-                />
-              </Box>
-
-              {/* Subject Info */}
-              <VStack align="stretch" spacing={{ base: 4, md: 6 }}>
-                {/* Package Info */}
-                <Card bg={blueLight} border="2px solid" borderColor={primaryColor} borderRadius={{ base: "lg", md: "xl" }}>
-                  <CardBody p={{ base: 4, md: 6 }}>
-                    <HStack spacing={{ base: 2, md: 3 }} mb={{ base: 2, md: 4 }}>
-                      <Box
-                        bg={primaryColor}
-                        borderRadius="full"
-                        p={{ base: 2, md: 3 }}
-                        color="white"
-                      >
-                        <Icon as={FiPackage} boxSize={{ base: 5, md: 6 }} />
-                      </Box>
-                      <VStack align="start" spacing={0}>
-                        <Text fontSize={{ base: "xs", md: "sm" }} color={subTextColor}>
-                          الباقة
-                        </Text>
-                        <Heading size={{ base: "md", md: "lg" }} color={primaryColor}>
-                          {subjectData.package_name}
-                        </Heading>
-                      </VStack>
-                    </HStack>
-                    <HStack spacing={{ base: 2, md: 4 }}>
-                      <Badge colorScheme="blue" fontSize={{ base: "xs", md: "md" }} px={{ base: 2, md: 3 }} py={1}>
-                        السعر: {subjectData.package_price} جنيه
-                      </Badge>
-                    </HStack>
-                  </CardBody>
-                </Card>
-
-                {/* Grade */}
-                <Card bg={cardBg} border="1px solid" borderColor={borderColor} borderRadius={{ base: "lg", md: "xl" }}>
-                  <CardBody p={{ base: 4, md: 6 }}>
-                    <HStack spacing={{ base: 2, md: 3 }}>
-                      <Box
-                        bg={primaryColor}
-                        borderRadius="full"
-                        p={{ base: 2, md: 3 }}
-                        color="white"
-                      >
-                        <Icon as={FiBookOpen} boxSize={{ base: 5, md: 6 }} />
-                      </Box>
-                      <VStack align="start" spacing={0}>
-                        <Text fontSize={{ base: "xs", md: "sm" }} color={subTextColor}>
-                          الصف الدراسي
-                        </Text>
-                        <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color={textColor}>
-                          {subjectData.grade_name}
-                        </Text>
-                      </VStack>
-                    </HStack>
-                  </CardBody>
-                </Card>
-
-                {/* Created Date */}
-                <Card bg={cardBg} border="1px solid" borderColor={borderColor} borderRadius={{ base: "lg", md: "xl" }}>
-                  <CardBody p={{ base: 4, md: 6 }}>
-                    <HStack spacing={{ base: 2, md: 3 }}>
-                      <Box
-                        bg={primaryColor}
-                        borderRadius="full"
-                        p={{ base: 2, md: 3 }}
-                        color="white"
-                      >
-                        <Icon as={FiCalendar} boxSize={{ base: 5, md: 6 }} />
-                      </Box>
-                      <VStack align="start" spacing={0}>
-                        <Text fontSize={{ base: "xs", md: "sm" }} color={subTextColor}>
-                          تاريخ الإنشاء
-                        </Text>
-                        <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color={textColor}>
-                          {new Date(subjectData.created_at).toLocaleDateString('ar-EG', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </Text>
-                      </VStack>
-                    </HStack>
-                  </CardBody>
-                </Card>
-              </VStack>
-            </SimpleGrid>
-          </CardBody>
-        </Card>
-
-        {/* Admin Section - Permissions Management */}
-        {isAdmin && (
-          <Card bg={cardBg} shadow="xl" borderRadius={{ base: "xl", md: "2xl" }} mb={{ base: 6, md: 8 }}>
-            <Box
-              bg={blueGradient}
-              p={{ base: 4, md: 6 }}
-              color="white"
-              borderTopRadius={{ base: "xl", md: "2xl" }}
-            >
-              <HStack spacing={{ base: 2, md: 3 }} justify="space-between" flexWrap="wrap">
-                <HStack spacing={{ base: 2, md: 3 }} flexWrap="wrap">
-                  <Icon as={FiUser} boxSize={{ base: 5, md: 6 }} />
-                  <Heading size={{ base: "md", md: "lg" }} fontWeight="bold">
-                    إدارة الصلاحيات
-                  </Heading>
-                  <Badge bg="whiteAlpha.200" color="white" px={{ base: 2, md: 3 }} py={1} borderRadius="full" fontSize={{ base: "xs", md: "sm" }}>
-                    {permissions.length} مدرس
-                  </Badge>
-                </HStack>
-                <Button
-                  leftIcon={<Icon as={FiPlus} />}
-                  bg="whiteAlpha.200"
-                  color="white"
-                  _hover={{ bg: 'whiteAlpha.300' }}
-                  onClick={onOpen}
-                  size={{ base: "sm", md: "md" }}
-                  fontSize={{ base: "xs", md: "sm" }}
-                >
-                  إضافة مدرس
-                </Button>
-              </HStack>
-            </Box>
-
-            <CardBody p={{ base: 4, md: 8 }}>
-              {permissionsLoading ? (
-                <Center py={8}>
-                  <Spinner size="lg" color={primaryColor} />
-                </Center>
-              ) : permissions.length > 0 ? (
-                <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing={{ base: 4, md: 6 }}>
-                  {permissions.map((permission) => (
-                    <Card
-                      key={permission.id}
-                      bg={blueLight}
-                      border="2px solid"
-                      borderColor={primaryColor}
-                      borderRadius={{ base: "lg", md: "xl" }}
-                      _hover={{
-                        transform: 'translateY(-4px)',
-                        shadow: 'lg',
-                      }}
-                      transition="all 0.3s ease"
-                    >
-                      <CardBody p={{ base: 4, md: 6 }}>
-                        <VStack spacing={{ base: 3, md: 4 }} align="stretch">
-                          {/* Teacher Avatar & Name */}
-                          <HStack spacing={{ base: 2, md: 4 }}>
-                            <Avatar
-                              size={{ base: "md", md: "lg" }}
-                              src={
-                                permission.teacher_avatar
-                                  ? (permission.teacher_avatar.startsWith('http')
-                                      ? permission.teacher_avatar
-                                      : `http://localhost:8000/${permission.teacher_avatar}`)
-                                  : undefined
-                              }
-                              name={permission.teacher_name}
-                              bg={primaryColor}
-                            />
-                            <VStack align="start" spacing={1} flex={1}>
-                              <Text fontWeight="bold" color={textColor} fontSize={{ base: "sm", md: "md" }}>
-                                {permission.teacher_name}
-                              </Text>
-                              <Text fontSize={{ base: "xs", md: "sm" }} color={subTextColor}>
-                                {permission.teacher_email}
-                              </Text>
-                            </VStack>
-                          </HStack>
-
-                          <Divider />
-
-                          {/* Permission Info */}
-                          <VStack spacing={2} align="stretch" fontSize={{ base: "xs", md: "sm" }}>
-                            <HStack justify="space-between" flexWrap="wrap">
-                              <Text color={subTextColor}>منح بواسطة:</Text>
-                              <Text fontWeight="bold" color={textColor} fontSize={{ base: "xs", md: "sm" }}>
-                                {permission.granted_by_name || 'Admin'}
-                              </Text>
-                            </HStack>
-                            <HStack justify="space-between" flexWrap="wrap">
-                              <Text color={subTextColor}>تاريخ المنح:</Text>
-                              <Text fontWeight="bold" color={textColor} fontSize={{ base: "xs", md: "xs" }}>
-                                {new Date(permission.granted_at).toLocaleDateString('ar-EG')}
-                              </Text>
-                            </HStack>
-                          </VStack>
-
-                          {/* Delete Button */}
-                          <Button
-                            leftIcon={<Icon as={FiTrash2} />}
-                            colorScheme="red"
-                            size={{ base: "xs", md: "sm" }}
-                            fontSize={{ base: "xs", md: "sm" }}
-                            onClick={() => openDeleteDialog(permission)}
-                            variant="outline"
-                          >
-                            إزالة الصلاحية
-                          </Button>
-                        </VStack>
-                      </CardBody>
-                    </Card>
-                  ))}
-                </SimpleGrid>
-              ) : (
-                <Center py={8}>
-                  <VStack spacing={4}>
-                    <Icon as={FiUser} boxSize={12} color={subTextColor} />
-                    <Text color={subTextColor} fontSize="lg">
-                      لا يوجد مدرسين مصرح لهم
-                    </Text>
-                    <Text color={subTextColor} fontSize="sm">
-                      قم بإضافة مدرسين للوصول إلى هذه المادة
-                    </Text>
-                  </VStack>
-                </Center>
-              )}
-            </CardBody>
-          </Card>
-        )}
-
-        {/* Lessons Section */}
-        <Card bg={cardBg} shadow="xl" borderRadius={{ base: "xl", md: "2xl" }} mb={{ base: 6, md: 8 }}>
-          <Box
-            bg={blueGradient}
-            p={{ base: 4, md: 6 }}
-            color="white"
-            borderTopRadius={{ base: "xl", md: "2xl" }}
-          >
-            <HStack spacing={{ base: 2, md: 3 }} justify="space-between" flexWrap="wrap">
-              <HStack spacing={{ base: 2, md: 3 }} flexWrap="wrap">
-                <Icon as={FiBookOpen} boxSize={{ base: 5, md: 6 }} />
-                <Heading size={{ base: "md", md: "lg" }} fontWeight="bold">
-                  إدارة المحتوى
-                </Heading>
-                <Badge bg="whiteAlpha.200" color="white" px={{ base: 2, md: 3 }} py={1} borderRadius="full" fontSize={{ base: "xs", md: "sm" }}>
-                  {lessons.length} درس
-                </Badge>
-              </HStack>
-              {(isAdmin || isTeacher) && (
-                <Button
-                  leftIcon={<Icon as={FiPlus} />}
-                  bg="whiteAlpha.200"
-                  color="white"
-                  _hover={{ bg: 'whiteAlpha.300' }}
-                  onClick={onLessonModalOpen}
-                  size={{ base: "sm", md: "md" }}
-                  fontSize={{ base: "xs", md: "sm" }}
-                >
-                  إضافة درس
-                </Button>
-              )}
-            </HStack>
-          </Box>
-
-          <CardBody p={{ base: 4, md: 8 }}>
-            {lessonsLoading ? (
-              <Center py={8}>
-                <Spinner size="lg" color={primaryColor} />
-              </Center>
-            ) : lessons.length > 0 ? (
-              <Accordion allowMultiple defaultIndex={[]}>
-                {lessons.map((lesson, index) => (
-                  <AccordionItem key={lesson.id} mb={{ base: 3, md: 4 }} border="none">
-                    <Card bg={blueLight} border="2px solid" borderColor={primaryColor} borderRadius={{ base: "lg", md: "xl" }}>
-                      <AccordionButton
-                        p={0}
-                        _hover={{ bg: 'transparent' }}
-                        _focus={{ boxShadow: 'none' }}
-                      >
-                        <CardBody p={{ base: 4, md: 6 }} w="full">
-                          <HStack justify="space-between" w="full" flexWrap={{ base: "wrap", md: "nowrap" }}>
-                            <HStack spacing={{ base: 2, md: 4 }} flex={1} flexWrap="wrap">
-                              <Box
-                                bg={primaryColor}
-                                color="white"
-                                borderRadius="full"
-                                p={{ base: 2, md: 3 }}
-                                minW={{ base: "40px", md: "50px" }}
-                                textAlign="center"
-                                fontWeight="bold"
-                                fontSize={{ base: "sm", md: "md" }}
-                              >
-                                {index + 1}
-                              </Box>
-                              <VStack align="start" spacing={1} flex={1} minW={0}>
-                                <Heading size={{ base: "sm", md: "md" }} color={textColor} noOfLines={{ base: 2, md: 1 }}>
-                                  {lesson.title}
-                                </Heading>
-                                {lesson.description && (
-                                  <Text fontSize={{ base: "xs", md: "sm" }} color={subTextColor} noOfLines={1}>
-                                    {lesson.description}
-                                  </Text>
-                                )}
-                                <HStack spacing={{ base: 2, md: 4 }} fontSize={{ base: "2xs", md: "xs" }} color={subTextColor} flexWrap="wrap">
-                                  <HStack spacing={1}>
-                                    <Icon as={FiVideo} />
-                                    <Text>{lesson.videos?.length || 0} فيديو</Text>
-                                  </HStack>
-                                  <HStack spacing={1}>
-                                    <Icon as={FiFileText} />
-                                    <Text>{lesson.assignments?.length || 0} واجب</Text>
-                                  </HStack>
-                                </HStack>
-                              </VStack>
-                            </HStack>
-                            <HStack spacing={2}>
-                              {/* Visibility Badge */}
-                              <Badge
-                                colorScheme={lesson.is_visible ? "green" : "gray"}
-                                fontSize={{ base: "2xs", md: "xs" }}
-                                px={2}
-                                py={1}
-                                borderRadius="full"
-                              >
-                                <HStack spacing={1}>
-                                  {lesson.is_visible ? (
-                                    <>
-                                      <Icon as={FiCheckCircle} boxSize={3} />
-                                      <Text display={{ base: "none", sm: "inline" }}>ظاهر</Text>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Icon as={FiXCircle} boxSize={3} />
-                                      <Text display={{ base: "none", sm: "inline" }}>مخفي</Text>
-                                    </>
-                                  )}
-                                </HStack>
-                              </Badge>
-                              {(isAdmin || isTeacher) && (
-                                <>
-                                  <Tooltip label={lesson.is_visible ? "إخفاء الدرس" : "إظهار الدرس"} hasArrow>
-                                    <IconButton
-                                      icon={<Icon as={lesson.is_visible ? FiXCircle : FiCheckCircle} />}
-                                      size={{ base: "xs", md: "sm" }}
-                                      colorScheme={lesson.is_visible ? "orange" : "green"}
-                                      variant="ghost"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleToggleVisibility(lesson);
-                                      }}
-                                      aria-label={lesson.is_visible ? "إخفاء" : "إظهار"}
-                                      isLoading={togglingVisibility}
-                                    />
-                                  </Tooltip>
-                                  <IconButton
-                                    icon={<Icon as={FiEdit} />}
-                                    size={{ base: "xs", md: "sm" }}
-                                    colorScheme="blue"
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      openEditLessonModal(lesson);
-                                    }}
-                                    aria-label="تعديل"
-                                  />
-                                  <IconButton
-                                    icon={<Icon as={FiTrash2} />}
-                                    size={{ base: "xs", md: "sm" }}
-                                    colorScheme="red"
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedLesson(lesson);
-                                      onDeleteLessonOpen();
-                                    }}
-                                    aria-label="حذف"
-                                  />
-                                </>
-                              )}
-                              <AccordionIcon color={textColor} boxSize={{ base: 5, md: 6 }} />
-                            </HStack>
-                          </HStack>
-                        </CardBody>
-                      </AccordionButton>
-
-                      <AccordionPanel pb={{ base: 4, md: 6 }} px={{ base: 4, md: 6 }}>
-                        <VStack spacing={{ base: 3, md: 4 }} align="stretch">
-                          {/* Videos Section */}
-                          <Box>
-                            <HStack justify="space-between" mb={3} flexWrap="wrap">
-                              <HStack spacing={2}>
-                                <Icon as={FiVideo} color={primaryColor} boxSize={{ base: 4, md: 5 }} />
-                                <Text fontWeight="bold" color={textColor} fontSize={{ base: "sm", md: "md" }}>
-                                  الفيديوهات ({lesson.videos?.length || 0})
-                                </Text>
-                              </HStack>
-                              {(isAdmin || isTeacher) && (
-                                <Button
-                                  size={{ base: "2xs", md: "xs" }}
-                                  leftIcon={<Icon as={FiPlus} />}
-                                  colorScheme="blue"
-                                  onClick={() => openAddVideoModal(lesson)}
-                                  fontSize={{ base: "2xs", md: "xs" }}
-                                >
-                                  إضافة فيديو
-                                </Button>
-                              )}
-                            </HStack>
-                            {lesson.videos && lesson.videos.length > 0 ? (
-                              <VStack spacing={2} align="stretch">
-                                {lesson.videos.map((video) => (
-                                  <Card key={video.id} bg={cardBg} border="1px solid" borderColor={borderColor}>
-                                    <CardBody p={{ base: 3, md: 4 }}>
-                                      <HStack justify="space-between" flexWrap={{ base: "wrap", md: "nowrap" }}>
-                                        <HStack spacing={{ base: 2, md: 3 }} flex={1} minW={0}>
-                                          <Icon as={FiVideo} color="red.500" boxSize={{ base: 4, md: 5 }} />
-                                          <VStack align="start" spacing={0} flex={1} minW={0}>
-                                            <Text fontWeight="medium" color={textColor} fontSize={{ base: "xs", md: "sm" }} noOfLines={1}>
-                                              {video.title}
-                                            </Text>
-                                            {video.duration_minutes && (
-                                              <Text fontSize={{ base: "2xs", md: "xs" }} color={subTextColor}>
-                                                {video.duration_minutes} دقيقة
-                                              </Text>
-                                            )}
-                                          </VStack>
-                                        </HStack>
-                                        {(isAdmin || isTeacher) && (
-                                          <HStack spacing={1}>
-                                            <IconButton
-                                              icon={<Icon as={FiEdit} />}
-                                              size={{ base: "2xs", md: "xs" }}
-                                              colorScheme="blue"
-                                              variant="ghost"
-                                              onClick={() => openEditVideoModal(video, lesson)}
-                                              aria-label="تعديل"
-                                            />
-                                            <IconButton
-                                              icon={<Icon as={FiTrash2} />}
-                                              size={{ base: "2xs", md: "xs" }}
-                                              colorScheme="red"
-                                              variant="ghost"
-                                              onClick={() => {
-                                                setSelectedVideo(video);
-                                                onDeleteVideoOpen();
-                                              }}
-                                              aria-label="حذف"
-                                            />
-                                          </HStack>
-                                        )}
-                                      </HStack>
-                                    </CardBody>
-                                  </Card>
-                                ))}
-                              </VStack>
-                            ) : (
-                              <Alert status="info" borderRadius="md" fontSize={{ base: "xs", md: "sm" }}>
-                                <AlertIcon />
-                                <Text fontSize={{ base: "xs", md: "sm" }}>لا توجد فيديوهات</Text>
-                              </Alert>
-                            )}
-                          </Box>
-
-                          <Divider />
-
-                          {/* Assignments Section */}
-                          <Box>
-                            <HStack justify="space-between" mb={3} flexWrap="wrap">
-                              <HStack spacing={2}>
-                                <Icon as={FiFileText} color={primaryColor} boxSize={{ base: 4, md: 5 }} />
-                                <Text fontWeight="bold" color={textColor} fontSize={{ base: "sm", md: "md" }}>
-                                  الواجبات ({lesson.assignments?.length || 0})
-                                </Text>
-                              </HStack>
-                              {(isAdmin || isTeacher) && (
-                                <Button
-                                  size={{ base: "2xs", md: "xs" }}
-                                  leftIcon={<Icon as={FiPlus} />}
-                                  colorScheme="green"
-                                  onClick={() => openAddAssignmentModal(lesson)}
-                                  fontSize={{ base: "2xs", md: "xs" }}
-                                >
-                                  إضافة واجب
-                                </Button>
-                              )}
-                            </HStack>
-                            {lesson.assignments && lesson.assignments.length > 0 ? (
-                              <VStack spacing={2} align="stretch">
-                                {lesson.assignments.map((assignment) => (
-                                  <Card key={assignment.id} bg={cardBg} border="1px solid" borderColor={borderColor}>
-                                    <CardBody p={{ base: 3, md: 4 }}>
-                                      <VStack spacing={3} align="stretch">
-                                        <HStack justify="space-between" flexWrap={{ base: "wrap", md: "nowrap" }}>
-                                          <HStack spacing={{ base: 2, md: 3 }} flex={1} minW={0}>
-                                            <Icon as={FiFileText} color="green.500" boxSize={{ base: 4, md: 5 }} />
-                                            <VStack align="start" spacing={0} flex={1} minW={0}>
-                                              <HStack spacing={2} flexWrap="wrap">
-                                                <Text fontWeight="medium" color={textColor} fontSize={{ base: "xs", md: "sm" }} noOfLines={1}>
-                                                  {assignment.name}
-                                                </Text>
-                                                {/* Visibility Badge */}
-                                                <Badge
-                                                  colorScheme={assignment.is_visible ? "green" : "gray"}
-                                                  fontSize={{ base: "2xs", md: "xs" }}
-                                                  px={2}
-                                                  py={0.5}
-                                                  borderRadius="full"
-                                                >
-                                                  <HStack spacing={1}>
-                                                    {assignment.is_visible ? (
-                                                      <>
-                                                        <Icon as={FiCheckCircle} boxSize={2.5} />
-                                                        <Text display={{ base: "none", sm: "inline" }}>ظاهر</Text>
-                                                      </>
-                                                    ) : (
-                                                      <>
-                                                        <Icon as={FiXCircle} boxSize={2.5} />
-                                                        <Text display={{ base: "none", sm: "inline" }}>مخفي</Text>
-                                                      </>
-                                                    )}
-                                                  </HStack>
-                                                </Badge>
-                                              </HStack>
-                                              <HStack spacing={{ base: 2, md: 3 }} fontSize={{ base: "2xs", md: "xs" }} color={subTextColor} flexWrap="wrap">
-                                                <Text>{assignment.questions_count || 0} سؤال</Text>
-                                                {assignment.duration_minutes && (
-                                                  <Text>{assignment.duration_minutes} دقيقة</Text>
-                                                )}
-                                              </HStack>
-                                            </VStack>
-                                          </HStack>
-                                          <HStack spacing={1} flexWrap="wrap">
-                                            {(isAdmin || isTeacher) && (
-                                              <>
-                                                <Tooltip label={(assignment.is_visible ?? false) ? "إخفاء الواجب" : "إظهار الواجب"} hasArrow>
-                                                  <IconButton
-                                                    icon={<Icon as={(assignment.is_visible ?? false) ? FiXCircle : FiCheckCircle} />}
-                                                    size={{ base: "2xs", md: "xs" }}
-                                                    colorScheme={(assignment.is_visible ?? false) ? "orange" : "green"}
-                                                    variant="ghost"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      e.preventDefault();
-                                                      handleToggleAssignmentVisibility(assignment);
-                                                    }}
-                                                    aria-label={(assignment.is_visible ?? false) ? "إخفاء" : "إظهار"}
-                                                    isLoading={togglingAssignmentVisibility}
-                                                  />
-                                                </Tooltip>
-                                                <IconButton
-                                                  icon={<Icon as={FiEdit} />}
-                                                  size={{ base: "2xs", md: "xs" }}
-                                                  colorScheme="green"
-                                                  variant="ghost"
-                                                  onClick={() => openEditAssignmentModal(assignment, lesson)}
-                                                  aria-label="تعديل"
-                                                />
-                                                <IconButton
-                                                  icon={<Icon as={FiTrash2} />}
-                                                  size={{ base: "2xs", md: "xs" }}
-                                                  colorScheme="red"
-                                                  variant="ghost"
-                                                  onClick={() => {
-                                                    setSelectedAssignment(assignment);
-                                                    onDeleteAssignmentOpen();
-                                                  }}
-                                                  aria-label="حذف"
-                                                />
-                                              </>
-                                            )}
-                                            <Button
-                                              size={{ base: "2xs", md: "xs" }}
-                                              leftIcon={<Icon as={FiBookOpen} />}
-                                              colorScheme="blue"
-                                              variant="outline"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                e.preventDefault();
-                                                navigate(`/assignment/${assignment.id}/questions`, {
-                                                  state: {
-                                                    assignmentName: assignment.name,
-                                                    assignmentDuration: assignment.duration_minutes,
-                                                  }
-                                                });
-                                              }}
-                                              fontSize={{ base: "2xs", md: "xs" }}
-                                            >
-                                              دخول للواجب
-                                            </Button>
-                                          </HStack>
-                                        </HStack>
-
-                                        {/* Questions Section */}
-                                        {(isAdmin || isTeacher) && (
-                                          <Box>
-                                            <HStack justify="space-between" mb={2} flexWrap="wrap">
-                                              <HStack spacing={2}>
-                                                <Icon as={FiHelpCircle} color="purple.500" boxSize={{ base: 3, md: 4 }} />
-                                                <Text fontWeight="semibold" color={textColor} fontSize={{ base: "2xs", md: "xs" }}>
-                                                  الأسئلة ({assignmentQuestions[assignment.id]?.length || 0})
-                                                </Text>
-                                              </HStack>
-                                              <HStack spacing={1}>
-                                                <Button
-                                                  size={{ base: "2xs", md: "xs" }}
-                                                  leftIcon={<Icon as={FiFileText} />}
-                                                  colorScheme="purple"
-                                                  variant="outline"
-                                                  onClick={() => {
-                                                    openAddQuestionModal(assignment);
-                                                    if (!assignmentQuestions[assignment.id]) {
-                                                      fetchAssignmentQuestions(assignment.id);
-                                                    }
-                                                  }}
-                                                  fontSize={{ base: "2xs", md: "xs" }}
-                                                >
-                                                  نصي
-                                                </Button>
-                                                <Button
-                                                  size={{ base: "2xs", md: "xs" }}
-                                                  leftIcon={<Icon as={FiImage} />}
-                                                  colorScheme="purple"
-                                                  variant="outline"
-                                                  onClick={() => {
-                                                    openAddImageQuestionModal(assignment);
-                                                    if (!assignmentQuestions[assignment.id]) {
-                                                      fetchAssignmentQuestions(assignment.id);
-                                                    }
-                                                  }}
-                                                  fontSize={{ base: "2xs", md: "xs" }}
-                                                >
-                                                  صورة
-                                                </Button>
-                                              </HStack>
-                                            </HStack>
-                                            
-                                            {loadingQuestions[assignment.id] ? (
-                                              <Center py={2}>
-                                                <Spinner size="sm" color="purple.500" />
-                                              </Center>
-                                            ) : assignmentQuestions[assignment.id] && assignmentQuestions[assignment.id].length > 0 ? (
-                                              <VStack spacing={1} align="stretch" maxH="200px" overflowY="auto">
-                                                {assignmentQuestions[assignment.id].map((question, qIndex) => (
-                                                  <Card key={question.id} bg={blueLight} border="1px solid" borderColor={borderColor} size="sm">
-                                                    <CardBody p={2}>
-                                                      <VStack align="start" spacing={2}>
-                                                        <HStack spacing={2} w="full" justify="space-between">
-                                                          <HStack spacing={2}>
-                                                            <Text fontSize={{ base: "2xs", md: "xs" }} fontWeight="medium" color={textColor}>
-                                                              {qIndex + 1}.
-                                                            </Text>
-                                                            {question.question_type === 'image' && question.images && question.images.length > 0 ? (
-                                                              <HStack spacing={1} flexWrap="wrap">
-                                                                {question.images.slice(0, 3).map((img, imgIdx) => (
-                                                                  <Image
-                                                                    key={imgIdx}
-                                                                    src={img.image_url}
-                                                                    alt={`صورة ${imgIdx + 1}`}
-                                                                    boxSize="30px"
-                                                                    objectFit="cover"
-                                                                    borderRadius="sm"
-                                                                    border="1px solid"
-                                                                    borderColor={borderColor}
-                                                                  />
-                                                                ))}
-                                                                {question.images.length > 3 && (
-                                                                  <Badge colorScheme="purple" fontSize="2xs">
-                                                                    +{question.images.length - 3}
-                                                                  </Badge>
-                                                                )}
-                                                              </HStack>
-                                                            ) : (
-                                                              <Text fontSize={{ base: "2xs", md: "xs" }} fontWeight="medium" color={textColor} noOfLines={2}>
-                                                                {question.question_text}
-                                                              </Text>
-                                                            )}
-                                                          </HStack>
-                                                          <Badge colorScheme="purple" fontSize={{ base: "2xs", md: "xs" }} px={1} py={0}>
-                                                            {question.correct_answer?.toUpperCase()}
-                                                          </Badge>
-                                                        </HStack>
-                                                        <HStack spacing={2} fontSize={{ base: "2xs", md: "xs" }} color={subTextColor} flexWrap="wrap">
-                                                          <Text>أ: {question.option_a}</Text>
-                                                          <Text>ب: {question.option_b}</Text>
-                                                          <Text>ج: {question.option_c}</Text>
-                                                          <Text>د: {question.option_d}</Text>
-                                                        </HStack>
-                                                      </VStack>
-                                                    </CardBody>
-                                                  </Card>
-                                                ))}
-                                              </VStack>
-                                            ) : (
-                                              <Alert status="info" borderRadius="md" fontSize={{ base: "2xs", md: "xs" }} py={1}>
-                                                <AlertIcon boxSize={3} />
-                                                <Text fontSize={{ base: "2xs", md: "xs" }}>لا توجد أسئلة</Text>
-                                              </Alert>
-                                            )}
-                                          </Box>
-                                        )}
-                                      </VStack>
-                                    </CardBody>
-                                  </Card>
-                                ))}
-                              </VStack>
-                            ) : (
-                              <Alert status="info" borderRadius="md" fontSize={{ base: "xs", md: "sm" }}>
-                                <AlertIcon />
-                                <Text fontSize={{ base: "xs", md: "sm" }}>لا توجد واجبات</Text>
-                              </Alert>
-                            )}
-                          </Box>
-                        </VStack>
-                      </AccordionPanel>
-                    </Card>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <Center py={8}>
-                <VStack spacing={4}>
-                  <Icon as={FiBookOpen} boxSize={12} color={subTextColor} />
-                  <Text color={subTextColor} fontSize="lg">
-                    لا توجد دروس متاحة
-                  </Text>
-                  {(isAdmin || isTeacher) && (
-                    <Text color={subTextColor} fontSize="sm">
-                      قم بإضافة دروس جديدة للمادة
-                    </Text>
-                  )}
-                </VStack>
-              </Center>
+            px={{ base: 5, md: 7 }}
+            py={{ base: 5, md: 7 }}
+            bgGradient={useColorModeValue(
+              'linear(to-r, blue.500, blue.700)',
+              'linear(to-r, blue.600, blue.800)'
             )}
+            color={headerText}
+          >
+            <HStack justify="space-between" align="start" spacing={4} flexWrap="wrap">
+              <HStack spacing={4} align="center">
+                <Avatar name={roleMeta.label} size="md" bg="whiteAlpha.300" />
+                <Box>
+                  <Heading size="lg">مجموعات المادة داخل الباقة</Heading>
+                  <Text mt={1} fontSize="sm" opacity={0.9}>
+                    {roleMeta.hint}
+                  </Text>
+                </Box>
+              </HStack>
+
+              <Wrap justify="flex-end" spacing={2}>
+                <WrapItem>
+                  <Tag bg="whiteAlpha.300" borderRadius="full" px={3} py={1}>
+                    <TagLabel>
+                      المادة #{subjectId || '—'}
+                    </TagLabel>
+                  </Tag>
+                </WrapItem>
+                <WrapItem>
+                  <Tag bg="whiteAlpha.300" borderRadius="full" px={3} py={1}>
+                    <TagLabel>{roleMeta.label}</TagLabel>
+                  </Tag>
+                </WrapItem>
+              </Wrap>
+            </HStack>
+          </Box>
+
+          <CardBody>
+            <SimpleGrid columns={{ base: 2, md: role === 'student' ? 2 : 3 }} spacing={3}>
+              {stats.map((s) => (
+                <Card
+                  key={s.label}
+                  bg={useColorModeValue('gray.50', 'whiteAlpha.50')}
+                  borderRadius="2xl"
+                  border="1px solid"
+                  borderColor={borderColor}
+                >
+                  <CardBody>
+                    <Text fontSize="xs" color={muted}>
+                      {s.label}
+                    </Text>
+                    <Heading mt={1} size="md" color={primary}>
+                      {s.value}
+                    </Heading>
+                  </CardBody>
+                </Card>
+              ))}
+            </SimpleGrid>
+
+            <HStack mt={5} spacing={2} flexWrap="wrap">
+              <Button
+                leftIcon={<FiRefreshCw />}
+                variant="outline"
+                onClick={refresh}
+                isLoading={role === 'student' ? studentLoading : groupsLoading}
+              >
+                تحديث
+              </Button>
+
+              {role === 'admin' && (
+                <Button leftIcon={<FiPlus />} colorScheme="blue" onClick={onCreateOpen}>
+                  إنشاء مجموعة
+                </Button>
+              )}
+            </HStack>
           </CardBody>
         </Card>
 
-        {/* Action Buttons */}
-        <Flex justify="center" gap={4} flexWrap="wrap">
-          <Button
-            leftIcon={<Icon as={FiArrowLeft} />}
-            variant="outline"
-            colorScheme="blue"
-            size={{ base: "md", md: "lg" }}
-            px={{ base: 6, md: 8 }}
-            onClick={() => navigate(`/package/${subjectData.package_id}`)}
-            borderRadius="xl"
-            fontSize={{ base: "sm", md: "md" }}
-          >
-            العودة للباقة
-          </Button>
-        </Flex>
-      </Container>
-
-      {/* Add Permission Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", sm: "md", md: "lg" }} isCentered>
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-          <Box bg={blueGradient} p={{ base: 4, md: 6 }} color="white">
-            <ModalHeader p={0}>
-              <HStack spacing={{ base: 2, md: 3 }}>
-                <Icon as={FiPlus} boxSize={{ base: 5, md: 6 }} />
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
-                  إضافة صلاحية لمدرس
-                </Text>
-              </HStack>
-            </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size={{ base: "md", md: "lg" }} />
-          </Box>
-
-          <ModalBody p={{ base: 4, md: 6 }} bg={cardBg}>
-            <VStack spacing={6} align="stretch">
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  اختر المدرس
-                </FormLabel>
-                {teachersLoading ? (
-                  <Center py={4}>
-                    <Spinner size="md" color={primaryColor} />
-                  </Center>
-                ) : teachers.length > 0 ? (
-                  <Select
-                    value={selectedTeacherId}
-                    onChange={(e) => setSelectedTeacherId(e.target.value)}
-                    placeholder="اختر مدرس من القائمة"
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                    _hover={{ borderColor: primaryColor }}
-                    transition="all 0.2s"
-                  >
-                    {teachers.map((teacher) => (
-                      <option key={teacher.id} value={teacher.id}>
-                        {teacher.name} - {teacher.email}
-                      </option>
-                    ))}
-                  </Select>
-                ) : (
-                  <Box
-                    p={4}
-                    bg={blueLight}
-                    borderRadius="lg"
-                    border="2px dashed"
-                    borderColor={primaryColor}
-                    textAlign="center"
-                  >
-                    <Text color={subTextColor}>
-                      جميع المدرسين لديهم صلاحية بالفعل
-                    </Text>
-                  </Box>
-                )}
-              </FormControl>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter p={{ base: 4, md: 6 }} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
-            <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onClose} variant="outline" size={{ base: "md", md: "lg" }} borderRadius="xl" px={{ base: 4, md: 6 }} fontSize={{ base: "sm", md: "md" }}>
-                إلغاء
-              </Button>
-              <Button
-                bg={blueGradient}
-                color="white"
-                onClick={handleAddPermission}
-                isLoading={addingPermission}
-                loadingText="جاري الإضافة..."
-                size={{ base: "md", md: "lg" }}
-                px={{ base: 6, md: 8 }}
-                borderRadius="xl"
-                fontWeight="bold"
-                leftIcon={<Icon as={FiPlus} />}
-                isDisabled={!selectedTeacherId || teachers.length === 0}
-                fontSize={{ base: "sm", md: "md" }}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
-                  bg: "linear-gradient(135deg, #2C5282 0%, #3182CE 100%)"
-                }}
-                transition="all 0.3s ease"
-              >
-                إضافة الصلاحية
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Delete Permission Dialog */}
-      <AlertDialog
-        isOpen={isDeleteOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onDeleteClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              إزالة الصلاحية
-            </AlertDialogHeader>
-
-            <AlertDialogBody>
-              هل أنت متأكد من إزالة الصلاحية من المدرس{' '}
-              <Text as="span" fontWeight="bold" color="red.500">
-                {selectedPermission?.teacher_name}
-              </Text>
-              ؟ هذا الإجراء لا يمكن التراجع عنه.
-            </AlertDialogBody>
-
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onDeleteClose}>
-                إلغاء
-              </Button>
-              <Button
-                colorScheme="red"
-                onClick={handleDeletePermission}
-                ml={3}
-                isLoading={deletingPermission}
-                loadingText="جاري الحذف..."
-              >
-                حذف
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-
-      {/* ========== Lessons Modals ========== */}
-      {/* Add Lesson Modal */}
-      <Modal isOpen={isLessonModalOpen} onClose={onLessonModalClose} size={{ base: "full", sm: "md", md: "lg" }} isCentered>
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-          <Box bg={blueGradient} p={{ base: 4, md: 6 }} color="white">
-            <ModalHeader p={0}>
-              <HStack spacing={{ base: 2, md: 3 }}>
-                <Icon as={FiPlus} boxSize={{ base: 5, md: 6 }} />
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
-                  إضافة درس جديد
-                </Text>
-              </HStack>
-            </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size={{ base: "md", md: "lg" }} />
-          </Box>
-
-          <ModalBody p={{ base: 4, md: 6 }} bg={cardBg}>
-            <VStack spacing={6} align="stretch">
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  عنوان الدرس
-                </FormLabel>
-                <Input
-                  value={lessonFormData.title}
-                  onChange={(e) =>
-                    setLessonFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  placeholder="أدخل عنوان الدرس"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  size="lg"
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                  _hover={{ borderColor: primaryColor }}
-                  transition="all 0.2s"
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  وصف الدرس
-                </FormLabel>
-                <Textarea
-                  value={lessonFormData.description}
-                  onChange={(e) =>
-                    setLessonFormData((prev) => ({ ...prev, description: e.target.value }))
-                  }
-                  placeholder="أدخل وصفاً للدرس"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  rows={4}
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                  _hover={{ borderColor: primaryColor }}
-                  transition="all 0.2s"
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter p={{ base: 4, md: 6 }} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
-            <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onLessonModalClose} variant="outline" size={{ base: "md", md: "lg" }} borderRadius="xl" px={{ base: 4, md: 6 }} fontSize={{ base: "sm", md: "md" }}>
-                إلغاء
-              </Button>
-              <Button
-                bg={blueGradient}
-                color="white"
-                onClick={handleAddLesson}
-                isLoading={addingLesson}
-                loadingText="جاري الإضافة..."
-                size={{ base: "md", md: "lg" }}
-                px={{ base: 6, md: 8 }}
-                borderRadius="xl"
-                fontWeight="bold"
-                leftIcon={<Icon as={FiPlus} />}
-                fontSize={{ base: "sm", md: "md" }}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
-                  bg: "linear-gradient(135deg, #2C5282 0%, #3182CE 100%)"
-                }}
-                transition="all 0.3s ease"
-              >
-                إضافة الدرس
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Edit Lesson Modal */}
-      <Modal isOpen={isEditLessonModalOpen} onClose={onEditLessonModalClose} size={{ base: "full", sm: "md", md: "lg" }} isCentered>
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-          <Box bg={blueGradient} p={{ base: 4, md: 6 }} color="white">
-            <ModalHeader p={0}>
-              <HStack spacing={{ base: 2, md: 3 }}>
-                <Icon as={FiEdit} boxSize={{ base: 5, md: 6 }} />
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
-                  تعديل الدرس
-                </Text>
-              </HStack>
-            </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size={{ base: "md", md: "lg" }} />
-          </Box>
-
-          <ModalBody p={{ base: 4, md: 6 }} bg={cardBg}>
-            <VStack spacing={6} align="stretch">
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  عنوان الدرس
-                </FormLabel>
-                <Input
-                  value={lessonFormData.title}
-                  onChange={(e) =>
-                    setLessonFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  placeholder="أدخل عنوان الدرس"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  size="lg"
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                  _hover={{ borderColor: primaryColor }}
-                  transition="all 0.2s"
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  وصف الدرس
-                </FormLabel>
-                <Textarea
-                  value={lessonFormData.description}
-                  onChange={(e) =>
-                    setLessonFormData((prev) => ({ ...prev, description: e.target.value }))
-                  }
-                  placeholder="أدخل وصفاً للدرس"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  rows={4}
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                  _hover={{ borderColor: primaryColor }}
-                  transition="all 0.2s"
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter p={{ base: 4, md: 6 }} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
-            <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onEditLessonModalClose} variant="outline" size={{ base: "md", md: "lg" }} borderRadius="xl" px={{ base: 4, md: 6 }} fontSize={{ base: "sm", md: "md" }}>
-                إلغاء
-              </Button>
-              <Button
-                bg={blueGradient}
-                color="white"
-                onClick={handleEditLesson}
-                isLoading={editingLesson}
-                loadingText="جاري التحديث..."
-                size={{ base: "md", md: "lg" }}
-                px={{ base: 6, md: 8 }}
-                borderRadius="xl"
-                fontWeight="bold"
-                leftIcon={<Icon as={FiEdit} />}
-                fontSize={{ base: "sm", md: "md" }}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
-                  bg: "linear-gradient(135deg, #2C5282 0%, #3182CE 100%)"
-                }}
-                transition="all 0.3s ease"
-              >
-                حفظ التغييرات
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Delete Lesson Dialog */}
-      <AlertDialog
-        isOpen={isDeleteLessonOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onDeleteLessonClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              حذف الدرس
-            </AlertDialogHeader>
-
-            <AlertDialogBody>
-              هل أنت متأكد من حذف الدرس{' '}
-              <Text as="span" fontWeight="bold" color="red.500">
-                {selectedLesson?.title}
-              </Text>
-              ؟ سيتم حذف جميع الفيديوهات والواجبات المرتبطة به أيضاً. هذا الإجراء لا يمكن التراجع عنه.
-            </AlertDialogBody>
-
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onDeleteLessonClose}>
-                إلغاء
-              </Button>
-              <Button
-                colorScheme="red"
-                onClick={handleDeleteLesson}
-                ml={3}
-                isLoading={deletingLesson}
-                loadingText="جاري الحذف..."
-              >
-                حذف
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-
-      {/* ========== Videos Modals ========== */}
-      {/* Add Video Modal */}
-      <Modal isOpen={isVideoModalOpen} onClose={onVideoModalClose} size={{ base: "full", sm: "md", md: "lg" }} isCentered>
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-          <Box bg="linear-gradient(135deg, #E53E3E 0%, #C53030 100%)" p={{ base: 4, md: 6 }} color="white">
-            <ModalHeader p={0}>
-              <HStack spacing={{ base: 2, md: 3 }}>
-                <Icon as={FiVideo} boxSize={{ base: 5, md: 6 }} />
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
-                  إضافة فيديو جديد
-                </Text>
-              </HStack>
-            </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size={{ base: "md", md: "lg" }} />
-          </Box>
-
-          <ModalBody p={{ base: 4, md: 6 }} bg={cardBg}>
-            <VStack spacing={6} align="stretch">
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  عنوان الفيديو
-                </FormLabel>
-                <Input
-                  value={videoFormData.title}
-                  onChange={(e) =>
-                    setVideoFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  placeholder="أدخل عنوان الفيديو"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  size="lg"
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  رابط الفيديو
-                </FormLabel>
-                <Input
-                  value={videoFormData.video_url}
-                  onChange={(e) =>
-                    setVideoFormData((prev) => ({ ...prev, video_url: e.target.value }))
-                  }
-                  placeholder="https://example.com/video.mp4"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  size="lg"
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  مدة الفيديو (بالدقائق)
-                </FormLabel>
-                <NumberInput
-                  value={videoFormData.duration_minutes}
-                  onChange={(valueString) =>
-                    setVideoFormData((prev) => ({ ...prev, duration_minutes: parseInt(valueString) || 0 }))
-                  }
-                  min={0}
-                >
-                  <NumberInputField
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  ترتيب الفيديو
-                </FormLabel>
-                <NumberInput
-                  value={videoFormData.order_index}
-                  onChange={(valueString) =>
-                    setVideoFormData((prev) => ({ ...prev, order_index: parseInt(valueString) || 0 }))
-                  }
-                  min={0}
-                >
-                  <NumberInputField
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter p={{ base: 4, md: 6 }} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
-            <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onVideoModalClose} variant="outline" size={{ base: "md", md: "lg" }} borderRadius="xl" px={{ base: 4, md: 6 }} fontSize={{ base: "sm", md: "md" }}>
-                إلغاء
-              </Button>
-              <Button
-                bg="linear-gradient(135deg, #E53E3E 0%, #C53030 100%)"
-                color="white"
-                onClick={handleAddVideo}
-                isLoading={addingVideo}
-                loadingText="جاري الإضافة..."
-                size={{ base: "md", md: "lg" }}
-                px={{ base: 6, md: 8 }}
-                borderRadius="xl"
-                fontWeight="bold"
-                leftIcon={<Icon as={FiPlus} />}
-                fontSize={{ base: "sm", md: "md" }}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
-                }}
-                transition="all 0.3s ease"
-              >
-                إضافة الفيديو
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Edit Video Modal */}
-      <Modal isOpen={isEditVideoModalOpen} onClose={onEditVideoModalClose} size={{ base: "full", sm: "md", md: "lg" }} isCentered>
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-          <Box bg="linear-gradient(135deg, #E53E3E 0%, #C53030 100%)" p={{ base: 4, md: 6 }} color="white">
-            <ModalHeader p={0}>
-              <HStack spacing={{ base: 2, md: 3 }}>
-                <Icon as={FiEdit} boxSize={{ base: 5, md: 6 }} />
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
-                  تعديل الفيديو
-                </Text>
-              </HStack>
-            </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size={{ base: "md", md: "lg" }} />
-          </Box>
-
-          <ModalBody p={{ base: 4, md: 6 }} bg={cardBg}>
-            <VStack spacing={6} align="stretch">
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  عنوان الفيديو
-                </FormLabel>
-                <Input
-                  value={videoFormData.title}
-                  onChange={(e) =>
-                    setVideoFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  placeholder="أدخل عنوان الفيديو"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  size="lg"
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  رابط الفيديو
-                </FormLabel>
-                <Input
-                  value={videoFormData.video_url}
-                  onChange={(e) =>
-                    setVideoFormData((prev) => ({ ...prev, video_url: e.target.value }))
-                  }
-                  placeholder="https://example.com/video.mp4"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  size="lg"
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  مدة الفيديو (بالدقائق)
-                </FormLabel>
-                <NumberInput
-                  value={videoFormData.duration_minutes}
-                  onChange={(valueString) =>
-                    setVideoFormData((prev) => ({ ...prev, duration_minutes: parseInt(valueString) || 0 }))
-                  }
-                  min={0}
-                >
-                  <NumberInputField
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  ترتيب الفيديو
-                </FormLabel>
-                <NumberInput
-                  value={videoFormData.order_index}
-                  onChange={(valueString) =>
-                    setVideoFormData((prev) => ({ ...prev, order_index: parseInt(valueString) || 0 }))
-                  }
-                  min={0}
-                >
-                  <NumberInputField
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter p={{ base: 4, md: 6 }} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
-            <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onEditVideoModalClose} variant="outline" size={{ base: "md", md: "lg" }} borderRadius="xl" px={{ base: 4, md: 6 }} fontSize={{ base: "sm", md: "md" }}>
-                إلغاء
-              </Button>
-              <Button
-                bg="linear-gradient(135deg, #E53E3E 0%, #C53030 100%)"
-                color="white"
-                onClick={handleEditVideo}
-                isLoading={editingVideo}
-                loadingText="جاري التحديث..."
-                size={{ base: "md", md: "lg" }}
-                px={{ base: 6, md: 8 }}
-                borderRadius="xl"
-                fontWeight="bold"
-                leftIcon={<Icon as={FiEdit} />}
-                fontSize={{ base: "sm", md: "md" }}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
-                }}
-                transition="all 0.3s ease"
-              >
-                حفظ التغييرات
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Delete Video Dialog */}
-      <AlertDialog
-        isOpen={isDeleteVideoOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onDeleteVideoClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              حذف الفيديو
-            </AlertDialogHeader>
-
-            <AlertDialogBody>
-              هل أنت متأكد من حذف الفيديو{' '}
-              <Text as="span" fontWeight="bold" color="red.500">
-                {selectedVideo?.title}
-              </Text>
-              ؟ هذا الإجراء لا يمكن التراجع عنه.
-            </AlertDialogBody>
-
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onDeleteVideoClose}>
-                إلغاء
-              </Button>
-              <Button
-                colorScheme="red"
-                onClick={handleDeleteVideo}
-                ml={3}
-                isLoading={deletingVideo}
-                loadingText="جاري الحذف..."
-              >
-                حذف
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-
-      {/* ========== Assignments Modals ========== */}
-      {/* Add Assignment Modal */}
-      <Modal isOpen={isAssignmentModalOpen} onClose={onAssignmentModalClose} size={{ base: "full", sm: "md", md: "lg" }} isCentered>
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-          <Box bg="linear-gradient(135deg, #38A169 0%, #2F855A 100%)" p={{ base: 4, md: 6 }} color="white">
-            <ModalHeader p={0}>
-              <HStack spacing={{ base: 2, md: 3 }}>
-                <Icon as={FiFileText} boxSize={{ base: 5, md: 6 }} />
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
-                  إضافة واجب جديد
-                </Text>
-              </HStack>
-            </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size={{ base: "md", md: "lg" }} />
-          </Box>
-
-          <ModalBody p={{ base: 4, md: 6 }} bg={cardBg}>
-            <VStack spacing={6} align="stretch">
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  اسم الواجب
-                </FormLabel>
-                <Input
-                  value={assignmentFormData.name}
-                  onChange={(e) =>
-                    setAssignmentFormData((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  placeholder="أدخل اسم الواجب"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  size="lg"
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  عدد الأسئلة
-                </FormLabel>
-                <NumberInput
-                  value={assignmentFormData.questions_count}
-                  onChange={(valueString) =>
-                    setAssignmentFormData((prev) => ({ ...prev, questions_count: parseInt(valueString) || 0 }))
-                  }
-                  min={0}
-                >
-                  <NumberInputField
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  مدة الواجب (بالدقائق)
-                </FormLabel>
-                <NumberInput
-                  value={assignmentFormData.duration_minutes}
-                  onChange={(valueString) =>
-                    setAssignmentFormData((prev) => ({ ...prev, duration_minutes: parseInt(valueString) || 0 }))
-                  }
-                  min={0}
-                >
-                  <NumberInputField
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter p={{ base: 4, md: 6 }} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
-            <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onAssignmentModalClose} variant="outline" size={{ base: "md", md: "lg" }} borderRadius="xl" px={{ base: 4, md: 6 }} fontSize={{ base: "sm", md: "md" }}>
-                إلغاء
-              </Button>
-              <Button
-                bg="linear-gradient(135deg, #38A169 0%, #2F855A 100%)"
-                color="white"
-                onClick={handleAddAssignment}
-                isLoading={addingAssignment}
-                loadingText="جاري الإضافة..."
-                size={{ base: "md", md: "lg" }}
-                px={{ base: 6, md: 8 }}
-                borderRadius="xl"
-                fontWeight="bold"
-                leftIcon={<Icon as={FiPlus} />}
-                fontSize={{ base: "sm", md: "md" }}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
-                }}
-                transition="all 0.3s ease"
-              >
-                إضافة الواجب
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Edit Assignment Modal */}
-      <Modal isOpen={isEditAssignmentModalOpen} onClose={onEditAssignmentModalClose} size={{ base: "full", sm: "md", md: "lg" }} isCentered>
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-          <Box bg="linear-gradient(135deg, #38A169 0%, #2F855A 100%)" p={{ base: 4, md: 6 }} color="white">
-            <ModalHeader p={0}>
-              <HStack spacing={{ base: 2, md: 3 }}>
-                <Icon as={FiEdit} boxSize={{ base: 5, md: 6 }} />
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
-                  تعديل الواجب
-                </Text>
-              </HStack>
-            </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size={{ base: "md", md: "lg" }} />
-          </Box>
-
-          <ModalBody p={{ base: 4, md: 6 }} bg={cardBg}>
-            <VStack spacing={6} align="stretch">
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  اسم الواجب
-                </FormLabel>
-                <Input
-                  value={assignmentFormData.name}
-                  onChange={(e) =>
-                    setAssignmentFormData((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  placeholder="أدخل اسم الواجب"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  size="lg"
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  عدد الأسئلة
-                </FormLabel>
-                <NumberInput
-                  value={assignmentFormData.questions_count}
-                  onChange={(valueString) =>
-                    setAssignmentFormData((prev) => ({ ...prev, questions_count: parseInt(valueString) || 0 }))
-                  }
-                  min={0}
-                >
-                  <NumberInputField
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  مدة الواجب (بالدقائق)
-                </FormLabel>
-                <NumberInput
-                  value={assignmentFormData.duration_minutes}
-                  onChange={(valueString) =>
-                    setAssignmentFormData((prev) => ({ ...prev, duration_minutes: parseInt(valueString) || 0 }))
-                  }
-                  min={0}
-                >
-                  <NumberInputField
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter p={{ base: 4, md: 6 }} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
-            <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onEditAssignmentModalClose} variant="outline" size={{ base: "md", md: "lg" }} borderRadius="xl" px={{ base: 4, md: 6 }} fontSize={{ base: "sm", md: "md" }}>
-                إلغاء
-              </Button>
-              <Button
-                bg="linear-gradient(135deg, #38A169 0%, #2F855A 100%)"
-                color="white"
-                onClick={handleEditAssignment}
-                isLoading={editingAssignment}
-                loadingText="جاري التحديث..."
-                size={{ base: "md", md: "lg" }}
-                px={{ base: 6, md: 8 }}
-                borderRadius="xl"
-                fontWeight="bold"
-                leftIcon={<Icon as={FiEdit} />}
-                fontSize={{ base: "sm", md: "md" }}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
-                }}
-                transition="all 0.3s ease"
-              >
-                حفظ التغييرات
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Delete Assignment Dialog */}
-      <AlertDialog
-        isOpen={isDeleteAssignmentOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onDeleteAssignmentClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              حذف الواجب
-            </AlertDialogHeader>
-
-            <AlertDialogBody>
-              هل أنت متأكد من حذف الواجب{' '}
-              <Text as="span" fontWeight="bold" color="red.500">
-                {selectedAssignment?.name}
-              </Text>
-              ؟ هذا الإجراء لا يمكن التراجع عنه.
-            </AlertDialogBody>
-
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onDeleteAssignmentClose}>
-                إلغاء
-              </Button>
-              <Button
-                colorScheme="red"
-                onClick={handleDeleteAssignment}
-                ml={3}
-                isLoading={deletingAssignment}
-                loadingText="جاري الحذف..."
-              >
-                حذف
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-
-      {/* ========== Questions Modals ========== */}
-      {/* Add Question Modal */}
-      <Modal isOpen={isQuestionModalOpen} onClose={onQuestionModalClose} size={{ base: "full", sm: "md", md: "lg", lg: "xl" }} isCentered>
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-          <Box bg="linear-gradient(135deg, #805AD5 0%, #6B46C1 100%)" p={{ base: 4, md: 6 }} color="white">
-            <ModalHeader p={0}>
-              <HStack spacing={{ base: 2, md: 3 }}>
-                <Icon as={FiHelpCircle} boxSize={{ base: 5, md: 6 }} />
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
-                  إضافة سؤال جديد
-                </Text>
-              </HStack>
-            </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size={{ base: "md", md: "lg" }} />
-          </Box>
-
-          <ModalBody p={{ base: 4, md: 6 }} bg={cardBg} maxH="80vh" overflowY="auto">
-            <VStack spacing={6} align="stretch">
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  نص السؤال
-                </FormLabel>
-                <Textarea
-                  value={questionFormData.question_text}
-                  onChange={(e) =>
-                    setQuestionFormData((prev) => ({ ...prev, question_text: e.target.value }))
-                  }
-                  placeholder="أدخل نص السؤال"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  rows={3}
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                />
-              </FormControl>
-
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                <FormControl isRequired>
-                  <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                    الخيار أ
-                  </FormLabel>
-                  <Input
-                    value={questionFormData.option_a}
-                    onChange={(e) =>
-                      setQuestionFormData((prev) => ({ ...prev, option_a: e.target.value }))
-                    }
-                    placeholder="أدخل الخيار أ"
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                    الخيار ب
-                  </FormLabel>
-                  <Input
-                    value={questionFormData.option_b}
-                    onChange={(e) =>
-                      setQuestionFormData((prev) => ({ ...prev, option_b: e.target.value }))
-                    }
-                    placeholder="أدخل الخيار ب"
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                    الخيار ج
-                  </FormLabel>
-                  <Input
-                    value={questionFormData.option_c}
-                    onChange={(e) =>
-                      setQuestionFormData((prev) => ({ ...prev, option_c: e.target.value }))
-                    }
-                    placeholder="أدخل الخيار ج"
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                    الخيار د
-                  </FormLabel>
-                  <Input
-                    value={questionFormData.option_d}
-                    onChange={(e) =>
-                      setQuestionFormData((prev) => ({ ...prev, option_d: e.target.value }))
-                    }
-                    placeholder="أدخل الخيار د"
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                </FormControl>
-              </SimpleGrid>
-
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  الإجابة الصحيحة
-                </FormLabel>
-                <Select
-                  value={questionFormData.correct_answer}
-                  onChange={(e) =>
-                    setQuestionFormData((prev) => ({ ...prev, correct_answer: e.target.value }))
-                  }
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  size="lg"
-                  _focus={{
-                    borderColor: primaryColor,
-                    boxShadow: `0 0 0 3px ${primaryColor}33`,
-                    borderWidth: '2px',
-                  }}
-                >
-                  <option value="a">أ - {questionFormData.option_a || 'الخيار أ'}</option>
-                  <option value="b">ب - {questionFormData.option_b || 'الخيار ب'}</option>
-                  <option value="c">ج - {questionFormData.option_c || 'الخيار ج'}</option>
-                  <option value="d">د - {questionFormData.option_d || 'الخيار د'}</option>
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  ترتيب السؤال
-                </FormLabel>
-                <NumberInput
-                  value={questionFormData.order_index}
-                  onChange={(valueString) =>
-                    setQuestionFormData((prev) => ({ ...prev, order_index: parseInt(valueString) || 0 }))
-                  }
-                  min={0}
-                >
-                  <NumberInputField
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
-                  />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter p={{ base: 4, md: 6 }} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
-            <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onQuestionModalClose} variant="outline" size={{ base: "md", md: "lg" }} borderRadius="xl" px={{ base: 4, md: 6 }} fontSize={{ base: "sm", md: "md" }}>
-                إلغاء
-              </Button>
-              <Button
-                bg="linear-gradient(135deg, #805AD5 0%, #6B46C1 100%)"
-                color="white"
-                onClick={handleAddQuestion}
-                isLoading={addingQuestion}
-                loadingText="جاري الإضافة..."
-                size={{ base: "md", md: "lg" }}
-                px={{ base: 6, md: 8 }}
-                borderRadius="xl"
-                fontWeight="bold"
-                leftIcon={<Icon as={FiPlus} />}
-                fontSize={{ base: "sm", md: "md" }}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
-                }}
-                transition="all 0.3s ease"
-              >
-                إضافة السؤال
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Add Image Question Modal */}
-      <Modal isOpen={isImageQuestionModalOpen} onClose={onImageQuestionModalClose} size={{ base: "full", sm: "md", md: "lg", lg: "xl" }} isCentered>
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent borderRadius={{ base: "xl", md: "2xl" }} overflow="hidden" m={{ base: 0, sm: 4 }}>
-          <Box bg="linear-gradient(135deg, #ED64A6 0%, #D53F8C 100%)" p={{ base: 4, md: 6 }} color="white">
-            <ModalHeader p={0}>
-              <HStack spacing={{ base: 2, md: 3 }}>
-                <Icon as={FiImage} boxSize={{ base: 5, md: 6 }} />
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
-                  إضافة سؤال بصورة
-                </Text>
-              </HStack>
-            </ModalHeader>
-            <ModalCloseButton color="white" _hover={{ bg: 'whiteAlpha.200' }} size={{ base: "md", md: "lg" }} />
-          </Box>
-
-          <ModalBody p={{ base: 4, md: 6 }} bg={cardBg} maxH="80vh" overflowY="auto">
-            <VStack spacing={6} align="stretch">
-              <FormControl isRequired>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  رفع الصور (حتى 10 صور)
-                </FormLabel>
-                <Box
-                  border="2px dashed"
-                  borderColor={borderColor}
-                  borderRadius="lg"
-                  p={4}
-                  textAlign="center"
-                  _hover={{ borderColor: primaryColor }}
-                  transition="all 0.2s"
-                >
-                  <Input
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                    multiple
-                    onChange={handleImageSelect}
-                    display="none"
-                    id="image-upload"
-                  />
-                  <label htmlFor="image-upload">
-                    <VStack spacing={2} cursor="pointer">
-                      <Icon as={FiImage} boxSize={8} color={primaryColor} />
-                      <Text color={textColor} fontSize="sm">
-                        اضغط لاختيار الصور
-                      </Text>
-                      <Text color={subTextColor} fontSize="xs">
-                        الحد الأقصى: 10 صور، حجم كل صورة: 5MB
-                      </Text>
-                      <Text color={subTextColor} fontSize="xs">
-                        الأنواع المدعومة: JPEG, JPG, PNG, GIF, WebP
-                      </Text>
-                    </VStack>
-                  </label>
-                </Box>
-                
-                {selectedImages.length > 0 && (
-                  <Box mt={3}>
-                    <Text fontSize="sm" color={textColor} mb={2} fontWeight="medium">
-                      الصور المختارة ({selectedImages.length}/10):
-                    </Text>
-                    <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={2}>
-                      {imagePreviews.map((preview, index) => (
-                        <Box key={index} position="relative">
-                          <Image
-                            src={preview.preview}
-                            alt={`Preview ${index + 1}`}
-                            borderRadius="md"
-                            boxSize="100px"
-                            objectFit="cover"
-                            border="2px solid"
+        {(role === 'admin' || role === 'teacher') && (
+          <Box>
+            <Card bg={cardBg} borderRadius="3xl" border="1px solid" borderColor={borderColor}>
+              <CardBody>
+                <Stack spacing={5}>
+                  <SectionHeader
+                    title="المجموعات"
+                    description={role === 'admin' ? 'عرض وإدارة كل المجموعات داخل المادة.' : 'هذه هي مجموعاتك داخل المادة.'}
+                    right={
+                      <HStack spacing={2} flexWrap="wrap">
+                        <InputGroup size="sm" w={{ base: 'full', md: '280px' }}>
+                          <Input
+                            value={groupQuery}
+                            onChange={(e) => setGroupQuery(e.target.value)}
+                            placeholder="بحث باسم المجموعة / المدرس / ID"
+                            bg={useColorModeValue('white', 'blackAlpha.300')}
                             borderColor={borderColor}
                           />
-                          <IconButton
-                            icon={<Icon as={FiXCircle} />}
-                            size="xs"
-                            colorScheme="red"
-                            position="absolute"
-                            top={-2}
-                            right={-2}
-                            borderRadius="full"
-                            onClick={() => handleRemoveImage(index)}
-                            aria-label="حذف الصورة"
-                          />
-                        </Box>
-                      ))}
-                    </SimpleGrid>
-                  </Box>
-                )}
-              </FormControl>
-
-              <Alert status="info" borderRadius="md" fontSize="sm">
-                <AlertIcon />
-                <VStack align="start" spacing={1}>
-                  <Text fontWeight="bold">ملاحظة:</Text>
-                  <Text fontSize="xs">
-                    الخيارات ثابتة: أ، ب، ج، د
-                  </Text>
-                  <Text fontSize="xs">
-                    الإجابة الصحيحة سيتم تعيينها افتراضياً كـ "أ" ويمكن تحديثها لاحقاً
-                  </Text>
-                </VStack>
-              </Alert>
-
-              <FormControl>
-                <FormLabel fontWeight="bold" color={textColor} fontSize="md" mb={2}>
-                  ترتيب السؤال
-                </FormLabel>
-                <NumberInput
-                  value={imageQuestionFormData.order_index}
-                  onChange={(valueString) =>
-                    setImageQuestionFormData((prev) => ({ ...prev, order_index: parseInt(valueString) || 0 }))
-                  }
-                  min={0}
-                >
-                  <NumberInputField
-                    borderColor={borderColor}
-                    borderRadius="lg"
-                    size="lg"
-                    _focus={{
-                      borderColor: primaryColor,
-                      boxShadow: `0 0 0 3px ${primaryColor}33`,
-                      borderWidth: '2px',
-                    }}
+                          <InputRightElement pointerEvents="none">
+                            <Box color={useColorModeValue('gray.500', 'gray.400')}>
+                              <FiSearch />
+                            </Box>
+                          </InputRightElement>
+                        </InputGroup>
+                        <Button
+                          size="sm"
+                          leftIcon={<FiRefreshCw />}
+                          variant="outline"
+                          onClick={refresh}
+                          isLoading={groupsLoading}
+                        >
+                          تحديث
+                        </Button>
+                        {role === 'admin' && (
+                          <Button size="sm" leftIcon={<FiPlus />} colorScheme="blue" onClick={onCreateOpen}>
+                            إنشاء
+                          </Button>
+                        )}
+                      </HStack>
+                    }
                   />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-            </VStack>
-          </ModalBody>
 
-          <ModalFooter p={{ base: 4, md: 6 }} bg={useColorModeValue("gray.50", "gray.700")} borderTop="1px solid" borderColor={borderColor}>
-            <HStack spacing={3} w="full" justify="flex-end">
-              <Button onClick={onImageQuestionModalClose} variant="outline" size={{ base: "md", md: "lg" }} borderRadius="xl" px={{ base: 4, md: 6 }} fontSize={{ base: "sm", md: "md" }}>
+                  {groupsLoading && (
+                    <Stack spacing={4}>
+                      <Card borderRadius="2xl">
+                        <CardBody>
+                          <Skeleton height="16px" width="30%" />
+                          <SkeletonText mt="4" noOfLines={3} spacing="3" />
+                        </CardBody>
+                      </Card>
+                      <Card borderRadius="2xl">
+                        <CardBody>
+                          <Skeleton height="16px" width="35%" />
+                          <SkeletonText mt="4" noOfLines={3} spacing="3" />
+                        </CardBody>
+                      </Card>
+                    </Stack>
+                  )}
+
+                  {!groupsLoading && groupsError && (
+                    <Alert status="error" borderRadius="2xl">
+                      <AlertIcon />
+                      <Flex justify="space-between" align="center" w="full" gap={3} flexWrap="wrap">
+                        <AlertDescription>{groupsError}</AlertDescription>
+                        <Button size="sm" variant="outline" leftIcon={<FiRefreshCw />} onClick={refresh}>
+                          إعادة المحاولة
+                        </Button>
+                      </Flex>
+                    </Alert>
+                  )}
+
+                  {!groupsLoading && !groupsError && groups.length === 0 && (
+                    <EmptyState
+                      title="لا توجد مجموعات بعد"
+                      description="ابدأ بإنشاء أول مجموعة ثم اربطها بمدرس (اختياري) وأضف الطلاب."
+                      onRetry={refresh}
+                    />
+                  )}
+
+                  {!groupsLoading && !groupsError && filteredGroups.length === 0 && groups.length > 0 && (
+                    <EmptyState
+                      title="لا توجد نتائج"
+                      description="جرّب تعديل كلمة البحث أو مسحها لعرض كل المجموعات."
+                      onRetry={() => setGroupQuery('')}
+                      retryLabel="مسح البحث"
+                    />
+                  )}
+
+                  {!groupsLoading && !groupsError && filteredGroups.length > 0 && (
+                    <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing={4}>
+                      {filteredGroups.map((g) => {
+                        const days = formatScheduleDays(g.raw?.schedule_days);
+                        const time = formatScheduleTime(g.raw?.schedule_time);
+                        const scheduleSummary = days || time ? `${days || ''}${days && time ? ' • ' : ''}${time || ''}` : null;
+                        const groupDetailsPath = `/subject/${subjectId}/groups/${g.id}`;
+
+                        return (
+                          <Card
+                            key={g.id}
+                            borderRadius="3xl"
+                            border="1px solid"
+                            borderColor={borderColor}
+                            bg={cardBg}
+                            overflow="hidden"
+                            transition="all 160ms ease"
+                            cursor="pointer"
+                            _hover={{
+                              transform: 'translateY(-2px)',
+                              boxShadow: elevatedShadow,
+                              borderColor: useColorModeValue('blue.200', 'blue.600'),
+                            }}
+                            onClick={() => navigate(groupDetailsPath)}
+                          >
+                            {/* Premium header strip */}
+                            <Box
+                              px={4}
+                              py={3}
+                              bgGradient={useColorModeValue(
+                                'linear(to-r, blue.500, blue.700)',
+                                'linear(to-r, blue.700, blue.900)'
+                              )}
+                              color="white"
+                            >
+                              <HStack justify="space-between" align="center">
+                                <HStack spacing={3}>
+                                  <Avatar size="sm" name={g.name} bg="whiteAlpha.300" />
+                                  <Box>
+                                    <Text fontWeight="bold" noOfLines={1}>
+                                      {g.name}
+                                    </Text>
+                                    <Text fontSize="xs" opacity={0.9}>
+                                      المجموعة #{g.id}
+                                    </Text>
+                                  </Box>
+                                </HStack>
+
+                                <Menu placement="bottom-end">
+                                  <MenuButton
+                                    as={IconButton}
+                                    aria-label="Actions"
+                                    icon={<FiMoreVertical />}
+                                    size="sm"
+                                    variant="ghost"
+                                    color="white"
+                                    _hover={{ bg: 'whiteAlpha.200' }}
+                                    _active={{ bg: 'whiteAlpha.300' }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                  <MenuList onClick={(e) => e.stopPropagation()}>
+                                    <MenuItem as={RouterLink} to={groupDetailsPath}>
+                                      صفحة المجموعة
+                                    </MenuItem>
+                                    {role === 'admin' && (
+                                      <MenuItem onClick={() => openEditGroup(g)}>
+                                        تعديل المجموعة
+                                      </MenuItem>
+                                    )}
+                                    {role === 'admin' && (
+                                      <MenuItem icon={<FiUsers />} onClick={() => openManageStudents(g)}>
+                                        إدارة الطلاب
+                                      </MenuItem>
+                                    )}
+                                    <MenuItem icon={<FiList />} onClick={() => openViewStudents(g)}>
+                                      عرض الطلاب
+                                    </MenuItem>
+                                    {role === 'admin' && (
+                                      <MenuItem color="red.500" onClick={() => openDeleteGroup(g)}>
+                                        حذف المجموعة
+                                      </MenuItem>
+                                    )}
+                                  </MenuList>
+                                </Menu>
+                              </HStack>
+                            </Box>
+
+                            <CardBody>
+                              <Stack spacing={4}>
+                                <Box>
+                                  <Text fontSize="xs" color={muted}>
+                                    المدرس
+                                  </Text>
+                                  <Text fontWeight="semibold">
+                                    {g.teacherName || '—'}
+                                  </Text>
+                                </Box>
+
+                                <Box>
+                                  <Text fontSize="xs" color={muted} mb={2}>
+                                    الجدول
+                                  </Text>
+                                  <HStack spacing={2} flexWrap="wrap">
+                                    {g.raw?.schedule_days?.length > 0 && (
+                                      <Tag size="sm" borderRadius="full" colorScheme="blue">
+                                        <TagLabel>{formatScheduleDays(g.raw?.schedule_days)}</TagLabel>
+                                      </Tag>
+                                    )}
+                                    {g.raw?.schedule_time && (
+                                      <Tag size="sm" borderRadius="full" variant="subtle" colorScheme="blue">
+                                        <TagLabel>{formatScheduleTime(g.raw?.schedule_time)}</TagLabel>
+                                      </Tag>
+                                    )}
+                                    {!scheduleSummary && (
+                                      <Tag size="sm" borderRadius="full" variant="subtle">
+                                        <TagLabel>بدون جدول</TagLabel>
+                                      </Tag>
+                                    )}
+                                  </HStack>
+                                </Box>
+
+                                <Divider />
+
+                                <HStack justify="space-between" flexWrap="wrap">
+                                  <Text fontSize="xs" color={muted}>
+                                    تاريخ الإنشاء: {g.createdAt ? dayjs(g.createdAt).format('YYYY-MM-DD HH:mm') : '—'}
+                                  </Text>
+                                  <HStack spacing={2}>
+                                    {role === 'admin' && (
+                                      <Button
+                                        size="sm"
+                                        colorScheme="blue"
+                                        variant="solid"
+                                        leftIcon={<FiUsers />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          openManageStudents(g);
+                                        }}
+                                      >
+                                        الطلاب
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="sm"
+                                      colorScheme="blue"
+                                      variant="outline"
+                                      leftIcon={<FiList />}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openViewStudents(g);
+                                      }}
+                                    >
+                                      عرض
+                                    </Button>
+                                  </HStack>
+                                </HStack>
+                              </Stack>
+                            </CardBody>
+                          </Card>
+                        );
+                      })}
+                    </SimpleGrid>
+                  )}
+                </Stack>
+              </CardBody>
+            </Card>
+          </Box>
+        )}
+
+        {role === 'student' && (
+          <Box>
+            <Card bg={cardBg} borderRadius="3xl" border="1px solid" borderColor={borderColor}>
+              <CardBody>
+                <Stack spacing={5}>
+                  <SectionHeader
+                    title="مجموعتي"
+                    description="هنا ستجد تفاصيل مجموعتك والجدول الخاص بك."
+                    right={
+                      <Button
+                        size="sm"
+                        leftIcon={<FiRefreshCw />}
+                        variant="outline"
+                        onClick={refresh}
+                        isLoading={studentLoading}
+                      >
+                        تحديث
+                      </Button>
+                    }
+                  />
+
+                  {studentLoading && (
+                    <Stack spacing={4}>
+                      <Card borderRadius="2xl">
+                        <CardBody>
+                          <Skeleton height="16px" width="40%" />
+                          <SkeletonText mt="4" noOfLines={3} spacing="3" />
+                        </CardBody>
+                      </Card>
+                    </Stack>
+                  )}
+
+                  {!studentLoading && studentError && (
+                    <Alert status="error" borderRadius="2xl">
+                      <AlertIcon />
+                      <Flex justify="space-between" align="center" w="full" gap={3} flexWrap="wrap">
+                        <AlertDescription>{studentError}</AlertDescription>
+                        <Button size="sm" variant="outline" leftIcon={<FiRefreshCw />} onClick={refresh}>
+                          إعادة المحاولة
+                        </Button>
+                      </Flex>
+                    </Alert>
+                  )}
+
+                  {!studentLoading && !studentError && studentEmptyMessage && (
+                    <EmptyState title="لا يمكن عرض المجموعة" description={studentEmptyMessage} onRetry={refresh} />
+                  )}
+
+                  {!studentLoading && !studentError && studentGroup && (
+                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                      <Card borderRadius="2xl" border="1px solid" borderColor={borderColor}>
+                        <CardBody>
+                          <Stack spacing={3}>
+                            <HStack justify="space-between" align="start">
+                              <Box>
+                                <Heading size="sm">{studentGroup.name}</Heading>
+                                <Text fontSize="sm" color={muted} mt={1}>
+                                  المدرس: <Text as="span" fontWeight="bold">{studentGroup.teacherName || '—'}</Text>
+                                </Text>
+                              </Box>
+                              <Badge colorScheme="green" borderRadius="full" px={3} py={1}>
+                                مجموعتك
+                              </Badge>
+                            </HStack>
+
+                            {(studentGroup.raw?.schedule_days || studentGroup.raw?.schedule_time) && (
+                              <Box>
+                                <Text fontSize="xs" color={muted}>
+                                  الأيام: {formatScheduleDays(studentGroup.raw?.schedule_days) || '—'}
+                                </Text>
+                                <Text fontSize="xs" color={muted} mt={1}>
+                                  الوقت: {formatScheduleTime(studentGroup.raw?.schedule_time) || '—'}
+                                </Text>
+                              </Box>
+                            )}
+
+                            <Divider />
+                            <Text fontSize="xs" color={muted}>
+                              Group #{studentGroup.id || '—'}
+                            </Text>
+                          </Stack>
+                        </CardBody>
+                      </Card>
+
+                      <Card borderRadius="2xl" border="1px solid" borderColor={borderColor}>
+                        <CardBody>
+                          <Stack spacing={3}>
+                            <Heading size="sm">جدول المحاضرات</Heading>
+
+                            {(!studentSchedule || studentSchedule.length === 0) && (
+                              <Text fontSize="sm" color={muted}>
+                                لا يوجد جدول محاضرات مسجل لهذه المجموعة.
+                              </Text>
+                            )}
+
+                            {studentSchedule && studentSchedule.length > 0 && (
+                              <Box border="1px solid" borderColor={borderColor} borderRadius="2xl" overflow="hidden">
+                                <Table size="sm" variant="simple">
+                                  <Thead bg={useColorModeValue('gray.50', 'whiteAlpha.50')}>
+                                    <Tr>
+                                      <Th>العنوان</Th>
+                                      <Th>اليوم</Th>
+                                      <Th>الوقت</Th>
+                                    </Tr>
+                                  </Thead>
+                                  <Tbody>
+                                    {studentSchedule.map((s, idx) => {
+                                      const starts = s.starts_at ? dayjs(s.starts_at) : null;
+                                      const ends = s.ends_at ? dayjs(s.ends_at) : null;
+                                      const day = starts ? starts.format('YYYY-MM-DD') : '—';
+                                      const time =
+                                        starts && ends
+                                          ? `${starts.format('HH:mm')} → ${ends.format('HH:mm')}`
+                                          : starts
+                                            ? starts.format('HH:mm')
+                                            : '—';
+
+                                      return (
+                                        <Tr key={`${idx}-${s.title || 'schedule'}`}>
+                                          <Td>{s.title || '—'}</Td>
+                                          <Td>{day}</Td>
+                                          <Td>{time}</Td>
+                                        </Tr>
+                                      );
+                                    })}
+                                  </Tbody>
+                                </Table>
+                              </Box>
+                            )}
+                          </Stack>
+                        </CardBody>
+                      </Card>
+                    </SimpleGrid>
+                  )}
+                </Stack>
+              </CardBody>
+            </Card>
+          </Box>
+        )}
+
+        {/* Admin: Create group modal */}
+        <Modal isOpen={isCreateOpen} onClose={onCreateClose} size="xl">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              <HStack spacing={3}>
+                <Badge bg="blue.500" color="white" borderRadius="full" px={3} py={1}>
+                  جديد
+                </Badge>
+                <Text>إنشاء مجموعة</Text>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Stack spacing={4}>
+                <Card borderRadius="2xl" border="1px solid" borderColor={borderColor}>
+                  <CardBody>
+                    <Stack spacing={4}>
+                      <FormControl isRequired>
+                        <FormLabel>اسم المجموعة</FormLabel>
+                        <Input
+                          value={createForm.name}
+                          onChange={(e) => setCreateForm((p) => ({ ...p, name: e.target.value }))}
+                          placeholder="مثال: Group A"
+                        />
+                      </FormControl>
+
+                      <FormControl>
+                        <FormLabel>المدرس (اختياري)</FormLabel>
+                        <Select
+                          value={createForm.teacher_id}
+                          onChange={(e) => setCreateForm((p) => ({ ...p, teacher_id: e.target.value }))}
+                          placeholder={teachersLoading ? 'جاري تحميل المدرسين...' : 'بدون مدرس'}
+                          isDisabled={teachersLoading}
+                        >
+                          {(teachers || []).map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.name} (#{t.id})
+                            </option>
+                          ))}
+                        </Select>
+                        <FormHelperText>يمكن تركه فارغًا ثم إضافة المدرس لاحقًا.</FormHelperText>
+                      </FormControl>
+                    </Stack>
+                  </CardBody>
+                </Card>
+
+                <Card borderRadius="2xl" border="1px solid" borderColor={borderColor} bg={primarySoftBg}>
+                  <CardBody>
+                    <Stack spacing={4}>
+                      <HStack justify="space-between" align="center" flexWrap="wrap">
+                        <Heading size="sm">الجدول (اختياري)</Heading>
+                        <Tag size="sm" borderRadius="full">
+                          <TagLabel>
+                            {createForm.schedule_days?.length ? `${createForm.schedule_days.length} أيام` : 'بدون أيام'}
+                            {createForm.schedule_time ? ` • ${createForm.schedule_time}` : ''}
+                          </TagLabel>
+                        </Tag>
+                      </HStack>
+
+                      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                        <FormControl>
+                          <FormLabel>أيام الجدول</FormLabel>
+                          <CheckboxGroup
+                            value={createForm.schedule_days}
+                            onChange={(values) =>
+                              setCreateForm((p) => ({
+                                ...p,
+                                schedule_days: values,
+                              }))
+                            }
+                          >
+                            <SimpleGrid columns={{ base: 3, md: 4 }} spacing={2}>
+                              <Checkbox value="sat">sat</Checkbox>
+                              <Checkbox value="sun">sun</Checkbox>
+                              <Checkbox value="mon">mon</Checkbox>
+                              <Checkbox value="tue">tue</Checkbox>
+                              <Checkbox value="wed">wed</Checkbox>
+                              <Checkbox value="thu">thu</Checkbox>
+                              <Checkbox value="fri">fri</Checkbox>
+                            </SimpleGrid>
+                          </CheckboxGroup>
+                          <FormHelperText>مثال: sat, tue</FormHelperText>
+                        </FormControl>
+
+                        <FormControl>
+                          <FormLabel>وقت الجدول</FormLabel>
+                          <Input
+                            type="time"
+                            value={createForm.schedule_time}
+                            onChange={(e) => setCreateForm((p) => ({ ...p, schedule_time: e.target.value }))}
+                          />
+                          <FormHelperText>مثال: 20:00</FormHelperText>
+                        </FormControl>
+                      </SimpleGrid>
+                    </Stack>
+                  </CardBody>
+                </Card>
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onCreateClose}>
                 إلغاء
               </Button>
-              <Button
-                bg="linear-gradient(135deg, #ED64A6 0%, #D53F8C 100%)"
-                color="white"
-                onClick={handleAddImageQuestion}
-                isLoading={addingImageQuestion}
-                loadingText="جاري الإضافة..."
-                size={{ base: "md", md: "lg" }}
-                px={{ base: 6, md: 8 }}
-                borderRadius="xl"
-                fontWeight="bold"
-                leftIcon={<Icon as={FiPlus} />}
-                fontSize={{ base: "sm", md: "md" }}
-                isDisabled={selectedImages.length === 0}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  shadow: 'xl',
-                }}
-                transition="all 0.3s ease"
-              >
-                إضافة السؤال
+              <Button colorScheme="blue" onClick={handleCreateGroup} isLoading={createSaving}>
+                حفظ
               </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
 
-      {/* Modals moved to AssignmentQuestions page */}
+        {/* Admin: Edit group modal */}
+        <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              <HStack spacing={3}>
+                <Badge bg="blue.500" color="white" borderRadius="full" px={3} py={1}>
+                  تعديل
+                </Badge>
+                <Text>تعديل المجموعة</Text>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Stack spacing={4}>
+                <Text fontSize="sm" color={muted}>
+                  المجموعة: <Text as="span" fontWeight="bold">{editGroup?.name || '—'}</Text>
+                </Text>
 
-      <ScrollToTop />
+                <Card borderRadius="2xl" border="1px solid" borderColor={borderColor}>
+                  <CardBody>
+                    <Stack spacing={4}>
+                      <FormControl>
+                        <FormLabel>اسم المجموعة</FormLabel>
+                        <Input
+                          value={editForm.name}
+                          onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+                          placeholder="مثال: Group A - Updated"
+                        />
+                      </FormControl>
+
+                      <FormControl>
+                        <FormLabel>المدرس (اختياري)</FormLabel>
+                        <Select
+                          value={editForm.teacher_id}
+                          onChange={(e) => setEditForm((p) => ({ ...p, teacher_id: e.target.value }))}
+                          placeholder={teachersLoading ? 'جاري تحميل المدرسين...' : 'بدون مدرس'}
+                          isDisabled={teachersLoading}
+                        >
+                          {(teachers || []).map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.name} (#{t.id})
+                            </option>
+                          ))}
+                        </Select>
+                        <FormHelperText>يمكنك تغيير المدرس أو تركه بدون تعديل.</FormHelperText>
+                      </FormControl>
+                    </Stack>
+                  </CardBody>
+                </Card>
+
+                <Card borderRadius="2xl" border="1px solid" borderColor={borderColor} bg={primarySoftBg}>
+                  <CardBody>
+                    <Stack spacing={4}>
+                      <Heading size="sm">الجدول (اختياري)</Heading>
+
+                      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                        <FormControl>
+                          <FormLabel>أيام الجدول</FormLabel>
+                          <CheckboxGroup
+                            value={editForm.schedule_days}
+                            onChange={(values) => setEditForm((p) => ({ ...p, schedule_days: values }))}
+                          >
+                            <SimpleGrid columns={{ base: 3, md: 4 }} spacing={2}>
+                              <Checkbox value="sat">sat</Checkbox>
+                              <Checkbox value="sun">sun</Checkbox>
+                              <Checkbox value="mon">mon</Checkbox>
+                              <Checkbox value="tue">tue</Checkbox>
+                              <Checkbox value="wed">wed</Checkbox>
+                              <Checkbox value="thu">thu</Checkbox>
+                              <Checkbox value="fri">fri</Checkbox>
+                            </SimpleGrid>
+                          </CheckboxGroup>
+                        </FormControl>
+
+                        <FormControl>
+                          <FormLabel>وقت الجدول</FormLabel>
+                          <Input
+                            type="time"
+                            value={editForm.schedule_time}
+                            onChange={(e) => setEditForm((p) => ({ ...p, schedule_time: e.target.value }))}
+                          />
+                        </FormControl>
+                      </SimpleGrid>
+                    </Stack>
+                  </CardBody>
+                </Card>
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onEditClose}>
+                إلغاء
+              </Button>
+              <Button colorScheme="blue" onClick={handleUpdateGroup} isLoading={editSaving}>
+                حفظ التعديل
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Admin: Delete group confirm */}
+        <AlertDialog isOpen={isDeleteOpen} leastDestructiveRef={deleteCancelRef} onClose={onDeleteClose} isCentered>
+          <AlertDialogOverlay />
+          <AlertDialogContent borderRadius="2xl">
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              حذف المجموعة
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              هل أنت متأكد من حذف مجموعة{' '}
+              <Text as="span" fontWeight="bold">
+                {deleteGroup?.name || '—'}
+              </Text>
+              ؟ لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={deleteCancelRef} onClick={onDeleteClose} variant="ghost">
+                إلغاء
+              </Button>
+              <Button colorScheme="red" onClick={handleDeleteGroup} isLoading={deleteSaving} ml={3}>
+                حذف
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Admin: Manage students modal */}
+        <Modal isOpen={isManageStudentsOpen} onClose={onManageStudentsClose} size="lg" initialFocusRef={cancelRef}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              <HStack spacing={3} flexWrap="wrap">
+                <Badge bg="blue.500" color="white" borderRadius="full" px={3} py={1}>
+                  Students
+                </Badge>
+                <Text>إدارة طلاب المجموعة</Text>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Stack spacing={3}>
+                <Text fontSize="sm" color={muted}>
+                  المجموعة: <Text as="span" fontWeight="bold">{manageGroup?.name || '—'}</Text>
+                </Text>
+                <FormControl>
+                  <FormLabel>Student IDs</FormLabel>
+                  <Textarea
+                    ref={cancelRef}
+                    value={studentIdsText}
+                    onChange={(e) => setStudentIdsText(e.target.value)}
+                    placeholder="مثال: 108, 109"
+                    rows={4}
+                  />
+                  <FormHelperText>يمكنك إدخال IDs مفصولة بـ comma أو مسافات أو أسطر.</FormHelperText>
+                </FormControl>
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onManageStudentsClose}>
+                إغلاق
+              </Button>
+              <Button colorScheme="blue" onClick={handleAddStudents} isLoading={addStudentsSaving}>
+                إضافة
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* View students modal */}
+        <Modal isOpen={isViewStudentsOpen} onClose={onViewStudentsClose} size="xl">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              <HStack spacing={3} flexWrap="wrap">
+                <Badge bg="blue.500" color="white" borderRadius="full" px={3} py={1}>
+                  List
+                </Badge>
+                <Text>طلاب المجموعة</Text>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Stack spacing={3}>
+                <Text fontSize="sm" color={muted}>
+                  المجموعة: <Text as="span" fontWeight="bold">{viewGroup?.name || '—'}</Text>
+                </Text>
+
+                {groupStudentsLoading && (
+                  <Flex justify="center" py={6}>
+                    <Spinner />
+                  </Flex>
+                )}
+
+                {!groupStudentsLoading && groupStudentsError && (
+                  <Alert status="error" borderRadius="xl">
+                    <AlertIcon />
+                    <AlertDescription>{groupStudentsError}</AlertDescription>
+                  </Alert>
+                )}
+
+                {!groupStudentsLoading && !groupStudentsError && groupStudents.length === 0 && (
+                  <Alert status="info" borderRadius="xl">
+                    <AlertIcon />
+                    <AlertDescription>لا يوجد طلاب داخل هذه المجموعة.</AlertDescription>
+                  </Alert>
+                )}
+
+                {!groupStudentsLoading && !groupStudentsError && groupStudents.length > 0 && (
+                  <Table size="sm" variant="simple">
+                    <Thead>
+                      <Tr>
+                        <Th>الاسم</Th>
+                        <Th>الهاتف</Th>
+                        <Th>تاريخ الإضافة</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {groupStudents.map((s) => (
+                        <Tr key={s.id || `${s.name}-${s.phone}`}>
+                          <Td>{s.name}</Td>
+                          <Td>{s.phone}</Td>
+                          <Td>{s.addedAt ? dayjs(s.addedAt).format('YYYY-MM-DD HH:mm') : '—'}</Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                )}
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button onClick={onViewStudentsClose}>إغلاق</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </Container>
     </Box>
   );
 };

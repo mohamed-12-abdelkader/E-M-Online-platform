@@ -55,7 +55,7 @@ import {
   ModalCloseButton
 } from '@chakra-ui/react';
 import { BiSearch } from 'react-icons/bi';
-import { MdAdd, MdDelete, MdSchedule, MdPeople, MdLocationOn, MdSchool, MdAttachMoney, MdEmail, MdPhone, MdCheckCircle, MdCancel } from 'react-icons/md';
+import { MdAdd, MdDelete, MdSchedule, MdPeople, MdLocationOn, MdSchool, MdAttachMoney, MdEmail, MdPhone, MdCheckCircle, MdCancel, MdLock } from 'react-icons/md';
 import { FaGraduationCap, FaClock, FaCalendarAlt, FaUsers, FaFileAlt, FaStar } from 'react-icons/fa';
 import { useGroupStudents } from '../../Hooks/centerSystem/useGroupStudents';
 import AddStudentDualModal from '../../components/centerSystem/AddStudentDualModal';
@@ -215,8 +215,13 @@ const CenterGroupDetails = () => {
         });
         setGroupData(response.data);
       } catch (err) {
-        setError('فشل في جلب بيانات المجموعة');
-        toast({ title: 'فشل في جلب بيانات المجموعة', status: 'error' });
+        // If backend returns access:false (e.g. 403 with message), show the blocked UI
+        if (err.response && err.response.data && err.response.data.access === false) {
+          setGroupData(err.response.data);
+        } else {
+          setError('فشل في جلب بيانات المجموعة');
+          toast({ title: 'فشل في جلب بيانات المجموعة', status: 'error' });
+        }
       } finally {
         setLoadingGroup(false);
       }
@@ -594,7 +599,47 @@ const CenterGroupDetails = () => {
       </Box>
     );
   }
-
+if (groupData && groupData.access === false) {
+    return (
+      <Box p={6} className="mt-[80px]" bg={bgColor} minH="100vh">
+        <Container maxW="container.md">
+          <Card
+            bgGradient="linear(135deg, gray.50 0%, white 100%)"
+            borderRadius="2xl"
+            p={{ base: 6, md: 10 }}
+            shadow="xl"
+            border="1px"
+            borderColor={borderColor}
+          >
+            <VStack spacing={6} align="center">
+              <Box
+                p={4}
+                bg={useColorModeValue('red.50', 'red.900')}
+                borderRadius="full"
+                boxShadow="md"
+              >
+                <Icon as={MdLock} boxSize={10} color={useColorModeValue('red.500', 'red.300')} />
+              </Box>
+              <Heading size="md" textAlign="center" color={textColor}>
+                تم حجب المحتوى
+              </Heading>
+              <Text textAlign="center" color="gray.600">
+                {groupData.message || 'تم حجب المحتوي لحين تجديد الاشتراك'}
+              </Text>
+              <HStack spacing={4} pt={2}>
+                <Button colorScheme="blue" onClick={() => window.location.reload()} borderRadius="xl">
+                  إعادة المحاولة
+                </Button>
+                <Button variant="outline" onClick={() => window.history.back()} borderRadius="xl">
+                  العودة
+                </Button>
+              </HStack>
+            </VStack>
+          </Card>
+        </Container>
+      </Box>
+    );
+  }
   if (error || !groupData) {
     return (
       <Box p={6} className="mt-[80px]" bg={bgColor} minH="100vh">
@@ -607,6 +652,9 @@ const CenterGroupDetails = () => {
       </Box>
     );
   }
+
+  // عرض رسالة أن المحتوى محجوب إذا جاءت الاستجابة بهذا الشكل
+  
 
   return (
     <Box  className="my-[80px] px-auto" bg={bgColor} minH="100vh">
