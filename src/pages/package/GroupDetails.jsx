@@ -138,6 +138,12 @@ const GroupDetails = () => {
   const [totalLessons, setTotalLessons] = useState(0);
   const [lessonQuery, setLessonQuery] = useState('');
 
+  // General group content (not linked to lessons)
+  const [generalLoading, setGeneralLoading] = useState(false);
+  const [generalError, setGeneralError] = useState(null);
+  const [groupFiles, setGroupFiles] = useState([]);
+  const [groupExams, setGroupExams] = useState([]);
+
   const { isOpen: isCreateLessonOpen, onOpen: onOpenCreateLesson, onClose: onCloseCreateLesson } = useDisclosure();
   const [lessonSaving, setLessonSaving] = useState(false);
   const [lessonForm, setLessonForm] = useState({ title: '', description: '' });
@@ -154,6 +160,18 @@ const GroupDetails = () => {
   const [activeLesson, setActiveLesson] = useState(null);
   const [activeItem, setActiveItem] = useState(null);
   const [contentForm, setContentForm] = useState({});
+
+  // General content modal (files/exams)
+  const {
+    isOpen: isGeneralOpen,
+    onOpen: onOpenGeneral,
+    onClose: onCloseGeneral,
+  } = useDisclosure();
+  const [generalSaving, setGeneralSaving] = useState(false);
+  const [generalMode, setGeneralMode] = useState('create'); // create | edit
+  const [generalType, setGeneralType] = useState('file'); // file | exam
+  const [generalItem, setGeneralItem] = useState(null);
+  const [generalForm, setGeneralForm] = useState({});
 
   const {
     isOpen: isDeleteOpen,
@@ -212,14 +230,193 @@ const GroupDetails = () => {
     }
   };
 
+  const fetchGeneralContent = async () => {
+    if (!subjectId || !groupId) return;
+    // Admin + Teacher only (backend will enforce ownership)
+    if (role !== 'admin' && role !== 'teacher') return;
+
+    setGeneralLoading(true);
+    setGeneralError(null);
+
+    try {
+      const headers = { headers: getAuthHeaders() };
+
+      const [filesRes, examsRes] = await Promise.allSettled([
+        baseUrl.get(`/api/subjects/${subjectId}/groups/${groupId}/group-files`, headers),
+        baseUrl.get(`/api/subjects/${subjectId}/groups/${groupId}/package-group-exams`, headers),
+      ]);
+
+      if (filesRes.status === 'fulfilled') {
+        const files = safeArray(filesRes.value?.data?.files || filesRes.value?.data?.group_files || filesRes.value?.data?.data?.files);
+        setGroupFiles(files);
+      } else {
+        setGroupFiles([]);
+      }
+
+      if (examsRes.status === 'fulfilled') {
+        const exams = safeArray(examsRes.value?.data?.exams || examsRes.value?.data?.group_exams || examsRes.value?.data?.data?.exams);
+        setGroupExams(exams);
+      } else {
+        setGroupExams([]);
+      }
+
+      if (filesRes.status === 'rejected' || examsRes.status === 'rejected') {
+        const msg =
+          filesRes.status === 'rejected'
+            ? filesRes.reason?.response?.data?.message || filesRes.reason?.response?.data?.error
+            : examsRes.reason?.response?.data?.message || examsRes.reason?.response?.data?.error;
+        setGeneralError(msg || 'حدث خطأ أثناء تحميل المحتوى العام للمجموعة');
+      }
+    } catch (e) {
+      setGeneralError(e?.response?.data?.message || e?.response?.data?.error || 'حدث خطأ أثناء تحميل المحتوى العام للمجموعة');
+      setGroupFiles([]);
+      setGroupExams([]);
+    } finally {
+      setGeneralLoading(false);
+    }
+  };
+
   const refreshAll = async () => {
-    await Promise.allSettled([fetchDetails(), fetchContent()]);
+    await Promise.allSettled([fetchDetails(), fetchContent(), fetchGeneralContent()]);
   };
 
   useEffect(() => {
     refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjectId, groupId]);
+
+  const openGeneralModal = ({ type, mode, item }) => {
+    setGeneralType(type);
+    setGeneralMode(mode);
+    setGeneralItem(item || null);
+
+    if (type === 'file') {
+      setGeneralForm({
+        title: item?.title || '',
+        file_url: item?.file_url || item?.url || '',
+        order_index: item?.order_index ?? 0,
+      });
+    } else if (type === 'exam') {
+      setGeneralForm({
+        title: item?.title || '',
+        duration: item?.duration ?? '',
+        total_marks: item?.total_marks ?? '',
+      });
+    }
+
+    onOpenGeneral();
+  };
+
+  const handleSaveGeneral = async () => {
+    if (!subjectId || !groupId) return;
+    if (role !== 'admin' && role !== 'teacher') return;
+
+    try {
+      setGeneralSaving(true);
+      const headers = { ...getAuthHeaders(), 'Content-Type': 'application/json' };
+
+      if (generalType === 'file') {
+        const payload = {
+          title: String(generalForm.title || '').trim(),
+          file_url: String(generalForm.file_url || '').trim(),
+          order_index: safeNumber(generalForm.order_index) ?? 0,
+        };
+        if (!payload.title || !payload.file_url) {
+          toast({
+            title: 'بيانات ناقصة',
+            description: 'عنوان الملف ورابط الملف مطلوبان',
+            status: 'warning',
+            duration: 3000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          return;
+        }
+
+        if (generalMode === 'create') {
+          await baseUrl.post(`/api/subjects/${subjectId}/groups/${groupId}/group-files`, payload, { headers });
+        } else {
+          await baseUrl.put(`/api/group-files/${generalItem?.id}`, payload, { headers });
+        }
+      }
+
+      if (generalType === 'exam') {
+        const payload = {
+          title: String(generalForm.title || '').trim(),
+          duration: safeNumber(generalForm.duration) ?? 0,
+          total_marks: safeNumber(generalForm.total_marks) ?? 0,
+        };
+        if (!payload.title) {
+          toast({
+            title: 'بيانات ناقصة',
+            description: 'عنوان الامتحان مطلوب',
+            status: 'warning',
+            duration: 3000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          return;
+        }
+
+        if (generalMode === 'create') {
+          await baseUrl.post(`/api/subjects/${subjectId}/groups/${groupId}/package-group-exams`, payload, { headers });
+        } else {
+          await baseUrl.put(`/api/package-group-exams/${generalItem?.id}`, payload, { headers });
+        }
+      }
+
+      toast({
+        title: 'تم الحفظ',
+        description: 'تم تنفيذ العملية بنجاح',
+        status: 'success',
+        duration: 3500,
+        isClosable: true,
+        position: 'top-right',
+      });
+
+      onCloseGeneral();
+      setGeneralItem(null);
+      await fetchGeneralContent();
+    } catch (e) {
+      toast({
+        title: 'فشل الحفظ',
+        description: e?.response?.data?.message || e?.response?.data?.error || 'حدث خطأ أثناء الحفظ',
+        status: 'error',
+        duration: 4500,
+        isClosable: true,
+        position: 'top-right',
+      });
+    } finally {
+      setGeneralSaving(false);
+    }
+  };
+
+  const toggleGeneralExamVisibility = async ({ item, isVisible }) => {
+    if (!item?.id) return;
+    if (role !== 'admin' && role !== 'teacher') return;
+    try {
+      const headers = { ...getAuthHeaders(), 'Content-Type': 'application/json' };
+      await baseUrl.patch(`/api/package-group-exams/${item.id}/visibility`, { is_visible: isVisible }, { headers });
+      toast({
+        title: 'تم التحديث',
+        description: isVisible ? 'تم إظهار الامتحان' : 'تم إخفاء الامتحان',
+        status: 'success',
+        duration: 2500,
+        isClosable: true,
+        position: 'top-right',
+      });
+      await fetchGeneralContent();
+    } catch (e) {
+      toast({
+        title: 'فشل تحديث الظهور',
+        description: e?.response?.data?.message || e?.response?.data?.error || 'حدث خطأ',
+        status: 'error',
+        duration: 4500,
+        isClosable: true,
+        position: 'top-right',
+      });
+    }
+  };
 
   const handleCreateLesson = async () => {
     if (!subjectId || !groupId) return;
@@ -341,6 +538,10 @@ const GroupDetails = () => {
         await baseUrl.delete(`/api/assignments/${id}`, { headers: getAuthHeaders() });
       } else if (deleteTarget.type === 'exam') {
         await baseUrl.delete(`/api/exams/${id}`, { headers: getAuthHeaders() });
+      } else if (deleteTarget.type === 'groupFile') {
+        await baseUrl.delete(`/api/group-files/${id}`, { headers: getAuthHeaders() });
+      } else if (deleteTarget.type === 'groupExam') {
+        await baseUrl.delete(`/api/package-group-exams/${id}`, { headers: getAuthHeaders() });
       }
 
       toast({
@@ -354,7 +555,11 @@ const GroupDetails = () => {
 
       onCloseDelete();
       setDeleteTarget(null);
-      await refreshAll();
+      if (deleteTarget.type === 'groupFile' || deleteTarget.type === 'groupExam') {
+        await fetchGeneralContent();
+      } else {
+        await refreshAll();
+      }
     } catch (e) {
       toast({
         title: 'فشل الحذف',
@@ -777,6 +982,192 @@ const GroupDetails = () => {
                 </HStack>
               </CardBody>
             </Card>
+
+            {/* General group content */}
+            {(role === 'admin' || role === 'teacher') && (
+              <Card bg={cardBg} borderRadius="3xl" border="1px solid" borderColor={borderColor}>
+                <CardBody>
+                  <HStack justify="space-between" flexWrap="wrap" spacing={3} mb={4}>
+                    <Box>
+                      <Heading size="md">محتوى عام للمجموعة</Heading>
+                      <Text fontSize="sm" color={muted} mt={1}>
+                        ملفات PDF وامتحانات عامة (غير مرتبطة بدروس).
+                      </Text>
+                    </Box>
+                    <Button
+                      leftIcon={<FiRefreshCw />}
+                      variant="outline"
+                      onClick={fetchGeneralContent}
+                      isLoading={generalLoading}
+                    >
+                      تحديث
+                    </Button>
+                  </HStack>
+
+                  {generalError && (
+                    <Alert status="error" borderRadius="2xl" mb={4}>
+                      <AlertIcon />
+                      <AlertDescription>{generalError}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                    {/* Group Files */}
+                    <Card borderRadius="2xl" border="1px solid" borderColor={borderColor} bg={useColorModeValue('white', 'blackAlpha.200')}>
+                      <CardBody>
+                        <HStack justify="space-between" mb={3} flexWrap="wrap" spacing={2}>
+                          <HStack>
+                            <Icon as={FiFileText} color={primary} />
+                            <Text fontWeight="bold">ملفات PDF عامة</Text>
+                          </HStack>
+                          <Button
+                            size="sm"
+                            leftIcon={<FiPlus />}
+                            colorScheme="blue"
+                            onClick={() => openGeneralModal({ type: 'file', mode: 'create' })}
+                            isDisabled={forbidden}
+                          >
+                            إضافة
+                          </Button>
+                        </HStack>
+
+                        <Stack spacing={2}>
+                          {safeArray(groupFiles).length === 0 ? (
+                            <Text fontSize="sm" color={muted}>
+                              لا يوجد ملفات عامة.
+                            </Text>
+                          ) : (
+                            safeArray(groupFiles).map((f) => (
+                              <Card key={f.id} borderRadius="xl" border="1px solid" borderColor={borderColor}>
+                                <CardBody>
+                                  <HStack justify="space-between" align="start" spacing={3} flexWrap="wrap">
+                                    <Box>
+                                      <Text fontWeight="bold" noOfLines={1}>
+                                        {f.title || '—'}
+                                      </Text>
+                                      <Text fontSize="xs" color={muted} mt={1} noOfLines={1}>
+                                        {f.file_url || f.url || '—'}
+                                      </Text>
+                                      <Text fontSize="xs" color={muted} mt={1}>
+                                        order: {Number.isFinite(Number(f.order_index)) ? Number(f.order_index) : 0}
+                                      </Text>
+                                    </Box>
+                                    <HStack spacing={2}>
+                                      {(f.file_url || f.url) && (
+                                        <IconButton
+                                          as="a"
+                                          href={f.file_url || f.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          aria-label="Open link"
+                                          icon={<FiLink />}
+                                          size="sm"
+                                          variant="ghost"
+                                        />
+                                      )}
+                                      <IconButton
+                                        aria-label="Edit"
+                                        icon={<FiEdit2 />}
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => openGeneralModal({ type: 'file', mode: 'edit', item: f })}
+                                      />
+                                      <IconButton
+                                        aria-label="Delete"
+                                        icon={<FiTrash2 />}
+                                        size="sm"
+                                        colorScheme="red"
+                                        variant="ghost"
+                                        onClick={() => confirmDelete({ type: 'groupFile', item: f })}
+                                      />
+                                    </HStack>
+                                  </HStack>
+                                </CardBody>
+                              </Card>
+                            ))
+                          )}
+                        </Stack>
+                      </CardBody>
+                    </Card>
+
+                    {/* Group Exams */}
+                    <Card borderRadius="2xl" border="1px solid" borderColor={borderColor} bg={useColorModeValue('white', 'blackAlpha.200')}>
+                      <CardBody>
+                        <HStack justify="space-between" mb={3} flexWrap="wrap" spacing={2}>
+                          <HStack>
+                            <Icon as={FiClipboard} color={primary} />
+                            <Text fontWeight="bold">امتحانات عامة</Text>
+                          </HStack>
+                          <Button
+                            size="sm"
+                            leftIcon={<FiPlus />}
+                            colorScheme="blue"
+                            onClick={() => openGeneralModal({ type: 'exam', mode: 'create' })}
+                            isDisabled={forbidden}
+                          >
+                            إنشاء
+                          </Button>
+                        </HStack>
+
+                        <Stack spacing={2}>
+                          {safeArray(groupExams).length === 0 ? (
+                            <Text fontSize="sm" color={muted}>
+                              لا يوجد امتحانات عامة.
+                            </Text>
+                          ) : (
+                            safeArray(groupExams).map((ex) => (
+                              <Card key={ex.id} borderRadius="xl" border="1px solid" borderColor={borderColor}>
+                                <CardBody>
+                                  <HStack justify="space-between" align="start" spacing={3} flexWrap="wrap" mb={2}>
+                                    <Box>
+                                      <Text fontWeight="bold" noOfLines={1}>
+                                        {ex.title || '—'}
+                                      </Text>
+                                      <Text fontSize="xs" color={muted} mt={1}>
+                                        {`المدة: ${ex.duration ?? '—'} دقيقة • الدرجة: ${ex.total_marks ?? '—'}`}
+                                      </Text>
+                                    </Box>
+                                    <HStack spacing={2} align="center">
+                                      <HStack spacing={2} align="center">
+                                        <Text fontSize="xs" color={muted}>
+                                          مرئي
+                                        </Text>
+                                        <Switch
+                                          colorScheme="blue"
+                                          isChecked={Boolean(ex.is_visible)}
+                                          onChange={(e) =>
+                                            toggleGeneralExamVisibility({ item: ex, isVisible: e.target.checked })
+                                          }
+                                        />
+                                      </HStack>
+                                      <IconButton
+                                        aria-label="Edit"
+                                        icon={<FiEdit2 />}
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => openGeneralModal({ type: 'exam', mode: 'edit', item: ex })}
+                                      />
+                                      <IconButton
+                                        aria-label="Delete"
+                                        icon={<FiTrash2 />}
+                                        size="sm"
+                                        colorScheme="red"
+                                        variant="ghost"
+                                        onClick={() => confirmDelete({ type: 'groupExam', item: ex })}
+                                      />
+                                    </HStack>
+                                  </HStack>
+                                </CardBody>
+                              </Card>
+                            ))
+                          )}
+                        </Stack>
+                      </CardBody>
+                    </Card>
+                  </SimpleGrid>
+                </CardBody>
+              </Card>
+            )}
 
             <Card
               bg={cardBg}
@@ -1426,6 +1817,98 @@ const GroupDetails = () => {
                 إلغاء
               </Button>
               <Button colorScheme="blue" onClick={handleSaveContent} isLoading={contentSaving}>
+                حفظ
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* General content (group files / group exams) modal */}
+        <Modal isOpen={isGeneralOpen} onClose={onCloseGeneral} size="lg">
+          <ModalOverlay />
+          <ModalContent borderRadius="2xl">
+            <ModalHeader>
+              <HStack spacing={3} flexWrap="wrap">
+                <Badge bg="blue.500" color="white" borderRadius="full" px={3} py={1}>
+                  {generalMode === 'create' ? 'إضافة' : 'تعديل'}
+                </Badge>
+                <Text>{generalType === 'file' ? 'ملف PDF عام' : 'امتحان عام'}</Text>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Stack spacing={4}>
+                {generalType === 'file' && (
+                  <>
+                    <FormControl isRequired>
+                      <FormLabel>عنوان الملف</FormLabel>
+                      <Input
+                        value={generalForm.title || ''}
+                        onChange={(e) => setGeneralForm((p) => ({ ...p, title: e.target.value }))}
+                      />
+                    </FormControl>
+                    <FormControl isRequired>
+                      <FormLabel>رابط الملف (PDF)</FormLabel>
+                      <Input
+                        value={generalForm.file_url || ''}
+                        onChange={(e) => setGeneralForm((p) => ({ ...p, file_url: e.target.value }))}
+                        placeholder="https://..."
+                      />
+                      <FormHelperText>يفضل رابط مباشر للـ PDF.</FormHelperText>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>الترتيب</FormLabel>
+                      <NumberInput
+                        value={generalForm.order_index ?? 0}
+                        onChange={(v) => setGeneralForm((p) => ({ ...p, order_index: v }))}
+                        min={0}
+                      >
+                        <NumberInputField />
+                      </NumberInput>
+                    </FormControl>
+                  </>
+                )}
+
+                {generalType === 'exam' && (
+                  <>
+                    <FormControl isRequired>
+                      <FormLabel>عنوان الامتحان</FormLabel>
+                      <Input
+                        value={generalForm.title || ''}
+                        onChange={(e) => setGeneralForm((p) => ({ ...p, title: e.target.value }))}
+                      />
+                    </FormControl>
+                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                      <FormControl>
+                        <FormLabel>المدة (دقيقة)</FormLabel>
+                        <NumberInput
+                          value={generalForm.duration ?? ''}
+                          onChange={(v) => setGeneralForm((p) => ({ ...p, duration: v }))}
+                          min={0}
+                        >
+                          <NumberInputField />
+                        </NumberInput>
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel>الدرجة الكلية</FormLabel>
+                        <NumberInput
+                          value={generalForm.total_marks ?? ''}
+                          onChange={(v) => setGeneralForm((p) => ({ ...p, total_marks: v }))}
+                          min={0}
+                        >
+                          <NumberInputField />
+                        </NumberInput>
+                      </FormControl>
+                    </SimpleGrid>
+                  </>
+                )}
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onCloseGeneral}>
+                إلغاء
+              </Button>
+              <Button colorScheme="blue" onClick={handleSaveGeneral} isLoading={generalSaving}>
                 حفظ
               </Button>
             </ModalFooter>

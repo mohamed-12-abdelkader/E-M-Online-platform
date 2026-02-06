@@ -11,13 +11,13 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   useDisclosure,
   VStack,
   HStack,
   Text,
   Icon,
-  Divider
+  Divider,
+  useColorModeValue
 } from "@chakra-ui/react";
 import { Link, useNavigate } from "react-router-dom";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
@@ -39,6 +39,16 @@ const LoginPage = () => {
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const pageBg = useColorModeValue("linear(to-br, blue.50, white)", "linear(to-br, gray.900, gray.800)");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("gray.200", "gray.700");
+  const headingColor = useColorModeValue("gray.800", "white");
+  const subtextColor = useColorModeValue("gray.600", "gray.400");
+  const labelColor = useColorModeValue("gray.700", "gray.300");
+  const inputBorder = useColorModeValue("gray.200", "gray.600");
+  const inputBg = useColorModeValue("white", "gray.700");
+  const bottomTextColor = useColorModeValue("gray.500", "gray.500");
   
   function generateString() {
     var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -124,222 +134,158 @@ const LoginPage = () => {
 
   return (
     <Box
-    className="mt-[100px] "
+      className="mt-[100px]"
       minH="100vh"
-    
-      bgGradient="linear(to-br, blue.50, indigo.100, purple.50)"
+      bgGradient={pageBg}
       display="flex"
       alignItems="center"
       justifyContent="center"
       p={4}
       position="relative"
       overflow="hidden"
+      dir="rtl"
+      style={{ fontFamily: "'Changa', sans-serif" }}
     >
-      {/* Background Pattern */}
       <Box
         position="absolute"
         top="0"
         left="0"
         right="0"
         bottom="0"
-        opacity="0.1"
-        backgroundImage="url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C92AC%22%20fill-opacity%3D%220.4%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%224%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
+        opacity={useColorModeValue(0.04, 0.06)}
+        bgImage="url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%234299E1%22 fill-opacity=%22.4%22%3E%3Cpath d=%22M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30v4h-4v2h4v4h2v-4h4v-2h-4v-4h-2zM6 34v4h4v2h-4v4h-2v-4h-4v-2h4v-4h2zM6 4v4h-4v2h4v4h2v-4h4v-2h-4v-4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
       />
 
-      <Box
-       className="w-[90%] mx-auto"
-        position="relative"
-        zIndex="1"
-      >
-        {/* Main Login Card */}
+      <Box position="relative" zIndex="1" w="full" maxW="440px">
         <Box
-        
-          bg="white"
-          borderRadius="3xl"
+          bg={cardBg}
+          borderRadius="2xl"
           p={8}
-          boxShadow="0 25px 50px rgba(0, 0, 0, 0.15)"
-          border="1px solid"
-          borderColor="whiteAlpha.200"
-          backdropFilter="blur(10px)"
-          position="relative"
+          boxShadow={useColorModeValue("0 25px 50px rgba(0,0,0,0.08)", "0 25px 50px rgba(0,0,0,0.3)")}
+          borderWidth="1px"
+          borderColor={cardBorder}
           overflow="hidden"
         >
-          {/* Decorative Elements */}
-          <Box
-          
-            position="absolute"
-            top="-30px"
-            right="-30px"
-            w="60px"
-            h="60px"
-            bgGradient="linear(to-br, blue.400, purple.500)"
-            borderRadius="full"
-            opacity="0.1"
-          />
-          <Box
-          
-            position="absolute"
-            bottom="-20px"
-            left="-20px"
-            w="40px"
-            h="40px"
-            bgGradient="linear(to-br, pink.400, red.500)"
-            borderRadius="full"
-            opacity="0.1"
-          />
-
-          <VStack spacing={8} align="stretch" >
-            {/* Header */}
-            <Box textAlign="center" >
+          <VStack spacing={8} align="stretch">
+            <Box textAlign="center">
               <Box
-                w="80px"
-                h="80px"
-                bgGradient="linear(135deg, #667eea 0%, blue.500 100%)"
-                borderRadius="full"
+                w="16"
+                h="16"
+                bg="blue.500"
+                borderRadius="xl"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
                 mx="auto"
                 mb={4}
-                boxShadow="0 15px 30px rgba(102, 126, 234, 0.3)"
+                boxShadow="0 10px 25px rgba(66, 153, 225, 0.35)"
               >
-                <Icon as={FiLock} w="40px" h="40px" color="white" />
+                <Icon as={FiLock} w="8" h="8" color="white" />
               </Box>
-              <Text
-                fontSize="2xl"
-                fontWeight="bold"
-                bgGradient="linear(135deg, #667eea 0%, blue.500 100%)"
-                bgClip="text"
-                mb={2}
-              >
+              <Text fontSize="2xl" fontWeight="bold" color={headingColor} mb={2}>
                 مرحباً بعودتك
               </Text>
-              <Text color="gray.600" fontSize="md">
-                سجل دخولك للاستمرار في رحلة التعلم
+              <Text color={subtextColor} fontSize="md">
+                سجل دخولك للاستمرار في رحلة التعلم مع Next Edu
               </Text>
             </Box>
 
-            {/* Login Form */}
-            <Box>
-              <form onSubmit={handleLogin}>
-                <VStack spacing={6}>
-                  {/* Phone/Email Input */}
-                  <FormControl>
-                    <FormLabel fontWeight="semibold" color="gray.700" mb={3}>
-                      رقم الهاتف أو البريد الإلكتروني
-                    </FormLabel>
-                    <Input
-                      placeholder="ادخل رقم الهاتف أو البريد الإلكتروني"
-                      size="lg"
-                      value={identifier}
-                      onChange={identifierChange}
-                      borderRadius="xl"
-                      borderColor="gray.200"
-                      _hover={{ borderColor: "gray.300" }}
-                      _focus={{
-                        borderColor: "blue.500",
-                        boxShadow: "0 0 0 1px #3B82F6"
-                      }}
-                      transition="all 0.3s"
-                    />
-                  </FormControl>
-
-                  {/* Password Input */}
-                  <FormControl>
-                    <FormLabel fontWeight="semibold" color="gray.700" mb={3}>
-                      كلمة المرور
-                    </FormLabel>
-                    <Input
-                      type="password"
-                      placeholder="أدخل كلمة المرور"
-                      size="lg"
-                      value={pass}
-                      onChange={passChange}
-                      borderRadius="xl"
-                      borderColor="gray.200"
-                      _hover={{ borderColor: "gray.300" }}
-                      _focus={{
-                        borderColor: "blue.500",
-                        boxShadow: "0 0 0 1px #3B82F6"
-                      }}
-                      transition="all 0.3s"
-                    />
-                  </FormControl>
-
-                  {/* Login Button */}
-                  <Button
-                    type="submit"
+            <Box as="form" onSubmit={handleLogin}>
+              <VStack spacing={5}>
+                <FormControl>
+                  <FormLabel fontWeight="semibold" color={labelColor} mb={2}>
+                    رقم الهاتف أو البريد الإلكتروني
+                  </FormLabel>
+                  <Input
+                    placeholder="ادخل رقم الهاتف أو البريد الإلكتروني"
                     size="lg"
-                    w="full"
-                    bgGradient="linear(135deg, #667eea 0%, blue.500 100%)"
-                    color="white"
-                    _hover={{
-                      bgGradient: "linear(135deg, #5a6fd8 0%, blue.500 100%)",
-                      boxShadow: "0 10px 25px rgba(102, 126, 234, 0.4)"
-                    }}
-                    _active={{
-                      bgGradient: "linear(135deg, #4f5fc7 0%, #5f387f 100%)"
-                    }}
+                    value={identifier}
+                    onChange={identifierChange}
                     borderRadius="xl"
-                    fontSize="lg"
-                    fontWeight="semibold"
-                    boxShadow="0 8px 20px rgba(102, 126, 234, 0.3)"
-                    transition="all 0.3s ease"
-                    rightIcon={loading ? <Spinner size="sm" color="white" /> : undefined}
-                    isDisabled={loading}
-                  >
-                    {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
-                  </Button>
-                </VStack>
-              </form>
+                    borderColor={inputBorder}
+                    bg={inputBg}
+                    _hover={{ borderColor: "blue.300" }}
+                    _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.25)" }}
+                    transition="all 0.2s"
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel fontWeight="semibold" color={labelColor} mb={2}>
+                    كلمة المرور
+                  </FormLabel>
+                  <Input
+                    type="password"
+                    placeholder="أدخل كلمة المرور"
+                    size="lg"
+                    value={pass}
+                    onChange={passChange}
+                    borderRadius="xl"
+                    borderColor={inputBorder}
+                    bg={inputBg}
+                    _hover={{ borderColor: "blue.300" }}
+                    _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.25)" }}
+                    transition="all 0.2s"
+                  />
+                </FormControl>
+
+                <Button
+                  type="submit"
+                  size="lg"
+                  w="full"
+                  bg="orange.500"
+                  color="white"
+                  _hover={{ bg: "orange.400", boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)" }}
+                  _active={{ bg: "orange.600" }}
+                  borderRadius="xl"
+                  fontSize="lg"
+                  fontWeight="bold"
+                  boxShadow="0 8px 20px rgba(237, 137, 54, 0.3)"
+                  transition="all 0.2s"
+                  rightIcon={loading ? <Spinner size="sm" color="white" /> : undefined}
+                  isDisabled={loading}
+                >
+                  {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+                </Button>
+              </VStack>
             </Box>
 
-            {/* Divider */}
             <HStack>
-              <Divider />
-              <Text fontSize="sm" color="gray.500" px={4}>
+              <Divider borderColor={cardBorder} />
+              <Text fontSize="sm" color={bottomTextColor} px={3}>
                 أو
               </Text>
-              <Divider />
+              <Divider borderColor={cardBorder} />
             </HStack>
 
-            {/* Sign Up Link */}
             <Box textAlign="center">
-              <Text color="gray.600" fontSize="md" mb={4}>
+              <Text color={subtextColor} fontSize="md" mb={3}>
                 هل أنت جديد على منصتنا؟
               </Text>
               <Button
                 variant="outline"
-                borderColor="blue.300"
-                color="blue.600"
-                _hover={{
-                  bg: "blue.50",
-                  borderColor: "blue.400",
-                  boxShadow: "0 8px 20px rgba(59, 130, 246, 0.2)"
-                }}
-                _active={{
-                  bg: "blue.100"
-                }}
+                borderColor="blue.400"
+                color="blue.500"
+                _hover={{ bg: "blue.50", borderColor: "blue.500" }}
+                _dark={{ _hover: { bg: "blue.900", borderColor: "blue.400" } }}
                 size="lg"
                 w="full"
                 borderRadius="xl"
                 fontSize="md"
                 fontWeight="semibold"
-                transition="all 0.3s ease"
-                onClick={() => navigate('/signup')}
+                transition="all 0.2s"
+                onClick={() => navigate("/signup")}
               >
                 إنشاء حساب جديد
               </Button>
             </Box>
 
-            {/* Forgot Password Link */}
             <Box textAlign="center">
-              <Link 
-                to='/verify_code' 
+              <Link
+                to="/verify_code"
                 color="blue.500"
                 fontSize="sm"
                 _hover={{ color: "blue.600", textDecoration: "underline" }}
-                transition="all 0.3s"
               >
                 هل نسيت كلمة المرور؟
               </Link>
@@ -347,10 +293,9 @@ const LoginPage = () => {
           </VStack>
         </Box>
 
-        {/* Bottom Features */}
         <Box mt={6} textAlign="center">
-          <Text fontSize="sm" color="gray.500">
-            انضم إلى أكثر من 10,000 طالب وطالبة في رحلة التعلم
+          <Text fontSize="sm" color={bottomTextColor}>
+            انضم إلى آلاف الطلاب في رحلة التعلم مع Next Edu
           </Text>
         </Box>
       </Box>
@@ -507,19 +452,16 @@ const LoginPage = () => {
                   إعادة المحاولة
                 </Button>
                 <Button
-                  bgGradient="linear(135deg, #10b981 0%, #059669 100%)"
+                  bg="orange.500"
                   color="white"
-                  _hover={{
-                    bgGradient: "linear(135deg, #059669 0%, #047857 100%)",
-                    boxShadow: "0 10px 25px rgba(16, 185, 129, 0.4)"
-                  }}
+                  _hover={{ bg: "orange.400", boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)" }}
                   flex={1}
                   borderRadius="xl"
                   onClick={() => {
                     onClose();
-                    navigate('/signup');
+                    navigate("/signup");
                   }}
-                  boxShadow="0 8px 20px rgba(16, 185, 129, 0.3)"
+                  boxShadow="0 8px 20px rgba(237, 137, 54, 0.3)"
                 >
                   إنشاء حساب جديد
                 </Button>
@@ -730,15 +672,12 @@ const LoginPage = () => {
           
           <ModalFooter justifyContent="center" py={6}>
             <Button
-              bgGradient="linear(135deg, #10b981 0%, #059669 100%)"
+              bg="orange.500"
               color="white"
-              _hover={{
-                bgGradient: "linear(135deg, #059669 0%, #047857 100%)",
-                boxShadow: "0 10px 25px rgba(16, 185, 129, 0.4)"
-              }}
+              _hover={{ bg: "orange.400", boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)" }}
               borderRadius="xl"
               onClick={() => setShowSuccessModal(false)}
-              boxShadow="0 8px 20px rgba(16, 185, 129, 0.3)"
+              boxShadow="0 8px 20px rgba(237, 137, 54, 0.3)"
               px={8}
             >
               متابعة

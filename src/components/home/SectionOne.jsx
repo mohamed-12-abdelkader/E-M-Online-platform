@@ -1,234 +1,138 @@
 import React from "react";
-import { motion, useInView } from "framer-motion";
-import { 
-  FaUsers, 
-  FaChalkboardTeacher, 
-  FaBookOpen, 
-  FaGraduationCap, 
-  FaRocket, 
-  FaBrain,
-  FaStar,
+import { motion } from "framer-motion";
+import {
+  FaChalkboardTeacher,
+  FaBookOpen,
+  FaGraduationCap,
+  FaRocket,
   FaArrowLeft,
-  FaCheckCircle,
-  FaTrophy,
-  FaLightbulb
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { Text, useColorModeValue } from "@chakra-ui/react";
 
 const SectionOne = () => {
-  const { ref, inView } = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
-
-  // تأثيرات الحركة
   const fadeInUp = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-  };
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 0, y: 32 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15 },
+      y: 0,
+      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
     },
   };
-
-  const floatAnimation = {
-    animate: { 
-      y: [0, -20, 0], 
-      rotate: [0, 5, -5, 0],
-    },
-    transition: { 
-      repeat: Infinity, 
-      duration: 6, 
-      ease: "easeInOut" 
-    },
+  const brandOrange = useColorModeValue("orange.300", "orange.400");
+  const stagger = {
+    visible: { transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
+    hidden: {},
   };
 
   const stats = [
-    { icon: FaUsers, number: "50K+", label: "طالب نشط", bgColor: "bg-blue-500" },
-    { icon: FaChalkboardTeacher, number: "500+", label: "محاضر محترف", bgColor: "bg-blue-400" },
-    { icon: FaBookOpen, number: "1000+", label: "كورس متاح", bgColor: "bg-orange-400" },
-    { icon: FaGraduationCap, number: "98%", label: "معدل الرضا", bgColor: "bg-blue-500" },
-  ];
-
-  const features = [
-    { icon: FaBrain, text: "تعلم ذكي بالذكاء الاصطناعي" },
-    { icon: FaStar, text: "محاضرون محترفون معتمدون" },
-    { icon: FaTrophy, text: "شهادات معتمدة ومعترف بها" },
-    { icon: FaLightbulb, text: "محتوى تعليمي متطور ومحدث" },
+    { icon: FaChalkboardTeacher, value: "500+", label: "محاضر" },
+    { icon: FaBookOpen, value: "1000+", label: "كورس" },
+    { icon: FaGraduationCap, value: "98%", label: "رضا" },
   ];
 
   return (
     <section
       dir="rtl"
-      className="relative  flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-500 via-blue-400 to-blue-600"
+      className="relative min-h-[68vh] sm:min-h-[65vh] flex items-center overflow-hidden bg-blue-500 dark:bg-slate-900"
       style={{ fontFamily: "'Changa', sans-serif" }}
     >
-      {/* Background Effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Animated gradient circles - Blue */}
-        <motion.div
-          className="absolute top-20   bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
-          animate={{
-            x: [0, 100, 0],
-            y: [0, -100, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-20 left-20 w-96 h-96 bg-orange-400 rounded-full mix-blend-multiply filter blur-3xl opacity-25"
-          animate={{
-            x: [0, -100, 0],
-            y: [0, 100, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"
-          animate={{
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        
-        {/* Grid pattern overlay */}
-        <div 
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30v4h-4v2h4v4h2v-4h4v-2h-4v-4h-2zM6 34v4h4v2h-4v4h-2v-4h-4v-2h4v-4h2zM6 4v4h-4v2h4v4h2v-4h4v-2h-4v-4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
-      </div>
+      {/* Light: blue gradient | Dark: subtle overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-400 to-blue-600 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(59,130,246,0.2),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(59,130,246,0.08),transparent)]" />
 
-      {/* Main Content Container */}
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg: py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          
-          {/* Left Side - Text Content */}
+      {/* Grid pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.06] dark:opacity-[0.03]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px)`,
+          backgroundSize: "64px 64px",
+        }}
+      />
+
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
+        <motion.div
+          className="max-w-3xl"
+          variants={stagger}
+          initial="hidden"
+          animate="visible"
+        >
           <motion.div
-            className="space-y-8 text-white"
-            variants={staggerContainer}
-            initial="hidden"
-            animate={inView ? "visible" : "visible"}
-            ref={ref}
+            variants={fadeInUp}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 dark:bg-white/5 border border-white/25 dark:border-white/10 text-white/95 dark:text-slate-300 text-xs font-medium mb-4"
           >
-            {/* Badge */}
-            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30">
-              <FaRocket className="text-orange-400" />
-              <span className="text-sm font-semibold">منصة التعليم الرائدة في مصر والوطن العربي</span>
-            </motion.div>
-
-            {/* Main Heading */}
-            <motion.h1
-              variants={fadeInUp}
-              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight"
-            >
-              اكتشف مستقبل التعليم مع{" "}
-              <span className="bg-gradient-to-r from-orange-400 via-orange-300 to-orange-400 bg-clip-text text-transparent">
-                EM Academy
-              </span>
-            </motion.h1>
-
-            {/* Subtitle */}
-            <motion.p
-              variants={fadeInUp}
-              className="text-lg sm:text-xl text-blue-50 leading-relaxed max-w-xl"
-            >
-              انضم إلى آلاف الطلاب الذين يطورون مهاراتهم ويحققون أهدافهم التعليمية من خلال 
-              <span className="font-bold text-orange-400"> منصة EM Academy</span> المتطورة. 
-              نقدم لك تجربة تعليمية فريدة تجمع بين 
-              <span className="font-bold text-orange-400"> التكنولوجيا الحديثة</span> و
-              <span className="font-bold text-orange-400"> المحتوى التعليمي المتميز</span> لضمان نجاحك.
-            </motion.p>
-
-            {/* Features List */}
- 
-
-            {/* CTA Buttons */}
-            <motion.div variants={fadeInUp} className="flex flex-wrap gap-4 pt-4">
-              <Link to="/login">
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-orange-400 hover:bg-orange-500 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center gap-2"
-                >
-                  <span>سجل الدخول</span>
-                  <FaArrowLeft />
-                </motion.button>
-              </Link>
-              <Link to="/welcome">
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/20 transition-all duration-300 flex items-center gap-2"
-                >
-                  <span>ابدأ رحلتك الآن</span>
-                  <FaRocket />
-                </motion.button>
-              </Link>
-            </motion.div>
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+            منصة التعليم الرائدة
           </motion.div>
 
-          {/* Right Side - Image and Stats */}
-          <motion.div
-            className="relative"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
+          <motion.h1
+            variants={fadeInUp}
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.2] tracking-tight mb-4"
           >
-            {/* Main Image */}
-            <motion.div
-              className="relative"
-              {...floatAnimation}
-            >
-              <div className="relative z-10">
-                        <motion.div variants={fadeInUp} className="space-y-3">
-              {features.map((feature, index) => (
-                <motion.div
-                style={{border:"3px solid white"}}
-                  key={index}
-                  className="flex items-center gap-3 bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg border border-white/200"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  whileHover={{ scale: 1.02, x: 5, bg: "white/15" }}
-                >
-                  <div className="bg-orange-400 p-2 rounded-lg">
-                    <feature.icon className="text-white text-lg" />
+            اصنع مستقبلك في Next
+            <Text as="span" color={brandOrange} mx={1}>
+              Edu
+            </Text>
+            School
+          </motion.h1>
+
+          <motion.p
+            variants={fadeInUp}
+            className="text-base sm:text-lg text-blue-50 dark:text-slate-400 leading-relaxed max-w-xl mb-6"
+          >
+            تجربة تعليمية تجمع التكنولوجيا الحديثة والمحتوى المتميز. انضم لآلاف
+            الطلاب الذين يحققون أهدافهم مع Next Education.
+          </motion.p>
+
+          <motion.div variants={fadeInUp} className="flex flex-wrap gap-3">
+            <Link to="/login">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-400 text-white font-bold text-sm transition-colors dark:bg-orange-500 dark:hover:bg-orange-400"
+              >
+                <span>تسجيل الدخول</span>
+                <FaArrowLeft className="text-xs" />
+              </motion.button>
+            </Link>
+            <Link to="/welcome">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/15 text-white font-semibold text-sm border border-white/30 dark:border-white/20 transition-colors"
+              >
+                <span>ابدأ رحلتك</span>
+                <FaRocket className="text-xs" />
+              </motion.button>
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {/* Stats bar — مدمج ومختصر */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-8 pt-6 border-t border-white/20 dark:border-white/10"
+        >
+          <div className="flex flex-wrap gap-8 sm:gap-12">
+            {stats.map(({ icon: Icon, value, label }) => (
+              <div key={label} className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/15 dark:bg-white/5 border border-white/20 dark:border-white/10">
+                  <Icon className="text-orange-400 dark:text-orange-500 text-lg" />
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-white">{value}</div>
+                  <div className="text-xs text-blue-100 dark:text-slate-500">
+                    {label}
                   </div>
-                  <span className="text-sm font-medium">{feature.text}</span>
-                </motion.div>
-              ))}
-            </motion.div>
+                </div>
               </div>
-
-              {/* Floating stats cards */}
-             
-            </motion.div>
-          </motion.div>
-        </div>
-
-        {/* Bottom Stats Bar */}
-      
+            ))}
+          </div>
+        </motion.div>
       </div>
-
-      {/* Scroll indicator */}
-     
     </section>
   );
 };

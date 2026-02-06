@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Flex,
@@ -8,7 +8,6 @@ import {
   Card,
   CardHeader,
   CardBody,
-  CardFooter,
   Badge,
   Button,
   useColorModeValue,
@@ -22,8 +21,6 @@ import {
   ModalBody,
   ModalFooter,
   Input,
-  InputGroup,
-  InputLeftElement,
   FormControl,
   FormLabel,
   Textarea,
@@ -33,44 +30,60 @@ import {
   HStack,
   VStack,
   useToast,
-  Divider,
-  Radio,
-  RadioGroup,
-  Stack,
+  Tabs,
+  Tab,
+  TabList,
+  TabPanels,
+  TabPanel,
   Alert,
   AlertIcon,
   AlertTitle,
-  AlertDescription,
+  Tooltip,
+  Container,
+  Checkbox,
+  Radio,
+  RadioGroup,
+  Select,
+  Divider
 } from "@chakra-ui/react";
 import {
-  FaQuestionCircle,
+  FaPlus,
   FaEdit,
   FaTrash,
-  FaPlus,
   FaImage,
+  FaArrowRight,
   FaCheck,
-  FaTimes,
   FaUpload,
-  FaEye,
+  FaDatabase,
+  FaClipboardList,
+  FaFileAlt,
+  FaTimes
 } from "react-icons/fa";
-import { useParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
 import baseUrl from "../../api/baseUrl";
 
 const MotionBox = motion(Box);
-const MotionCard = motion(Card);
-const MotionButton = motion(Button);
 
 const Lesson = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Data states
   const [questions, setQuestions] = useState([]);
-  
+  const [exams, setExams] = useState([]);
+  const [passagesList, setPassagesList] = useState([]); // [{ passage: {...}, questions: [...] }]
+  const [passagesLoading, setPassagesLoading] = useState(false);
+  const [passagesError, setPassagesError] = useState(null);
+
+  // Selection states
+  const [selectedQuestions, setSelectedQuestions] = useState([]);
+  const [selectedExamId, setSelectedExamId] = useState("");
+
   // Form states
   const [bulkQuestions, setBulkQuestions] = useState("");
   const [editingQuestion, setEditingQuestion] = useState(null);
@@ -81,214 +94,346 @@ const Lesson = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState("");
-  const [loadingAnswerId, setLoadingAnswerId] = useState(null);
-  
+
   // New states for image questions
-  const [questionType, setQuestionType] = useState("text"); // "text" or "image"
+  const [questionType, setQuestionType] = useState("text"); // "text" | "image" | "passage"
   const [selectedImages, setSelectedImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
-  
-  
+  const [imageQuestionText, setImageQuestionText] = useState("");
+  const [imageCorrectAnswerIndex, setImageCorrectAnswerIndex] = useState(0);
+
+  // Passage (قطعة) state
+  const [passageTitle, setPassageTitle] = useState("");
+  const [passageContent, setPassageContent] = useState("");
+  const [passageQuestions, setPassageQuestions] = useState([
+    { question_text: "", options: ["", "", "", ""], correct_answer_index: 0, explanation: "", difficulty_level: "medium", points: 1 }
+  ]);
+  const [passageLoading, setPassageLoading] = useState(false);
+
+  // أسئلة صورة فقط (Bulk) — حتى 20 صورة
+  const [imageOnlyBulkFiles, setImageOnlyBulkFiles] = useState([]);
+  const [imageOnlyBulkPreviewUrls, setImageOnlyBulkPreviewUrls] = useState([]);
+  const imageOnlyBulkPreviewUrlsRef = useRef([]);
+  const [imageOnlyBulkLoading, setImageOnlyBulkLoading] = useState(false);
+  const [imageOnlyBulkResult, setImageOnlyBulkResult] = useState(null);
+  const [imageOnlyBulkMetaDefault, setImageOnlyBulkMetaDefault] = useState({ correct_answer_index: 0, difficulty_level: "medium", points: 1 });
+
+  // تحديث الإجابة الصحيحة لسؤال (PATCH correct-answer)
+  const [correctAnswerUpdatingId, setCorrectAnswerUpdatingId] = useState(null);
+
+
   // Loading states
   const [submitLoading, setSubmitLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [answerLoading, setAnswerLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
-  
+  const [examLoading, setExamLoading] = useState(false);
+  const [addToExamLoading, setAddToExamLoading] = useState(false);
+
   // Modal states
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const { isOpen: isImageOpen, onOpen: onImageOpen, onClose: onImageClose } = useDisclosure();
-  const { isOpen: isAnswerOpen, onOpen: onAnswerOpen, onClose: onAnswerClose } = useDisclosure();
+  const { isOpen: isExamOpen, onOpen: onExamOpen, onClose: onExamClose } = useDisclosure();
+
   const [deletingQuestion, setDeletingQuestion] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(null);
 
-  // تحديد الألوان بناءً على وضع الثيم (فاتح/داكن)
-  const bgColor = useColorModeValue("gray.50", "gray.900");
-  const cardBg = useColorModeValue("white", "gray.700");
-  const accentColor = useColorModeValue("blue.600", "blue.300");
-  const headingColor = useColorModeValue("gray.800", "gray.100");
-  const textColor = useColorModeValue("gray.600", "gray.300");
+  // Theme Colors
+  const mainBg = useColorModeValue("gray.50", "gray.900");
+  const pageBg = useColorModeValue("blue.50", "gray.900");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("blue.100", "gray.700");
   const borderColor = useColorModeValue("gray.200", "gray.600");
-  const successColor = useColorModeValue("green.500", "green.400");
+  const bulkPreviewBg = useColorModeValue("gray.50", "gray.800");
+  const textPrimary = useColorModeValue("gray.800", "whiteAlpha.900");
+  const textSecondary = useColorModeValue("gray.600", "gray.400");
+  const optionBg = useColorModeValue("gray.50", "gray.700");
+  const optionCorrectBg = useColorModeValue("green.50", "green.900");
+  const optionCorrectBorder = useColorModeValue("green.200", "green.700");
+  const cardShadow = useColorModeValue("0 4px 20px rgba(66, 153, 225, 0.08)", "0 4px 20px rgba(0,0,0,0.2)");
+  const cardShadowHover = useColorModeValue("0 12px 40px rgba(66, 153, 225, 0.15)", "0 12px 40px rgba(0,0,0,0.3)");
+  const headerShadow = useColorModeValue("0 4px 20px rgba(66, 153, 225, 0.2)", "0 4px 20px rgba(0,0,0,0.3)");
+  const fontCairo = "'Cairo', 'Tajawal', sans-serif";
+  const loadingGradient = useColorModeValue("linear(to-b, blue.50 0%, white 50%)", "linear(to-b, gray.900 0%, gray.800 50%)");
+  const patternOpacity = useColorModeValue(0.03, 0.05);
+  const errorBorderColor = useColorModeValue("red.200", "red.900");
+  const errorIconBg = useColorModeValue("red.50", "red.900");
+  const selectedCardBg = useColorModeValue("blue.50", "gray.700");
+  const optionLetterBg = useColorModeValue("gray.300", "gray.600");
+  const optionCorrectText = useColorModeValue("green.800", "green.200");
+  const optionHoverBg = useColorModeValue("blue.50", "whiteAlpha.100");
+  const emptyIconBg = useColorModeValue("blue.50", "blue.900");
 
   // Fetch questions data
   const fetchQuestionsData = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = localStorage.getItem("token");
       if (!token) {
-        toast({
-          title: "خطأ",
-          description: "يجب تسجيل الدخول أولاً",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        toast({ title: "خطأ", description: "يجب تسجيل الدخول أولاً", status: "error", duration: 3000, isClosable: true });
         return;
       }
 
-      const response = await baseUrl.get(`/api/lesson-questions/lessons/${id}/questions`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+      const response = await baseUrl.get(`/api/question-bank-v2/lesson/${id}`, {
+        headers: { "Authorization": `Bearer ${token}` }
       });
 
-      console.log("Questions API Response:", response.data);
-      
       if (response.data.success) {
-        setQuestions(response.data.data);
+        setQuestions(response.data.data?.questions || response.data.data || []);
       }
     } catch (err) {
       const errorMsg = err.response?.data?.message || "حدث خطأ في جلب الأسئلة";
       setError(errorMsg);
-      console.error("Error fetching questions:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Create bulk questions (text)
+  // Fetch passages (أسئلة القطع) — GET /api/question-bank-v2/lesson/:lessonId/passages
+  const fetchPassages = async () => {
+    try {
+      setPassagesLoading(true);
+      setPassagesError(null);
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const response = await baseUrl.get(`/api/question-bank-v2/lesson/${id}/passages`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data?.success && Array.isArray(response.data?.data)) {
+        setPassagesList(response.data.data);
+      } else {
+        setPassagesList([]);
+      }
+    } catch (err) {
+      setPassagesError(err.response?.data?.message || "فشل تحميل أسئلة القطع");
+      setPassagesList([]);
+    } finally {
+      setPassagesLoading(false);
+    }
+  };
+
+  // Fetch exams data
+  const fetchExams = async () => {
+    try {
+      setExamLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await baseUrl.get(`/api/exams/teacher/lecture-exams`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (response.data && response.data.exams) {
+        setExams(response.data.exams);
+      }
+    } catch (err) {
+      console.error("Error fetching exams:", err);
+      toast({ title: "خطأ", description: "فشل تحميل قائمة الامتحانات", status: "error", duration: 3000, isClosable: true });
+    } finally {
+      setExamLoading(false);
+    }
+  };
+
+  // Parse bulk text questions
+  const parseBulkQuestions = (text) => {
+    const questions = [];
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+
+    let currentQuestion = null;
+    let currentOptions = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.match(/^[A-D]\)/)) {
+        if (currentQuestion && currentOptions.length === 4) {
+          questions.push({
+            question_text: currentQuestion,
+            options: currentOptions.map((opt, idx) => ({ option_index: idx, option_type: "text", text_content: opt })),
+            correct_answer_index: 0,
+            difficulty_level: "medium",
+            points: 1
+          });
+        }
+        currentQuestion = line;
+        currentOptions = [];
+      } else {
+        const optionText = line.replace(/^[A-D]\)\s*/, '');
+        if (optionText) currentOptions.push(optionText);
+      }
+    }
+
+    if (currentQuestion && currentOptions.length === 4) {
+      questions.push({
+        question_text: currentQuestion,
+        options: currentOptions.map((opt, idx) => ({ option_index: idx, option_type: "text", text_content: opt })),
+        correct_answer_index: 0,
+        difficulty_level: "medium",
+        points: 1
+      });
+    }
+    return questions;
+  };
+
+  // Create bulk questions (اختيار من متعدد دفعة واحدة - مع الإجابة الصحيحة)
+  // API: POST /api/lesson-questions/lessons/:lessonId/questions/bulk
   const createBulkQuestions = async () => {
+    const trimmed = (bulkQuestions || "").trim();
+    if (!trimmed) {
+      toast({ title: "خطأ", description: "اكتب نص الأسئلة أولاً.", status: "error", duration: 3000, isClosable: true });
+      return { success: false };
+    }
     try {
       setSubmitLoading(true);
-      
       const token = localStorage.getItem("token");
       if (!token) {
-        toast({
-          title: "خطأ",
-          description: "يجب تسجيل الدخول أولاً",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        toast({ title: "خطأ", description: "يجب تسجيل الدخول أولاً", status: "error", duration: 3000, isClosable: true });
         return { success: false };
       }
 
-      const requestData = {
-        bulk_text: bulkQuestions
-      };
+      const response = await baseUrl.post(
+        `/api/lesson-questions/lessons/${id}/questions/bulk`,
+        { bulk_text: trimmed },
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+      );
 
-      console.log("Creating bulk questions with data:", requestData);
-      
-      const response = await baseUrl.post(`/api/lesson-questions/lessons/${id}/questions/text`, requestData, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-
-      console.log("Create Bulk Questions API Response:", response.data);
-      
-      // تحديث البيانات مباشرة في state
-      if (response.data.success && response.data.data) {
-        const newQuestions = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
-        setQuestions(prev => [...prev, ...newQuestions]);
+      if (response.data?.success && response.data?.data?.questions) {
+        const raw = response.data.data.questions;
+        const letterToIndex = (letter) => {
+          const L = (letter || "").toString().trim().toUpperCase();
+          if (L === "A" || L === "أ") return 0;
+          if (L === "B" || L === "ب") return 1;
+          if (L === "C" || L === "ج") return 2;
+          if (L === "D" || L === "د") return 3;
+          return 0;
+        };
+        const newQuestions = raw.map((q) => ({
+          id: q.id,
+          question_text: q.text ?? q.question_text,
+          text: q.text ?? q.question_text,
+          options: Array.isArray(q.options) ? q.options.map((o) => (typeof o === "string" ? o : (o?.text_content ?? o))) : [],
+          correct_answer_index: typeof q.correct_answer !== "undefined" ? letterToIndex(q.correct_answer) : (q.correct_answer_index ?? 0)
+        }));
+        setQuestions((prev) => [...prev, ...newQuestions]);
+        const msg = response.data.message || `تمت إضافة ${response.data.data.inserted ?? newQuestions.length} سؤال/أسئلة`;
+        toast({ title: "نجح", description: msg, status: "success", duration: 3000, isClosable: true });
+        return { success: true };
       }
-      
-      toast({
-        title: "نجح",
-        description: "تم إنشاء الأسئلة بنجاح",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      
-      return { success: true, data: response.data };
+      toast({ title: "نجح", description: response.data?.message || "تمت إضافة الأسئلة", status: "success", duration: 3000, isClosable: true });
+      return { success: true };
     } catch (error) {
-      console.error("Error creating bulk questions:", error);
-      
       const errorMessage = error.response?.data?.message || "حدث خطأ في إنشاء الأسئلة";
-      toast({
-        title: "خطأ",
-        description: errorMessage,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return { success: false, error: errorMessage };
+      toast({ title: "خطأ", description: errorMessage, status: "error", duration: 3000, isClosable: true });
+      return { success: false };
     } finally {
       setSubmitLoading(false);
     }
   };
 
-  // Create bulk questions with images
-  const createBulkImageQuestions = async () => {
+  // Create image question
+  const createImageChoicesQuestion = async (questionText, correctAnswerIndex) => {
     try {
       setSubmitLoading(true);
-      
       const token = localStorage.getItem("token");
-      if (!token) {
-        toast({
-          title: "خطأ",
-          description: "يجب تسجيل الدخول أولاً",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return { success: false };
-      }
-
-      if (selectedImages.length === 0) {
-        toast({
-          title: "خطأ",
-          description: "يجب اختيار صورة واحدة على الأقل",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return { success: false };
-      }
 
       const formData = new FormData();
+      formData.append('question_text', questionText || 'اختر الإجابة الصحيحة');
+      formData.append('lesson_id', id);
+      formData.append('correct_answer_index', correctAnswerIndex || 0);
+      formData.append('difficulty_level', 'medium');
+      formData.append('points', '2');
+
       selectedImages.forEach((image, index) => {
-        formData.append('images', image);
+        formData.append(`option_${index}`, image);
       });
 
-      console.log("Creating bulk image questions with files:", selectedImages.length);
-      
-      const response = await baseUrl.post(`/api/lesson-questions/lessons/${id}/questions/images`, formData, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "multipart/form-data"
-        }
+      const response = await baseUrl.post(`/api/question-bank-v2/image-choices`, formData, {
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "multipart/form-data" }
       });
 
-      console.log("Create Bulk Image Questions API Response:", response.data);
-      
-      // تحديث البيانات مباشرة في state
       if (response.data.success && response.data.data) {
-        const newQuestions = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
-        setQuestions(prev => [...prev, ...newQuestions]);
+        setQuestions(prev => [...prev, response.data.data]);
       }
-      
-      toast({
-        title: "نجح",
-        description: "تم إنشاء الأسئلة بالصور بنجاح",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      
-      return { success: true, data: response.data };
+
+      toast({ title: "نجح", description: "تم إنشاء السؤال الصوري بنجاح", status: "success", duration: 3000, isClosable: true });
+      return { success: true };
     } catch (error) {
-      console.error("Error creating bulk image questions:", error);
-      
-      const errorMessage = error.response?.data?.message || "حدث خطأ في إنشاء الأسئلة بالصور";
-      toast({
-        title: "خطأ",
-        description: errorMessage,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return { success: false, error: errorMessage };
+      const errorMessage = error.response?.data?.message || "حدث خطأ";
+      toast({ title: "خطأ", description: errorMessage, status: "error", duration: 3000, isClosable: true });
+      return { success: false };
     } finally {
       setSubmitLoading(false);
+    }
+  };
+
+  // Create passage (إضافة قطعة) — POST /api/question-bank-v2/passages
+  const createPassage = async () => {
+    const contentTrimmed = (passageContent || "").trim();
+    if (!contentTrimmed) {
+      toast({ title: "خطأ", description: "أدخل نص القطعة أولاً.", status: "error", duration: 3000, isClosable: true });
+      return { success: false };
+    }
+    const validQuestions = passageQuestions.filter(
+      (q) => (q.question_text || "").trim() && q.options.every((o) => (o || "").trim())
+    );
+    if (validQuestions.length === 0) {
+      toast({ title: "خطأ", description: "أضف سؤالاً واحداً على الأقل مع نص السؤال والأربعة خيارات.", status: "error", duration: 3000, isClosable: true });
+      return { success: false };
+    }
+    try {
+      setPassageLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({ title: "خطأ", description: "يجب تسجيل الدخول أولاً", status: "error", duration: 3000, isClosable: true });
+        return { success: false };
+      }
+      const body = {
+        lesson_id: Number(id),
+        title: (passageTitle || "").trim() || undefined,
+        content: contentTrimmed,
+        questions: validQuestions.map((q) => ({
+          question_text: (q.question_text || "").trim(),
+          options: (q.options || ["", "", "", ""]).map((text, idx) => ({
+            option_index: idx,
+            option_type: "text",
+            text_content: (text || "").trim()
+          })),
+          correct_answer_index: Number(q.correct_answer_index) || 0,
+          explanation: (q.explanation || "").trim() || undefined,
+          difficulty_level: q.difficulty_level || "medium",
+          points: Number(q.points) || 1
+        }))
+      };
+      const response = await baseUrl.post("/api/question-bank-v2/passages", body, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+      });
+      if (response.data?.success && response.data?.data) {
+        const data = response.data.data;
+        const newQuestions = Array.isArray(data.questions) ? data.questions : (data.passage?.questions || []);
+        const normalized = newQuestions.map((q) => ({
+          id: q.id,
+          question_text: q.question_text ?? q.text,
+          text: q.question_text ?? q.text,
+          options: Array.isArray(q.options)
+            ? q.options.map((o) => (typeof o === "string" ? o : (o?.text_content ?? o)))
+            : [],
+          correct_answer_index: q.correct_answer_index ?? 0
+        }));
+        setQuestions((prev) => [...prev, ...normalized]);
+        fetchPassages();
+        toast({ title: "نجح", description: `تمت إضافة القطعة و${normalized.length} سؤال.`, status: "success", duration: 3000, isClosable: true });
+        return { success: true };
+      }
+      fetchPassages();
+      toast({ title: "نجح", description: response.data?.message || "تمت إضافة القطعة", status: "success", duration: 3000, isClosable: true });
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "حدث خطأ في إضافة القطعة";
+      toast({ title: "خطأ", description: errorMessage, status: "error", duration: 3000, isClosable: true });
+      return { success: false };
+    } finally {
+      setPassageLoading(false);
     }
   };
 
@@ -296,1427 +441,1094 @@ const Lesson = () => {
   const updateQuestion = async (formData) => {
     try {
       setEditLoading(true);
-      
       const token = localStorage.getItem("token");
-      if (!token) {
-        toast({
-          title: "خطأ",
-          description: "يجب تسجيل الدخول أولاً",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
+
+      const requestData = {
+        question_text: formData.text,
+        options: formData.options.map((opt, idx) => ({
+          option_index: idx,
+          option_type: "text",
+          text_content: opt
+        })).filter(opt => opt.text_content.trim() !== '')
+      };
+
+      let response;
+      try {
+        response = await baseUrl.put(`/api/question-bank-v2/${editingQuestion.id}`, requestData, {
+          headers: { "Authorization": `Bearer ${token}` }
         });
-        return { success: false };
+      } catch (err) {
+        throw err;
       }
 
-      const requestData = {};
-      if (formData.text) requestData.text = formData.text;
-      if (formData.options.some(opt => opt.trim() !== '')) {
-        requestData.options = formData.options.filter(opt => opt.trim() !== '');
-      }
-
-      console.log("Updating question:", editingQuestion.id, requestData);
-      
-      const response = await baseUrl.put(`/api/lesson-questions/questions/${editingQuestion.id}`, requestData, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-
-      console.log("Update Question API Response:", response.data);
-      
-      // تحديث البيانات مباشرة في state
       if (response.data.success) {
-        setQuestions(prev => prev.map(q => 
-          q.id === editingQuestion.id 
-            ? { ...q, ...requestData, updated_at: new Date().toISOString() }
-            : q
-        ));
+        setQuestions(prev => prev.map(q => q.id === editingQuestion.id ? { ...q, question_text: formData.text, options: formData.options } : q));
       }
-      
-      toast({
-        title: "نجح",
-        description: "تم تحديث السؤال بنجاح",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      
-      return { success: true, data: response.data };
+
+      toast({ title: "نجح", description: "تم تحديث السؤال بنجاح", status: "success", duration: 3000, isClosable: true });
+      return { success: true };
     } catch (error) {
-      console.error("Error updating question:", error);
-      
-      const errorMessage = error.response?.data?.message || "حدث خطأ في تحديث السؤال";
-      toast({
-        title: "خطأ",
-        description: errorMessage,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return { success: false, error: errorMessage };
+      toast({ title: "خطأ", description: "فشل التحديث", status: "error", duration: 3000, isClosable: true });
+      return { success: false };
     } finally {
       setEditLoading(false);
     }
   };
 
-  // Delete question
   const deleteQuestion = async () => {
     try {
       setDeleteLoading(true);
-      
       const token = localStorage.getItem("token");
-      if (!token) {
-        toast({
-          title: "خطأ",
-          description: "يجب تسجيل الدخول أولاً",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return { success: false };
-      }
-
-      console.log("Deleting question:", deletingQuestion.id);
-      
-      const response = await baseUrl.delete(`/api/lesson-questions/questions/${deletingQuestion.id}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+      await baseUrl.delete(`/api/question-bank-v2/${deletingQuestion.id}`, {
+        headers: { "Authorization": `Bearer ${token}` }
       });
-
-      console.log("Delete Question API Response:", response.data);
-      
-      // تحديث البيانات مباشرة في state
-      if (response.data.success) {
-        setQuestions(prev => prev.filter(q => q.id !== deletingQuestion.id));
-      }
-      
-      toast({
-        title: "نجح",
-        description: "تم حذف السؤال بنجاح",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      
-      return { success: true, data: response.data };
+      setQuestions(prev => prev.filter(q => q.id !== deletingQuestion.id));
+      setSelectedQuestions(prev => prev.filter(id => id !== deletingQuestion.id));
+      toast({ title: "نجح", description: "تم الحذف", status: "success", duration: 3000, isClosable: true });
+      return { success: true };
     } catch (error) {
-      console.error("Error deleting question:", error);
-      
-      const errorMessage = error.response?.data?.message || "حدث خطأ في حذف السؤال";
-      toast({
-        title: "خطأ",
-        description: errorMessage,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return { success: false, error: errorMessage };
+      toast({ title: "خطأ", description: "فشل الحذف", status: "error", duration: 3000, isClosable: true });
+      return { success: false };
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  // Set correct answer (modal)
-  const setCorrectAnswer = async () => {
-    try {
-      setAnswerLoading(true);
-      
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast({
-          title: "خطأ",
-          description: "يجب تسجيل الدخول أولاً",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return { success: false };
-      }
-
-      // Find the index of the selected answer
-      const correctChoiceId = currentQuestion.options.findIndex(option => option === selectedAnswer);
-
-      const requestData = {
-        correctChoiceId: correctChoiceId
-      };
-
-      console.log("Setting correct answer for question:", currentQuestion.id, requestData);
-      
-      const response = await baseUrl.post(`/api/lesson-questions/questions/${currentQuestion.id}/answer`, requestData, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-
-      console.log("Set Correct Answer API Response:", response.data);
-      
-      // تحديث البيانات مباشرة في state
-      if (response.data.success) {
-        setQuestions(prev => prev.map(q => 
-          q.id === currentQuestion.id 
-            ? { ...q, correct_answer: correctChoiceId, updated_at: new Date().toISOString() }
-            : q
-        ));
-      }
-      
-      toast({
-        title: "نجح",
-        description: "تم تحديد الإجابة الصحيحة بنجاح",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error("Error setting correct answer:", error);
-      
-      const errorMessage = error.response?.data?.message || "حدث خطأ في تحديد الإجابة الصحيحة";
-      toast({
-        title: "خطأ",
-        description: errorMessage,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return { success: false, error: errorMessage };
-    } finally {
-      setAnswerLoading(false);
-    }
-  };
-
-  // Upload image
   const uploadImage = async () => {
     try {
       setImageLoading(true);
-      
       const token = localStorage.getItem("token");
-      if (!token) {
-        toast({
-          title: "خطأ",
-          description: "يجب تسجيل الدخول أولاً",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return { success: false };
-      }
-
-      if (!selectedImage) {
-        toast({
-          title: "خطأ",
-          description: "يجب اختيار صورة",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return { success: false };
-      }
-
       const formData = new FormData();
-      formData.append("image", selectedImage);
+      formData.append("media", selectedImage);
+      formData.append("media_type", "image");
 
-      console.log("Uploading image for question:", currentQuestion.id);
-      
-      const response = await baseUrl.put(`api/lesson-questions/${currentQuestion.id}/image`, formData, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "multipart/form-data"
-        }
+      const response = await baseUrl.post(`/api/question-bank-v2/${currentQuestion.id}/media`, formData, {
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "multipart/form-data" }
       });
 
-      console.log("Upload Image API Response:", response.data);
-      
-      // تحديث البيانات مباشرة في state
       if (response.data.success) {
-        const imageUrl = URL.createObjectURL(selectedImage);
-        setQuestions(prev => prev.map(q => 
-          q.id === currentQuestion.id 
-            ? { ...q, image: imageUrl, updated_at: new Date().toISOString() }
-            : q
-        ));
+        setQuestions(prev => prev.map(q => q.id === currentQuestion.id ? { ...q, media: response.data.data } : q));
       }
-      
-      toast({
-        title: "نجح",
-        description: "تم رفع الصورة بنجاح",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      
-      return { success: true, data: response.data };
+      toast({ title: "نجح", description: "تم رفع الصورة", status: "success", duration: 3000, isClosable: true });
+      return { success: true };
     } catch (error) {
-      console.error("Error uploading image:", error);
-      
-      const errorMessage = error.response?.data?.message || "حدث خطأ في رفع الصورة";
-      toast({
-        title: "خطأ",
-        description: errorMessage,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return { success: false, error: errorMessage };
+      return { success: false };
     } finally {
       setImageLoading(false);
     }
   };
 
-  // Set correct answer directly from option click
-  const setCorrectAnswerDirectly = async (questionId, answer) => {
+  // Add selected questions to exam
+  const handleAddQuestionsToExam = async () => {
+    if (!selectedExamId) {
+      toast({ title: "تنبيه", description: "الرجاء اختيار امتحان", status: "warning" });
+      return;
+    }
+
     try {
-      setAnswerLoading(true);
-      setLoadingAnswerId(questionId);
-      
+      setAddToExamLoading(true);
       const token = localStorage.getItem("token");
-      if (!token) {
+
+      const response = await baseUrl.post(`/api/exams/${selectedExamId}/questions/from-bank`, {
+        questionIds: selectedQuestions
+      }, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (response.data) {
         toast({
-          title: "خطأ",
-          description: "يجب تسجيل الدخول أولاً",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
+          title: "نجح",
+          description: `تم إضافة ${selectedQuestions.length} سؤال للامتحان بنجاح`,
+          status: "success",
+          duration: 3000
         });
-        return { success: false };
+        onExamClose();
+        setSelectedQuestions([]);
+        setSelectedExamId("");
       }
-
-      // Find the question to get its options
-      const question = questions.find(q => q.id === questionId);
-      if (!question) {
-        toast({
-          title: "خطأ",
-          description: "السؤال غير موجود",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return { success: false };
-      }
-
-      // Find the index of the selected answer
-      const correctChoiceId = question.options.findIndex(option => option === answer);
-
-      const requestData = {
-        correctChoiceId: correctChoiceId
-      };
-
-      console.log("Setting correct answer directly for question:", questionId, requestData);
-      
-      const response = await baseUrl.post(`/api/lesson-questions/questions/${questionId}/answer`, requestData, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-
-      console.log("Set Correct Answer Directly API Response:", response.data);
-      
-      // تحديث البيانات مباشرة في state
-      if (response.data.success) {
-        setQuestions(prev => prev.map(q => 
-          q.id === questionId 
-            ? { ...q, correct_answer: correctChoiceId, updated_at: new Date().toISOString() }
-            : q
-        ));
-      }
-      
-      toast({
-        title: "نجح",
-        description: "تم تحديد الإجابة الصحيحة بنجاح",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error("Error setting correct answer directly:", error);
-      
-      const errorMessage = error.response?.data?.message || "حدث خطأ في تحديد الإجابة الصحيحة";
-      toast({
-        title: "خطأ",
-        description: errorMessage,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return { success: false, error: errorMessage };
+    } catch (err) {
+      console.error("Error adding questions to exam:", err);
+      const msg = err.response?.data?.message || "حدث خطأ أثناء إضافة الأسئلة للامتحان";
+      toast({ title: "خطأ", description: msg, status: "error" });
     } finally {
-      setAnswerLoading(false);
-      setLoadingAnswerId(null);
+      setAddToExamLoading(false);
     }
   };
 
-  // Handle option click
-  const handleOptionClick = async (questionId, option) => {
-    const result = await setCorrectAnswerDirectly(questionId, option);
-    // لا حاجة لـ fetchQuestionsData() بعد الآن
+  const handleToggleSelectId = (id) => {
+    setSelectedQuestions(prev => {
+      if (prev.includes(id)) return prev.filter(qId => qId !== id);
+      return [...prev, id];
+    });
   };
 
-  // Load data on component mount
+  const handleSelectAll = () => {
+    if (selectedQuestions.length === questions.length) {
+      setSelectedQuestions([]);
+    } else {
+      setSelectedQuestions(questions.map(q => q.id));
+    }
+  };
+
   useEffect(() => {
     fetchQuestionsData();
+    fetchPassages();
   }, [id]);
 
-  // Handle form input changes
-  const handleBulkQuestionsChange = (e) => {
-    setBulkQuestions(e.target.value);
-  };
-
-  const handleEditInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name.startsWith('option')) {
-      const index = parseInt(name.replace('option', ''));
-      const newOptions = [...editFormData.options];
-      newOptions[index] = value;
-      setEditFormData(prev => ({
-        ...prev,
-        options: newOptions
-      }));
-    } else {
-      setEditFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  };
-
-  // Handle image change
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Remove image
-  const removeImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-  };
-
-  // Handle multiple images change
-  const handleMultipleImagesChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      setSelectedImages(files);
-      
-      // Create previews for all images
-      const previews = [];
-      files.forEach((file) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          previews.push(reader.result);
-          if (previews.length === files.length) {
-            setImagePreviews(previews);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  };
-
-  // Remove specific image
-  const removeImageAtIndex = (index) => {
-    const newImages = selectedImages.filter((_, i) => i !== index);
-    const newPreviews = imagePreviews.filter((_, i) => i !== index);
-    setSelectedImages(newImages);
-    setImagePreviews(newPreviews);
-  };
-
-  // Clear all images
-  const clearAllImages = () => {
-    setSelectedImages([]);
-    setImagePreviews([]);
-  };
-
-  // Handle form submit
+  // Handlers
   const handleBulkSubmit = async (e) => {
     e.preventDefault();
-    
     if (questionType === "text") {
-      if (!bulkQuestions.trim()) {
-        toast({
-          title: "خطأ في البيانات",
-          description: "يجب ملء الأسئلة",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
+      if (!bulkQuestions.trim()) return;
       const result = await createBulkQuestions();
-      
-      if (result.success) {
-        onClose();
-        resetBulkForm();
-      }
-    } else if (questionType === "image") {
-      if (selectedImages.length === 0) {
-        toast({
-          title: "خطأ في البيانات",
-          description: "يجب اختيار صورة واحدة على الأقل",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      const result = await createBulkImageQuestions();
-      
-      if (result.success) {
-        onClose();
-        resetBulkForm();
-      }
+      if (result.success) { onClose(); resetBulkForm(); }
+      return;
+    }
+    if (questionType === "image") {
+      if (selectedImages.length !== 4) return;
+      const result = await createImageChoicesQuestion(imageQuestionText, imageCorrectAnswerIndex);
+      if (result.success) { onClose(); resetBulkForm(); }
+      return;
+    }
+    if (questionType === "passage") {
+      const result = await createPassage();
+      if (result.success) { onClose(); resetBulkForm(); }
     }
   };
 
-  // Handle edit submit
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!editFormData.text && editFormData.options.every(opt => !opt.trim())) {
-      toast({
-        title: "خطأ في البيانات",
-        description: "يجب ملء نص السؤال أو الخيارات",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     const result = await updateQuestion(editFormData);
-    
-    if (result.success) {
-      onEditClose();
-      resetEditForm();
-      // لا حاجة لـ fetchQuestionsData() بعد الآن
-    }
+    if (result.success) { onEditClose(); resetEditForm(); }
   };
 
-  // Handle delete confirm
-  const handleDeleteConfirm = async () => {
-    const result = await deleteQuestion();
-    
-    if (result.success) {
-      onDeleteClose();
-      setDeletingQuestion(null);
-      // لا حاجة لـ fetchQuestionsData() بعد الآن
-    }
-  };
-
-  // Handle answer submit
-  const handleAnswerSubmit = async () => {
-    if (!selectedAnswer) {
-      toast({
-        title: "خطأ",
-        description: "يجب اختيار إجابة",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    const result = await setCorrectAnswer();
-    
-    if (result.success) {
-      onAnswerClose();
-      setSelectedAnswer("");
-      setCurrentQuestion(null);
-      // لا حاجة لـ fetchQuestionsData() بعد الآن
-    }
-  };
-
-  // Handle image submit
   const handleImageSubmit = async () => {
     const result = await uploadImage();
-    
-    if (result.success) {
-      onImageClose();
-      removeImage();
-      setCurrentQuestion(null);
-      // لا حاجة لـ fetchQuestionsData() بعد الآن
-    }
+    if (result.success) { onImageClose(); removeImage(); setCurrentQuestion(null); }
   };
 
-  // Reset forms
+  const handleOpenExamModal = () => {
+    if (selectedQuestions.length === 0) {
+      toast({ title: "تنبيه", description: "اختر أسئلة أولاً", status: "info" });
+      return;
+    }
+    fetchExams();
+    onExamOpen();
+  };
+
   const resetBulkForm = () => {
     setBulkQuestions("");
     setQuestionType("text");
     setSelectedImages([]);
     setImagePreviews([]);
+    setImageQuestionText("");
+    setImageCorrectAnswerIndex(0);
+    setPassageTitle("");
+    setPassageContent("");
+    setPassageQuestions([{ question_text: "", options: ["", "", "", ""], correct_answer_index: 0, explanation: "", difficulty_level: "medium", points: 1 }]);
+    imageOnlyBulkPreviewUrlsRef.current.forEach(URL.revokeObjectURL);
+    imageOnlyBulkPreviewUrlsRef.current = [];
+    setImageOnlyBulkPreviewUrls([]);
+    setImageOnlyBulkFiles([]);
+    setImageOnlyBulkResult(null);
+    setImageOnlyBulkMetaDefault({ correct_answer_index: 0, difficulty_level: "medium", points: 1 });
   };
 
-  const resetEditForm = () => {
-    setEditFormData({ text: '', options: ['', '', '', ''] });
+  const removeBulkImageAtIndex = (index) => {
+    URL.revokeObjectURL(imageOnlyBulkPreviewUrls[index]);
+    imageOnlyBulkPreviewUrlsRef.current = imageOnlyBulkPreviewUrlsRef.current.filter((_, i) => i !== index);
+    setImageOnlyBulkPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+    setImageOnlyBulkFiles((prev) => prev.filter((_, i) => i !== index));
+    setImageOnlyBulkResult(null);
   };
 
-  // Handle edit button click
-  const handleEditClick = (question) => {
-    setEditingQuestion(question);
-    setEditFormData({
-      text: question.text,
-      options: question.options
+  const handleUpdateCorrectAnswer = async (questionId, correct_answer_index) => {
+    if (correct_answer_index < 0 || correct_answer_index > 3) return;
+    setCorrectAnswerUpdatingId(questionId);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await baseUrl.patch(
+        `api/question-bank-v2/${questionId}/correct-answer`,
+        { correct_answer_index: Number(correct_answer_index) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data?.success) {
+        setQuestions((prev) => prev.map((q) => (q.id === questionId ? { ...q, correct_answer_index: Number(correct_answer_index) } : q)));
+        toast({ title: res.data?.message || "تم تحديث الإجابة الصحيحة بنجاح", status: "success", duration: 3000, isClosable: true });
+      } else {
+        toast({ title: res.data?.message || "فشل التحديث", status: "error", duration: 3000, isClosable: true });
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || "حدث خطأ أثناء تحديث الإجابة الصحيحة";
+      toast({ title: "خطأ", description: msg, status: "error", duration: 4000, isClosable: true });
+    } finally {
+      setCorrectAnswerUpdatingId(null);
+    }
+  };
+
+  // إضافة أسئلة صورة فقط (Bulk) — POST image-only-bulk
+  const handleImageOnlyBulkSubmit = async () => {
+    if (!imageOnlyBulkFiles.length || !id) {
+      toast({ title: "اختر صوراً أولاً (حتى 20)", status: "warning", duration: 3000, isClosable: true });
+      return;
+    }
+    if (imageOnlyBulkFiles.length > 20) {
+      toast({ title: "الحد الأقصى 20 صورة", status: "warning", duration: 3000, isClosable: true });
+      return;
+    }
+    setImageOnlyBulkLoading(true);
+    setImageOnlyBulkResult(null);
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      imageOnlyBulkFiles.forEach((file) => formData.append("images", file));
+      const meta = imageOnlyBulkFiles.map(() => ({
+        correct_answer_index: imageOnlyBulkMetaDefault.correct_answer_index,
+        difficulty_level: imageOnlyBulkMetaDefault.difficulty_level,
+        points: Number(imageOnlyBulkMetaDefault.points) || 1,
+      }));
+      formData.append("meta", JSON.stringify(meta));
+      const res = await baseUrl.post(
+        `api/question-bank-v2/lesson/${id}/questions/image-only-bulk`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = res.data;
+      if (data?.success && data?.data) {
+        const { added = 0, failed = 0, questions = [], errors = [] } = data.data;
+        setImageOnlyBulkResult({ added, failed, questions, errors });
+        if (failed === 0) {
+          toast({ title: data?.message || `تمت إضافة ${added} سؤال بنجاح`, status: "success", duration: 5000, isClosable: true });
+          fetchQuestionsData();
+          setImageOnlyBulkFiles([]);
+        } else {
+          toast({ title: data?.message || `تمت إضافة ${added}، وفشل ${failed}`, status: "warning", duration: 5000, isClosable: true });
+          fetchQuestionsData();
+        }
+      } else {
+        toast({ title: data?.message || "فشل الرفع", status: "error", duration: 3000, isClosable: true });
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || "حدث خطأ أثناء رفع الصور";
+      toast({ title: "خطأ في الرفع", description: msg, status: "error", duration: 4000, isClosable: true });
+    } finally {
+      setImageOnlyBulkLoading(false);
+    }
+  };
+
+  const addPassageQuestion = () => {
+    setPassageQuestions((prev) => [...prev, { question_text: "", options: ["", "", "", ""], correct_answer_index: 0, explanation: "", difficulty_level: "medium", points: 1 }]);
+  };
+
+  const updatePassageQuestion = (index, field, value) => {
+    setPassageQuestions((prev) => {
+      const next = [...prev];
+      if (!next[index]) return prev;
+      if (field === "options") next[index] = { ...next[index], options: value };
+      else next[index] = { ...next[index], [field]: value };
+      return next;
     });
-    onEditOpen();
   };
 
-  // Handle delete button click
-  const handleDeleteClick = (question) => {
-    setDeletingQuestion(question);
-    onDeleteOpen();
+  const removePassageQuestion = (index) => {
+    setPassageQuestions((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Handle image button click
-  const handleImageClick = (question) => {
-    setCurrentQuestion(question);
-    setImagePreview(question.image);
-    onImageOpen();
-  };
-
-  // Handle answer button click
-  const handleAnswerClick = (question) => {
-    setCurrentQuestion(question);
-    // تحديد الإجابة بناءً على الفهرس
-    const correctAnswer = question.correct_answer !== null && question.correct_answer !== undefined 
-      ? question.options[question.correct_answer] 
-      : "";
-    setSelectedAnswer(correctAnswer);
-    onAnswerOpen();
-  };
+  const resetEditForm = () => { setEditFormData({ text: '', options: ['', '', '', ''] }); };
+  const removeImage = () => { setSelectedImage(null); setImagePreview(null); };
 
   if (loading) {
     return (
-      <Box p={{ base: 4, md: 8 }} className="mt-[80px]" maxW="1200px" mx="auto" bg={bgColor} minH="100vh">
-        <Flex justify="center" align="center" minH="80vh">
-          <VStack spacing={4}>
-            <Spinner size="xl" color={accentColor} />
-            <Text color={textColor}>جاري تحميل الأسئلة...</Text>
-          </VStack>
-        </Flex>
-      </Box>
+      <Flex minH="100vh" align="center" justify="center" bg={pageBg} pt="80px" position="relative">
+        <Box position="absolute" inset={0} bgGradient={loadingGradient} opacity={0.9} />
+        <VStack spacing={5} position="relative" zIndex={1} p={8} bg={cardBg} borderRadius="2xl" boxShadow={cardShadow} borderWidth="1px" borderColor={cardBorder}>
+          <Spinner size="xl" color="blue.500" thickness="3px" />
+          <Text color={textPrimary} fontWeight="600" fontFamily={fontCairo}>جاري تحميل الأسئلة...</Text>
+        </VStack>
+      </Flex>
     );
   }
 
   if (error) {
     return (
-      <Box p={{ base: 4, md: 8 }} className="mt-[80px]" maxW="1200px" mx="auto" bg={bgColor} minH="100vh">
-        <Flex justify="center" align="center" minH="80vh">
-          <Box textAlign="center" p={6} bg="red.50" borderRadius="lg">
-            <Text color="red.600">خطأ في تحميل البيانات: {error}</Text>
+      <Flex minH="100vh" align="center" justify="center" bg={pageBg} pt="80px" p={4}>
+        <VStack spacing={5} bg={cardBg} p={8} borderRadius="2xl" boxShadow={cardShadow} borderWidth="2px" borderColor={errorBorderColor} maxW="md" textAlign="center">
+          <Box w="14" h="14" borderRadius="full" bg={errorIconBg} display="flex" alignItems="center" justifyContent="center">
+            <Icon as={FaTrash} color="red.500" boxSize={6} />
           </Box>
-        </Flex>
-      </Box>
+          <Heading size="md" color={textPrimary} fontFamily={fontCairo}>فشل تحميل الأسئلة</Heading>
+          <Text color={textSecondary} fontSize="sm">{error}</Text>
+          <Button colorScheme="blue" onClick={fetchQuestionsData} leftIcon={<Icon as={FaPlus} />} fontFamily={fontCairo}>إعادة المحاولة</Button>
+        </VStack>
+      </Flex>
     );
   }
 
   return (
-    <Box minH="100vh" bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)" position="relative">
-      {/* Background Pattern */}
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        opacity={0.1}
-        backgroundImage="radial-gradient(circle at 25px 25px, white 2px, transparent 0), radial-gradient(circle at 75px 75px, white 2px, transparent 0)"
-        backgroundSize="100px 100px"
-      />
-      
-      {/* Header */}
-      <Box
-        bg="rgba(255, 255, 255, 0.95)"
-        backdropFilter="blur(20px)"
-        borderBottom="1px solid"
-        borderColor="rgba(255, 255, 255, 0.2)"
-        boxShadow="0 8px 32px rgba(0, 0, 0, 0.1)"
-        position="sticky"
-        top={0}
-        zIndex={10}
-        mt="50px"
-      >
-        <Box maxW="1200px" mx="auto" px={{ base: 4, md: 8 }} py={{ base: 4, md: 6 }}>
-          <Flex
-            direction={{ base: "column", md: "row" }}
-            align="center"
-            justify="space-between"
-            gap={6}
-          >
-            <Flex align="center" gap={4}>
-              <Box
-                w="60px"
-                h="60px"
-                bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
-                borderRadius="20px"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                boxShadow="0 10px 30px rgba(49, 130, 206, 0.3)"
+    <Box minH="100vh" bg={pageBg} pt="100px" pb={10} px={{ base: 4, md: 6, lg: 8 }} position="relative">
+      <Box position="absolute" inset={0} opacity={patternOpacity} backgroundImage={useColorModeValue("radial-gradient(circle at 25px 25px, blue.400 1.5px, transparent 0)", "radial-gradient(circle at 25px 25px, blue.500 1.5px, transparent 0)")} backgroundSize="60px 60px" pointerEvents="none" />
+      <ScrollToTop />
+      <Container maxW="1280px" position="relative" zIndex={1}>
+
+        {/* Header Section */}
+        <Flex
+          direction={{ base: "column", md: "row" }}
+          justify="space-between"
+          align="center"
+          mb={8}
+          bgGradient="linear(to-r, blue.600, blue.500)"
+          borderRadius="2xl"
+          p={{ base: 6, md: 8 }}
+          color="white"
+          boxShadow={headerShadow}
+          position="relative"
+          overflow="hidden"
+        >
+          <Box position="absolute" top={0} left={0} w="full" h="full" bgImage="radial-gradient(circle at 10% 20%, rgba(255,255,255,0.12) 2px, transparent 0)" bgSize="36px 36px" opacity={1} />
+          <VStack align={{ base: "center", md: "flex-start" }} spacing={1} zIndex={1}>
+            <HStack spacing={2} opacity={0.9} fontSize="sm" fontFamily={fontCairo}>
+              <Link to="/teacher/subjects"><Text _hover={{ textDecor: "underline" }}>المواد</Text></Link>
+              <Icon as={FaArrowRight} size="xs" />
+              <Text>بنك الأسئلة</Text>
+            </HStack>
+            <Heading size="xl" fontFamily={fontCairo} fontWeight="800" letterSpacing="-0.02em">إدارة أسئلة الدرس</Heading>
+            <Text fontSize="md" opacity={0.9} fontFamily={fontCairo}>{questions.length} سؤال</Text>
+          </VStack>
+
+          <HStack spacing={3} mt={{ base: 4, md: 0 }} zIndex={1} flexWrap="wrap" justify="center">
+            {questions.length > 0 && (
+              <Button
+                variant="outline"
+                colorScheme="whiteAlpha"
+                color="white"
+                borderWidth="2px"
+                _hover={{ bg: "whiteAlpha.200" }}
+                onClick={handleSelectAll}
+                size="sm"
+                fontFamily={fontCairo}
               >
-                <Icon as={FaQuestionCircle} color="white" boxSize={6} />
-              </Box>
-              <Box>
-                <Heading 
-                  size={{ base: "lg", md: "xl" }} 
-                  bgGradient="linear(to-r, #3182ce, #2c5aa0)"
-                  bgClip="text"
-                  fontWeight="bold"
-                >
-                  أسئلة الدرس
-                </Heading>
-                <Text color="gray.600" fontSize="sm" mt={1}>
-                  إدارة أسئلة الدرس رقم {id} - {questions.length} سؤال
-                </Text>
-              </Box>
-            </Flex>
-
-            <MotionButton
-              leftIcon={<FaPlus />}
-              bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
-              color="white"
-              onClick={onOpen}
-              size={{ base: "md", md: "lg" }}
-              borderRadius="15px"
-              boxShadow="0 10px 30px rgba(49, 130, 206, 0.3)"
-              _hover={{
-                transform: "translateY(-2px)",
-                boxShadow: "0 15px 40px rgba(49, 130, 206, 0.4)",
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              px={8}
-              py={6}
-            >
-              إضافة أسئلة
-            </MotionButton>
-          </Flex>
-        </Box>
-      </Box>
-
-      {/* Main Content */}
-      <Box maxW="1200px" mx="auto" px={{ base: 4, md: 8 }} py={8} position="relative" zIndex={1}>
-
-        {/* عرض الأسئلة */}
-        {questions.length === 0 ? (
-          <Box
-            textAlign="center"
-            py={16}
-            bg="rgba(255, 255, 255, 0.9)"
-            backdropFilter="blur(20px)"
-            borderRadius="25px"
-            boxShadow="0 15px 35px rgba(0, 0, 0, 0.1)"
-            border="1px solid"
-            borderColor="rgba(255, 255, 255, 0.2)"
-          >
-            <Box
-              w="100px"
-              h="100px"
-              bg="linear-gradient(135deg, rgba(49, 130, 206, 0.1) 0%, rgba(44, 90, 160, 0.1) 100%)"
-              borderRadius="50%"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              mx="auto"
-              mb={6}
-            >
-              <FaQuestionCircle size={40} color="#3182ce" />
-            </Box>
-            <Heading size="lg" color="gray.700" mb={3}>
-              لا توجد أسئلة بعد
-            </Heading>
-            <Text color="gray.500" fontSize="lg" mb={6}>
-              ابدأ بإضافة أول سؤال للدرس
-            </Text>
-            <MotionButton
-              bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
-              color="white"
-              size="lg"
-              borderRadius="15px"
-              boxShadow="0 10px 30px rgba(49, 130, 206, 0.3)"
-              onClick={onOpen}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              px={8}
-              py={6}
-              leftIcon={<FaPlus />}
-            >
-              إضافة أول سؤال
-            </MotionButton>
-          </Box>
-        ) : (
-          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8}>
-            {questions.map((question, index) => (
-              <MotionCard
-                key={question.id}
-                whileHover={{ scale: 1.02, y: -8 }}
-                bg="rgba(255, 255, 255, 0.95)"
-                backdropFilter="blur(20px)"
-                borderRadius="25px"
-                border="1px solid"
-                borderColor="rgba(255, 255, 255, 0.2)"
-                boxShadow="0 15px 35px rgba(0, 0, 0, 0.1)"
-                overflow="hidden"
-                position="relative"
-                _hover={{
-                  boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15)",
-                  borderColor: "rgba(49, 130, 206, 0.3)"
-                }}
-                transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+                {selectedQuestions.length === questions.length ? "إلغاء الكل" : "تحديد الكل"}
+              </Button>
+            )}
+            {selectedQuestions.length > 0 && (
+              <Button
+                leftIcon={<Icon as={FaClipboardList} />}
+                bg="orange.400"
+                _hover={{ bg: "orange.500" }}
+                color="white"
+                onClick={handleOpenExamModal}
+                size="sm"
+                fontFamily={fontCairo}
               >
-                {/* Gradient Overlay */}
-                <Box
-                  position="absolute"
-                  top={0}
-                  left={0}
-                  right={0}
-                  h="4px"
-                  bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
-                />
+                للامتحان ({selectedQuestions.length})
+              </Button>
+            )}
+            <Button
+              leftIcon={<Icon as={FaPlus} />}
+              bg="white"
+              color="blue.600"
+              _hover={{ bg: "blue.50", transform: "translateY(-2px)", boxShadow: "lg" }}
+              transition="all 0.2s"
+              onClick={onOpen}
+              size="md"
+              fontFamily={fontCairo}
+              fontWeight="bold"
+            >
+              أسئلة جديدة
+            </Button>
+          </HStack>
+        </Flex>
 
-                {/* Decorative Element */}
-                <Box
-                  position="absolute"
-                  top="-20px"
-                  right="-20px"
-                  w="80px"
-                  h="80px"
-                  bg="linear-gradient(135deg, rgba(49, 130, 206, 0.1) 0%, rgba(44, 90, 160, 0.1) 100%)"
-                  borderRadius="50%"
-                  filter="blur(20px)"
-                />
-                <CardHeader pb={4} position="relative" zIndex={1}>
-                  <Flex align="center" justify="space-between" mb={4}>
-                    <HStack spacing={3}>
-                      <Box
-                        w="40px"
-                        h="40px"
-                        bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
-                        borderRadius="12px"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        boxShadow="0 5px 15px rgba(49, 130, 206, 0.3)"
-                      >
-                        <Text fontWeight="bold" color="white" fontSize="sm">{index + 1}</Text>
-                      </Box>
-                      <Box>
-                        <Heading 
-                          size="md" 
-                          bgGradient="linear(to-r, #3182ce, #2c5aa0)"
-                          bgClip="text"
-                          fontWeight="bold"
-                        >
-                          السؤال {index + 1}
-                        </Heading>
-                        {question.correct_answer && (
-                          <Box
-                            bg="linear-gradient(135deg, #48bb78 0%, #38a169 100%)"
-                            color="white"
-                            px={2}
-                            py={1}
-                            borderRadius="10px"
-                            fontSize="xs"
-                            fontWeight="medium"
-                            display="inline-block"
-                            mt={1}
-                            boxShadow="0 3px 10px rgba(72, 187, 120, 0.3)"
-                          >
-                            تم تحديد الإجابة الصحيحة
+        {/* Tabs: الأسئلة العادية | أسئلة القطع */}
+        <Tabs variant="soft-rounded" colorScheme="blue" mb={6}>
+          <TabList bg={cardBg} p={1} borderRadius="xl" borderWidth="1px" borderColor={cardBorder} boxShadow={cardShadow} fontFamily={fontCairo}>
+            <Tab fontWeight="600">الأسئلة العادية</Tab>
+            <Tab fontWeight="600">أسئلة القطع</Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel px={0} pt={4}>
+        {/* Questions Grid */}
+        {questions.length > 0 ? (
+          <Box>
+            <HStack mb={6} justify="space-between" align="center">
+              <Text color={textSecondary} fontSize="sm" fontFamily={fontCairo}>عرض {questions.length} سؤال</Text>
+            </HStack>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+              <AnimatePresence>
+                {questions.map((question, index) => (
+                  <MotionBox
+                    key={question.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.3) }}
+                    position="relative"
+                  >
+                    <Card
+                      bg={selectedQuestions.includes(question.id) ? selectedCardBg : cardBg}
+                      borderRadius="2xl"
+                      overflow="hidden"
+                      boxShadow={selectedQuestions.includes(question.id) ? "md" : cardShadow}
+                      borderWidth="2px"
+                      borderColor={selectedQuestions.includes(question.id) ? "blue.400" : cardBorder}
+                      _hover={{ boxShadow: cardShadowHover, transform: "translateY(-4px)" }}
+                      transition="all 0.25s ease"
+                      h="100%"
+                      display="flex"
+                      flexDirection="column"
+                      cursor="pointer"
+                      onClick={() => handleToggleSelectId(question.id)}
+                    >
+                      <CardHeader pb={2} pt={5} px={5}>
+                        <Flex justify="space-between" align="center" wrap="wrap" gap={2}>
+                          <HStack spacing={3}>
+                            <Checkbox
+                              isChecked={selectedQuestions.includes(question.id)}
+                              onChange={() => handleToggleSelectId(question.id)}
+                              size="md"
+                              colorScheme="blue"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <Badge bg="blue.500" color="white" borderRadius="lg" px={3} py={1} fontSize="sm" fontFamily={fontCairo} fontWeight="bold">
+                              {index + 1}
+                            </Badge>
+                            <Badge colorScheme={question.difficulty_level === "hard" ? "red" : "green"} variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo}>
+                              {question.difficulty_level || "متوسط"}
+                            </Badge>
+                          </HStack>
+                          <HStack spacing={1} onClick={(e) => e.stopPropagation()}>
+                            <Tooltip label="تعديل" hasArrow>
+                              <IconButton icon={<FaEdit />} size="sm" variant="ghost" colorScheme="blue" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setEditingQuestion(question); const opts = question.options ? question.options.map(o => typeof o === "string" ? o : (o.text_content || o.image_url)) : []; setEditFormData({ text: question.question_text || question.text || "", options: opts.length === 4 ? opts : ["", "", "", ""] }); onEditOpen(); }} />
+                            </Tooltip>
+                            <Tooltip label="صورة" hasArrow>
+                              <IconButton icon={<FaImage />} size="sm" variant="ghost" colorScheme="purple" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setCurrentQuestion(question); setImagePreview(question.media?.media_url || question.image); onImageOpen(); }} />
+                            </Tooltip>
+                            <Tooltip label="حذف" hasArrow>
+                              <IconButton icon={<FaTrash />} size="sm" variant="ghost" colorScheme="red" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setDeletingQuestion(question); onDeleteOpen(); }} />
+                            </Tooltip>
+                          </HStack>
+                        </Flex>
+                      </CardHeader>
+
+                      <CardBody flex={1} pt={0} px={5} pb={5}>
+                        <Text fontSize="md" fontWeight="600" color={textPrimary} mb={4} lineHeight="1.7" fontFamily={fontCairo}>
+                          {question.question_text || question.text}
+                        </Text>
+
+                        {question.media?.media_url && (
+                          <Box mb={4} borderRadius="xl" overflow="hidden" borderWidth="1px" borderColor={borderColor}>
+                            <Image src={question.media.media_url} w="100%" maxH="180px" objectFit="cover" alt="Question" />
                           </Box>
                         )}
-                      </Box>
-                    </HStack>
-                    <HStack spacing={2}>
-                      <MotionButton
-                        as={IconButton}
-                        icon={<FaImage />}
-                        size="sm"
-                        bg="linear-gradient(135deg, #9f7aea 0%, #805ad5 100%)"
-                        color="white"
-                        borderRadius="10px"
-                        onClick={() => handleImageClick(question)}
-                        aria-label="إضافة صورة"
-                        boxShadow="0 3px 10px rgba(159, 122, 234, 0.3)"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      />
-                      <MotionButton
-                        as={IconButton}
-                        icon={<FaCheck />}
-                        size="sm"
-                        bg="linear-gradient(135deg, #48bb78 0%, #38a169 100%)"
-                        color="white"
-                        borderRadius="10px"
-                        onClick={() => handleAnswerClick(question)}
-                        aria-label="تحديد الإجابة الصحيحة"
-                        boxShadow="0 3px 10px rgba(72, 187, 120, 0.3)"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      />
-                      <MotionButton
-                        as={IconButton}
-                        icon={<FaEdit />}
-                        size="sm"
-                        bg="linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)"
-                        color="white"
-                        borderRadius="10px"
-                        onClick={() => handleEditClick(question)}
-                        aria-label="تعديل السؤال"
-                        boxShadow="0 3px 10px rgba(49, 130, 206, 0.3)"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      />
-                      <MotionButton
-                        as={IconButton}
-                        icon={<FaTrash />}
-                        size="sm"
-                        bg="linear-gradient(135deg, #f56565 0%, #e53e3e 100%)"
-                        color="white"
-                        borderRadius="10px"
-                        onClick={() => handleDeleteClick(question)}
-                        aria-label="حذف السؤال"
-                        boxShadow="0 3px 10px rgba(245, 101, 101, 0.3)"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      />
-                    </HStack>
-                  </Flex>
-                </CardHeader>
 
-                <CardBody py={4}>
-                  {question.image && (
-                    <Box mb={4}>
-                      <Image
-                        src={question.image}
-                        alt="صورة السؤال"
-                        borderRadius="md"
-                        w="full"
-                        h="auto"
-                        objectFit="contain"
-                        maxH="400px"
-                      />
-                    </Box>
-                  )}
-                  
-                  <VStack spacing={4} align="stretch">
-                    <Box>
-                      <Text fontSize="md" color={headingColor} fontWeight="semibold" mb={2}>
-                        نص السؤال:
-                      </Text>
-                      <Text fontSize="sm" color={textColor} bg="gray.50" p={3} borderRadius="md">
-                        {question.text}
-                      </Text>
-                    </Box>
-                    
-                    <Box>
-                      <Text fontSize="md" color={headingColor} fontWeight="semibold" mb={2}>
-                        الخيارات:
-                      </Text>
-                      <VStack spacing={2} align="stretch">
-                        {question.options.map((option, optIndex) => {
-                          const isCorrectAnswer = question.correct_answer === optIndex;
-                          const isLoading = loadingAnswerId === question.id && answerLoading;
-                          const isSelected = isLoading && question.options.findIndex(opt => opt === option) === question.options.findIndex(opt => opt === option);
-                          
-                          return (
-                            <HStack 
-                              key={optIndex} 
-                              p={2} 
-                              bg={isCorrectAnswer ? "green.100" : "gray.50"} 
-                              borderRadius="md"
-                              cursor={isLoading ? "not-allowed" : "pointer"}
-                              transition="all 0.2s"
-                              opacity={isLoading ? 0.7 : 1}
-                              _hover={!isLoading ? {
-                                bg: isCorrectAnswer ? "green.200" : "blue.50",
-                                transform: "translateX(5px)",
-                                boxShadow: "sm"
-                              } : {}}
-                              onClick={!isLoading ? () => handleOptionClick(question.id, option) : undefined}
-                              position="relative"
-                            >
-                              <Text fontSize="sm" fontWeight="bold" color="blue.600" minW="20px">
-                                {String.fromCharCode(65 + optIndex)})
-                              </Text>
-                              <Text fontSize="sm" color={textColor}>
-                                {option}
-                              </Text>
-                              {isCorrectAnswer && (
-                                <Icon as={FaCheck} color="green.500" />
-                              )}
-                              {isLoading && (
-                                <Spinner size="sm" color="blue.500" />
+                        <Box onClick={(e) => e.stopPropagation()}>
+                          <Text fontSize="xs" color={textSecondary} mb={2} fontFamily={fontCairo}>اضغط على الخيار لتعيينه إجابةً صحيحة</Text>
+                          <VStack align="stretch" spacing={2}>
+                            {question.options && question.options.map((opt, i) => {
+                              const isCorrect = question.correct_answer_index === i;
+                              const content = typeof opt === "string" ? opt : (opt.text_content || opt.image_url);
+                              const isImg = typeof opt !== "string" && opt.option_type === "image";
+                              const isUpdating = correctAnswerUpdatingId === question.id;
+                              const canSelect = !isCorrect && !isUpdating;
+                              return (
+                                <Tooltip key={i} label={canSelect ? "تحديد كإجابة صحيحة" : (isCorrect ? "الإجابة الصحيحة الحالية" : "")} hasArrow>
+                                  <HStack
+                                    p={3}
+                                    bg={isCorrect ? optionCorrectBg : optionBg}
+                                    borderRadius="xl"
+                                    borderWidth="1px"
+                                    borderColor={isCorrect ? optionCorrectBorder : "transparent"}
+                                    justify="space-between"
+                                    cursor={canSelect ? "pointer" : "default"}
+                                    _hover={canSelect ? { bg: optionHoverBg, borderColor: "blue.200" } : { opacity: 0.95 }}
+                                    transition="all 0.2s"
+                                    onClick={() => canSelect && handleUpdateCorrectAnswer(question.id, i)}
+                                  >
+                                    <HStack spacing={3} minW={0} flex={1}>
+                                      <Box w="28px" h="28px" flexShrink={0} borderRadius="full" bg={isCorrect ? "green.500" : optionLetterBg} color="white" fontSize="xs" fontWeight="bold" display="flex" alignItems="center" justifyContent="center" fontFamily={fontCairo}>
+                                        {String.fromCharCode(65 + i)}
+                                      </Box>
+                                      {isImg ? (
+                                        <Image src={content} maxH="36px" borderRadius="md" />
+                                      ) : (
+                                        <Text fontSize="sm" color={isCorrect ? optionCorrectText : textSecondary} noOfLines={2} fontFamily={fontCairo}>{content}</Text>
+                                      )}
+                                    </HStack>
+                                    {isCorrect && !isUpdating && <Icon as={FaCheck} color="green.500" boxSize={4} flexShrink={0} />}
+                                    {isCorrect && isUpdating && <Spinner size="sm" flexShrink={0} />}
+                                  </HStack>
+                                </Tooltip>
+                              );
+                            })}
+                          </VStack>
+                          {correctAnswerUpdatingId === question.id && (
+                            <HStack mt={2} spacing={2} fontSize="xs" color={textSecondary} fontFamily={fontCairo}>
+                              <Spinner size="xs" />
+                              <Text>جاري تحديث الإجابة الصحيحة...</Text>
+                            </HStack>
+                          )}
+                        </Box>
+                      </CardBody>
+                    </Card>
+                  </MotionBox>
+                ))}
+              </AnimatePresence>
+            </SimpleGrid>
+          </Box>
+        ) : (
+          <Flex direction="column" align="center" justify="center" minH="420px" bg={cardBg} borderRadius="2xl" borderWidth="2px" borderStyle="dashed" borderColor={cardBorder} textAlign="center" p={10} boxShadow={cardShadow}>
+            <Box w="20" h="20" borderRadius="full" bg={emptyIconBg} display="flex" alignItems="center" justifyContent="center" mb={5}>
+              <Icon as={FaDatabase} boxSize={10} color="blue.500" />
+            </Box>
+            <Heading size="md" color={textPrimary} mb={2} fontFamily={fontCairo}>لا توجد أسئلة بعد</Heading>
+            <Text color={textSecondary} mb={6} fontFamily={fontCairo}>ابدأ بإضافة أسئلة لهذا الدرس</Text>
+            <Button colorScheme="blue" onClick={onOpen} leftIcon={<Icon as={FaPlus} />} fontFamily={fontCairo} fontWeight="bold" size="lg">
+              إضافة أول سؤال
+            </Button>
+          </Flex>
+        )}
+            </TabPanel>
+            <TabPanel px={0} pt={4}>
+              {passagesLoading ? (
+                <Flex justify="center" align="center" minH="320px" bg={cardBg} borderRadius="2xl" borderWidth="1px" borderColor={cardBorder} p={8}>
+                  <VStack spacing={4}>
+                    <Spinner size="xl" color="blue.500" thickness="3px" />
+                    <Text color={textSecondary} fontFamily={fontCairo}>جاري تحميل أسئلة القطع...</Text>
+                  </VStack>
+                </Flex>
+              ) : passagesError ? (
+                <Flex direction="column" align="center" justify="center" minH="320px" bg={cardBg} borderRadius="2xl" borderWidth="2px" borderColor={errorBorderColor} p={8} textAlign="center">
+                  <Box w="14" h="14" borderRadius="full" bg={errorIconBg} display="flex" alignItems="center" justifyContent="center" mb={4}>
+                    <Icon as={FaFileAlt} color="red.500" boxSize={6} />
+                  </Box>
+                  <Text color={textPrimary} fontWeight="600" fontFamily={fontCairo} mb={2}>فشل تحميل أسئلة القطع</Text>
+                  <Text color={textSecondary} fontSize="sm" fontFamily={fontCairo} mb={4}>{passagesError}</Text>
+                  <Button colorScheme="blue" size="sm" onClick={fetchPassages} fontFamily={fontCairo}>إعادة المحاولة</Button>
+                </Flex>
+              ) : passagesList.length === 0 ? (
+                <Flex direction="column" align="center" justify="center" minH="320px" bg={cardBg} borderRadius="2xl" borderWidth="2px" borderStyle="dashed" borderColor={cardBorder} p={10} textAlign="center">
+                  <Box w="20" h="20" borderRadius="full" bg={emptyIconBg} display="flex" alignItems="center" justifyContent="center" mb={5}>
+                    <Icon as={FaFileAlt} boxSize={10} color="blue.500" />
+                  </Box>
+                  <Heading size="md" color={textPrimary} mb={2} fontFamily={fontCairo}>لا توجد قطع بعد</Heading>
+                  <Text color={textSecondary} mb={6} fontFamily={fontCairo}>استخدم «إضافة أسئلة جديدة» ثم تبويب «إضافة قطعة» لإضافة قطعة وأسئلتها</Text>
+                  <Button colorScheme="blue" onClick={onOpen} leftIcon={<Icon as={FaPlus} />} fontFamily={fontCairo} fontWeight="bold" size="lg">إضافة قطعة</Button>
+                </Flex>
+              ) : (
+                <VStack align="stretch" spacing={6}>
+                  {passagesList.map((item, pIdx) => {
+                    const passage = item.passage || {};
+                    const qList = item.questions || [];
+                    return (
+                      <Card key={passage.id || pIdx} bg={cardBg} borderRadius="2xl" overflow="hidden" boxShadow={cardShadow} borderWidth="1px" borderColor={cardBorder} fontFamily={fontCairo}>
+                        <CardHeader bg={optionBg} borderBottomWidth="1px" borderColor={borderColor} py={4}>
+                          <Flex justify="space-between" align="center" wrap="wrap" gap={2}>
+                            <HStack spacing={3}>
+                              <Badge colorScheme="blue" borderRadius="lg" px={3} py={1} fontSize="sm" fontWeight="bold">قطعة {pIdx + 1}</Badge>
+                              {passage.title && (
+                                <Text fontWeight="700" color={textPrimary} fontSize="lg">{passage.title}</Text>
                               )}
                             </HStack>
-                          );
-                        })}
-                      </VStack>
-                    </Box>
-                    
-                  
-                  </VStack>
-                </CardBody>
-              </MotionCard>
-            ))}
-          </SimpleGrid>
-        )}
-      </Box>
+                            <Badge colorScheme="teal" variant="subtle" fontSize="xs">{qList.length} سؤال</Badge>
+                          </Flex>
+                        </CardHeader>
+                        <CardBody py={4}>
+                          {passage.content && (
+                            <Box mb={5} p={4} bg={mainBg} borderRadius="xl" borderWidth="1px" borderColor={borderColor}>
+                              <Text fontSize="sm" color={textSecondary} whiteSpace="pre-wrap" lineHeight="1.8">{passage.content}</Text>
+                            </Box>
+                          )}
+                          <VStack align="stretch" spacing={4}>
+                            {qList.map((q, qIdx) => {
+                              const opts = q.options || [];
+                              const optContent = (o) => (typeof o === "string" ? o : (o?.text_content ?? o));
+                              return (
+                                <Box key={q.id || qIdx} p={4} bg={optionBg} borderRadius="xl" borderWidth="1px" borderColor={borderColor}>
+                                  <HStack spacing={2} mb={3}>
+                                    <Badge colorScheme="blue" fontSize="xs">{qIdx + 1}</Badge>
+                                    <Text fontWeight="600" color={textPrimary} fontSize="md">{q.question_text || q.text}</Text>
+                                  </HStack>
+                                  <VStack align="stretch" spacing={2}>
+                                    {opts.map((opt, oIdx) => {
+                                      const isCorrect = q.correct_answer_index === oIdx;
+                                      const content = optContent(opt);
+                                      return (
+                                        <HStack
+                                          key={oIdx}
+                                          p={2}
+                                          pl={3}
+                                          bg={isCorrect ? optionCorrectBg : "transparent"}
+                                          borderRadius="lg"
+                                          borderWidth="1px"
+                                          borderColor={isCorrect ? optionCorrectBorder : "transparent"}
+                                        >
+                                          <Text fontSize="xs" fontWeight="bold" color={optionLetterBg} w="20px">{String.fromCharCode(65 + oIdx)})</Text>
+                                          <Text fontSize="sm" color={isCorrect ? optionCorrectText : textSecondary}>{content}</Text>
+                                          {isCorrect && <Icon as={FaCheck} color="green.500" boxSize={4} />}
+                                        </HStack>
+                                      );
+                                    })}
+                                  </VStack>
+                                </Box>
+                              );
+                            })}
+                          </VStack>
+                        </CardBody>
+                      </Card>
+                    );
+                  })}
+                </VStack>
+              )}
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+      </Container>
 
-      {/* Add Bulk Questions Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="4xl">
-        <ModalOverlay />
-        <ModalContent bg={cardBg} borderRadius="xl">
-          <ModalHeader>
-            <HStack>
-              <FaPlus color="blue.500" />
-              <Text>إضافة أسئلة متعددة</Text>
+
+      {/* --- ADD TO EXAM MODAL --- */}
+      <Modal isOpen={isExamOpen} onClose={onExamClose} size="lg" isCentered>
+        <ModalOverlay backdropFilter="blur(6px)" bg="blackAlpha.600" />
+        <ModalContent borderRadius="2xl" boxShadow={headerShadow} borderWidth="1px" borderColor={cardBorder}>
+          <ModalHeader bg="blue.500" color="white" borderRadius="2xl 2xl 0 0" py={5} fontFamily={fontCairo}>
+            <HStack spacing={3}>
+              <Box p={2} bg="whiteAlpha.200" borderRadius="xl"><Icon as={FaClipboardList} boxSize={5} /></Box>
+              <Text fontWeight="bold" fontSize="xl">إضافة الأسئلة للامتحان</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton />
-          
-          <ModalBody>
-            <form onSubmit={handleBulkSubmit}>
-              <VStack spacing={6}>
-                {/* Question Type Selection */}
-                <FormControl>
-                  <FormLabel fontSize="lg" fontWeight="bold">نوع الأسئلة</FormLabel>
-                  <RadioGroup value={questionType} onChange={setQuestionType}>
-                    <Stack direction="row" spacing={6}>
-                      <Radio value="text" colorScheme="blue">
-                        <HStack>
-                          <FaQuestionCircle />
-                          <Text>أسئلة نصية</Text>
-                        </HStack>
+          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
+          <ModalBody py={6}>
+            {examLoading ? (
+              <Flex justify="center" p={8}><Spinner color="blue.500" /></Flex>
+            ) : exams.length === 0 ? (
+              <Text textAlign="center" color="gray.500" py={8}>لا توجد امتحانات متاحة حالياً.</Text>
+            ) : (
+              <RadioGroup value={selectedExamId} onChange={setSelectedExamId}>
+                <VStack align="stretch" spacing={3} maxH="400px" overflowY="auto" pr={1}>
+                  {exams.map((exam) => (
+                    <Box
+                      key={exam.id}
+                      p={4}
+                      bg={selectedExamId === String(exam.id) ? "blue.50" : "gray.50"}
+                      borderRadius="xl"
+                      border="1px solid"
+                      borderColor={selectedExamId === String(exam.id) ? "blue.500" : "transparent"}
+                      cursor="pointer"
+                      onClick={() => setSelectedExamId(String(exam.id))}
+                      _hover={{ bg: "blue.50" }}
+                    >
+                      <Radio value={String(exam.id)} mb={2}>
+                        <Text fontWeight="bold" fontSize="md">{exam.title}</Text>
                       </Radio>
-                      <Radio value="image" colorScheme="purple">
-                        <HStack>
-                          <FaImage />
-                          <Text>أسئلة بالصور</Text>
-                        </HStack>
-                      </Radio>
-                    </Stack>
-                  </RadioGroup>
-                </FormControl>
+                      <HStack fontSize="sm" color="gray.500" spacing={4} pl={6}>
+                        <Text>{exam.courseTitle}</Text>
+                        <Text>•</Text>
+                        <Text>{exam.lectureTitle}</Text>
+                      </HStack>
+                    </Box>
+                  ))}
+                </VStack>
+              </RadioGroup>
+            )}
+          </ModalBody>
+          <ModalFooter borderTopWidth="1px" borderColor={borderColor} py={4}>
+            <Button variant="ghost" mr={3} onClick={onExamClose} fontFamily={fontCairo}>إلغاء</Button>
+            <Button colorScheme="blue" onClick={handleAddQuestionsToExam} isLoading={addToExamLoading} isDisabled={!selectedExamId} fontFamily={fontCairo} fontWeight="bold">
+              إضافة ({selectedQuestions.length})
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
-                {questionType === "text" ? (
-                  <>
-                    <Alert status="info" borderRadius="md">
-                      <AlertIcon />
-                      <Box>
-                        <AlertTitle>تنسيق الأسئلة النصية:</AlertTitle>
-                        <AlertDescription>
-                          اكتب الأسئلة بالشكل التالي:<br/>
-                          السؤال الأول؟<br/>
-                          A) الخيار الأول<br/>
-                          B) الخيار الثاني<br/>
-                          C) الخيار الثالث<br/>
-                          D) الخيار الرابع<br/><br/>
-                          السؤال الثاني؟<br/>
-                          A) الخيار الأول<br/>
-                          B) الخيار الثاني<br/>
-                          C) الخيار الثالث<br/>
-                          D) الخيار الرابع
-                        </AlertDescription>
-                      </Box>
-                    </Alert>
-                    
-                    <FormControl isRequired>
-                      <FormLabel>الأسئلة النصية</FormLabel>
-                      <Textarea
-                        name="questions"
-                        value={bulkQuestions}
-                        onChange={handleBulkQuestionsChange}
-                        placeholder="اكتب الأسئلة هنا..."
-                        rows={15}
-                        size="lg"
-                      />
-                    </FormControl>
-                  </>
-                ) : (
-                  <>
-                    <Alert status="info" borderRadius="md">
-                      <AlertIcon />
-                      <Box>
-                        <AlertTitle>إضافة أسئلة بالصور:</AlertTitle>
-                        <AlertDescription>
-                          اختر صور الأسئلة (حتى 10 صور). سيتم إنشاء سؤال لكل صورة مع خيارات افتراضية (أ، ب، ج، د).
-                        </AlertDescription>
-                      </Box>
-                    </Alert>
-                    
+      {/* --- OTHER MODALS --- */}
+
+      {/* 1. Add Bulk Question Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="4xl" isCentered>
+        <ModalOverlay backdropFilter="blur(6px)" bg="blackAlpha.600" />
+        <ModalContent borderRadius="2xl" boxShadow={headerShadow} borderWidth="1px" borderColor={cardBorder}>
+          <ModalHeader bg="blue.500" color="white" borderRadius="2xl 2xl 0 0" py={5} fontFamily={fontCairo}>
+            <HStack spacing={3}>
+              <Box p={2} bg="whiteAlpha.200" borderRadius="xl"><Icon as={FaPlus} boxSize={5} /></Box>
+              <Text fontWeight="bold" fontSize="xl">إضافة أسئلة جديدة</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
+          <ModalBody py={6}>
+            <Tabs variant="soft-rounded" colorScheme="blue" onChange={(idx) => setQuestionType(idx === 0 ? "text" : idx === 1 ? "image" : idx === 2 ? "passage" : "imageOnlyBulk")}>
+              <TabList mb={4} bg="gray.50" p={1} borderRadius="xl" flexWrap="wrap">
+                <Tab flex="1" minW="100px">أسئلة نصية (Bulk)</Tab>
+                <Tab flex="1" minW="100px">سؤال بالصور</Tab>
+                <Tab flex="1" minW="100px">إضافة قطعة</Tab>
+                <Tab flex="1" minW="100px">أسئلة صورة فقط (Bulk)</Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel px={0}>
+                  <Alert status="info" borderRadius="xl" mb={4}>
+                    <AlertIcon />
+                    <Box fontSize="sm">
+                      <AlertTitle>تنسيق إضافة أسئلة اختيار من متعدد دفعة واحدة:</AlertTitle>
+                      <Text mt={1}>• سطر السؤال (يمكن أن يبدأ برقم أو إيموجي مثل 2️⃣ أو ٣.)</Text>
+                      <Text>• أربعة أسطر للاختيارات: أ) ... ب) ... ج) ... د) ... (أو بالإنجليزية A) B) C) D))</Text>
+                      <Text>• سطر اختياري: ✅ الإجابة الصحيحة: ب (أو أ / ج / د أو A / B / C / D)</Text>
+                    </Box>
+                  </Alert>
+                  <Textarea
+                    value={bulkQuestions}
+                    onChange={(e) => setBulkQuestions(e.target.value)}
+                    placeholder={`2️⃣ متى وقعت معركة حطين؟\nأ) 1099م\nب) 1187م\nج) 1250م\nد) 1260م\n✅ الإجابة الصحيحة: ب\n\n3️⃣ من هو قائد المسلمين في معركة عين جالوت؟\nأ) الظاهر بيبرس\nب) قطز\nج) صلاح الدين\nد) قلاوون\n✅ الإجابة الصحيحة: ب`}
+                    rows={12}
+                    borderRadius="xl"
+                    bg="gray.50"
+                    border="none"
+                    _focus={{ bg: "white", boxShadow: "outline" }}
+                    fontFamily="inherit"
+                  />
+                </TabPanel>
+                <TabPanel px={0}>
+                  {/* Image Question Form UI */}
+                  <VStack spacing={4}>
                     <FormControl>
-                      <FormLabel>صور الأسئلة</FormLabel>
-                      <VStack spacing={4} align="stretch">
-                        {imagePreviews.length > 0 ? (
-                          <SimpleGrid columns={{ base: 2, md: 3 }} spacing={4}>
-                            {imagePreviews.map((preview, index) => (
-                              <Box key={index} position="relative">
-                                <Image
-                                  src={preview}
-                                  alt={`معاينة الصورة ${index + 1}`}
-                                  borderRadius="md"
-                                  maxH="150px"
-                                  objectFit="cover"
-                                  w="full"
-                                />
-                                <IconButton
-                                  icon={<FaTimes />}
-                                  position="absolute"
-                                  top={2}
-                                  right={2}
-                                  colorScheme="red"
-                                  size="sm"
-                                  onClick={() => removeImageAtIndex(index)}
-                                  aria-label="إزالة الصورة"
-                                />
-                              </Box>
+                      <FormLabel>نص السؤال</FormLabel>
+                      <Input value={imageQuestionText} onChange={(e) => setImageQuestionText(e.target.value)} placeholder="مثال: اختر الصورة الصحيحة..." />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>الخيارات (اختر 4 صور)</FormLabel>
+                      <SimpleGrid columns={4} spacing={2}>
+                        {[0, 1, 2, 3].map(i => (
+                          <Box key={i} h="100px" bg="gray.100" borderRadius="xl" position="relative" overflow="hidden" border="2px dashed" borderColor="gray.300">
+                            {imagePreviews[i] ? (
+                              <Image src={imagePreviews[i]} w="100%" h="100%" objectFit="cover" />
+                            ) : (
+                              <Flex h="100%" align="center" justify="center" color="gray.400" direction="column">
+                                <Icon as={FaUpload} />
+                                <Text fontSize="xs">{String.fromCharCode(65 + i)}</Text>
+                              </Flex>
+                            )}
+                            <Input
+                              type="file"
+                              position="absolute"
+                              top={0} left={0} w="100%" h="100%"
+                              opacity={0}
+                              cursor="pointer"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  const newImgs = [...selectedImages]; newImgs[i] = file; setSelectedImages(newImgs);
+                                  const reader = new FileReader(); reader.onload = () => { const newPrevs = [...imagePreviews]; newPrevs[i] = reader.result; setImagePreviews(newPrevs); }; reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                            {/* Radio for Correct Answer */}
+                            <Box position="absolute" bottom={1} right={1} onClick={(e) => { e.stopPropagation(); setImageCorrectAnswerIndex(i); }}>
+                              <Box w="20px" h="20px" borderRadius="full" border="2px solid white" bg={imageCorrectAnswerIndex === i ? "green.500" : "gray.300"} />
+                            </Box>
+                          </Box>
+                        ))}
+                      </SimpleGrid>
+                      <Text fontSize="xs" color="gray.500" mt={1}>* انقر على الدائرة الصغيرة لتحديد الإجابة الصحيحة.</Text>
+                    </FormControl>
+                  </VStack>
+                </TabPanel>
+                <TabPanel px={0} maxH="60vh" overflowY="auto">
+                  <Alert status="info" borderRadius="xl" mb={4}>
+                    <AlertIcon />
+                    <Box fontSize="sm">
+                      <AlertTitle>إضافة قطعة مع أسئلة</AlertTitle>
+                      <Text mt={1}>أدخل نص القطعة ثم أضف أسئلة اختيار من متعدد مرتبطة بها.</Text>
+                    </Box>
+                  </Alert>
+                  <VStack align="stretch" spacing={4}>
+                    <FormControl>
+                      <FormLabel fontFamily={fontCairo}>عنوان القطعة (اختياري)</FormLabel>
+                      <Input value={passageTitle} onChange={(e) => setPassageTitle(e.target.value)} placeholder="عنوان القطعة" borderRadius="xl" borderColor={borderColor} fontFamily={fontCairo} />
+                    </FormControl>
+                    <FormControl isRequired>
+                      <FormLabel fontFamily={fontCairo}>نص القطعة</FormLabel>
+                      <Textarea value={passageContent} onChange={(e) => setPassageContent(e.target.value)} placeholder="نص القطعة الكامل..." rows={6} borderRadius="xl" borderColor={borderColor} fontFamily={fontCairo} />
+                    </FormControl>
+                    <Divider />
+                    <Flex justify="space-between" align="center">
+                      <Text fontWeight="600" fontFamily={fontCairo}>أسئلة القطعة</Text>
+                      <Button size="sm" leftIcon={<Icon as={FaPlus} />} colorScheme="blue" variant="outline" onClick={addPassageQuestion} fontFamily={fontCairo}>إضافة سؤال</Button>
+                    </Flex>
+                    {passageQuestions.map((q, qIdx) => (
+                      <Box key={qIdx} p={4} bg={optionBg} borderRadius="xl" borderWidth="1px" borderColor={borderColor}>
+                        <Flex justify="space-between" align="center" mb={3}>
+                          <Badge colorScheme="blue" fontFamily={fontCairo}>سؤال {qIdx + 1}</Badge>
+                          {passageQuestions.length > 1 && (
+                            <IconButton aria-label="حذف السؤال" icon={<FaTrash />} size="xs" colorScheme="red" variant="ghost" onClick={() => removePassageQuestion(qIdx)} />
+                          )}
+                        </Flex>
+                        <FormControl mb={3}>
+                          <FormLabel fontSize="sm" fontFamily={fontCairo}>نص السؤال</FormLabel>
+                          <Input value={q.question_text} onChange={(e) => updatePassageQuestion(qIdx, "question_text", e.target.value)} placeholder="السؤال؟" borderRadius="lg" fontFamily={fontCairo} />
+                        </FormControl>
+                        <FormControl mb={3}>
+                          <FormLabel fontSize="sm" fontFamily={fontCairo}>الخيارات (أ، ب، ج، د)</FormLabel>
+                          <VStack spacing={2}>
+                            {(q.options || ["", "", "", ""]).map((opt, oIdx) => (
+                              <HStack key={oIdx} w="full">
+                                <Text w="24px" fontSize="sm" fontWeight="bold" fontFamily={fontCairo}>{String.fromCharCode(65 + oIdx)})</Text>
+                                <Input value={opt} onChange={(e) => { const opts = [...(q.options || ["", "", "", ""])]; opts[oIdx] = e.target.value; updatePassageQuestion(qIdx, "options", opts); }} placeholder={`الخيار ${String.fromCharCode(65 + oIdx)}`} size="sm" borderRadius="lg" fontFamily={fontCairo} />
+                                <Radio isChecked={q.correct_answer_index === oIdx} onChange={() => updatePassageQuestion(qIdx, "correct_answer_index", oIdx)} />
+                              </HStack>
                             ))}
-                          </SimpleGrid>
-                        ) : (
-                          <Button
-                            as="label"
-                            htmlFor="multiple-image-upload"
-                            leftIcon={<FaUpload />}
-                            variant="outline"
-                            size="lg"
-                            cursor="pointer"
-                            _hover={{ bg: "gray.50" }}
-                            h="200px"
-                            flexDirection="column"
-                            gap={2}
-                          >
-                            <Text>اختر صور الأسئلة</Text>
-                            <Text fontSize="sm" color="gray.500">حتى 10 صور</Text>
-                          </Button>
-                        )}
+                          </VStack>
+                        </FormControl>
+                        <HStack spacing={4} flexWrap="wrap">
+                          <FormControl flex="1" minW="120px">
+                            <FormLabel fontSize="xs" fontFamily={fontCairo}>الصعوبة</FormLabel>
+                            <Select size="sm" value={q.difficulty_level} onChange={(e) => updatePassageQuestion(qIdx, "difficulty_level", e.target.value)} borderRadius="lg" fontFamily={fontCairo}>
+                              <option value="easy">سهل</option>
+                              <option value="medium">متوسط</option>
+                              <option value="hard">صعب</option>
+                            </Select>
+                          </FormControl>
+                          <FormControl w="80px">
+                            <FormLabel fontSize="xs" fontFamily={fontCairo}>النقاط</FormLabel>
+                            <Input type="number" min={1} value={q.points} onChange={(e) => updatePassageQuestion(qIdx, "points", e.target.value)} size="sm" borderRadius="lg" fontFamily={fontCairo} />
+                          </FormControl>
+                        </HStack>
+                        <FormControl mt={2}>
+                          <FormLabel fontSize="xs" fontFamily={fontCairo}>شرح (اختياري)</FormLabel>
+                          <Input value={q.explanation} onChange={(e) => updatePassageQuestion(qIdx, "explanation", e.target.value)} placeholder="شرح الإجابة" size="sm" borderRadius="lg" fontFamily={fontCairo} />
+                        </FormControl>
+                      </Box>
+                    ))}
+                  </VStack>
+                </TabPanel>
+                <TabPanel px={0}>
+                  <Alert status="info" borderRadius="xl" mb={4} fontFamily={fontCairo}>
+                    <AlertIcon />
+                    <Box fontSize="sm">
+                      <AlertTitle>إضافة أسئلة صورة فقط (Bulk)</AlertTitle>
+                      <Text mt={1}>ارفع حتى 20 صورة؛ كل صورة = سؤال مستقل مع أربعة اختيارات ثابتة (أ، ب، ج، د). يمكنك تحديد الإجابة الصحيحة الافتراضية ومستوى الصعوبة والنقاط أدناه (تُطبَّق على كل الصور).</Text>
+                    </Box>
+                  </Alert>
+                  <VStack align="stretch" spacing={4}>
+                    <FormControl>
+                      <FormLabel fontFamily={fontCairo}>الصور (حتى 20)</FormLabel>
+                      <Flex align="center" gap={3} flexWrap="wrap">
                         <Input
-                          id="multiple-image-upload"
                           type="file"
                           accept="image/*"
                           multiple
-                          onChange={handleMultipleImagesChange}
-                          display="none"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            const limited = files.slice(0, 20);
+                            imageOnlyBulkPreviewUrlsRef.current.forEach(URL.revokeObjectURL);
+                            const urls = limited.map((f) => URL.createObjectURL(f));
+                            imageOnlyBulkPreviewUrlsRef.current = urls;
+                            setImageOnlyBulkPreviewUrls(urls);
+                            setImageOnlyBulkFiles(limited);
+                            setImageOnlyBulkResult(null);
+                            e.target.value = "";
+                          }}
+                          border="none"
+                          p={0}
+                          fontFamily={fontCairo}
+                          sx={{ "&::file-selector-button": { padding: 2, mr: 2, borderRadius: "md", border: "1px solid", borderColor: "gray.300", bg: "gray.50", cursor: "pointer" } }}
                         />
-                        {imagePreviews.length > 0 && (
-                          <HStack justify="center">
-                            <Button
-                              as="label"
-                              htmlFor="multiple-image-upload"
-                              leftIcon={<FaPlus />}
-                              colorScheme="blue"
-                              variant="outline"
-                              size="sm"
-                            >
-                              إضافة المزيد
-                            </Button>
-                            <Button
-                              leftIcon={<FaTimes />}
-                              colorScheme="red"
-                              variant="outline"
-                              size="sm"
-                              onClick={clearAllImages}
-                            >
-                              مسح الكل
-                            </Button>
+                        {imageOnlyBulkFiles.length > 0 && (
+                          <HStack fontSize="sm" color={textSecondary}>
+                            <Icon as={FaImage} boxSize={4} color="blue.500" />
+                            <Text>{imageOnlyBulkFiles.length} صورة محددة</Text>
                           </HStack>
                         )}
-                      </VStack>
+                      </Flex>
                     </FormControl>
-                  </>
-                )}
-              </VStack>
-            </form>
-          </ModalBody>
-
-          <ModalFooter>
-            <HStack spacing={3}>
-              <Button variant="ghost" onClick={resetBulkForm}>
-                إعادة تعيين
-              </Button>
-              <Button variant="ghost" onClick={onClose}>
-                إلغاء
-              </Button>
-              <Button
-                colorScheme={questionType === "text" ? "blue" : "purple"}
-                onClick={handleBulkSubmit}
-                isLoading={submitLoading}
-                loadingText="جاري الإنشاء..."
-                leftIcon={questionType === "text" ? <FaPlus /> : <FaImage />}
-              >
-                {questionType === "text" ? "إضافة الأسئلة" : "إضافة الأسئلة بالصور"}
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Edit Question Modal */}
-      <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl">
-        <ModalOverlay />
-        <ModalContent bg={cardBg} borderRadius="xl">
-          <ModalHeader>
-            <HStack>
-              <FaEdit color="green.500" />
-              <Text>تعديل السؤال</Text>
-            </HStack>
-          </ModalHeader>
-          <ModalCloseButton />
-          
-          <ModalBody>
-            <form onSubmit={handleEditSubmit}>
-              <VStack spacing={6}>
-                <FormControl>
-                  <FormLabel>نص السؤال</FormLabel>
-                  <Textarea
-                    name="text"
-                    value={editFormData.text}
-                    onChange={handleEditInputChange}
-                    placeholder="أدخل نص السؤال"
-                    rows={4}
-                    size="lg"
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>الخيارات</FormLabel>
-                  <VStack spacing={3}>
-                    {editFormData.options.map((option, index) => (
-                      <Input
-                        key={index}
-                        name={`option${index}`}
-                        value={option}
-                        onChange={handleEditInputChange}
-                        placeholder={`الخيار ${String.fromCharCode(65 + index)}`}
-                        size="lg"
-                      />
-                    ))}
-                  </VStack>
-                </FormControl>
-              </VStack>
-            </form>
-          </ModalBody>
-
-          <ModalFooter>
-            <HStack spacing={3}>
-              <Button variant="ghost" onClick={resetEditForm}>
-                إعادة تعيين
-              </Button>
-              <Button variant="ghost" onClick={onEditClose}>
-                إلغاء
-              </Button>
-              <Button
-                colorScheme="green"
-                onClick={handleEditSubmit}
-                isLoading={editLoading}
-                loadingText="جاري التحديث..."
-                leftIcon={<FaEdit />}
-              >
-                تحديث السؤال
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal isOpen={isDeleteOpen} onClose={onDeleteClose} size="md">
-        <ModalOverlay />
-        <ModalContent bg={cardBg} borderRadius="xl">
-          <ModalHeader>
-            <HStack>
-              <FaTrash color="red.500" />
-              <Text>تأكيد الحذف</Text>
-            </HStack>
-          </ModalHeader>
-          <ModalCloseButton />
-          
-          <ModalBody>
-            <VStack spacing={4} align="stretch">
-              <Box textAlign="center">
-                <FaQuestionCircle size={48} color="red.400" style={{ margin: "0 auto 16px" }} />
-                <Text fontSize="lg" fontWeight="bold" color="red.600">
-                  هل أنت متأكد من حذف السؤال؟
-                </Text>
-                <Text mt={2} color="gray.600" fontSize="sm">
-                  هذا الإجراء لا يمكن التراجع عنه
-                </Text>
-              </Box>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter>
-            <HStack spacing={3}>
-              <Button variant="ghost" onClick={onDeleteClose}>
-                إلغاء
-              </Button>
-              <Button
-                colorScheme="red"
-                onClick={handleDeleteConfirm}
-                isLoading={deleteLoading}
-                loadingText="جاري الحذف..."
-                leftIcon={<FaTrash />}
-              >
-                حذف السؤال
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Set Correct Answer Modal */}
-      <Modal isOpen={isAnswerOpen} onClose={onAnswerClose} size="md">
-        <ModalOverlay />
-        <ModalContent bg={cardBg} borderRadius="xl">
-          <ModalHeader>
-            <HStack>
-              <FaCheck color="green.500" />
-              <Text>تحديد الإجابة الصحيحة</Text>
-            </HStack>
-          </ModalHeader>
-          <ModalCloseButton />
-          
-          <ModalBody>
-            <VStack spacing={4} align="stretch">
-              <Text fontSize="md" color={textColor}>
-                اختر الإجابة الصحيحة للسؤال:
-              </Text>
-              <Text fontSize="sm" color={headingColor} bg="gray.50" p={3} borderRadius="md">
-                {currentQuestion?.text}
-              </Text>
-              
-              <RadioGroup value={selectedAnswer} onChange={setSelectedAnswer}>
-                <Stack spacing={3}>
-                  {currentQuestion?.options?.map((option, index) => (
-                    <Radio key={index} value={option} colorScheme="green">
-                      <Text fontSize="sm">
-                        {String.fromCharCode(65 + index)}) {option}
-                      </Text>
-                    </Radio>
-                  ))}
-                </Stack>
-              </RadioGroup>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter>
-            <HStack spacing={3}>
-              <Button variant="ghost" onClick={onAnswerClose}>
-                إلغاء
-              </Button>
-              <Button
-                colorScheme="green"
-                onClick={handleAnswerSubmit}
-                isLoading={answerLoading}
-                loadingText="جاري الحفظ..."
-                leftIcon={<FaCheck />}
-              >
-                حفظ الإجابة
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Add Image Modal */}
-      <Modal isOpen={isImageOpen} onClose={onImageClose} size="xl">
-        <ModalOverlay />
-        <ModalContent bg={cardBg} borderRadius="xl">
-          <ModalHeader>
-            <HStack>
-              <FaImage color="purple.500" />
-              <Text>إضافة صورة للسؤال</Text>
-            </HStack>
-          </ModalHeader>
-          <ModalCloseButton />
-          
-          <ModalBody>
-            <VStack spacing={6}>
-              <Text fontSize="md" color={textColor}>
-                السؤال: {currentQuestion?.text}
-              </Text>
-              
-              <FormControl>
-                <FormLabel>صورة السؤال</FormLabel>
-                <VStack spacing={4} align="stretch">
-                  {!imagePreview ? (
+                    {imageOnlyBulkFiles.length > 0 && (
+                      <Box>
+                        <FormLabel fontFamily={fontCairo} fontSize="sm" mb={2}>معاينة الصور — يمكنك إلغاء أي صورة</FormLabel>
+                        <SimpleGrid columns={{ base: 2, sm: 3, md: 4 }} spacing={3}>
+                          {imageOnlyBulkFiles.map((file, index) => (
+                            <Box key={index} position="relative" borderRadius="lg" overflow="hidden" borderWidth="1px" borderColor={borderColor} bg={bulkPreviewBg}>
+                              <Image src={imageOnlyBulkPreviewUrls[index]} alt={file.name} objectFit="cover" h="24" w="full" />
+                              <IconButton
+                                aria-label="إلغاء الصورة"
+                                icon={<Icon as={FaTimes} />}
+                                size="xs"
+                                colorScheme="red"
+                                position="absolute"
+                                top={1}
+                                right={1}
+                                borderRadius="full"
+                                onClick={() => removeBulkImageAtIndex(index)}
+                              />
+                              <Text fontSize="xs" noOfLines={1} px={2} py={1} fontFamily={fontCairo}>{file.name}</Text>
+                            </Box>
+                          ))}
+                        </SimpleGrid>
+                      </Box>
+                    )}
+                    <SimpleGrid columns={{ base: 1, md: 3 }} spacing={3}>
+                      <FormControl>
+                        <FormLabel fontFamily={fontCairo} fontSize="sm">الإجابة الصحيحة الافتراضية</FormLabel>
+                        <Select
+                          value={imageOnlyBulkMetaDefault.correct_answer_index}
+                          onChange={(e) => setImageOnlyBulkMetaDefault((prev) => ({ ...prev, correct_answer_index: Number(e.target.value) }))}
+                          size="sm"
+                          borderRadius="lg"
+                          fontFamily={fontCairo}
+                        >
+                          <option value={0}>أ</option>
+                          <option value={1}>ب</option>
+                          <option value={2}>ج</option>
+                          <option value={3}>د</option>
+                        </Select>
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel fontFamily={fontCairo} fontSize="sm">مستوى الصعوبة</FormLabel>
+                        <Select
+                          value={imageOnlyBulkMetaDefault.difficulty_level}
+                          onChange={(e) => setImageOnlyBulkMetaDefault((prev) => ({ ...prev, difficulty_level: e.target.value }))}
+                          size="sm"
+                          borderRadius="lg"
+                          fontFamily={fontCairo}
+                        >
+                          <option value="easy">سهل</option>
+                          <option value="medium">متوسط</option>
+                          <option value="hard">صعب</option>
+                        </Select>
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel fontFamily={fontCairo} fontSize="sm">النقاط</FormLabel>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={imageOnlyBulkMetaDefault.points}
+                          onChange={(e) => setImageOnlyBulkMetaDefault((prev) => ({ ...prev, points: Number(e.target.value) || 1 }))}
+                          size="sm"
+                          borderRadius="lg"
+                          fontFamily={fontCairo}
+                        />
+                      </FormControl>
+                    </SimpleGrid>
                     <Button
-                      as="label"
-                      htmlFor="image-upload"
-                      leftIcon={<FaUpload />}
-                      variant="outline"
+                      leftIcon={<Icon as={FaUpload} />}
+                      colorScheme="blue"
+                      onClick={handleImageOnlyBulkSubmit}
+                      isLoading={imageOnlyBulkLoading}
+                      isDisabled={!imageOnlyBulkFiles.length}
+                      fontFamily={fontCairo}
+                      fontWeight="bold"
+                      borderRadius="xl"
+                      w="full"
                       size="lg"
-                      cursor="pointer"
-                      _hover={{ bg: "gray.50" }}
                     >
-                      اختر صورة
+                      {imageOnlyBulkLoading ? "جاري الرفع..." : "رفع الصور (إضافة أسئلة)"}
                     </Button>
-                  ) : (
-                    <Box position="relative" display="inline-block">
-                      <Image
-                        src={imagePreview}
-                        alt="معاينة الصورة"
-                        maxH="200px"
-                        borderRadius="md"
-                      />
-                      <IconButton
-                        icon={<FaTimes />}
-                        position="absolute"
-                        top={2}
-                        right={2}
-                        colorScheme="red"
-                        size="sm"
-                        onClick={removeImage}
-                        aria-label="إزالة الصورة"
-                      />
-                    </Box>
-                  )}
-                  <Input
-                    id="image-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    display="none"
-                  />
+                    {imageOnlyBulkResult && (
+                      <Alert status={imageOnlyBulkResult.failed > 0 ? "warning" : "success"} borderRadius="xl" fontFamily={fontCairo}>
+                        <AlertIcon />
+                        <Box>
+                          <AlertTitle>{imageOnlyBulkResult.failed > 0 ? "تم جزئياً" : "تمت الإضافة"}</AlertTitle>
+                          <Text fontSize="sm" mt={1}>
+                            تمت إضافة {imageOnlyBulkResult.added} سؤال.
+                            {imageOnlyBulkResult.failed > 0 && ` فشل ${imageOnlyBulkResult.failed}. ${imageOnlyBulkResult.errors?.length ? imageOnlyBulkResult.errors.map((e) => `(صورة ${(e.index ?? 0) + 1}: ${e.message})`).join(" ") : ""}`}
+                          </Text>
+                        </Box>
+                      </Alert>
+                    )}
+                  </VStack>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          </ModalBody>
+          <ModalFooter borderTopWidth="1px" borderColor={borderColor} py={5} bg={useColorModeValue("gray.50", "gray.800")} borderRadius="0 0 2xl 2xl">
+            <Button variant="ghost" onClick={onClose} mr={3} fontFamily={fontCairo}>إلغاء</Button>
+            {questionType !== "imageOnlyBulk" && (
+              <Button colorScheme="blue" onClick={handleBulkSubmit} isLoading={submitLoading || passageLoading} fontFamily={fontCairo} fontWeight="bold">حفظ الأسئلة</Button>
+            )}
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* 2. Edit Modal */}
+      <Modal isOpen={isEditOpen} onClose={onEditClose} size="lg" isCentered>
+        <ModalOverlay backdropFilter="blur(4px)" bg="blackAlpha.600" />
+        <ModalContent borderRadius="2xl" boxShadow={headerShadow} borderWidth="1px" borderColor={cardBorder}>
+          <ModalHeader bg="blue.500" color="white" borderRadius="2xl 2xl 0 0" py={5} fontFamily={fontCairo}>
+            <HStack spacing={3}>
+              <Box p={2} bg="whiteAlpha.200" borderRadius="xl"><Icon as={FaEdit} boxSize={5} /></Box>
+              <Text fontWeight="bold" fontSize="xl">تعديل السؤال</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
+          <ModalBody py={6}>
+            <VStack spacing={5}>
+              <FormControl>
+                <FormLabel color={textPrimary} fontFamily={fontCairo} fontWeight="600">نص السؤال</FormLabel>
+                <Textarea value={editFormData.text} onChange={(e) => setEditFormData({ ...editFormData, text: e.target.value })} borderRadius="xl" borderColor={borderColor} _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.2)" }} fontFamily={fontCairo} />
+              </FormControl>
+              <FormControl>
+                <FormLabel color={textPrimary} fontFamily={fontCairo} fontWeight="600">الخيارات</FormLabel>
+                <VStack spacing={3}>
+                  {editFormData.options.map((opt, i) => (
+                    <Input key={i} value={opt} onChange={(e) => { const newOpts = [...editFormData.options]; newOpts[i] = e.target.value; setEditFormData({ ...editFormData, options: newOpts }); }} placeholder={`الخيار ${String.fromCharCode(65 + i)}`} borderRadius="lg" borderColor={borderColor} fontFamily={fontCairo} />
+                  ))}
                 </VStack>
               </FormControl>
             </VStack>
           </ModalBody>
-
-          <ModalFooter>
-            <HStack spacing={3}>
-              <Button variant="ghost" onClick={onImageClose}>
-                إلغاء
-              </Button>
-              <Button
-                colorScheme="purple"
-                onClick={handleImageSubmit}
-                isLoading={imageLoading}
-                loadingText="جاري الرفع..."
-                leftIcon={<FaImage />}
-              >
-                رفع الصورة
-              </Button>
-            </HStack>
+          <ModalFooter borderTopWidth="1px" borderColor={borderColor} py={4}>
+            <Button variant="ghost" onClick={onEditClose} fontFamily={fontCairo}>إلغاء</Button>
+            <Button colorScheme="blue" onClick={handleEditSubmit} isLoading={editLoading} fontFamily={fontCairo} fontWeight="bold">حفظ التعديلات</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-      
-      <ScrollToTop/>
+
+      {/* 3. Delete Confirmation Modal */}
+      <Modal isOpen={isDeleteOpen} onClose={onDeleteClose} isCentered size="sm">
+        <ModalOverlay backdropFilter="blur(4px)" bg="blackAlpha.600" />
+        <ModalContent borderRadius="2xl" boxShadow={headerShadow} borderWidth="1px" borderColor={cardBorder}>
+          <ModalBody py={8} textAlign="center">
+            <Box w="16" h="16" mx="auto" mb={4} borderRadius="full" bg={useColorModeValue("red.50", "red.900")} display="flex" alignItems="center" justifyContent="center">
+              <Icon as={FaTrash} boxSize={8} color="red.500" />
+            </Box>
+            <Heading size="md" mb={2} color={textPrimary} fontFamily={fontCairo}>حذف السؤال؟</Heading>
+            <Text color={textSecondary} mb={6} fontSize="sm" fontFamily={fontCairo}>هل أنت متأكد؟ لا يمكن التراجع عن هذا الإجراء.</Text>
+            <HStack justify="center" spacing={4}>
+              <Button variant="ghost" onClick={onDeleteClose} fontFamily={fontCairo}>إلغاء</Button>
+              <Button colorScheme="red" onClick={deleteQuestion} isLoading={deleteLoading} fontFamily={fontCairo} fontWeight="bold">نعم، حذف</Button>
+            </HStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* 4. Image Upload Modal */}
+      <Modal isOpen={isImageOpen} onClose={onImageClose} size="md" isCentered>
+        <ModalOverlay backdropFilter="blur(4px)" bg="blackAlpha.600" />
+        <ModalContent borderRadius="2xl" boxShadow={headerShadow} borderWidth="1px" borderColor={cardBorder}>
+          <ModalHeader bg="blue.500" color="white" borderRadius="2xl 2xl 0 0" py={5} fontFamily={fontCairo}>
+            <HStack spacing={3}>
+              <Box p={2} bg="whiteAlpha.200" borderRadius="xl"><Icon as={FaImage} boxSize={5} /></Box>
+              <Text fontWeight="bold" fontSize="xl">صورة السؤال</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
+          <ModalBody py={6}>
+            <Box borderWidth="2px" borderStyle="dashed" borderColor="blue.300" bg={emptyIconBg} borderRadius="xl" h="220px" display="flex" alignItems="center" justifyContent="center" cursor="pointer" position="relative" overflow="hidden">
+              {imagePreview ? (
+                <Image src={imagePreview} w="full" h="full" objectFit="contain" />
+              ) : (
+                <VStack color="blue.500" fontFamily={fontCairo}>
+                  <Icon as={FaUpload} w={10} h={10} />
+                  <Text fontWeight="600">اضغط لرفع صورة</Text>
+                </VStack>
+              )}
+              <Input type="file" position="absolute" top={0} left={0} w="full" h="full" opacity={0} accept="image/*" onChange={(e) => { const file = e.target.files[0]; if (file) { setSelectedImage(file); const r = new FileReader(); r.onload = () => setImagePreview(r.result); r.readAsDataURL(file); } }} />
+            </Box>
+          </ModalBody>
+          <ModalFooter borderTopWidth="1px" borderColor={borderColor} py={4}>
+            {imagePreview && <Button colorScheme="red" variant="ghost" mr="auto" fontFamily={fontCairo} onClick={removeImage}>مسح</Button>}
+            <Button colorScheme="blue" onClick={handleImageSubmit} isLoading={imageLoading} fontFamily={fontCairo} fontWeight="bold">حفظ الصورة</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
     </Box>
   );
 };

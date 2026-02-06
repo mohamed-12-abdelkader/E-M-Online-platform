@@ -69,14 +69,14 @@ const AdminMange = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [grades, setGrades] = useState([]);
-  
+
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { 
-    isOpen: isEditOpen, 
-    onOpen: onEditOpen, 
-    onClose: onEditClose 
+  const {
+    isOpen: isEditOpen,
+    onOpen: onEditOpen,
+    onClose: onEditClose
   } = useDisclosure();
-  
+
   const cancelRef = React.useRef();
   const toast = useToast();
 
@@ -182,13 +182,14 @@ const AdminMange = () => {
   const openEditModal = (teacher) => {
     setSelectedTeacher(teacher);
     // تحويل الصفوف المحددة إلى array من IDs كـ strings
-    const selectedGradeIds = teacher.grades && Array.isArray(teacher.grades) 
-      ? teacher.grades.map(g => g.id.toString()) 
+    const selectedGradeIds = teacher.grades && Array.isArray(teacher.grades)
+      ? teacher.grades.map(g => g.id.toString())
       : [];
-    
+
     setEditFormData({
       name: teacher.name,
       email: teacher.email,
+      password: "", // Initialize password
       phone: teacher.phone || "",
       description: teacher.description || "",
       subject: teacher.subject,
@@ -220,7 +221,7 @@ const AdminMange = () => {
       const token = localStorage.getItem("token");
 
       // التأكد من أن grade_ids هو array وتحويله من strings إلى numbers
-      const gradeIds = Array.isArray(editFormData.grade_ids) 
+      const gradeIds = Array.isArray(editFormData.grade_ids)
         ? editFormData.grade_ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id))
         : [];
 
@@ -237,6 +238,9 @@ const AdminMange = () => {
         updateData.append("phone", editFormData.phone || "");
         updateData.append("description", editFormData.description || "");
         updateData.append("subject", editFormData.subject);
+        if (editFormData.password) {
+          updateData.append("password", editFormData.password);
+        }
         // إرسال grade_ids كـ JSON string في FormData (لأن FormData لا يدعم arrays مباشرة)
         if (gradeIds.length > 0) {
           updateData.append("grade_ids", JSON.stringify(gradeIds));
@@ -261,6 +265,9 @@ const AdminMange = () => {
           tiktok_url: editFormData.tiktok_url || "",
           whatsapp_number: editFormData.whatsapp_number || "",
         };
+        if (editFormData.password) {
+          updateData.password = editFormData.password;
+        }
         headers["Content-Type"] = "application/json";
       }
 
@@ -277,8 +284,8 @@ const AdminMange = () => {
       });
 
       // تحديث البيانات في القائمة
-      const updatedGradeIds = Array.isArray(editFormData.grade_ids) 
-        ? editFormData.grade_ids 
+      const updatedGradeIds = Array.isArray(editFormData.grade_ids)
+        ? editFormData.grade_ids
         : [];
       const updatedGrades = updatedGradeIds
         .map((id) => grades.find((g) => g.id.toString() === id))
@@ -288,21 +295,21 @@ const AdminMange = () => {
         prev.map((teacher) =>
           teacher.id === selectedTeacher.id
             ? {
-                ...teacher,
-                name: editFormData.name,
-                email: editFormData.email,
-                phone: editFormData.phone,
-                description: editFormData.description,
-                subject: editFormData.subject,
-                avatar: editFormData.avatarPreview
-                  ? editFormData.avatarPreview
-                  : teacher.avatar,
-                facebook_url: editFormData.facebook_url,
-                youtube_url: editFormData.youtube_url,
-                tiktok_url: editFormData.tiktok_url,
-                whatsapp_number: editFormData.whatsapp_number,
-                grades: updatedGrades,
-              }
+              ...teacher,
+              name: editFormData.name,
+              email: editFormData.email,
+              phone: editFormData.phone,
+              description: editFormData.description,
+              subject: editFormData.subject,
+              avatar: editFormData.avatarPreview
+                ? editFormData.avatarPreview
+                : teacher.avatar,
+              facebook_url: editFormData.facebook_url,
+              youtube_url: editFormData.youtube_url,
+              tiktok_url: editFormData.tiktok_url,
+              whatsapp_number: editFormData.whatsapp_number,
+              grades: updatedGrades,
+            }
             : teacher
         )
       );
@@ -341,7 +348,7 @@ const AdminMange = () => {
       </CardBody>
     </Card>
   );
- 
+
   return (
     <Box p={6} bg={bgColor} minH="100vh">
       <VStack spacing={8} align="stretch">
@@ -431,11 +438,11 @@ const AdminMange = () => {
                   <Box textAlign="center" mb={4}>
                     <Avatar
                       size="2xl"
-                      src={teacher.avatar ? 
-                        (teacher.avatar.startsWith('http') ? 
-                          teacher.avatar : 
-                          teacher.avatar.startsWith('/') ? 
-                            `http://localhost:8000${teacher.avatar}` : 
+                      src={teacher.avatar ?
+                        (teacher.avatar.startsWith('http') ?
+                          teacher.avatar :
+                          teacher.avatar.startsWith('/') ?
+                            `http://localhost:8000${teacher.avatar}` :
                             `http://localhost:8000/${teacher.avatar}`
                         ) : undefined
                       }
@@ -687,8 +694,8 @@ const AdminMange = () => {
                             : editFormData.avatar?.startsWith("http")
                               ? editFormData.avatar
                               : editFormData.avatar
-                              ? `http://localhost:8000/${editFormData.avatar.replace(/^\/+/, "")}`
-                              : undefined
+                                ? `http://localhost:8000/${editFormData.avatar.replace(/^\/+/, "")}`
+                                : undefined
                         }
                         name={editFormData.name}
                         mb={2}
@@ -757,6 +764,17 @@ const AdminMange = () => {
                   />
                 </FormControl>
               </SimpleGrid>
+
+              {/* Password Input */}
+              <FormControl>
+                <FormLabel fontWeight="bold">كلمة المرور (اختياري)</FormLabel>
+                <Input
+                  type="password"
+                  value={editFormData.password || ""}
+                  onChange={(e) => handleEditInputChange("password", e.target.value)}
+                  placeholder="أدخل كلمة مرور جديدة إذا أردت تغييرها"
+                />
+              </FormControl>
 
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="full">
                 <FormControl>

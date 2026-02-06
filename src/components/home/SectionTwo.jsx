@@ -1,110 +1,118 @@
 import React from "react";
-import { motion, useInView } from "framer-motion";
-import { Box, Flex, Heading, Text, useColorModeValue, Icon } from "@chakra-ui/react";
-import { FaRobot, FaChalkboardTeacher, FaTrophy, FaBook, FaRocket, FaStar } from "react-icons/fa";
-import { BsFillBookFill, BsFillTrophyFill } from "react-icons/bs";
+import { motion } from "framer-motion";
+import { useColorModeValue } from "@chakra-ui/react";
+import { FaTrophy, FaBook, FaRobot, FaChalkboardTeacher } from "react-icons/fa";
 
 const SectionTwo = () => {
-  const { ref, inView } = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
+  const sectionBg = useColorModeValue("bg-slate-50", "bg-gray.900");
+  const headingColor = useColorModeValue("text-slate-900", "text-gray.100");
+  const subtextColor = useColorModeValue("text-slate-600", "text-gray.400");
+  const cardBg = useColorModeValue("bg-white", "bg-gray.800");
+  const cardBorder = useColorModeValue("border-slate-200/80", "border-gray.700");
+  const cardBorderHover = useColorModeValue("hover:border-slate-300/80", "hover:border-gray-600");
 
-  const bgGradient = useColorModeValue(
-    "linear(to-br, #f0f4ff, #e5e8ff)",
-    "linear(to-br, #1a202c, #2d3748)"
-  );
-  const cardBg = useColorModeValue("rgba(255, 255, 255, 0.9)", "rgba(45, 55, 72, 0.8)");
-  const textColor = useColorModeValue("gray.900", "white");
-  const descriptionColor = useColorModeValue("gray.600", "gray.400");
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 24 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+    },
+  };
+
+  const stagger = {
+    visible: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+    hidden: {},
+  };
 
   const features = [
     {
       id: 1,
       name: "مسابقات يومية",
       description: "اختبر مهاراتك يوميًا من خلال تحديات تعليمية ممتعة.",
-      icon: BsFillTrophyFill,
-      color: "purple.500",
+      icon: FaTrophy,
+      color: "bg-violet-500",
+      light: "bg-violet-500/10",
+      iconColor: "text-violet-600",
     },
     {
       id: 2,
       name: "امتحانات شهرية",
-      description: "قم بتقييم مستواك عبر امتحانات شهرية متخصصة.",
-      icon: BsFillBookFill,
-      color: "blue.500",
+      description: "قيّم مستواك عبر امتحانات شهرية متخصصة ومنظمة.",
+      icon: FaBook,
+      color: "bg-blue-500",
+      light: "bg-blue-500/10",
+      iconColor: "text-blue-600",
     },
     {
       id: 3,
       name: "ذكاء اصطناعي",
-      description: "استفد من أحدث تقنيات الذكاء الاصطناعي في التعليم.",
+      description: "استفد من أحدث تقنيات الذكاء الاصطناعي في التعلم.",
       icon: FaRobot,
-      color: "green.500",
+      color: "bg-emerald-500",
+      light: "bg-emerald-500/10",
+      iconColor: "text-emerald-600",
     },
     {
       id: 4,
       name: "أقوى المحاضرين",
       description: "تعلم من نخبة المحاضرين المتخصصين في مختلف المجالات.",
       icon: FaChalkboardTeacher,
-      color: "orange.500",
+      color: "bg-amber-500",
+      light: "bg-amber-500/10",
+      iconColor: "text-amber-600",
     },
   ];
- const fadeInUp = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-  };
-  return (
-    <Box w="full" py={10} px={6} className="" textAlign="center">
-      <motion.h1
-              variants={fadeInUp}
-              className="text-6xl my-3 text-orange-500 sm:text-5xl lg:text-7xl font-extrabold leading-tight">
-        خدماتنا التعليمية 
-      </motion.h1>
-      <Text fontSize="lg" color="blue.500" mb={10}>
-        اكتشف أفضل الدورات التعليمية والدروس الخاصة مع خبراء التعليم.
-      </Text>
 
-      <Flex wrap="wrap" justify="center" gap={8}>
-        {features.map((service) => (
-          <Box
-            key={service.id}
-            p={8}
-            bg={cardBg}
-            backdropFilter="blur(10px)"
-            border="1px solid rgba(255, 255, 255, 0.18)"
-            borderRadius="2xl"
-            boxShadow="0 8px 30px rgba(0, 0, 0, 0.1)"
-            transition="transform 0.4s ease, box-shadow 0.4s ease"
-            _hover={{
-              transform: "translateY(-10px)",
-              boxShadow: "0 12px 50px rgba(0, 0, 0, 0.2)",
-            }}
-            w={{ base: "100%", sm: "45%", md: "22%" }}
-          >
-            <Flex justify="center" align="center" mb={6}>
-              <Box
-                bg={service.color}
-                p={5}
-                borderRadius="full"
-                boxShadow="inset 0 0 10px rgba(0,0,0,0.1)"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                transition="all 0.4s"
-                _hover={{ transform: "scale(1.1) rotate(10deg)" }}
+  return (
+    <section
+      dir="rtl"
+      className={`relative py-20 sm:py-24 ${sectionBg}`}
+      style={{ fontFamily: "'Changa', sans-serif" }}
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          className="text-center mb-14"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className={`text-3xl sm:text-4xl font-bold ${headingColor} mb-3`}>
+            خدماتنا التعليمية
+          </h2>
+          <p className={`${subtextColor} text-lg max-w-xl mx-auto`}>
+            اكتشف أفضل الدورات والدروس مع خبراء التعليم.
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          variants={stagger}
+          initial="hidden"
+          animate="visible"
+        >
+          {features.map((item) => (
+            <motion.div
+              key={item.id}
+              variants={fadeInUp}
+              className={`group relative p-6 rounded-2xl ${cardBg} border ${cardBorder} ${cardBorderHover} shadow-sm hover:shadow-lg transition-all duration-300`}
+            >
+              <div
+                className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${item.light} ${item.iconColor} mb-4 transition-transform duration-300 group-hover:scale-105`}
               >
-                <Icon as={service.icon} boxSize={10} color="white" />
-              </Box>
-            </Flex>
-            <Heading fontSize="xl" fontWeight="bold" color="blue.500" mb={3}>
-              {service.name}
-            </Heading>
-            <Text fontSize="md" color={descriptionColor}>
-              {service.description}
-            </Text>
-          </Box>
-        ))}
-      </Flex>
-    </Box>
+                <item.icon className="text-xl" />
+              </div>
+              <h3 className={`text-lg font-bold ${headingColor} mb-2`}>
+                {item.name}
+              </h3>
+              <p className={`${subtextColor} text-sm leading-relaxed`}>
+                {item.description}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
   );
 };
 

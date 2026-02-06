@@ -22,12 +22,12 @@ import UserType from '../../Hooks/auth/userType';
 
 // --- 1. خلفية الواتساب ---
 const useChatBackground = () => {
-    const bgColor = useColorModeValue('#ECE5DD', '#1A202C');
-    const patternOpacity = useColorModeValue(0.25, 0.06);
-    // نستخدم نفس النمط لكن نعدل الشفافية حسب المود
+    // WhatsApp-ish background (light/dark)
+    const bgColor = useColorModeValue('#EFEAE2', '#0B141A');
+    const patternOpacity = useColorModeValue(0.20, 0.08);
     return {
         backgroundImage: `linear-gradient(rgba(0,0,0,${patternOpacity}), rgba(0,0,0,${patternOpacity})), url("https://res.cloudinary.com/dz0b4712v/image/upload/v1720233000/whatsapp_bg_pattern_x8l5b0.png")`,
-    backgroundRepeat: 'repeat',
+        backgroundRepeat: 'repeat',
         backgroundColor: bgColor,
     };
 };
@@ -65,200 +65,160 @@ const getGroupColor = (groupName, index) => {
 
 // --- 2. مكون ChatListItem ---
 const ChatListItem = ({ chat, type, onSelectChat, isActive, index = 0 }) => {
-    const GroupIcon = getGroupIcon(chat.name, index);
-    const groupColor = getGroupColor(chat.name, index);
-    
+    const sidebarItemHover = useColorModeValue('#F0F2F5', '#202C33');
+    const sidebarItemActive = useColorModeValue('#F0F2F5', '#2A3942');
+    const subText = useColorModeValue('#667781', '#8696A0');
+    const timeText = useColorModeValue('#667781', '#8696A0');
+    const unreadBg = useColorModeValue('#25D366', '#00A884');
+
     return (
         <Flex
             align="center"
-            p={4}
-            borderRadius="xl"
-            _hover={{ 
-                bg: useColorModeValue('gray.50', 'gray.700'), 
-                cursor: 'pointer',
-                transform: 'translateX(4px)',
-                boxShadow: 'lg'
-            }}
-            bg={isActive ? useColorModeValue(`${groupColor}.50`, `${groupColor}.900`) : 'transparent'}
-            borderLeft={isActive ? '4px solid' : '4px solid transparent'}
-            borderColor={isActive ? `${groupColor}.500` : 'transparent'}
+            px={4}
+            py={3}
+            cursor="pointer"
+            _hover={{ bg: sidebarItemHover }}
+            bg={isActive ? sidebarItemActive : 'transparent'}
             onClick={() => onSelectChat(type, chat.id)}
-            position="relative"
-            transition="all 0.3s ease"
-            mb={2}
-            boxShadow={isActive ? 'md' : 'sm'}
-            _before={{
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                borderRadius: 'xl',
-                bg: isActive ? 
-                    `linear-gradient(135deg, ${useColorModeValue(`${groupColor}.100`, `${groupColor}.800`)}, transparent)` : 
-                    'transparent',
-                zIndex: -1
-            }}
+            borderBottom="1px solid"
+            borderColor={useColorModeValue('gray.100', 'whiteAlpha.100')}
         >
-            {type === 'group' ? (
-                <Box
-                    position="relative"
-                    w="48px"
-                    h="48px"
-                    borderRadius="full"
-                    bg={isActive ? 
-                        `linear-gradient(135deg, ${useColorModeValue(`${groupColor}.200`, `${groupColor}.700`)}, ${useColorModeValue(`${groupColor}.300`, `${groupColor}.600`)})` : 
-                        `linear-gradient(135deg, ${useColorModeValue('gray.100', 'gray.600')}, ${useColorModeValue('gray.200', 'gray.500')})`
-                    }
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    boxShadow="md"
-                    _hover={{
-                        transform: 'scale(1.05)',
-                        boxShadow: 'lg'
-                    }}
-                    transition="all 0.2s ease"
-                >
-                    <GroupIcon 
-                        fontSize="1.5rem" 
-                        color={isActive ? 
-                            useColorModeValue(`${groupColor}.700`, `${groupColor}.200`) : 
-                            useColorModeValue('gray.600', 'gray.300')
-                        } 
+            <HStack spacing={3} w="full" minW={0}>
+                {type === 'group' ? (
+                    <Avatar
+                        size="md"
+                        icon={<IoPeopleOutline fontSize="1.35rem" />}
+                        bg={useColorModeValue('#DFE5E7', '#2A3942')}
+                        color={useColorModeValue('#54656F', '#AEBAC1')}
                     />
-                    {isActive && (
-                        <Box
-                            position="absolute"
-                            top="-2px"
-                            right="-2px"
-                            w="12px"
-                            h="12px"
-                            borderRadius="full"
-                            bg={`${groupColor}.500`}
-                            border="2px solid"
-                            borderColor={useColorModeValue('white', 'gray.800')}
-                        />
-                    )}
+                ) : (
+                    <Avatar size="md" src={chat.avatar || undefined} name={chat.name} />
+                )}
+
+                <Box flex="1" minW={0}>
+                    <HStack justify="space-between" align="center" spacing={2}>
+                        <Text fontWeight="600" fontSize="md" noOfLines={1}>
+                            {chat.name}
+                        </Text>
+                        <Text fontSize="xs" color={timeText} whiteSpace="nowrap">
+                            {chat.time || ''}
+                        </Text>
+                    </HStack>
+
+                    <HStack justify="space-between" align="center" spacing={2} mt={1}>
+                        <Text fontSize="sm" color={subText} noOfLines={1}>
+                            {chat.lastMessage || 'لا توجد رسائل'}
+                        </Text>
+
+                        {chat.unread > 0 && (
+                            <Box
+                                minW="20px"
+                                h="20px"
+                                px={2}
+                                borderRadius="full"
+                                bg={unreadBg}
+                                color="white"
+                                fontSize="xs"
+                                fontWeight="700"
+                                display="flex"
+                                alignItems="center"
+                                justifyContent="center"
+                            >
+                                {chat.unread > 99 ? '99+' : chat.unread}
+                            </Box>
+                        )}
+                    </HStack>
                 </Box>
-            ) : (
-                <Avatar size="md" src={chat.avatar} name={chat.name} />
-            )}
-            <Box ml={4} flex="1" overflow="hidden" minW={0}>
-                <Flex justify="space-between" align="center" mb={2}>
-                    <Text 
-                        fontWeight={isActive ? "bold" : "semibold"} 
-                        fontSize="md" 
-                        noOfLines={1}
-                        color={isActive ? 
-                            useColorModeValue(`${groupColor}.700`, `${groupColor}.200`) : 
-                            useColorModeValue('gray.800', 'gray.200')
-                        }
-                    >
-                        {chat.name}
-                    </Text>
-                    <Text 
-                        fontSize="xs" 
-                        color={useColorModeValue('gray.500', 'gray.400')}
-                        fontWeight="medium"
-                    >
-                        {chat.time}
-                    </Text>
-                </Flex>
-                <Text 
-                    fontSize="sm" 
-                    color={isActive ? 
-                        useColorModeValue(`${groupColor}.600`, `${groupColor}.300`) : 
-                        useColorModeValue('gray.600', 'gray.400')
-                    } 
-                    noOfLines={2}
-                    lineHeight="1.4"
-                >
-                    {chat.lastMessage || 'لا توجد رسائل'}
-                </Text>
-            </Box>
-            {chat.unread > 0 && (
-                <Badge
-                    colorScheme={groupColor}
-                    borderRadius="full"
-                    px={3}
-                    py={1}
-                    fontSize="xs"
-                    fontWeight="bold"
-                    minW="24px"
-                    h="24px"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    boxShadow="md"
-                    _hover={{
-                        transform: 'scale(1.1)'
-                    }}
-                    transition="all 0.2s ease"
-                >
-                    {chat.unread > 99 ? '99+' : chat.unread}
-                </Badge>
-            )}
+            </HStack>
         </Flex>
     );
 };
 
 // --- 3. مكون Sidebar ---
-const Sidebar = ({ groups, onSelectGroup, activeGroupId }) => {
+const Sidebar = ({ groups, contacts, onSelectGroup, onSelectContact, activeChat }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const sidebarBg = useColorModeValue('#FFFFFF', '#111B21');
+    const sidebarHeaderBg = useColorModeValue('#F0F2F5', '#202C33');
+    const sidebarText = useColorModeValue('#111B21', '#E9EDEF');
+    const sidebarSubText = useColorModeValue('#667781', '#8696A0');
+    const searchBg = useColorModeValue('#FFFFFF', '#111B21');
+    const searchBorder = useColorModeValue('#E9EDEF', '#2A3942');
 
     const filteredGroups = useMemo(() => {
         return (groups || []).filter(chat => (chat.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
     }, [groups, searchTerm]);
 
+    const filteredContacts = useMemo(() => {
+        return (contacts || []).filter(c => (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [contacts, searchTerm]);
+
     return (
-        <Box p={{ base: 3, md: 4 }} h="full" display="flex" flexDirection="column">
-            {/* Header */}
-            <Box mb={4}>
-                <Text 
-                    fontSize={{ base: "lg", md: "xl" }} 
-                    fontWeight="bold" 
-                    color={useColorModeValue('gray.700','gray.200')} 
-                    mb={1}
-                >
-                    المحادثات
-                </Text>
-                <Text fontSize="sm" color={useColorModeValue('gray.500','gray.400')}>
-                    {groups?.length || 0} مجموعة متاحة
-                </Text>
-            </Box>
+        <Box h="full" display="flex" flexDirection="column" bg={sidebarBg}>
+            {/* WhatsApp-like header */}
+            <Flex
+                px={3}
+                py={2}
+                align="center"
+                justify="space-between"
+                bg={sidebarHeaderBg}
+                borderBottom="1px solid"
+                borderColor={useColorModeValue('#E9EDEF', '#2A3942')}
+            >
+                <HStack spacing={3} minW={0}>
+                    <Avatar size="sm" bg={useColorModeValue('gray.300', 'gray.600')} />
+                    <Box minW={0}>
+                        <Text fontWeight="700" fontSize="sm" color={sidebarText} noOfLines={1}>
+                            المحادثات
+                        </Text>
+                        <Text fontSize="xs" color={sidebarSubText} noOfLines={1}>
+                            {(groups?.length || 0)} مجموعات • {(contacts?.length || 0)} طلاب
+                        </Text>
+                    </Box>
+                </HStack>
+                <HStack spacing={1}>
+                    <IconButton
+                        aria-label="بحث"
+                        icon={<IoSearchOutline />}
+                        variant="ghost"
+                        size="sm"
+                    />
+                    <IconButton
+                        aria-label="المزيد"
+                        icon={<IoEllipsisVertical />}
+                        variant="ghost"
+                        size="sm"
+                    />
+                </HStack>
+            </Flex>
 
             {/* شريط البحث */}
-            <InputGroup mb={4}>
-                <InputLeftElement pointerEvents="none">
-                    <Icon as={IoSearchOutline} color={useColorModeValue('gray.400','gray.500')} />
-                </InputLeftElement>
-                <Input
-                    placeholder="ابحث عن محادثة..."
-                    borderRadius="full"
-                    bg={useColorModeValue('gray.50','gray.700')}
-                    border="1px solid"  
-                    borderColor={useColorModeValue('gray.200','gray.600')}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    _focus={{
-                        borderColor: 'teal.500',
-                        boxShadow: '0 0 0 1px teal.500'
-                    }}
-                />
-            </InputGroup>
+            <Box px={3} py={2} bg={sidebarBg}>
+                <InputGroup>
+                    <InputLeftElement pointerEvents="none">
+                        <Icon as={IoSearchOutline} color={sidebarSubText} />
+                    </InputLeftElement>
+                    <Input
+                        placeholder="ابحث أو ابدأ محادثة جديدة"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        bg={searchBg}
+                        border="1px solid"
+                        borderColor={searchBorder}
+                        borderRadius="xl"
+                        h="38px"
+                        fontSize="sm"
+                        _focus={{
+                            borderColor: useColorModeValue('#00A884', '#00A884'),
+                            boxShadow: 'none',
+                        }}
+                    />
+                </InputGroup>
+            </Box>
 
             {/* جزء المجموعات */}
-            <Box flex="1" overflowY="auto">
-                <Text 
-                    fontSize="sm" 
-                    fontWeight="semibold" 
-                    color={useColorModeValue('gray.600','gray.300')} 
-                    mb={3}
-                    px={2}
-                >
-                    مجموعات الصفوف
+            <Box flex="1" overflowY="auto" pb={2}>
+                <Text fontSize="xs" fontWeight="700" color={sidebarSubText} px={4} py={2}>
+                    مجموعات
                 </Text>
                 <VStack align="stretch" spacing={1}>
                     {filteredGroups.length > 0 ? (
@@ -268,7 +228,7 @@ const Sidebar = ({ groups, onSelectGroup, activeGroupId }) => {
                                 chat={chat}
                                 type="group"
                                 onSelectChat={() => onSelectGroup(chat.id)}
-                                isActive={activeGroupId === chat.id}
+                                isActive={activeChat?.type === 'group' && activeChat?.id === chat.id}
                                 index={index}
                             />
                         ))
@@ -291,6 +251,40 @@ const Sidebar = ({ groups, onSelectGroup, activeGroupId }) => {
                         </Flex>
                     )}
                 </VStack>
+
+                {/* Contacts (Teacher only) */}
+                <Divider my={2} borderColor={useColorModeValue('#E9EDEF', '#2A3942')} />
+                <Text fontSize="xs" fontWeight="700" color={sidebarSubText} px={4} py={2}>
+                    الطلاب (شات مباشر)
+                </Text>
+                <VStack align="stretch" spacing={1}>
+                    {filteredContacts.length > 0 ? (
+                        filteredContacts.map((c, index) => (
+                            <ChatListItem
+                                key={`student-${c.id}`}
+                                chat={{
+                                    id: c.id,
+                                    name: c.name,
+                                    avatar: c.avatar,
+                                    lastMessage: c.lastMessage,
+                                    time: c.time,
+                                    unread: c.unread || 0,
+                                }}
+                                type="direct"
+                                onSelectChat={() => onSelectContact(c)}
+                                isActive={activeChat?.type === 'direct' && activeChat?.id === c.id}
+                                index={index}
+                            />
+                        ))
+                    ) : (
+                        <Flex align="center" justify="center" py={6} flexDirection="column">
+                            <IoPersonOutline size="48px" color={useColorModeValue('gray.300','gray.600')} />
+                            <Text fontSize="sm" color={useColorModeValue('gray.500','gray.400')} textAlign="center" mt={2}>
+                                {searchTerm ? 'لا توجد نتائج مطابقة' : 'لا يوجد طلاب متاحين للشات'}
+                            </Text>
+                        </Flex>
+                    )}
+                </VStack>
             </Box>
         </Box>
     );
@@ -300,15 +294,24 @@ const Sidebar = ({ groups, onSelectGroup, activeGroupId }) => {
 const ChatHeader = ({ chatInfo, onBack, isMobile, canTogglePermission, allowStudentSend, onTogglePermission, togglingPermission, onOpenMembers, canViewMembers }) => {
     if (!chatInfo) return null;
 
+    const headerBg = useColorModeValue('#F0F2F5', '#202C33');
+    const headerBorder = useColorModeValue('#E9EDEF', '#2A3942');
+    const headerText = useColorModeValue('#111B21', '#E9EDEF');
+    const headerSub = useColorModeValue('#667781', '#8696A0');
+    const iconColor = useColorModeValue('#54656F', '#AEBAC1');
+
     return (
         <Flex
-            p={{ base: 3, md: 4 }}
+            px={{ base: 3, md: 4 }}
+            py={{ base: 2, md: 3 }}
             borderBottom="1px solid"
-            borderColor={useColorModeValue('gray.200','gray.700')}
+            borderColor={headerBorder}
             align="center"
-            bg={useColorModeValue('white','gray.800')}
-            boxShadow="sm"
+            bg={headerBg}
             minH="70px"
+            position="sticky"
+            top="0"
+            zIndex={5}
         >
             {isMobile && (
                 <IconButton
@@ -318,35 +321,48 @@ const ChatHeader = ({ chatInfo, onBack, isMobile, canTogglePermission, allowStud
                     aria-label="العودة للمحادثات"
                     mr={2}
                     size="md"
-                    _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                    color={iconColor}
+                    _hover={{ bg: useColorModeValue('blackAlpha.50', 'whiteAlpha.100') }}
                 />
             )}
             
-            <Avatar 
-                size="md" 
-                icon={<IoPeopleOutline fontSize="1.5rem" />} 
-                bg={useColorModeValue('teal.100','teal.900')} 
-                color={useColorModeValue('teal.700','teal.200')} 
-            />
+            {chatInfo.isDirect ? (
+                <Avatar size="md" src={chatInfo.avatar || undefined} name={chatInfo.name} />
+            ) : (
+                <Avatar 
+                    size="md" 
+                    icon={<IoPeopleOutline fontSize="1.5rem" />} 
+                    bg={useColorModeValue('#DFE5E7', '#2A3942')}
+                    color={useColorModeValue('#54656F', '#AEBAC1')}
+                />
+            )}
             
             <Box ml={3} flex="1" minW={0}>
                 <Text 
                     fontSize={{ base: "md", md: "lg" }} 
-                    fontWeight="semibold" 
+                    fontWeight="700" 
                     noOfLines={1}
-                    color={useColorModeValue('gray.800', 'gray.200')}
+                    color={headerText}
                 >
                     {chatInfo.name}
                 </Text>
                 <Text 
                     fontSize="sm" 
-                    color={useColorModeValue('gray.500','gray.400')}
+                    color={headerSub}
                 >
-                    دردشة صفية جماعية
+                    {chatInfo.isDirect ? 'شات مباشر' : 'دردشة صفية جماعية'}
                 </Text>
             </Box>
 
             <HStack spacing={2} align="center">
+                <IconButton
+                    icon={<IoSearchOutline />}
+                    variant="ghost"
+                    aria-label="بحث داخل المحادثة"
+                    size="md"
+                    color={iconColor}
+                    _hover={{ bg: useColorModeValue('blackAlpha.50', 'whiteAlpha.100') }}
+                />
                 {canViewMembers && (
                     <IconButton
                         icon={<IoPersonOutline />}
@@ -354,13 +370,14 @@ const ChatHeader = ({ chatInfo, onBack, isMobile, canTogglePermission, allowStud
                         variant="ghost"
                         aria-label="عرض الأعضاء"
                         size="md"
-                        _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                        color={iconColor}
+                        _hover={{ bg: useColorModeValue('blackAlpha.50', 'whiteAlpha.100') }}
                     />
                 )}
                 
                 {canTogglePermission && (
                     <HStack spacing={2} display={{ base: 'none', md: 'flex' }}>
-                        <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                        <Text fontSize="sm" color={headerSub}>
                             سماح الطلاب
                         </Text>
                         <Switch 
@@ -378,7 +395,8 @@ const ChatHeader = ({ chatInfo, onBack, isMobile, canTogglePermission, allowStud
                     variant="ghost" 
                     aria-label="خيارات المحادثة"
                     size="md"
-                    _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                    color={iconColor}
+                    _hover={{ bg: useColorModeValue('blackAlpha.50', 'whiteAlpha.100') }}
                 />
             </HStack>
         </Flex>
@@ -388,10 +406,10 @@ const ChatHeader = ({ chatInfo, onBack, isMobile, canTogglePermission, allowStud
 // --- 5. مكون ChatMessage ---
 const ChatMessage = ({ message, onReply, onEdit, onDelete, isEditing, isDeleting }) => {
     const isMine = message.isMine;
-    const bgColor = isMine ? 
-        'linear-gradient(135deg, #38B2AC, #319795)' : 
-        useColorModeValue('white', 'gray.700');
-    const textColor = isMine ? 'white' : useColorModeValue('gray.800', 'gray.200');
+    const outBg = useColorModeValue('#D9FDD3', '#005C4B');
+    const inBg = useColorModeValue('#FFFFFF', '#202C33');
+    const outText = useColorModeValue('#111B21', '#E9EDEF');
+    const inText = useColorModeValue('#111B21', '#E9EDEF');
     const alignment = isMine ? 'flex-end' : 'flex-start';
     const hasAttachment = !!message.attachment_url;
     const attachmentType = message.attachment_type;
@@ -399,64 +417,33 @@ const ChatMessage = ({ message, onReply, onEdit, onDelete, isEditing, isDeleting
     return (
         <Flex justify={alignment} mb={4} px={2}>
             <Box
-                bg={isMine ? 'transparent' : bgColor}
-                backgroundImage={isMine ? bgColor : 'none'}
-                color={textColor}
-                px={5}
-                py={4}
-                borderRadius="2xl"
+                bg={isMine ? outBg : inBg}
+                color={isMine ? outText : inText}
+                px={4}
+                py={3}
+                borderRadius="lg"
                 maxWidth="80%"
                 position="relative"
-                boxShadow={isMine ? 
-                    '0 6px 20px rgba(56, 178, 172, 0.25)' : 
-                    useColorModeValue('0 4px 15px rgba(0,0,0,0.08)', '0 4px 15px rgba(0,0,0,0.25)')
-                }
-                _hover={{
-                    transform: 'translateY(-2px)',
-                    boxShadow: isMine ? 
-                        '0 8px 25px rgba(56, 178, 172, 0.35)' : 
-                        useColorModeValue('0 6px 20px rgba(0,0,0,0.12)', '0 6px 20px rgba(0,0,0,0.35)')
-                }}
-                transition="all 0.3s ease"
-                border={isMine ? 'none' : '1px solid'}
-                borderColor={useColorModeValue('gray.100', 'gray.600')}
+                boxShadow={useColorModeValue('0 1px 1px rgba(0,0,0,0.10)', '0 1px 1px rgba(0,0,0,0.40)')}
+                transition="background-color 0.2s ease"
                 sx={{
-                    // تحسين الذيل
-                    ...(isMine ? {
-                        borderBottomRightRadius: '8px',
-                        '&::after': {
-                            content: '""',
-                            position: 'absolute',
-                            bottom: 0,
-                            right: '-10px',
-                            width: 0,
-                            height: 0,
-                            borderLeft: '10px solid #38B2AC',
-                            borderTop: '10px solid transparent',
-                            borderBottom: '10px solid transparent',
-                        }
-                    } : {
-                        borderBottomLeftRadius: '8px',
-                        '&::after': {
-                            content: '""',
-                            position: 'absolute',
-                            bottom: 0,
-                            left: '-10px',
-                            width: 0,
-                            height: 0,
-                            borderRight: '10px solid',
-                            borderRightColor: useColorModeValue('white', 'gray.700'),
-                            borderTop: '10px solid transparent',
-                            borderBottom: '10px solid transparent',
-                        }
-                    }),
+                    ...(isMine ? { borderTopRightRadius: '6px' } : { borderTopLeftRadius: '6px' }),
                 }}
             >
                 {/* Reply preview inside bubble */}
                 {message.reply_to_preview && (
-                    <Box mb={2} p={2} borderLeft="3px solid" borderColor={isMine ? 'whiteAlpha.700' : 'teal.400'} bg={isMine ? 'whiteAlpha.200' : 'gray.100'} borderRadius="md">
-                        <Text fontSize="xs" fontWeight="bold" mb={1} color={isMine ? 'whiteAlpha.900' : 'teal.600'} noOfLines={1}>{message.reply_to_preview.sender || 'مستخدم'}</Text>
-                        <Text fontSize="xs" noOfLines={2} color={isMine ? 'whiteAlpha.800' : 'gray.700'}>
+                    <Box
+                        mb={2}
+                        p={2}
+                        borderLeft="3px solid"
+                        borderColor={useColorModeValue('#00A884', '#00A884')}
+                        bg={useColorModeValue('blackAlpha.50', 'whiteAlpha.100')}
+                        borderRadius="md"
+                    >
+                        <Text fontSize="xs" fontWeight="700" mb={1} color={useColorModeValue('#006D5B', '#9FEFE1')} noOfLines={1}>
+                            {message.reply_to_preview.sender || 'مستخدم'}
+                        </Text>
+                        <Text fontSize="xs" noOfLines={2} color={useColorModeValue('#667781', '#8696A0')}>
                             {message.reply_to_preview.text || (message.reply_to_preview.attachment_type === 'image' ? 'صورة' : message.reply_to_preview.attachment_name || 'مرفق')}
                         </Text>
                     </Box>
@@ -518,14 +505,11 @@ const ChatMessage = ({ message, onReply, onEdit, onDelete, isEditing, isDeleting
                             icon={<IoReturnUpBack />} 
                             size="sm" 
                             variant="ghost" 
-                            colorScheme={isMine ? 'whiteAlpha' : 'teal'} 
+                            colorScheme={isMine ? 'blackAlpha' : 'teal'} 
                             onClick={() => onReply?.(message)}
                             _hover={{
-                                bg: isMine ? 'whiteAlpha.300' : 'teal.100',
-                                transform: 'scale(1.15)',
-                                boxShadow: 'md'
+                                bg: useColorModeValue('blackAlpha.50', 'whiteAlpha.100'),
                             }}
-                            transition="all 0.2s"
                             borderRadius="full"
                         />
                         {isMine && message.type === 'text' && !hasAttachment && (
@@ -561,7 +545,7 @@ const ChatMessage = ({ message, onReply, onEdit, onDelete, isEditing, isDeleting
                                         _hover={{ 
                                             bg: useColorModeValue('blue.50', 'blue.900'),
                                             color: 'blue.500',
-                                            transform: 'translateX(4px)'
+                                            transform: 'none'
                                         }}
                                         borderRadius="lg"
                                         mx={1}
@@ -578,7 +562,7 @@ const ChatMessage = ({ message, onReply, onEdit, onDelete, isEditing, isDeleting
                                         _hover={{ 
                                             bg: useColorModeValue('red.50', 'red.900'),
                                             color: 'red.600',
-                                            transform: 'translateX(4px)'
+                                            transform: 'none'
                                         }}
                                         borderRadius="lg"
                                         mx={1}
@@ -595,7 +579,7 @@ const ChatMessage = ({ message, onReply, onEdit, onDelete, isEditing, isDeleting
                     <VStack spacing={0} align="end">
                         <Text 
                             fontSize="xs" 
-                            color={isMine ? 'whiteAlpha.800' : 'gray.500'} 
+                            color={useColorModeValue('#667781', '#8696A0')} 
                             textAlign="end"
                             fontWeight="500"
                         >
@@ -604,7 +588,7 @@ const ChatMessage = ({ message, onReply, onEdit, onDelete, isEditing, isDeleting
                         {message.isEdited && (
                             <Text 
                                 fontSize="xs" 
-                                color={isMine ? 'whiteAlpha.700' : 'gray.400'} 
+                                color={useColorModeValue('#667781', '#8696A0')}
                                 fontStyle="italic"
                                 fontWeight="400"
                             >
@@ -631,7 +615,15 @@ const MessagesContainer = ({ messages, onReply, onEdit, onDelete, isEditing, isD
     }, [messages]);
 
     return (
-        <VStack flex="1" p={4} spacing={2} overflowY="auto" align="stretch" bg={useColorModeValue('transparent','gray.900')}>
+        <VStack
+            flex="1"
+            px={{ base: 2, md: 4 }}
+            py={{ base: 3, md: 4 }}
+            spacing={2}
+            overflowY="auto"
+            align="stretch"
+            bg="transparent"
+        >
             {messages.length > 0 ? (
                 messages.map((msg) => (
                     <ChatMessage
@@ -657,7 +649,7 @@ const SendButton = ({ onSend, disabled, isLoading }) => {
     return (
         <IconButton
             icon={<IoSend />}
-            colorScheme="teal"
+            colorScheme="green"
             variant="solid"
             aria-label="إرسال الرسالة"
             size="md"
@@ -665,23 +657,20 @@ const SendButton = ({ onSend, disabled, isLoading }) => {
             isDisabled={disabled}
             isLoading={isLoading}
             borderRadius="full"
-            bg="linear-gradient(135deg, #38B2AC, #319795)"
+            bg={useColorModeValue('#00A884', '#00A884')}
+            color="white"
             _hover={{
-                transform: 'scale(1.1)',
-                boxShadow: '0 6px 16px rgba(56, 178, 172, 0.5)',
-                bg: 'linear-gradient(135deg, #319795, #2C7A7B)'
+                bg: useColorModeValue('#008069', '#008069'),
             }}
             _active={{
-                transform: 'scale(0.95)'
+                bg: useColorModeValue('#00705E', '#00705E'),
             }}
             _disabled={{
                 bg: 'gray.300',
                 cursor: 'not-allowed',
-                transform: 'none',
                 boxShadow: 'none'
             }}
-            transition="all 0.2s ease"
-            boxShadow="0 2px 8px rgba(56, 178, 172, 0.3)"
+            transition="background-color 0.15s ease"
         />
     );
 };
@@ -692,6 +681,9 @@ const MessageInputBar = ({ onSendMessage, onSendAttachment, disabled, replyTarge
     const fileInputRef = useRef(null);
     const toast = useToast();
     const [pendingAttachment, setPendingAttachment] = useState(null);
+    const inputBarBg = useColorModeValue('#F0F2F5', '#202C33');
+    const inputBg = useColorModeValue('#FFFFFF', '#2A3942');
+    const iconColor = useColorModeValue('#54656F', '#AEBAC1');
 
     const handleSend = () => {
         if (disabled || !message.trim()) return;
@@ -730,7 +722,7 @@ const MessageInputBar = ({ onSendMessage, onSendAttachment, disabled, replyTarge
 
 
     return (
-        <Box>
+        <Box position="sticky" bottom="0" zIndex={5}>
             {/* شريط تعديل الرسالة */}
             {editingMessage && (
                 <Flex 
@@ -976,23 +968,12 @@ const MessageInputBar = ({ onSendMessage, onSendAttachment, disabled, replyTarge
 
             {/* شريط الإدخال الرئيسي */}
             <Flex 
-                p={{ base: 3, md: 4 }} 
-                bg={useColorModeValue('white','gray.800')} 
+                p={{ base: 2, md: 3 }} 
+                bg={inputBarBg} 
                 align="center" 
                 borderTop="1px solid" 
-                borderColor={useColorModeValue('gray.200','gray.700')}
+                borderColor={useColorModeValue('#E9EDEF', '#2A3942')}
                 gap={3}
-                boxShadow="0 -4px 12px rgba(0,0,0,0.05)"
-                position="relative"
-                _before={{
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '1px',
-                    bg: 'linear-gradient(90deg, transparent, teal.300, transparent)'
-                }}
             >
                 {/* قائمة الإرفاق */}
                 <Menu>
@@ -1001,15 +982,13 @@ const MessageInputBar = ({ onSendMessage, onSendAttachment, disabled, replyTarge
                         icon={<IoAttachOutline />}
                         variant="ghost"
                         aria-label="إرفاق ملف"
-                        size="lg"
-                        color="gray.600"
+                        size="md"
+                        color={iconColor}
                         borderRadius="full"
                         isDisabled={disabled}
                         _hover={{
-                            bg: useColorModeValue('gray.100', 'gray.700'),
-                            transform: 'scale(1.05)'
+                            bg: useColorModeValue('blackAlpha.50', 'whiteAlpha.100'),
                         }}
-                        transition="all 0.2s"
                     />
                     <MenuList bg={useColorModeValue('white','gray.800')} borderColor={useColorModeValue('gray.200','gray.600')}>
                         <MenuItem 
@@ -1034,17 +1013,14 @@ const MessageInputBar = ({ onSendMessage, onSendAttachment, disabled, replyTarge
                 {/* مربع إدخال الرسالة */}
                 <InputGroup 
                     flex="1" 
-                    bg={useColorModeValue('gray.50','gray.700')} 
-                    borderRadius="full"
-                    boxShadow="sm"
-                    _hover={{
-                        boxShadow: 'md'
-                    }}
-                    transition="all 0.2s ease"
+                    bg={inputBg} 
+                    borderRadius="2xl"
+                    border="1px solid"
+                    borderColor={useColorModeValue('#E9EDEF', '#2A3942')}
                 >
                     <Input
                         placeholder={editingMessage ? "عدل الرسالة..." : "اكتب رسالة..."}
-                        borderRadius="full"
+                        borderRadius="2xl"
                         value={editingMessage ? editText : message}
                         onChange={(e) => editingMessage ? setEditText(e.target.value) : setMessage(e.target.value)}
                         onKeyPress={handleKeyPress}
@@ -1053,13 +1029,8 @@ const MessageInputBar = ({ onSendMessage, onSendAttachment, disabled, replyTarge
                         border="none"
                         bg="transparent"
                         _focus={{
-                            boxShadow: '0 0 0 2px teal.400',
-                            bg: useColorModeValue('white', 'gray.600')
+                            boxShadow: 'none',
                         }}
-                        _hover={{
-                            bg: useColorModeValue('white', 'gray.600')
-                        }}
-                        transition="all 0.2s ease"
                     />
                     <InputRightElement width="3.5rem" pr={2}>
                         <SendButton
@@ -1069,6 +1040,17 @@ const MessageInputBar = ({ onSendMessage, onSendAttachment, disabled, replyTarge
                         />
                     </InputRightElement>
                 </InputGroup>
+
+                <IconButton
+                    aria-label="تسجيل صوتي"
+                    icon={<IoMicOutline />}
+                    variant="ghost"
+                    size="md"
+                    color={iconColor}
+                    borderRadius="full"
+                    isDisabled={disabled}
+                    _hover={{ bg: useColorModeValue('blackAlpha.50', 'whiteAlpha.100') }}
+                />
             </Flex>
         </Box>
     );
@@ -1146,6 +1128,8 @@ const TeacherChat = () => {
 
     const [groups, setGroups] = useState([]);
     const [activeGroupId, setActiveGroupId] = useState(null);
+    const [activeChatType, setActiveChatType] = useState('group'); // group | direct
+    const [activeDirect, setActiveDirect] = useState(null); // { id, name, avatar, chat_group_id }
     const [messagesByGroup, setMessagesByGroup] = useState({});
     const [isLoadingGroups, setIsLoadingGroups] = useState(true);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -1160,6 +1144,10 @@ const TeacherChat = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const socketRef = useRef(null);
+
+    // Direct contacts (Teacher -> students)
+    const [contacts, setContacts] = useState([]);
+    const [contactsLoading, setContactsLoading] = useState(false);
 
     const authHeader = useMemo(() => {
         const raw = localStorage.getItem('Authorization') || localStorage.getItem('token');
@@ -1212,6 +1200,40 @@ const TeacherChat = () => {
         return () => { ignore = true; };
     }, [authHeader, toast]);
 
+    // Fetch contacts (Teacher: students)
+    useEffect(() => {
+        let ignore = false;
+        const fetchContacts = async () => {
+            if (!isTeacher) return;
+            setContactsLoading(true);
+            try {
+                const { data } = await baseUrl.get('/api/chat/contacts', {
+                    headers: authHeader ? { Authorization: authHeader } : {},
+                });
+                if (ignore) return;
+                const list = (data?.contacts || [])
+                    .filter(c => c?.type === 'student' && c?.student)
+                    .map(c => ({
+                        id: c.student.id,
+                        name: c.student.name,
+                        avatar: c.student.avatar,
+                        direct_chat_group_id: c.direct_chat_group_id,
+                        lastMessage: '',
+                        time: '',
+                        unread: 0,
+                    }));
+                setContacts(list);
+            } catch (err) {
+                toast({ title: 'فشل تحميل الطلاب', status: 'error', duration: 3000, isClosable: true });
+                setContacts([]);
+            } finally {
+                setContactsLoading(false);
+            }
+        };
+        fetchContacts();
+        return () => { ignore = true; };
+    }, [authHeader, isTeacher, toast]);
+
     // Connect socket
     useEffect(() => {
         const tokenOnly = (localStorage.getItem('Authorization') || '').replace(/^Bearer\s+/i, '') || localStorage.getItem('token');
@@ -1244,6 +1266,8 @@ const TeacherChat = () => {
             });
             // update last message on group
             setGroups(prev => prev.map(g => g.id === groupId ? { ...g, lastMessage: payload.text, time: dayjs(payload.created_at).format('h:mm A'), unread: g.id === activeGroupId ? 0 : (g.unread || 0) + 1 } : g));
+            // update last message on direct contacts (if this groupId is a direct chat group)
+            setContacts(prev => prev.map(c => c.direct_chat_group_id === groupId ? { ...c, lastMessage: payload.text, time: dayjs(payload.created_at).format('h:mm A'), unread: (activeChatType === 'direct' && activeDirect?.id === c.id) ? 0 : (c.unread || 0) + 1 } : c));
         });
 
         s.on('chat:permission-changed', (payload) => {
@@ -1254,7 +1278,7 @@ const TeacherChat = () => {
         return () => {
             s.disconnect();
         };
-    }, [socketEndpoint, userData, activeGroupId]);
+    }, [socketEndpoint, userData, activeGroupId, activeChatType, activeDirect]);
 
     // Join rooms when groups list updates
     useEffect(() => {
@@ -1263,11 +1287,48 @@ const TeacherChat = () => {
         (groups || []).forEach(g => {
             s.emit('chat:join-group', g.id);
         });
-    }, [groups]);
+        (contacts || []).forEach(c => {
+            if (c.direct_chat_group_id) s.emit('chat:join-group', c.direct_chat_group_id);
+        });
+    }, [groups, contacts]);
 
-    // Load history when selecting a group (first time or on explicit change)
+    // Load history when selecting a group/direct chat (first time or on explicit change)
     useEffect(() => {
         const loadHistory = async () => {
+            if (activeChatType === 'direct') {
+                const otherId = activeDirect?.id;
+                if (!otherId) return;
+                const knownGroupId = activeDirect?.chat_group_id || contacts.find(c => c.id === otherId)?.direct_chat_group_id;
+                if (knownGroupId && messagesByGroup[knownGroupId]?.length) return;
+                setIsLoadingHistory(true);
+                try {
+                    const { data } = await baseUrl.get(`/api/chat/direct/${otherId}/messages`, {
+                        params: { limit: 50 },
+                        headers: authHeader ? { Authorization: authHeader } : {},
+                    });
+                    const chatGroupId = data?.chat_group_id || knownGroupId;
+                    const transformed = (data?.messages || []).map(m => ({
+                        id: m.id,
+                        sender: m.sender_name,
+                        text: m.text,
+                        timestamp: dayjs(m.created_at).format('h:mm A'),
+                        isMine: !!(userData && (m.sender_id === userData?.id || m.sender_id === userData?._id)),
+                        type: 'text',
+                    }));
+                    if (chatGroupId) {
+                        setMessagesByGroup(prev => ({ ...prev, [chatGroupId]: transformed }));
+                        setActiveDirect(prev => prev && prev.id === otherId ? { ...prev, chat_group_id: chatGroupId } : prev);
+                        setContacts(prev => prev.map(c => c.id === otherId ? { ...c, direct_chat_group_id: chatGroupId, unread: 0 } : c));
+                        socketRef.current?.emit('chat:join-group', chatGroupId);
+                    }
+                } catch (err) {
+                    toast({ title: 'فشل تحميل الرسائل', status: 'error', duration: 3000, isClosable: true });
+                } finally {
+                    setIsLoadingHistory(false);
+                }
+                return;
+            }
+
             if (!activeGroupId) return;
             if (messagesByGroup[activeGroupId]?.length) return;
             setIsLoadingHistory(true);
@@ -1308,30 +1369,105 @@ const TeacherChat = () => {
             }
         };
         loadHistory();
-    }, [activeGroupId, authHeader, toast, userData]);
+    }, [activeGroupId, activeChatType, activeDirect, authHeader, toast, userData, contacts, messagesByGroup]);
 
     const handleChatSelect = (id) => {
+        setActiveChatType('group');
+        setActiveDirect(null);
         setActiveGroupId(id);
         if (isMobile) {
             setShowSidebar(false);
         }
     };
 
+    const handleDirectSelect = (contact) => {
+        setActiveChatType('direct');
+        setActiveGroupId(null);
+        setActiveDirect({
+            id: contact.id,
+            name: contact.name,
+            avatar: contact.avatar,
+            chat_group_id: contact.direct_chat_group_id || null,
+        });
+        if (isMobile) setShowSidebar(false);
+        if (contact.direct_chat_group_id) socketRef.current?.emit('chat:join-group', contact.direct_chat_group_id);
+        // Reset unread
+        setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, unread: 0 } : c));
+    };
+
     const handleBackToSidebar = () => {
         if (isMobile) {
             setShowSidebar(true);
             setActiveGroupId(null);
+            setActiveDirect(null);
         }
     };
 
     const getActiveChatInfo = () => {
+        if (activeChatType === 'direct') {
+            if (!activeDirect) return null;
+            return {
+                id: activeDirect.id,
+                name: activeDirect.name,
+                avatar: activeDirect.avatar,
+                isDirect: true,
+            };
+        }
         if (!activeGroupId) return null;
         return groups.find(chat => chat.id === activeGroupId);
     };
 
     const getMessagesForChat = (id) => messagesByGroup[id] || [];
 
+    const getActiveChatGroupId = () => {
+        if (activeChatType === 'direct') {
+            const otherId = activeDirect?.id;
+            if (!otherId) return null;
+            return activeDirect?.chat_group_id || contacts.find(c => c.id === otherId)?.direct_chat_group_id || null;
+        }
+        return activeGroupId;
+    };
+
     const onSendMessage = async (content, messageType = 'text') => {
+        if (activeChatType === 'direct') {
+            const otherId = activeDirect?.id;
+            if (!otherId) return;
+            if (messageType !== 'text') return;
+            try {
+                setIsSending(true);
+                const { data } = await baseUrl.post(`/api/chat/direct/${otherId}/messages`, { message: content }, {
+                    headers: authHeader ? { Authorization: authHeader } : {},
+                });
+                const chatGroupId = data?.chat_group_id;
+                const m = data?.message;
+                if (chatGroupId) {
+                    socketRef.current?.emit('chat:join-group', chatGroupId);
+                    setActiveDirect(prev => prev && prev.id === otherId ? { ...prev, chat_group_id: chatGroupId } : prev);
+                    setContacts(prev => prev.map(c => c.id === otherId ? { ...c, direct_chat_group_id: chatGroupId, lastMessage: m?.text || content, time: dayjs(m?.created_at || new Date()).format('h:mm A'), unread: 0 } : c));
+                }
+                if (chatGroupId && m) {
+                    const transformed = {
+                        id: m.id,
+                        sender: userData?.name || 'أنا',
+                        text: m.text,
+                        timestamp: dayjs(m.created_at).format('h:mm A'),
+                        isMine: true,
+                        type: 'text',
+                    };
+                    setMessagesByGroup(prev => ({
+                        ...prev,
+                        [chatGroupId]: [...(prev[chatGroupId] || []), transformed],
+                    }));
+                }
+                setReplyTarget(null);
+            } catch (e) {
+                toast({ title: 'تعذر إرسال الرسالة', status: 'error', duration: 2500, isClosable: true });
+            } finally {
+                setIsSending(false);
+            }
+            return;
+        }
+
         if (!activeGroupId) return;
         if (messageType !== 'text') return;
         try {
@@ -1372,11 +1508,15 @@ const TeacherChat = () => {
 
     const canTogglePermission = !!(isAdmin || isTeacher);
     const activeGroup = getActiveChatInfo();
-    const allowStudentSend = activeGroup?.allow_student_send;
+    const allowStudentSend = activeChatType === 'group' ? activeGroup?.allow_student_send : true;
     const isStudent = !!student;
-    const inputDisabled = isStudent && activeGroup && activeGroup.allow_student_send === false;
+    const inputDisabled = activeChatType === 'group' && isStudent && activeGroup && activeGroup.allow_student_send === false;
 
     const onSendAttachment = async (file, extra = {}) => {
+        if (activeChatType !== 'group') {
+            toast({ title: 'غير متاح', description: 'المرفقات غير مدعومة في الشات المباشر حالياً.', status: 'info', duration: 2500, isClosable: true });
+            return;
+        }
         if (!activeGroupId) return;
         const form = new FormData();
         form.append('file', file);
@@ -1432,10 +1572,10 @@ const TeacherChat = () => {
         }
     };
 
-    const canViewMembers = !!(isTeacher || isAdmin);
+    const canViewMembers = !!(isTeacher || isAdmin) && activeChatType === 'group';
 
     const openMembers = async () => {
-        if (!activeGroupId) return;
+        if (!activeGroupId || activeChatType !== 'group') return;
         setIsMembersOpen(true);
         setMembersLoading(true);
         try {
@@ -1521,9 +1661,9 @@ const TeacherChat = () => {
 
     return (
         <Box 
-            h="calc(100vh - 80px)" 
-            mt={{ base: "20px", md: "30px" }} 
-            bg={useColorModeValue('gray.50','gray.900')} 
+            h={{ base: "calc(100vh - 80px)", md: "calc(100vh - 80px)" }} 
+            mt={{ base: "0px", md: "30px" }} 
+            bg={useColorModeValue('#EFEAE2','#0B141A')} 
             className='chat-page'
             borderRadius={{ base: "none", md: "lg" }}
             overflow="hidden"
@@ -1533,15 +1673,13 @@ const TeacherChat = () => {
                 {/* Sidebar */}
                 <Box
                     w={{ base: '100%', md: '350px', lg: '380px' }}
-                    h={{ base: showSidebar ? '50%' : '0', md: '100%' }}
-                    bg={useColorModeValue('white','gray.800')}
+                    h={{ base: '100%', md: '100%' }}
+                    bg={useColorModeValue('#FFFFFF','#111B21')}
                     borderEnd={{ base: 'none', md: '1px solid' }}
-                    borderColor={useColorModeValue('gray.200','gray.700')}
+                    borderColor={useColorModeValue('#E9EDEF','#2A3942')}
                     overflowY="auto"
                     transition="all 0.3s ease"
-                    transform={{ base: showSidebar ? 'translateY(0)' : 'translateY(-100%)', md: 'translateY(0)' }}
-                    position={{ base: 'absolute', md: 'relative' }}
-                    zIndex={{ base: 10, md: 1 }}
+                    position={{ base: 'relative', md: 'relative' }}
                     display={{ base: showSidebar ? 'block' : 'none', md: 'block' }}
                 >
                     {isLoadingGroups ? (
@@ -1554,8 +1692,10 @@ const TeacherChat = () => {
                     ) : (
                         <Sidebar
                             groups={groups}
+                            contacts={contacts}
                             onSelectGroup={handleChatSelect}
-                            activeGroupId={activeGroupId}
+                            onSelectContact={handleDirectSelect}
+                            activeChat={activeChatType === 'direct' ? { type: 'direct', id: activeDirect?.id } : { type: 'group', id: activeGroupId }}
                         />
                     )}
                 </Box>
@@ -1564,12 +1704,12 @@ const TeacherChat = () => {
                 <Box
                     flex="1"
                     h="full"
-                    bg={useColorModeValue('white','gray.800')}
+                    bg={useColorModeValue('#EFEAE2','#0B141A')}
                     style={useChatBackground()}
                     position="relative"
                     display={{ base: !showSidebar ? 'block' : 'none', md: 'block' }}
                 >
-                    {!activeGroupId ? (
+                    {(!activeGroupId && activeChatType !== 'direct') && !activeDirect ? (
                         <Flex 
                             h="full" 
                             align="center" 
@@ -1597,7 +1737,7 @@ const TeacherChat = () => {
                                 يمكنك اختيار مجموعة لبدء محادثة.
                             </Text>
                         </Flex>
-                    ) : isLoadingHistory && !messagesByGroup[activeGroupId]?.length ? (
+                    ) : isLoadingHistory && !getMessagesForChat(getActiveChatGroupId())?.length ? (
                         <Flex h="full" align="center" justify="center" direction="column">
                             <VStack spacing={4}>
                                 <Spinner color="teal.500" size="lg" />
@@ -1609,11 +1749,11 @@ const TeacherChat = () => {
                     ) : (
                         <MainChatArea
                             chatInfo={activeGroup}
-                            messages={getMessagesForChat(activeGroupId)}
+                            messages={getMessagesForChat(getActiveChatGroupId())}
                             onSendMessage={onSendMessage}
                             onBack={handleBackToSidebar}
                             isMobile={isMobile}
-                            canTogglePermission={canTogglePermission}
+                            canTogglePermission={canTogglePermission && activeChatType === 'group'}
                             allowStudentSend={!!allowStudentSend}
                             onTogglePermission={handleTogglePermission}
                             togglingPermission={togglingPermission}

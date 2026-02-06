@@ -4,17 +4,10 @@ import {
   Flex,
   Heading,
   Text,
-  SimpleGrid,
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Avatar,
   useColorModeValue,
   Input,
   InputGroup,
   InputLeftElement,
-  Progress,
   Button,
   Icon,
   useToast,
@@ -35,29 +28,32 @@ import {
   HStack,
   VStack,
   Badge,
-  Divider
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Avatar
 } from '@chakra-ui/react';
 import {
   FiBook,
   FiBookOpen,
-  FiAward,
   FiSearch,
   FiArrowRight,
   FiGrid,
-  FiUser,
   FiPlus,
   FiEdit,
   FiTrash,
   FiUpload,
-  FiX
+  FiX,
+  FiFolder,
+  FiFileText
 } from 'react-icons/fi';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import baseUrl from '../../api/baseUrl';
 
-// مكونات Motion لإضافة الحركات
 const MotionBox = motion(Box);
-const MotionCard = motion(Card);
 const MotionButton = motion(Button);
 
 const QuestionBank = () => {
@@ -97,6 +93,40 @@ const QuestionBank = () => {
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const [deletingSubject, setDeletingSubject] = useState(null);
 
+  // Chapter states (إضافة / تعديل / حذف فصل)
+  const [subjectForNewChapter, setSubjectForNewChapter] = useState(null);
+  const [chapterFormData, setChapterFormData] = useState({ name: '', description: '' });
+  const [chapterSelectedImage, setChapterSelectedImage] = useState(null);
+  const [chapterImagePreview, setChapterImagePreview] = useState(null);
+  const [editingChapter, setEditingChapter] = useState(null);
+  const [editChapterFormData, setEditChapterFormData] = useState({ name: '', description: '' });
+  const [editChapterImagePreview, setEditChapterImagePreview] = useState(null);
+  const [editChapterSelectedImage, setEditChapterSelectedImage] = useState(null);
+  const [deletingChapter, setDeletingChapter] = useState(null);
+  const { isOpen: isChapterAddOpen, onOpen: onChapterAddOpen, onClose: onChapterAddClose } = useDisclosure();
+  const { isOpen: isChapterEditOpen, onOpen: onChapterEditOpen, onClose: onChapterEditClose } = useDisclosure();
+  const { isOpen: isChapterDeleteOpen, onOpen: onChapterDeleteOpen, onClose: onChapterDeleteClose } = useDisclosure();
+  const [chapterSubmitLoading, setChapterSubmitLoading] = useState(false);
+  const [chapterEditLoading, setChapterEditLoading] = useState(false);
+  const [chapterDeleteLoading, setChapterDeleteLoading] = useState(false);
+
+  // Lesson states (إضافة / تعديل / حذف درس)
+  const [chapterForNewLesson, setChapterForNewLesson] = useState(null);
+  const [lessonFormData, setLessonFormData] = useState({ name: '', description: '' });
+  const [lessonSelectedImage, setLessonSelectedImage] = useState(null);
+  const [lessonImagePreview, setLessonImagePreview] = useState(null);
+  const [editingLesson, setEditingLesson] = useState(null);
+  const [editLessonFormData, setEditLessonFormData] = useState({ name: '', description: '' });
+  const [editLessonImagePreview, setEditLessonImagePreview] = useState(null);
+  const [editLessonSelectedImage, setEditLessonSelectedImage] = useState(null);
+  const [deletingLesson, setDeletingLesson] = useState(null);
+  const { isOpen: isLessonAddOpen, onOpen: onLessonAddOpen, onClose: onLessonAddClose } = useDisclosure();
+  const { isOpen: isLessonEditOpen, onOpen: onLessonEditOpen, onClose: onLessonEditClose } = useDisclosure();
+  const { isOpen: isLessonDeleteOpen, onOpen: onLessonDeleteOpen, onClose: onLessonDeleteClose } = useDisclosure();
+  const [lessonSubmitLoading, setLessonSubmitLoading] = useState(false);
+  const [lessonEditLoading, setLessonEditLoading] = useState(false);
+  const [lessonDeleteLoading, setLessonDeleteLoading] = useState(false);
+
   // ألوان مخصصة للثيم الفاتح والداكن
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
@@ -131,6 +161,18 @@ const QuestionBank = () => {
   const spinnerColor = useColorModeValue("blue.500", "blue.400");
   const badgeActiveBg = useColorModeValue("blue.100", "blue.900");
   const badgeActiveColor = useColorModeValue("blue.700", "blue.300");
+  const buttonHoverShadow = useColorModeValue("0 10px 30px rgba(66, 153, 225, 0.45)", "0 10px 30px rgba(0, 0, 0, 0.5)");
+  const cardShadow = useColorModeValue("0 8px 30px rgba(66, 153, 225, 0.12)", "0 8px 30px rgba(0, 0, 0, 0.3)");
+  const headerShadow = useColorModeValue("0 4px 20px rgba(66, 153, 225, 0.15)", "0 4px 20px rgba(0, 0, 0, 0.3)");
+  const iconShadow = useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)");
+  const inputShadow = useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.1)", "0 5px 15px rgba(0, 0, 0, 0.2)");
+  const searchIconColor = useColorModeValue("#4299e1", "#63b3ed");
+  const inputFocusBg = useColorModeValue("blue.100", "gray.600");
+  const accordionHoverBg = useColorModeValue("blue.50", "gray.700");
+  const lessonCardBg = useColorModeValue("gray.50", "gray.700");
+  const lessonCardHoverBg = useColorModeValue("blue.50", "gray.600");
+  const loadingGradient = useColorModeValue("linear(to-b, blue.50 0%, white 50%)", "linear(to-b, gray.900 0%, gray.800 50%)");
+  const focusRingShadow = useColorModeValue("0 0 0 3px rgba(66, 153, 225, 0.2)", "0 0 0 3px rgba(66, 153, 225, 0.3)");
 
   // Fetch question bank data
   const fetchQuestionBankData = async () => {
@@ -348,6 +390,91 @@ const QuestionBank = () => {
     }
   };
 
+  // Create new chapter (للمادة المحددة)
+  const createChapter = async (data) => {
+    if (!subjectForNewChapter?.id) return { success: false };
+    try {
+      setChapterSubmitLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({ title: "خطأ", description: "يجب تسجيل الدخول أولاً", status: "error", duration: 3000, isClosable: true });
+        return { success: false };
+      }
+      const fd = new FormData();
+      fd.append("name", data.name);
+      fd.append("description", data.description || "");
+      if (chapterSelectedImage) fd.append("image", chapterSelectedImage);
+      const response = await baseUrl.post(`/api/subjects/${subjectForNewChapter.id}/chapters`, fd, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+      });
+      if (response.data) {
+        toast({ title: "نجح", description: "تم إنشاء الفصل بنجاح", status: "success", duration: 3000, isClosable: true });
+        return { success: true, data: response.data };
+      }
+    } catch (error) {
+      const msg = error.response?.data?.message || "حدث خطأ في إنشاء الفصل";
+      toast({ title: "خطأ", description: msg, status: "error", duration: 3000, isClosable: true });
+      return { success: false };
+    } finally {
+      setChapterSubmitLoading(false);
+    }
+    return { success: false };
+  };
+
+  // Update chapter
+  const updateChapter = async (data) => {
+    if (!editingChapter?.id) return { success: false };
+    try {
+      setChapterEditLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({ title: "خطأ", description: "يجب تسجيل الدخول أولاً", status: "error", duration: 3000, isClosable: true });
+        return { success: false };
+      }
+      const fd = new FormData();
+      fd.append("name", data.name);
+      fd.append("description", data.description || "");
+      if (editChapterSelectedImage) fd.append("image", editChapterSelectedImage);
+      const response = await baseUrl.put(`/api/chapters/${editingChapter.id}`, fd, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+      });
+      if (response.data) {
+        toast({ title: "نجح", description: "تم تحديث الفصل بنجاح", status: "success", duration: 3000, isClosable: true });
+        return { success: true, data: response.data };
+      }
+    } catch (error) {
+      const msg = error.response?.data?.message || "حدث خطأ في تحديث الفصل";
+      toast({ title: "خطأ", description: msg, status: "error", duration: 3000, isClosable: true });
+      return { success: false };
+    } finally {
+      setChapterEditLoading(false);
+    }
+    return { success: false };
+  };
+
+  // Delete chapter
+  const deleteChapter = async () => {
+    if (!deletingChapter?.id) return { success: false };
+    try {
+      setChapterDeleteLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({ title: "خطأ", description: "يجب تسجيل الدخول أولاً", status: "error", duration: 3000, isClosable: true });
+        return { success: false };
+      }
+      await baseUrl.delete(`/api/chapters/${deletingChapter.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      toast({ title: "نجح", description: "تم حذف الفصل بنجاح", status: "success", duration: 3000, isClosable: true });
+      return { success: true };
+    } catch (error) {
+      const msg = error.response?.data?.message || "حدث خطأ في حذف الفصل";
+      toast({ title: "خطأ", description: msg, status: "error", duration: 3000, isClosable: true });
+      return { success: false };
+    } finally {
+      setChapterDeleteLoading(false);
+    }
+    return { success: false };
+  };
+
   // Load data on component mount
   useEffect(() => {
     fetchQuestionBankData();
@@ -479,6 +606,291 @@ const QuestionBank = () => {
     onDeleteOpen();
   };
 
+  // Chapter form handlers
+  const handleChapterInputChange = (e) => {
+    const { name, value } = e.target;
+    setChapterFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  const handleChapterEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditChapterFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  const handleChapterImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setChapterSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setChapterImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+  const removeChapterImage = () => {
+    setChapterSelectedImage(null);
+    setChapterImagePreview(null);
+  };
+  const handleChapterEditImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEditChapterSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setEditChapterImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+  const removeChapterEditImage = () => {
+    setEditChapterSelectedImage(null);
+    setEditChapterImagePreview(editingChapter?.image_url || null);
+  };
+  const openAddChapter = (subject) => {
+    setSubjectForNewChapter(subject);
+    setChapterFormData({ name: '', description: '' });
+    setChapterSelectedImage(null);
+    setChapterImagePreview(null);
+    onChapterAddOpen();
+  };
+  const handleChapterEditClick = (chapter) => {
+    setEditingChapter(chapter);
+    setEditChapterFormData({ name: chapter.name, description: chapter.description || '' });
+    setEditChapterImagePreview(chapter.image_url || null);
+    setEditChapterSelectedImage(null);
+    onChapterEditOpen();
+  };
+  const handleChapterDeleteClick = (chapter) => {
+    setDeletingChapter(chapter);
+    onChapterDeleteOpen();
+  };
+  const resetChapterForm = () => {
+    setChapterFormData({ name: '', description: '' });
+    setChapterSelectedImage(null);
+    setChapterImagePreview(null);
+  };
+  const resetChapterEditForm = () => {
+    setEditChapterFormData({ name: '', description: '' });
+    setEditChapterSelectedImage(null);
+    setEditChapterImagePreview(editingChapter?.image_url || null);
+  };
+  const handleChapterSubmit = async (e) => {
+    e.preventDefault();
+    if (!chapterFormData.name) {
+      toast({ title: "خطأ", description: "يجب ملء اسم الفصل", status: "error", duration: 3000, isClosable: true });
+      return;
+    }
+    const result = await createChapter(chapterFormData);
+    if (result.success) {
+      onChapterAddClose();
+      setSubjectForNewChapter(null);
+      resetChapterForm();
+      fetchQuestionBankData();
+    }
+  };
+  const handleChapterEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editChapterFormData.name) {
+      toast({ title: "خطأ", description: "يجب ملء اسم الفصل", status: "error", duration: 3000, isClosable: true });
+      return;
+    }
+    const result = await updateChapter(editChapterFormData);
+    if (result.success) {
+      onChapterEditClose();
+      setEditingChapter(null);
+      resetChapterEditForm();
+      fetchQuestionBankData();
+    }
+  };
+  const handleChapterDeleteConfirm = async () => {
+    const result = await deleteChapter();
+    if (result.success) {
+      onChapterDeleteClose();
+      setDeletingChapter(null);
+      fetchQuestionBankData();
+    }
+  };
+
+  // Create new lesson (للفصل المحدد)
+  const createLesson = async (data) => {
+    if (!chapterForNewLesson?.id) return { success: false };
+    try {
+      setLessonSubmitLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({ title: "خطأ", description: "يجب تسجيل الدخول أولاً", status: "error", duration: 3000, isClosable: true });
+        return { success: false };
+      }
+      const fd = new FormData();
+      fd.append("name", data.name);
+      fd.append("description", data.description || "");
+      if (lessonSelectedImage) fd.append("image", lessonSelectedImage);
+      const response = await baseUrl.post(`/api/chapters/${chapterForNewLesson.id}/lessons`, fd, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+      });
+      if (response.data) {
+        toast({ title: "نجح", description: "تم إنشاء الدرس بنجاح", status: "success", duration: 3000, isClosable: true });
+        return { success: true, data: response.data };
+      }
+    } catch (error) {
+      const msg = error.response?.data?.message || "حدث خطأ في إنشاء الدرس";
+      toast({ title: "خطأ", description: msg, status: "error", duration: 3000, isClosable: true });
+      return { success: false };
+    } finally {
+      setLessonSubmitLoading(false);
+    }
+    return { success: false };
+  };
+
+  // Update lesson
+  const updateLesson = async (data) => {
+    if (!editingLesson?.id) return { success: false };
+    try {
+      setLessonEditLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({ title: "خطأ", description: "يجب تسجيل الدخول أولاً", status: "error", duration: 3000, isClosable: true });
+        return { success: false };
+      }
+      const fd = new FormData();
+      fd.append("name", data.name);
+      fd.append("description", data.description || "");
+      if (editLessonSelectedImage) fd.append("image", editLessonSelectedImage);
+      const response = await baseUrl.put(`/api/lessons/${editingLesson.id}`, fd, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+      });
+      if (response.data) {
+        toast({ title: "نجح", description: "تم تحديث الدرس بنجاح", status: "success", duration: 3000, isClosable: true });
+        return { success: true, data: response.data };
+      }
+    } catch (error) {
+      const msg = error.response?.data?.message || "حدث خطأ في تحديث الدرس";
+      toast({ title: "خطأ", description: msg, status: "error", duration: 3000, isClosable: true });
+      return { success: false };
+    } finally {
+      setLessonEditLoading(false);
+    }
+    return { success: false };
+  };
+
+  // Delete lesson
+  const deleteLesson = async () => {
+    if (!deletingLesson?.id) return { success: false };
+    try {
+      setLessonDeleteLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({ title: "خطأ", description: "يجب تسجيل الدخول أولاً", status: "error", duration: 3000, isClosable: true });
+        return { success: false };
+      }
+      await baseUrl.delete(`/api/lessons/${deletingLesson.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      toast({ title: "نجح", description: "تم حذف الدرس بنجاح", status: "success", duration: 3000, isClosable: true });
+      return { success: true };
+    } catch (error) {
+      const msg = error.response?.data?.message || "حدث خطأ في حذف الدرس";
+      toast({ title: "خطأ", description: msg, status: "error", duration: 3000, isClosable: true });
+      return { success: false };
+    } finally {
+      setLessonDeleteLoading(false);
+    }
+    return { success: false };
+  };
+
+  // Lesson form handlers
+  const handleLessonInputChange = (e) => {
+    const { name, value } = e.target;
+    setLessonFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  const handleLessonEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditLessonFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  const handleLessonImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLessonSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setLessonImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+  const removeLessonImage = () => {
+    setLessonSelectedImage(null);
+    setLessonImagePreview(null);
+  };
+  const handleLessonEditImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEditLessonSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setEditLessonImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+  const removeLessonEditImage = () => {
+    setEditLessonSelectedImage(null);
+    setEditLessonImagePreview(editingLesson?.image_url || null);
+  };
+  const openAddLesson = (chapter) => {
+    setChapterForNewLesson(chapter);
+    setLessonFormData({ name: '', description: '' });
+    setLessonSelectedImage(null);
+    setLessonImagePreview(null);
+    onLessonAddOpen();
+  };
+  const handleLessonEditClick = (lesson) => {
+    setEditingLesson(lesson);
+    setEditLessonFormData({ name: lesson.name, description: lesson.description || '' });
+    setEditLessonImagePreview(lesson.image_url || null);
+    setEditLessonSelectedImage(null);
+    onLessonEditOpen();
+  };
+  const handleLessonDeleteClick = (lesson) => {
+    setDeletingLesson(lesson);
+    onLessonDeleteOpen();
+  };
+  const resetLessonForm = () => {
+    setLessonFormData({ name: '', description: '' });
+    setLessonSelectedImage(null);
+    setLessonImagePreview(null);
+  };
+  const resetLessonEditForm = () => {
+    setEditLessonFormData({ name: '', description: '' });
+    setEditLessonSelectedImage(null);
+    setEditLessonImagePreview(editingLesson?.image_url || null);
+  };
+  const handleLessonSubmit = async (e) => {
+    e.preventDefault();
+    if (!lessonFormData.name) {
+      toast({ title: "خطأ", description: "يجب ملء اسم الدرس", status: "error", duration: 3000, isClosable: true });
+      return;
+    }
+    const result = await createLesson(lessonFormData);
+    if (result.success) {
+      onLessonAddClose();
+      setChapterForNewLesson(null);
+      resetLessonForm();
+      fetchQuestionBankData();
+    }
+  };
+  const handleLessonEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editLessonFormData.name) {
+      toast({ title: "خطأ", description: "يجب ملء اسم الدرس", status: "error", duration: 3000, isClosable: true });
+      return;
+    }
+    const result = await updateLesson(editLessonFormData);
+    if (result.success) {
+      onLessonEditClose();
+      setEditingLesson(null);
+      resetLessonEditForm();
+      fetchQuestionBankData();
+    }
+  };
+  const handleLessonDeleteConfirm = async () => {
+    const result = await deleteLesson();
+    if (result.success) {
+      onLessonDeleteClose();
+      setDeletingLesson(null);
+      fetchQuestionBankData();
+    }
+  };
+
   // Filter subjects based on search
   const filteredSubjects = subjects.filter(subject =>
     subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -501,10 +913,12 @@ const QuestionBank = () => {
 
   if (loading) {
     return (
-      <Flex minH="100vh" bg={bgColor} justify="center" align="center">
-        <VStack spacing={4}>
-          <Spinner size="xl" color={accentColor} />
-          <Text color={textColor}>جاري تحميل بيانات بنك الأسئلة...</Text>
+      <Flex minH="100vh" bg={pageBg} justify="center" align="center" position="relative" overflow="hidden">
+        <Box position="absolute" inset={0} bgGradient={loadingGradient} opacity={0.9} />
+        <VStack spacing={6} position="relative" zIndex={1} p={8} bg={cardBackground} borderRadius="2xl" boxShadow={cardShadow} borderWidth="1px" borderColor={cardBorder}>
+          <Spinner size="xl" color={buttonPrimary} thickness="3px" />
+          <Text color={textPrimary} fontWeight="600" fontFamily="'Cairo', 'Tajawal', sans-serif">جاري تحميل بنك الأسئلة...</Text>
+          <Text color={textSecondary} fontSize="sm">الرجاء الانتظار</Text>
         </VStack>
       </Flex>
     );
@@ -512,9 +926,13 @@ const QuestionBank = () => {
 
   if (error) {
     return (
-      <Flex minH="100vh" bg={bgColor} justify="center" align="center">
-        <Box textAlign="center" p={6} bg="red.50" borderRadius="lg">
-          <Text color="red.600">خطأ في تحميل البيانات: {error}</Text>
+      <Flex minH="100vh" bg={pageBg} justify="center" align="center" p={4}>
+        <Box textAlign="center" p={8} bg={cardBackground} borderRadius="2xl" boxShadow={cardShadow} borderWidth="2px" borderColor={useColorModeValue("red.200", "red.900")} maxW="md">
+          <Box w="16" h="16" mx="auto" mb={4} borderRadius="full" bg={useColorModeValue("red.50", "red.900")} display="flex" alignItems="center" justifyContent="center">
+            <Icon as={FiX} color="red.500" boxSize={8} />
+          </Box>
+          <Heading size="md" color={textPrimary} mb={2} fontFamily="'Cairo', 'Tajawal', sans-serif">فشل تحميل البيانات</Heading>
+          <Text color={textSecondary} mb={4}>{error}</Text>
         </Box>
       </Flex>
     );
@@ -522,9 +940,13 @@ const QuestionBank = () => {
 
   if (!questionBank) {
     return (
-      <Flex minH="100vh" bg={bgColor} justify="center" align="center">
-        <Box textAlign="center" p={6} bg="red.50" borderRadius="lg">
-          <Text color="red.600">لم يتم العثور على بنك الأسئلة</Text>
+      <Flex minH="100vh" bg={pageBg} justify="center" align="center" p={4}>
+        <Box textAlign="center" p={8} bg={cardBackground} borderRadius="2xl" boxShadow={cardShadow} borderWidth="2px" borderColor={cardBorder} maxW="md">
+          <Box w="16" h="16" mx="auto" mb={4} borderRadius="full" bg={iconBg} display="flex" alignItems="center" justifyContent="center">
+            <Icon as={FiBook} color={buttonPrimary} boxSize={8} />
+          </Box>
+          <Heading size="md" color={textPrimary} mb={2} fontFamily="'Cairo', 'Tajawal', sans-serif">بنك الأسئلة غير موجود</Heading>
+          <Text color={textSecondary}>لم يتم العثور على بنك الأسئلة المطلوب.</Text>
         </Box>
       </Flex>
     );
@@ -532,72 +954,64 @@ const QuestionBank = () => {
 
   return (
     <Box minH="100vh" bg={pageBg} position="relative">
-      {/* Background Pattern */}
+      {/* Background */}
+      <Box
+        position="absolute"
+        inset={0}
+        bgGradient={useColorModeValue("linear(to-br, blue.50 0%, white 40%, blue.50 100%)", "linear(to-br, gray.900 0%, gray.800 50%, gray.900 100%)")}
+        opacity={1}
+      />
       <Box
         position="absolute"
         top={0}
         left={0}
         right={0}
         bottom={0}
-        opacity={useColorModeValue(0.05, 0.1)}
+        opacity={useColorModeValue(0.04, 0.06)}
         backgroundImage={useColorModeValue(
-          "radial-gradient(circle at 25px 25px, blue.500 2px, transparent 0), radial-gradient(circle at 75px 75px, blue.500 2px, transparent 0)",
-          "radial-gradient(circle at 25px 25px, blue.400 2px, transparent 0), radial-gradient(circle at 75px 75px, blue.400 2px, transparent 0)"
+          "radial-gradient(circle at 25px 25px, blue.400 1.5px, transparent 0), radial-gradient(circle at 75px 75px, blue.400 1.5px, transparent 0)",
+          "radial-gradient(circle at 25px 25px, blue.500 1.5px, transparent 0), radial-gradient(circle at 75px 75px, blue.500 1.5px, transparent 0)"
         )}
-        backgroundSize="100px 100px"
+        backgroundSize="80px 80px"
       />
-      
+
       {/* Header */}
       <Box
         as={motion.header}
-        initial={{ y: -100, opacity: 0 }}
+        initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 120, damping: 20 }}
+        transition={{ duration: 0.4 }}
         bg={headerBg}
-        borderBottom="3px solid"
-        borderColor={useColorModeValue("blue.500", "blue.400")}
-        boxShadow={useColorModeValue("0 4px 20px rgba(66, 153, 225, 0.15)", "0 4px 20px rgba(0, 0, 0, 0.3)")}
+        borderBottomWidth="2px"
+        borderBottomColor={cardBorder}
+        boxShadow={headerShadow}
         position="sticky"
         top={0}
         zIndex={10}
+        backdropFilter="blur(8px)"
       >
-        <Flex justify="space-between" align="center" maxW="1400px" mx="auto" px={{ base: 4, md: 8 }} py={{ base: 4, md: 6 }}>
-          <Flex align="center" gap={4}>
+        <Flex justify="space-between" align="center" maxW="1280px" mx="auto" px={{ base: 4, md: 6, lg: 8 }} py={{ base: 4, md: 5 }}>
+          <Flex align="center" gap={{ base: 3, md: 5 }}>
             <Box
-              w="70px"
-              h="70px"
+              w={{ base: "56px", md: "64px" }}
+              h={{ base: "56px", md: "64px" }}
               bg={buttonPrimary}
-              borderRadius="20px"
+              borderRadius="2xl"
               display="flex"
               alignItems="center"
               justifyContent="center"
-              boxShadow={useColorModeValue("0 8px 25px rgba(66, 153, 225, 0.4)", "0 8px 25px rgba(0, 0, 0, 0.4)")}
-              transition="all 0.3s"
-              _hover={{
-                transform: "rotate(5deg) scale(1.05)",
-                boxShadow: useColorModeValue("0 12px 35px rgba(66, 153, 225, 0.5)", "0 12px 35px rgba(0, 0, 0, 0.5)")
-              }}
+              boxShadow={iconShadow}
+              transition="all 0.25s ease"
+              _hover={{ transform: "scale(1.05)", boxShadow: buttonHoverShadow }}
             >
-              <Icon as={FiGrid} color="white" boxSize={7} />
+              <Icon as={FiGrid} color="white" boxSize={6} />
             </Box>
             <Box>
-              <Heading 
-                size={{ base: "lg", md: "xl" }} 
-                color={textPrimary}
-                fontWeight="800"
-                fontFamily="'Cairo', 'Tajawal', sans-serif"
-                letterSpacing="-0.02em"
-              >
+              <Heading size={{ base: "lg", md: "xl" }} color={textPrimary} fontWeight="800" fontFamily="'Cairo', 'Tajawal', sans-serif" letterSpacing="-0.02em" lineHeight="1.2">
                 {questionBank.name}
               </Heading>
-              <Text 
-                color={textSecondary} 
-                fontSize="md" 
-                mt={1} 
-                fontWeight="600"
-                fontFamily="'Cairo', 'Tajawal', sans-serif"
-              >
-                إدارة بنك الأسئلة والمواد الدراسية
+              <Text color={textSecondary} fontSize={{ base: "sm", md: "md" }} mt={0.5} fontWeight="500" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                إدارة المواد والفصول والدروس
               </Text>
             </Box>
           </Flex>
@@ -608,20 +1022,17 @@ const QuestionBank = () => {
             color="white"
             onClick={onOpen}
             size={{ base: "md", md: "lg" }}
-            borderRadius="12px"
-            boxShadow={useColorModeValue("0 6px 20px rgba(66, 153, 225, 0.35)", "0 6px 20px rgba(0, 0, 0, 0.4)")}
-            _hover={{
-              transform: "translateY(-3px)",
-              boxShadow: useColorModeValue("0 10px 30px rgba(66, 153, 225, 0.45)", "0 10px 30px rgba(0, 0, 0, 0.5)"),
-              bg: buttonPrimaryHover
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            px={8}
-            py={6}
+            borderRadius="xl"
+            boxShadow={iconShadow}
+            _hover={{ bg: buttonPrimaryHover, boxShadow: buttonHoverShadow, transform: "translateY(-2px)" }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            px={{ base: 5, md: 6 }}
+            py={{ base: 5, md: 6 }}
             fontWeight="bold"
+            fontFamily="'Cairo', 'Tajawal', sans-serif"
           >
-            إضافة مادة جديدة
+            إضافة مادة
           </MotionButton>
         </Flex>
       </Box>
@@ -629,8 +1040,8 @@ const QuestionBank = () => {
       {/* Main Content */}
       <MotionBox
         flex={1}
-        p={{ base: 4, md: 8 }}
-        maxW="1400px"
+        p={{ base: 4, md: 6, lg: 8 }}
+        maxW="1280px"
         mx="auto"
         w="full"
         initial="hidden"
@@ -643,145 +1054,72 @@ const QuestionBank = () => {
         <MotionBox
           variants={itemVariants}
           bg={cardBackground}
-          p={{ base: 6, md: 8 }}
-          borderRadius="20px"
-          boxShadow={useColorModeValue("0 8px 30px rgba(66, 153, 225, 0.12)", "0 8px 30px rgba(0, 0, 0, 0.3)")}
-          mb={8}
-          border="2px solid"
+          p={{ base: 5, md: 6, lg: 8 }}
+          borderRadius="2xl"
+          boxShadow={cardShadow}
+          mb={6}
+          borderWidth="1px"
           borderColor={cardBorder}
           position="relative"
           overflow="hidden"
         >
-          {/* Decorative Elements */}
-          <Box
-            position="absolute"
-            top="-50px"
-            right="-50px"
-            w="200px"
-            h="200px"
-            bg={iconBg}
-            borderRadius="50%"
-            opacity={0.5}
-          />
-          <Box
-            position="absolute"
-            bottom="-30px"
-            left="-30px"
-            w="150px"
-            h="150px"
-            bg={iconBg}
-            borderRadius="50%"
-            opacity={0.5}
-          />
+          <Box position="absolute" top={-8} right={-8} w="32" h="32" bg={iconBg} borderRadius="full" opacity={0.6} />
+          <Box position="absolute" bottom={-6} left={-6} w="24" h="24" bg={iconBg} borderRadius="full" opacity={0.5} />
 
-          <Flex
-            direction={{ base: "column", md: "row" }}
-            justify="space-between"
-            align={{ base: "flex-start", md: "center" }}
-            wrap="wrap"
-            position="relative"
-            zIndex={1}
-          >
-            <Box mb={{ base: 6, md: 0 }} flex={1}>
-              <Flex align="center" mb={4}>
-                <Box
-                  w="50px"
-                  h="50px"
-                  bg={buttonPrimary}
-                  borderRadius="15px"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  mr={4}
-                  boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
-                >
-                  <Icon as={FiBookOpen} color="white" boxSize={5} />
-                </Box>
-                <Box>
-                  <Heading 
-                    size={{ base: "lg", md: "xl" }} 
-                    mb={2} 
-                    color={textPrimary}
-                    fontWeight="800"
-                    fontFamily="'Cairo', 'Tajawal', sans-serif"
-                    letterSpacing="-0.02em"
+          <Flex direction={{ base: "column", md: "row" }} justify="space-between" align={{ base: "flex-start", md: "center" }} wrap="wrap" gap={6} position="relative" zIndex={1}>
+            <Flex align="flex-start" gap={4} flex={1} minW={0}>
+              <Box
+                w="12"
+                h="12"
+                bg={buttonPrimary}
+                borderRadius="xl"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                flexShrink={0}
+                boxShadow={iconShadow}
+              >
+                <Icon as={FiBookOpen} color="white" boxSize={6} />
+              </Box>
+              <Box minW={0}>
+                <Heading size={{ base: "lg", md: "xl" }} mb={1} color={textPrimary} fontWeight="800" fontFamily="'Cairo', 'Tajawal', sans-serif" letterSpacing="-0.02em">
+                  {questionBank.name}
+                </Heading>
+                <Text fontSize={{ base: "sm", md: "md" }} color={textSecondary} lineHeight="1.6" fontWeight="500" fontFamily="'Cairo', 'Tajawal', sans-serif" noOfLines={2}>
+                  {questionBank.description}
+                </Text>
+                <HStack spacing={3} mt={3} flexWrap="wrap" gap={2}>
+                  <Badge bg={buttonPrimary} color="white" px={3} py={1.5} borderRadius="lg" fontWeight="bold" fontSize="xs" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                    {questionBank.grade_name}
+                  </Badge>
+                  <Badge
+                    bg={questionBank.is_active ? badgeActiveBg : useColorModeValue("gray.200", "gray.600")}
+                    color={questionBank.is_active ? badgeActiveColor : useColorModeValue("gray.600", "gray.400")}
+                    px={3}
+                    py={1.5}
+                    borderRadius="lg"
+                    fontWeight="bold"
+                    fontSize="xs"
                   >
-                    {questionBank.name}
-                  </Heading>
-                  <Text 
-                    fontSize={{ base: "md", md: "lg" }} 
-                    color={textSecondary} 
-                    lineHeight="1.7"
-                    fontWeight="500"
-                    fontFamily="'Cairo', 'Tajawal', sans-serif"
-                  >
-                    {questionBank.description}
-                  </Text>
-                </Box>
-              </Flex>
-              
-              <HStack spacing={4} flexWrap="wrap">
-                <Badge
-                  bg={buttonPrimary}
-                  color="white"
-                  px={4}
-                  py={2}
-                  borderRadius="12px"
-                  fontWeight="bold"
-                  fontSize="sm"
-                  boxShadow={useColorModeValue("0 4px 12px rgba(66, 153, 225, 0.3)", "0 4px 12px rgba(0, 0, 0, 0.3)")}
-                >
-                  {questionBank.grade_name}
-                </Badge>
-                <Badge
-                  bg={questionBank.is_active ? badgeActiveBg : useColorModeValue("gray.200", "gray.600")}
-                  color={questionBank.is_active ? badgeActiveColor : useColorModeValue("gray.600", "gray.300")}
-                  px={4}
-                  py={2}
-                  borderRadius="12px"
-                  fontWeight="bold"
-                  fontSize="sm"
-                >
-                  {questionBank.is_active ? "نشط" : "غير نشط"}
-                </Badge>
-                <Badge
-                  bg={iconBg}
-                  color={textPrimary}
-                  px={4}
-                  py={2}
-                  borderRadius="12px"
-                  fontWeight="bold"
-                  fontSize="sm"
-                  border="2px solid"
-                  borderColor={iconBorder}
-                >
-                  {filteredSubjects.length} مادة
-                </Badge>
-              </HStack>
-            </Box>
+                    {questionBank.is_active ? "نشط" : "غير نشط"}
+                  </Badge>
+                  <Badge bg={iconBg} color={textPrimary} px={3} py={1.5} borderRadius="lg" fontWeight="bold" fontSize="xs" borderWidth="1px" borderColor={iconBorder}>
+                    {filteredSubjects.length} مادة
+                  </Badge>
+                </HStack>
+              </Box>
+            </Flex>
 
             {questionBank.image_url && (
-              <Box position="relative">
+              <Box position="relative" flexShrink={0}>
                 <Image
                   src={questionBank.image_url}
                   alt={questionBank.name}
-                  maxH="150px"
-                  maxW="200px"
-                  borderRadius="20px"
+                  maxH="120px"
+                  maxW="180px"
+                  borderRadius="xl"
                   objectFit="cover"
-                  boxShadow="0 15px 35px rgba(0, 0, 0, 0.15)"
-                />
-                <Box
-                  position="absolute"
-                  top={0}
-                  left={0}
-                  right={0}
-                  bottom={0}
-                  bg="linear-gradient(45deg, rgba(49, 130, 206, 0.1), rgba(44, 90, 160, 0.1))"
-                  borderRadius="20px"
-                  opacity={0}
-                  transition="all 0.3s"
-                  _hover={{ opacity: 1 }}
+                  boxShadow="lg"
                 />
               </Box>
             )}
@@ -789,406 +1127,245 @@ const QuestionBank = () => {
         </MotionBox>
 
         {/* Search Bar */}
-        <MotionBox variants={itemVariants} mb={8}>
-          <Box
-            bg={inputBg}
-            borderRadius="12px"
-            p={2}
-            boxShadow={useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.1)", "0 5px 15px rgba(0, 0, 0, 0.2)")}
-            border="2px solid"
-            borderColor={inputBorder}
-            _hover={{ borderColor: inputHoverBorder }}
-            transition="all 0.2s"
-          >
-            <InputGroup size="lg">
-              <InputLeftElement pointerEvents="none" pl={6}>
-                <Icon as={FiSearch} color={useColorModeValue("#4299e1", "#63b3ed")} boxSize={5} />
-              </InputLeftElement>
-              <Input
-                placeholder="ابحث عن مادة..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                bg="transparent"
-                border="none"
-                _hover={{ bg: useColorModeValue("blue.100", "gray.600") }}
-                _focus={{
-                  bg: useColorModeValue("blue.100", "gray.600"),
-                  boxShadow: "none",
-                  outline: "none"
-                }}
-                borderRadius="10px"
-                py={6}
-                pl={16}
-                fontSize="lg"
-                fontWeight="medium"
-                color={textPrimary}
-                _placeholder={{ color: useColorModeValue("blue.400", "blue.500") }}
-              />
-            </InputGroup>
-          </Box>
+        <MotionBox variants={itemVariants} mb={6}>
+          <InputGroup size="lg" maxW="md">
+            <InputLeftElement pointerEvents="none" height="full" pl={5}>
+              <Icon as={FiSearch} color={searchIconColor} boxSize={5} />
+            </InputLeftElement>
+            <Input
+              placeholder="ابحث عن مادة بالاسم أو الوصف..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              bg={inputBg}
+              borderWidth="2px"
+              borderColor={inputBorder}
+              borderRadius="xl"
+              py={6}
+              pl={14}
+              fontSize="md"
+              fontWeight="500"
+              color={textPrimary}
+              _placeholder={{ color: textSecondary }}
+              _hover={{ borderColor: inputHoverBorder, bg: cardBackground }}
+              _focus={{ borderColor: inputFocusBorder, bg: cardBackground, boxShadow: focusRingShadow }}
+              transition="all 0.2s"
+            />
+          </InputGroup>
         </MotionBox>
 
-        {/* Subjects Section */}
+        {/* المواد الدراسية - Accordion */}
         <MotionBox variants={itemVariants}>
-          <Flex justify="space-between" align="center" mb={8}>
-            <Flex align="center" gap={4}>
-              <Box
-                w="50px"
-                h="50px"
-                bg={buttonPrimary}
-                borderRadius="15px"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
-              >
-                <Icon as={FiBook} color="white" boxSize={5} />
-              </Box>
-              <Box>
-                <Heading 
-                  size="xl" 
-                  color={textPrimary}
-                  fontWeight="800"
-                  fontFamily="'Cairo', 'Tajawal', sans-serif"
-                  letterSpacing="-0.02em"
-                  mb={1}
-                >
-                  المواد الدراسية
-                </Heading>
-                <Text 
-                  color={textSecondary} 
-                  fontSize="md" 
-                  fontWeight="600"
-                  fontFamily="'Cairo', 'Tajawal', sans-serif"
-                >
-                  {filteredSubjects.length} مادة متاحة
-                </Text>
-              </Box>
-            </Flex>
+          <Flex align="center" gap={4} mb={5}>
+            <Box w="12" h="12" bg={buttonPrimary} borderRadius="xl" display="flex" alignItems="center" justifyContent="center" boxShadow={iconShadow}>
+              <Icon as={FiBook} color="white" boxSize={6} />
+            </Box>
+            <Box>
+              <Heading size="lg" color={textPrimary} fontWeight="800" fontFamily="'Cairo', 'Tajawal', sans-serif" letterSpacing="-0.02em" mb={0.5}>
+                المواد الدراسية
+              </Heading>
+              <Text color={textSecondary} fontSize="sm" fontWeight="500" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                {filteredSubjects.length} مادة · فصول ودروس قابلة للطي
+              </Text>
+            </Box>
           </Flex>
 
           {filteredSubjects.length === 0 ? (
             <MotionBox
               textAlign="center"
-              py={16}
+              py={14}
+              px={6}
               bg={cardBackground}
-              borderRadius="20px"
-              boxShadow={useColorModeValue("0 8px 30px rgba(66, 153, 225, 0.12)", "0 8px 30px rgba(0, 0, 0, 0.3)")}
-              border="2px solid"
+              borderRadius="2xl"
+              boxShadow={cardShadow}
+              borderWidth="1px"
               borderColor={cardBorder}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.4 }}
             >
-              <Box
-                w="120px"
-                h="120px"
-                bg={iconBg}
-                borderRadius="50%"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                mx="auto"
-                mb={6}
-                border="3px solid"
-                borderColor={iconBorder}
-              >
-                <FiBook size={50} color={useColorModeValue("#4299e1", "#63b3ed")} />
+              <Box w="24" h="24" bg={iconBg} borderRadius="full" display="flex" alignItems="center" justifyContent="center" mx="auto" mb={5} borderWidth="2px" borderColor={iconBorder}>
+                <Icon as={FiBook} color={searchIconColor} boxSize={10} />
               </Box>
-              <Heading 
-                size="lg" 
-                color={textPrimary} 
-                mb={3} 
-                fontWeight="800"
-                fontFamily="'Cairo', 'Tajawal', sans-serif"
-                letterSpacing="-0.01em"
-              >
+              <Heading size="md" color={textPrimary} mb={2} fontWeight="700" fontFamily="'Cairo', 'Tajawal', sans-serif">
                 {searchTerm ? "لا توجد نتائج للبحث" : "لا توجد مواد دراسية بعد"}
               </Heading>
-              <Text 
-                color={useColorModeValue("blue.500", "blue.400")} 
-                fontSize="lg" 
-                mb={8} 
-                fontWeight="600"
-                fontFamily="'Cairo', 'Tajawal', sans-serif"
-              >
-                {searchTerm ? "جرب البحث بكلمات مختلفة" : "ابدأ بإضافة أول مادة دراسية"}
+              <Text color={textSecondary} fontSize="md" mb={6} fontWeight="500" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                {searchTerm ? "جرب كلمات بحث أخرى" : "ابدأ بإضافة أول مادة"}
               </Text>
               {!searchTerm && (
                 <MotionButton
                   bg={buttonPrimary}
                   color="white"
                   size="lg"
-                  borderRadius="12px"
-                  boxShadow={useColorModeValue("0 6px 20px rgba(66, 153, 225, 0.35)", "0 6px 20px rgba(0, 0, 0, 0.4)")}
+                  borderRadius="xl"
+                  boxShadow={iconShadow}
                   onClick={onOpen}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
                   px={8}
                   py={6}
                   leftIcon={<FiPlus />}
                   fontWeight="bold"
-                  _hover={{
-                    bg: buttonPrimaryHover,
-                    boxShadow: useColorModeValue("0 10px 30px rgba(66, 153, 225, 0.45)", "0 10px 30px rgba(0, 0, 0, 0.5)")
-                  }}
+                  fontFamily="'Cairo', 'Tajawal', sans-serif"
+                  _hover={{ bg: buttonPrimaryHover, boxShadow: buttonHoverShadow }}
                 >
                   إضافة أول مادة
                 </MotionButton>
               )}
             </MotionBox>
           ) : (
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
-              {filteredSubjects.map((subject, index) => (
-                <MotionCard
-                  key={subject.id}
-                  variants={itemVariants}
-                  bg={cardBackground}
-                  borderRadius="20px"
-                  border="2px solid"
-                  borderColor={cardBorder}
-                  boxShadow={useColorModeValue("0 8px 25px rgba(66, 153, 225, 0.15)", "0 8px 25px rgba(0, 0, 0, 0.3)")}
-                  overflow="hidden"
-                  position="relative"
-                  whileHover={{ 
-                    y: -5,
-                    scale: 1.02,
-                    transition: { duration: 0.3 }
-                  }}
-                  _hover={{
-                    boxShadow: useColorModeValue("0 15px 40px rgba(66, 153, 225, 0.25)", "0 15px 40px rgba(0, 0, 0, 0.4)"),
-                    borderColor: cardHoverBorder
-                  }}
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  custom={index}
-                >
-                  {/* Top Border */}
-                  <Box
-                    position="absolute"
-                    top={0}
-                    left={0}
-                    right={0}
-                    h="5px"
-                    bg={buttonPrimary}
-                  />
-
-                  {/* Decorative Element */}
-                  <Box
-                    position="absolute"
-                    top="-30px"
-                    right="-30px"
-                    w="100px"
-                    h="100px"
-                    bg={iconBg}
-                    borderRadius="50%"
-                    opacity={0.5}
-                  />
-
-                  <CardHeader pb={4} position="relative" zIndex={1}>
-                    {subject.image_url && (
-                      <Box mb={6} position="relative" borderRadius="15px" overflow="hidden">
-                        <Image
-                          src={subject.image_url}
-                          alt={subject.name}
-                          borderRadius="15px"
-                          maxH="220px"
-                          objectFit="cover"
-                          w="full"
-                          boxShadow={useColorModeValue("0 8px 20px rgba(66, 153, 225, 0.2)", "0 8px 20px rgba(0, 0, 0, 0.3)")}
-                          transition="transform 0.3s"
-                          _hover={{ transform: "scale(1.05)" }}
-                        />
-                        <Box
-                          position="absolute"
-                          top={0}
-                          left={0}
-                          right={0}
-                          bottom={0}
-                          bg={useColorModeValue("rgba(66, 153, 225, 0.1)", "rgba(66, 153, 225, 0.2)")}
-                          borderRadius="15px"
-                          opacity={0}
-                          transition="all 0.3s"
-                          _hover={{ opacity: 1 }}
-                        />
-                      </Box>
-                    )}
-                    
-                    <Flex align="flex-start" mb={4} gap={4}>
-                      <Box
-                        w="60px"
-                        h="60px"
-                        bg={buttonPrimary}
-                        borderRadius="15px"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        flexShrink={0}
-                        boxShadow={useColorModeValue("0 6px 20px rgba(66, 153, 225, 0.4)", "0 6px 20px rgba(0, 0, 0, 0.4)")}
-                        transition="all 0.3s"
-                        _hover={{
-                          transform: "rotate(5deg) scale(1.1)",
-                          boxShadow: useColorModeValue("0 8px 25px rgba(66, 153, 225, 0.5)", "0 8px 25px rgba(0, 0, 0, 0.5)")
-                        }}
-                      >
-                        <Icon as={FiBookOpen} color="white" boxSize={6} />
-                      </Box>
-                      <Box flex={1} minW={0}>
-                        <Heading 
-                          size="lg" 
-                          color={textPrimary}
-                          fontWeight="800"
-                          mb={3}
-                          fontFamily="'Cairo', 'Tajawal', sans-serif"
-                          lineHeight="1.3"
-                          letterSpacing="-0.02em"
-                        >
-                          {subject.name}
-                        </Heading>
-                        {subject.description && (
-                          <Text 
-                            fontSize="md" 
-                            color={textSecondary} 
-                            noOfLines={3} 
-                            lineHeight="1.7"
-                            fontWeight="500"
-                            fontFamily="'Cairo', 'Tajawal', sans-serif"
-                          >
-                            {subject.description}
-                          </Text>
+            <Accordion allowToggle allowMultiple defaultIndex={[]} bg={cardBackground} borderRadius="2xl" borderWidth="1px" borderColor={cardBorder} overflow="hidden" boxShadow={cardShadow}>
+              {filteredSubjects.map((subject) => (
+                <AccordionItem key={subject.id} border="none" borderBottomWidth="1px" borderColor={borderColor} _last={{ borderBottom: "none" }}>
+                  {({ isExpanded }) => (
+                    <>
+                      <AccordionButton py={5} px={{ base: 4, md: 6 }} _hover={{ bg: accordionHoverBg }} transition="all 0.2s" borderLeftWidth="4px" borderLeftColor={isExpanded ? "blue.500" : "transparent"}>
+                        <Flex flex={1} align="center" gap={{ base: 3, md: 4 }} direction={{ base: "column", sm: "row" }} textAlign="right" w="full">
+                          <Avatar src={subject.image_url || undefined} name={subject.name} size="lg" borderRadius="xl" bg={buttonPrimary} color="white" flexShrink={0} />
+                          <VStack align="flex-start" spacing={0.5} flex={1} minW={0} w="full">
+                            <HStack justify="space-between" w="full" flexWrap="wrap" gap={2}>
+                              <Heading size="sm" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif" fontWeight="700">
+                                {subject.name}
+                              </Heading>
+                              <Badge bg={subject.is_active ? badgeActiveBg : useColorModeValue("gray.200", "gray.600")} color={subject.is_active ? badgeActiveColor : useColorModeValue("gray.600", "gray.400")} borderRadius="full" px={3} py={0.5} fontSize="xs">
+                                {subject.is_active ? "نشط" : "غير نشط"}
+                              </Badge>
+                            </HStack>
+                            {subject.description && (
+                              <Text fontSize="xs" color={textSecondary} noOfLines={1} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                                {subject.description}
+                              </Text>
+                            )}
+                            <HStack spacing={2} fontSize="xs" color={textSecondary} mt={1}>
+                              <Text>{subject.chapters?.length || 0} فصل</Text>
+                              <Text>·</Text>
+                              <Text>{(subject.chapters || []).reduce((acc, ch) => acc + (ch.lessons?.length || 0), 0)} درس</Text>
+                            </HStack>
+                          </VStack>
+                          <HStack spacing={2} onClick={(e) => e.stopPropagation()} flexShrink={0} flexWrap="wrap">
+                            <IconButton aria-label="تعديل" icon={<FiEdit />} size="sm" bg={buttonSecondary} color="white" borderRadius="lg" onClick={() => handleEditClick(subject)} _hover={{ bg: buttonSecondaryHover }} />
+                            <IconButton aria-label="حذف" icon={<FiTrash />} size="sm" bg={useColorModeValue("red.400", "red.600")} color="white" borderRadius="lg" onClick={() => handleDeleteClick(subject)} _hover={{ opacity: 0.9 }} />
+                            <Link to={`/supject/${subject.id}`}>
+                              <Button size="sm" rightIcon={<FiArrowRight />} bg={buttonPrimary} color="white" borderRadius="lg" _hover={{ bg: buttonPrimaryHover }} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                                عرض الأسئلة
+                              </Button>
+                            </Link>
+                          </HStack>
+                          <AccordionIcon color={textSecondary} fontSize="lg" />
+                        </Flex>
+                      </AccordionButton>
+                      <AccordionPanel pb={6} pt={2} bg={accordionHoverBg} borderTopWidth="1px" borderColor={borderColor} px={{ base: 4, md: 6 }}>
+                        <Flex justify="flex-end" mb={3}>
+                          <Button size="sm" leftIcon={<FiPlus />} bg={buttonPrimary} color="white" borderRadius="lg" onClick={() => openAddChapter(subject)} _hover={{ bg: buttonPrimaryHover }} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                            إضافة فصل جديد
+                          </Button>
+                        </Flex>
+                        {subject.chapters && subject.chapters.length > 0 ? (
+                          <VStack spacing={3} align="stretch">
+                            {subject.chapters.map((chapter) => (
+                              <Accordion key={chapter.id} allowToggle>
+                                <AccordionItem border="none" bg={cardBackground} borderRadius="xl" boxShadow="sm" overflow="hidden" borderWidth="1px" borderColor={borderColor}>
+                                  <AccordionButton py={3} px={4} borderRadius="xl" _hover={{ bg: accordionHoverBg }}>
+                                    <Flex flex={1} align="center" gap={3} w="full">
+                                      <Box p={2} bg={iconBg} borderRadius="lg" color={buttonPrimary}>
+                                        <Icon as={FiFolder} boxSize={4} />
+                                      </Box>
+                                      <VStack align="flex-start" spacing={0} flex={1} minW={0}>
+                                        <Text fontWeight="bold" fontSize="sm" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                                          {chapter.name}
+                                        </Text>
+                                        {chapter.description && (
+                                          <Text fontSize="xs" color={textSecondary} noOfLines={1}>{chapter.description}</Text>
+                                        )}
+                                        <Text fontSize="xs" color={textSecondary}>{chapter.lessons?.length || 0} درس</Text>
+                                      </VStack>
+                                      <HStack spacing={1} onClick={(e) => e.stopPropagation()} flexShrink={0}>
+                                        <IconButton aria-label="تعديل الفصل" icon={<FiEdit />} size="sm" bg={buttonSecondary} color="white" borderRadius="lg" onClick={() => handleChapterEditClick(chapter)} _hover={{ bg: buttonSecondaryHover }} />
+                                        <IconButton aria-label="حذف الفصل" icon={<FiTrash />} size="sm" bg={useColorModeValue("red.400", "red.600")} color="white" borderRadius="lg" onClick={() => handleChapterDeleteClick(chapter)} _hover={{ opacity: 0.9 }} />
+                                        <Link to={`/chapter/${chapter.id}`}>
+                                          <Button size="sm" rightIcon={<FiArrowRight />} bg={buttonPrimary} color="white" borderRadius="lg" _hover={{ bg: buttonPrimaryHover }} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                                            عرض الدروس
+                                          </Button>
+                                        </Link>
+                                      </HStack>
+                                      <AccordionIcon />
+                                    </Flex>
+                                  </AccordionButton>
+                                  <AccordionPanel pb={4} px={4}>
+                                    <Flex justify="flex-end" mb={2}>
+                                      <Button size="xs" leftIcon={<FiPlus />} bg={buttonPrimary} color="white" borderRadius="lg" onClick={() => openAddLesson(chapter)} _hover={{ bg: buttonPrimaryHover }} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                                        إضافة درس جديد
+                                      </Button>
+                                    </Flex>
+                                    {chapter.lessons && chapter.lessons.length > 0 ? (
+                                      <VStack spacing={2} align="stretch">
+                                        {chapter.lessons.map((lesson) => (
+                                          <Flex
+                                            key={lesson.id}
+                                            p={3}
+                                            bg={lessonCardBg}
+                                            borderRadius="lg"
+                                            align="center"
+                                            gap={3}
+                                            _hover={{ bg: lessonCardHoverBg, borderColor: "blue.300" }}
+                                            borderWidth="1px"
+                                            borderColor="transparent"
+                                            transition="all 0.2s"
+                                          >
+                                            <Icon as={FiFileText} color={buttonPrimary} boxSize={4} flexShrink={0} />
+                                            <Text fontSize="sm" fontWeight="500" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif" flex={1} noOfLines={1}>
+                                              {lesson.name}
+                                            </Text>
+                                            <HStack spacing={1} flexShrink={0} onClick={(e) => e.stopPropagation()}>
+                                              <IconButton aria-label="تعديل الدرس" icon={<FiEdit />} size="xs" bg={buttonSecondary} color="white" borderRadius="md" onClick={() => handleLessonEditClick(lesson)} _hover={{ bg: buttonSecondaryHover }} />
+                                              <IconButton aria-label="حذف الدرس" icon={<FiTrash />} size="xs" bg={useColorModeValue("red.400", "red.600")} color="white" borderRadius="md" onClick={() => handleLessonDeleteClick(lesson)} _hover={{ opacity: 0.9 }} />
+                                              <Link to={`/lesson/${lesson.id}`}>
+                                                <Button size="xs" rightIcon={<FiArrowRight />} bg={buttonPrimary} color="white" borderRadius="md" _hover={{ bg: buttonPrimaryHover }} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                                                  عرض
+                                                </Button>
+                                              </Link>
+                                            </HStack>
+                                          </Flex>
+                                        ))}
+                                      </VStack>
+                                    ) : (
+                                      <Text fontSize="sm" color={textSecondary} textAlign="center" py={4}>
+                                        لا توجد دروس في هذا الفصل
+                                      </Text>
+                                    )}
+                                  </AccordionPanel>
+                                </AccordionItem>
+                              </Accordion>
+                            ))}
+                          </VStack>
+                        ) : (
+                          <Flex direction="column" align="center" justify="center" py={8} color={textSecondary}>
+                            <Icon as={FiFolder} boxSize={8} mb={2} opacity={0.4} />
+                            <Text fontSize="sm" fontFamily="'Cairo', 'Tajawal', sans-serif">لا توجد فصول في هذه المادة بعد</Text>
+                          </Flex>
                         )}
-                      </Box>
-                    </Flex>
-                  </CardHeader>
-
-                  <CardBody py={4} position="relative" zIndex={1} bg={iconBg} borderRadius="12px" mb={4}>
-                    <VStack spacing={3} align="stretch">
-                      <HStack justify="space-between" flexWrap="wrap" gap={2}>
-                        <Badge
-                          bg={subject.is_active ? buttonPrimary : useColorModeValue("gray.300", "gray.600")}
-                          color="white"
-                          px={4}
-                          py={2}
-                          borderRadius="10px"
-                          fontSize="sm"
-                          fontWeight="700"
-                          fontFamily="'Cairo', 'Tajawal', sans-serif"
-                          boxShadow={useColorModeValue("0 3px 10px rgba(66, 153, 225, 0.3)", "0 3px 10px rgba(0, 0, 0, 0.3)")}
-                        >
-                          {subject.is_active ? "✓ نشط" : "✗ غير نشط"}
-                        </Badge>
-                        <HStack spacing={2}>
-                          <Icon as={FiAward} color={useColorModeValue("blue.400", "blue.500")} boxSize={4} />
-                          <Text 
-                            fontSize="sm" 
-                            color={textPrimary} 
-                            fontWeight="600"
-                            fontFamily="'Cairo', 'Tajawal', sans-serif"
-                          >
-                            {new Date(subject.created_at).toLocaleDateString('ar-EG', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </Text>
-                        </HStack>
-                      </HStack>
-                    </VStack>
-                  </CardBody>
-
-                  <CardFooter pt={0} position="relative" zIndex={1}>
-                    <VStack spacing={3} w="full">
-                      <HStack spacing={3} w="full">
-                        <MotionButton
-                          as={IconButton}
-                          icon={<FiEdit />}
-                          size="md"
-                          bg={buttonSecondary}
-                          color="white"
-                          borderRadius="12px"
-                          onClick={() => handleEditClick(subject)}
-                          aria-label="تعديل المادة"
-                          boxShadow={useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.35)", "0 5px 15px rgba(0, 0, 0, 0.4)")}
-                          whileHover={{ scale: 1.1, y: -2 }}
-                          whileTap={{ scale: 0.95 }}
-                          _hover={{ 
-                            bg: buttonSecondaryHover,
-                            boxShadow: useColorModeValue("0 8px 20px rgba(66, 153, 225, 0.45)", "0 8px 20px rgba(0, 0, 0, 0.5)")
-                          }}
-                          transition="all 0.2s"
-                        />
-                        <MotionButton
-                          as={IconButton}
-                          icon={<FiTrash />}
-                          size="md"
-                          bg={useColorModeValue("blue.300", "blue.600")}
-                          color="white"
-                          borderRadius="12px"
-                          onClick={() => handleDeleteClick(subject)}
-                          aria-label="حذف المادة"
-                          boxShadow={useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.35)", "0 5px 15px rgba(0, 0, 0, 0.4)")}
-                          whileHover={{ scale: 1.1, y: -2 }}
-                          whileTap={{ scale: 0.95 }}
-                          _hover={{ 
-                            bg: useColorModeValue("blue.400", "blue.700"),
-                            boxShadow: useColorModeValue("0 8px 20px rgba(66, 153, 225, 0.45)", "0 8px 20px rgba(0, 0, 0, 0.5)")
-                          }}
-                          transition="all 0.2s"
-                        />
-                        <Link to={`/supject/${subject.id}`} style={{ flex: 1 }}>
-                          <MotionButton
-                            rightIcon={<FiArrowRight />}
-                            bg={buttonPrimary}
-                            color="white"
-                            w="full"
-                            size="md"
-                            borderRadius="12px"
-                            boxShadow={useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.35)", "0 5px 15px rgba(0, 0, 0, 0.4)")}
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            _hover={{ 
-                              bg: buttonPrimaryHover,
-                              boxShadow: useColorModeValue("0 8px 20px rgba(66, 153, 225, 0.45)", "0 8px 20px rgba(0, 0, 0, 0.5)")
-                            }}
-                            fontWeight="700"
-                            fontSize="md"
-                            fontFamily="'Cairo', 'Tajawal', sans-serif"
-                            letterSpacing="0.02em"
-                            transition="all 0.2s"
-                          >
-                            عرض الأسئلة
-                          </MotionButton>
-                        </Link>
-                      </HStack>
-                    </VStack>
-                  </CardFooter>
-                </MotionCard>
+                      </AccordionPanel>
+                    </>
+                  )}
+                </AccordionItem>
               ))}
-            </SimpleGrid>
+            </Accordion>
           )}
         </MotionBox>
       </MotionBox>
       {/* Add Subject Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
-        <ModalContent bg={modalBg} borderRadius="20px" border="2px solid" borderColor={modalBorder}>
-          <ModalHeader bg={modalHeaderBg} color="white" borderRadius="18px 18px 0 0" py={4}>
-            <HStack>
-              <Box
-                w="40px"
-                h="40px"
-                bg="white"
-                borderRadius="10px"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <FiPlus color="#4299e1" size={18} />
+      <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(6px)" />
+        <ModalContent bg={modalBg} borderRadius="2xl" borderWidth="1px" borderColor={modalBorder} boxShadow={cardShadow}>
+          <ModalHeader bg={modalHeaderBg} color="white" borderRadius="2xl 2xl 0 0" py={5}>
+            <HStack spacing={3}>
+              <Box w="10" h="10" bg="whiteAlpha.300" borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
+                <FiPlus color="white" size={20} />
               </Box>
-              <Text fontSize="xl" fontWeight="bold">إضافة مادة جديدة</Text>
+              <Text fontSize="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إضافة مادة جديدة</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton color="white" _hover={{ bg: buttonPrimaryHover }} />
+          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
           
           <ModalBody>
             <form onSubmit={handleSubmit}>
@@ -1281,39 +1458,15 @@ const QuestionBank = () => {
             </form>
           </ModalBody>
 
-          <ModalFooter bg={modalFooterBg} borderRadius="0 0 18px 18px" py={4}>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 2xl 2xl" py={5}>
             <HStack spacing={3}>
-              <Button 
-                variant="ghost" 
-                onClick={resetForm}
-                color={textPrimary}
-                _hover={{ bg: iconBg }}
-                fontWeight="bold"
-              >
+              <Button variant="ghost" onClick={resetForm} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
                 إعادة تعيين
               </Button>
-              <Button 
-                variant="ghost" 
-                onClick={onClose}
-                color={textPrimary}
-                _hover={{ bg: iconBg }}
-                fontWeight="bold"
-              >
+              <Button variant="ghost" onClick={onClose} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
                 إلغاء
               </Button>
-              <Button
-                bg={buttonPrimary}
-                color="white"
-                onClick={handleSubmit}
-                isLoading={submitLoading}
-                loadingText="جاري الإنشاء..."
-                leftIcon={<FiPlus />}
-                _hover={{ bg: buttonPrimaryHover, transform: "translateY(-2px)" }}
-                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
-                borderRadius="10px"
-                fontWeight="bold"
-                transition="all 0.2s"
-              >
+              <Button bg={buttonPrimary} color="white" onClick={handleSubmit} isLoading={submitLoading} loadingText="جاري الإنشاء..." leftIcon={<FiPlus />} _hover={{ bg: buttonPrimaryHover }} boxShadow={iconShadow} borderRadius="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
                 إضافة المادة
               </Button>
             </HStack>
@@ -1322,26 +1475,18 @@ const QuestionBank = () => {
       </Modal>
 
       {/* Edit Subject Modal */}
-      <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl">
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
-        <ModalContent bg={modalBg} borderRadius="20px" border="2px solid" borderColor={modalBorder}>
-          <ModalHeader bg={buttonSecondary} color="white" borderRadius="18px 18px 0 0" py={4}>
-            <HStack>
-              <Box
-                w="40px"
-                h="40px"
-                bg="white"
-                borderRadius="10px"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <FiEdit color="#4299e1" size={18} />
+      <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl" isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(6px)" />
+        <ModalContent bg={modalBg} borderRadius="2xl" borderWidth="1px" borderColor={modalBorder} boxShadow={cardShadow}>
+          <ModalHeader bg={buttonSecondary} color="white" borderRadius="2xl 2xl 0 0" py={5}>
+            <HStack spacing={3}>
+              <Box w="10" h="10" bg="whiteAlpha.300" borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
+                <FiEdit color="white" size={20} />
               </Box>
-              <Text fontSize="xl" fontWeight="bold">تعديل المادة</Text>
+              <Text fontSize="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">تعديل المادة</Text>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton color="white" _hover={{ bg: buttonSecondaryHover }} />
+          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
           
           <ModalBody>
             <form onSubmit={handleEditSubmit}>
@@ -1434,39 +1579,15 @@ const QuestionBank = () => {
             </form>
           </ModalBody>
 
-          <ModalFooter bg={modalFooterBg} borderRadius="0 0 18px 18px" py={4}>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 2xl 2xl" py={5}>
             <HStack spacing={3}>
-              <Button 
-                variant="ghost" 
-                onClick={resetEditForm}
-                color={textPrimary}
-                _hover={{ bg: iconBg }}
-                fontWeight="bold"
-              >
+              <Button variant="ghost" onClick={resetEditForm} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
                 إعادة تعيين
               </Button>
-              <Button 
-                variant="ghost" 
-                onClick={onEditClose}
-                color={textPrimary}
-                _hover={{ bg: iconBg }}
-                fontWeight="bold"
-              >
+              <Button variant="ghost" onClick={onEditClose} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
                 إلغاء
               </Button>
-              <Button
-                bg={buttonSecondary}
-                color="white"
-                onClick={handleEditSubmit}
-                isLoading={editLoading}
-                loadingText="جاري التحديث..."
-                leftIcon={<FiEdit />}
-                _hover={{ bg: buttonSecondaryHover, transform: "translateY(-2px)" }}
-                boxShadow={useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)")}
-                borderRadius="10px"
-                fontWeight="bold"
-                transition="all 0.2s"
-              >
+              <Button bg={buttonSecondary} color="white" onClick={handleEditSubmit} isLoading={editLoading} loadingText="جاري التحديث..." leftIcon={<FiEdit />} _hover={{ bg: buttonSecondaryHover }} boxShadow={iconShadow} borderRadius="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
                 تحديث المادة
               </Button>
             </HStack>
@@ -1475,47 +1596,337 @@ const QuestionBank = () => {
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal isOpen={isDeleteOpen} onClose={onDeleteClose} size="md">
-        <ModalOverlay />
-        <ModalContent bg={cardBg}>
-          <ModalHeader>
-            <HStack>
-              <FiTrash color="red.500" />
-              <Text>تأكيد الحذف</Text>
+      <Modal isOpen={isDeleteOpen} onClose={onDeleteClose} size="md" isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg={cardBackground} borderRadius="2xl" borderWidth="1px" borderColor={cardBorder} boxShadow={cardShadow}>
+          <ModalHeader borderBottomWidth="1px" borderColor={borderColor} py={5}>
+            <HStack spacing={3}>
+              <Box w="10" h="10" bg={useColorModeValue("red.50", "red.900")} borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FiTrash} color="red.500" boxSize={5} />
+              </Box>
+              <Text fontFamily="'Cairo', 'Tajawal', sans-serif" fontWeight="bold" color={textPrimary}>تأكيد الحذف</Text>
             </HStack>
           </ModalHeader>
           <ModalCloseButton />
-          
-          <ModalBody>
-            <VStack spacing={4} align="stretch">
-              <Box textAlign="center">
-                <FiBook size={48} color="red.400" style={{ margin: "0 auto 16px" }} />
-                <Text fontSize="lg" fontWeight="bold" color="red.600">
-                  هل أنت متأكد من حذف المادة؟
-                </Text>
-                <Text mt={2} color="gray.600">
-                  "{deletingSubject?.name}"
-                </Text>
-                <Text mt={2} color="gray.500" fontSize="sm">
-                  هذا الإجراء لا يمكن التراجع عنه
-                </Text>
+          <ModalBody py={6}>
+            <VStack spacing={4} align="stretch" textAlign="center">
+              <Box w="16" h="16" mx="auto" borderRadius="full" bg={useColorModeValue("red.50", "red.900")} display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FiBook} color="red.500" boxSize={8} />
               </Box>
+              <Text fontSize="md" fontWeight="600" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                هل أنت متأكد من حذف المادة؟
+              </Text>
+              <Text fontSize="sm" color={textSecondary} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                "{deletingSubject?.name}"
+              </Text>
+              <Text fontSize="xs" color={textSecondary}>
+                هذا الإجراء لا يمكن التراجع عنه
+              </Text>
             </VStack>
           </ModalBody>
-
-          <ModalFooter>
+          <ModalFooter borderTopWidth="1px" borderColor={borderColor} py={4}>
             <HStack spacing={3}>
-              <Button variant="ghost" onClick={onDeleteClose}>
+              <Button variant="ghost" onClick={onDeleteClose} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
                 إلغاء
               </Button>
-              <Button
-                colorScheme="red"
-                onClick={handleDeleteConfirm}
-                isLoading={deleteLoading}
-                loadingText="جاري الحذف..."
-                leftIcon={<FiTrash />}
-              >
+              <Button colorScheme="red" onClick={handleDeleteConfirm} isLoading={deleteLoading} loadingText="جاري الحذف..." leftIcon={<FiTrash />} borderRadius="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
                 حذف المادة
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Add Chapter Modal */}
+      <Modal isOpen={isChapterAddOpen} onClose={onChapterAddClose} size="xl" isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(6px)" />
+        <ModalContent bg={modalBg} borderRadius="2xl" borderWidth="1px" borderColor={modalBorder} boxShadow={cardShadow}>
+          <ModalHeader bg={modalHeaderBg} color="white" borderRadius="2xl 2xl 0 0" py={5}>
+            <HStack spacing={3}>
+              <Box w="10" h="10" bg="whiteAlpha.300" borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FiFolder} color="white" boxSize={5} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                إضافة فصل جديد {subjectForNewChapter && `(${subjectForNewChapter.name})`}
+              </Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
+          <ModalBody py={6}>
+            <form onSubmit={handleChapterSubmit} id="chapter-add-form">
+              <VStack spacing={5}>
+                <FormControl isRequired>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">اسم الفصل</FormLabel>
+                  <Input name="name" value={chapterFormData.name} onChange={handleChapterInputChange} placeholder="أدخل اسم الفصل" size="lg" borderWidth="2px" borderColor={inputBorder} _hover={{ borderColor: inputHoverBorder }} _focus={{ borderColor: inputFocusBorder, boxShadow: focusRingShadow }} borderRadius="lg" bg={useColorModeValue("white", "gray.700")} fontFamily="'Cairo', 'Tajawal', sans-serif" />
+                </FormControl>
+                <FormControl>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">وصف الفصل (اختياري)</FormLabel>
+                  <Textarea name="description" value={chapterFormData.description} onChange={handleChapterInputChange} placeholder="أدخل وصف الفصل" rows={3} size="lg" borderWidth="2px" borderColor={inputBorder} _hover={{ borderColor: inputHoverBorder }} _focus={{ borderColor: inputFocusBorder, boxShadow: focusRingShadow }} borderRadius="lg" bg={useColorModeValue("white", "gray.700")} fontFamily="'Cairo', 'Tajawal', sans-serif" />
+                </FormControl>
+                <FormControl>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">صورة الفصل (اختياري)</FormLabel>
+                  <VStack align="stretch" spacing={3}>
+                    {!chapterImagePreview ? (
+                      <Button as="label" htmlFor="chapter-image-upload" leftIcon={<FiUpload />} variant="outline" size="md" cursor="pointer" borderWidth="2px" borderColor={inputHoverBorder} color={searchIconColor} _hover={{ bg: iconBg, borderColor: inputFocusBorder }} borderRadius="lg" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                        اختر صورة
+                      </Button>
+                    ) : (
+                      <Box position="relative" display="inline-block">
+                        <Image src={chapterImagePreview} alt="معاينة" maxH="160px" borderRadius="md" />
+                        <IconButton icon={<FiX />} position="absolute" top={2} right={2} colorScheme="red" size="sm" onClick={removeChapterImage} aria-label="إزالة الصورة" />
+                      </Box>
+                    )}
+                    <Input id="chapter-image-upload" type="file" accept="image/*" onChange={handleChapterImageChange} display="none" />
+                  </VStack>
+                </FormControl>
+              </VStack>
+            </form>
+          </ModalBody>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 2xl 2xl" py={5}>
+            <HStack spacing={3}>
+              <Button variant="ghost" onClick={resetChapterForm} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إعادة تعيين</Button>
+              <Button variant="ghost" onClick={onChapterAddClose} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إلغاء</Button>
+              <Button type="submit" form="chapter-add-form" bg={buttonPrimary} color="white" onClick={handleChapterSubmit} isLoading={chapterSubmitLoading} loadingText="جاري الإنشاء..." leftIcon={<FiPlus />} _hover={{ bg: buttonPrimaryHover }} boxShadow={iconShadow} borderRadius="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                إضافة الفصل
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Edit Chapter Modal */}
+      <Modal isOpen={isChapterEditOpen} onClose={onChapterEditClose} size="xl" isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(6px)" />
+        <ModalContent bg={modalBg} borderRadius="2xl" borderWidth="1px" borderColor={modalBorder} boxShadow={cardShadow}>
+          <ModalHeader bg={buttonSecondary} color="white" borderRadius="2xl 2xl 0 0" py={5}>
+            <HStack spacing={3}>
+              <Box w="10" h="10" bg="whiteAlpha.300" borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FiEdit} color="white" boxSize={5} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">تعديل الفصل</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
+          <ModalBody py={6}>
+            <form onSubmit={handleChapterEditSubmit} id="chapter-edit-form">
+              <VStack spacing={5}>
+                <FormControl isRequired>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">اسم الفصل</FormLabel>
+                  <Input name="name" value={editChapterFormData.name} onChange={handleChapterEditInputChange} placeholder="أدخل اسم الفصل" size="lg" borderWidth="2px" borderColor={inputBorder} _hover={{ borderColor: inputHoverBorder }} _focus={{ borderColor: inputFocusBorder, boxShadow: focusRingShadow }} borderRadius="lg" bg={useColorModeValue("white", "gray.700")} fontFamily="'Cairo', 'Tajawal', sans-serif" />
+                </FormControl>
+                <FormControl>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">وصف الفصل (اختياري)</FormLabel>
+                  <Textarea name="description" value={editChapterFormData.description} onChange={handleChapterEditInputChange} placeholder="أدخل وصف الفصل" rows={3} size="lg" borderWidth="2px" borderColor={inputBorder} _hover={{ borderColor: inputHoverBorder }} _focus={{ borderColor: inputFocusBorder, boxShadow: focusRingShadow }} borderRadius="lg" bg={useColorModeValue("white", "gray.700")} fontFamily="'Cairo', 'Tajawal', sans-serif" />
+                </FormControl>
+                <FormControl>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">صورة الفصل (اختياري)</FormLabel>
+                  <VStack align="stretch" spacing={3}>
+                    {!editChapterImagePreview ? (
+                      <Button as="label" htmlFor="chapter-edit-image-upload" leftIcon={<FiUpload />} variant="outline" size="md" cursor="pointer" borderWidth="2px" borderColor={inputHoverBorder} color={searchIconColor} _hover={{ bg: iconBg, borderColor: inputFocusBorder }} borderRadius="lg" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                        اختر صورة
+                      </Button>
+                    ) : (
+                      <Box position="relative" display="inline-block">
+                        <Image src={editChapterImagePreview} alt="معاينة" maxH="160px" borderRadius="md" />
+                        <IconButton icon={<FiX />} position="absolute" top={2} right={2} colorScheme="red" size="sm" onClick={removeChapterEditImage} aria-label="إزالة الصورة" />
+                      </Box>
+                    )}
+                    <Input id="chapter-edit-image-upload" type="file" accept="image/*" onChange={handleChapterEditImageChange} display="none" />
+                  </VStack>
+                </FormControl>
+              </VStack>
+            </form>
+          </ModalBody>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 2xl 2xl" py={5}>
+            <HStack spacing={3}>
+              <Button variant="ghost" onClick={resetChapterEditForm} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إعادة تعيين</Button>
+              <Button variant="ghost" onClick={onChapterEditClose} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إلغاء</Button>
+              <Button type="submit" form="chapter-edit-form" bg={buttonSecondary} color="white" onClick={handleChapterEditSubmit} isLoading={chapterEditLoading} loadingText="جاري التحديث..." leftIcon={<FiEdit />} _hover={{ bg: buttonSecondaryHover }} boxShadow={iconShadow} borderRadius="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                تحديث الفصل
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Delete Chapter Modal */}
+      <Modal isOpen={isChapterDeleteOpen} onClose={onChapterDeleteClose} size="md" isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg={cardBackground} borderRadius="2xl" borderWidth="1px" borderColor={cardBorder} boxShadow={cardShadow}>
+          <ModalHeader borderBottomWidth="1px" borderColor={borderColor} py={5}>
+            <HStack spacing={3}>
+              <Box w="10" h="10" bg={useColorModeValue("red.50", "red.900")} borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FiTrash} color="red.500" boxSize={5} />
+              </Box>
+              <Text fontFamily="'Cairo', 'Tajawal', sans-serif" fontWeight="bold" color={textPrimary}>تأكيد حذف الفصل</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody py={6}>
+            <VStack spacing={4} align="stretch" textAlign="center">
+              <Box w="16" h="16" mx="auto" borderRadius="full" bg={useColorModeValue("red.50", "red.900")} display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FiFolder} color="red.500" boxSize={8} />
+              </Box>
+              <Text fontSize="md" fontWeight="600" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                هل أنت متأكد من حذف الفصل؟
+              </Text>
+              <Text fontSize="sm" color={textSecondary} fontFamily="'Cairo', 'Tajawal', sans-serif">"{deletingChapter?.name}"</Text>
+              <Text fontSize="xs" color={textSecondary}>هذا الإجراء لا يمكن التراجع عنه</Text>
+            </VStack>
+          </ModalBody>
+          <ModalFooter borderTopWidth="1px" borderColor={borderColor} py={4}>
+            <HStack spacing={3}>
+              <Button variant="ghost" onClick={onChapterDeleteClose} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إلغاء</Button>
+              <Button colorScheme="red" onClick={handleChapterDeleteConfirm} isLoading={chapterDeleteLoading} loadingText="جاري الحذف..." leftIcon={<FiTrash />} borderRadius="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                حذف الفصل
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Add Lesson Modal */}
+      <Modal isOpen={isLessonAddOpen} onClose={onLessonAddClose} size="xl" isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(6px)" />
+        <ModalContent bg={modalBg} borderRadius="2xl" borderWidth="1px" borderColor={modalBorder} boxShadow={cardShadow}>
+          <ModalHeader bg={modalHeaderBg} color="white" borderRadius="2xl 2xl 0 0" py={5}>
+            <HStack spacing={3}>
+              <Box w="10" h="10" bg="whiteAlpha.300" borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FiFileText} color="white" boxSize={5} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                إضافة درس جديد {chapterForNewLesson && `(${chapterForNewLesson.name})`}
+              </Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
+          <ModalBody py={6}>
+            <form onSubmit={handleLessonSubmit} id="lesson-add-form">
+              <VStack spacing={5}>
+                <FormControl isRequired>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">اسم الدرس</FormLabel>
+                  <Input name="name" value={lessonFormData.name} onChange={handleLessonInputChange} placeholder="أدخل اسم الدرس" size="lg" borderWidth="2px" borderColor={inputBorder} _hover={{ borderColor: inputHoverBorder }} _focus={{ borderColor: inputFocusBorder, boxShadow: focusRingShadow }} borderRadius="lg" bg={useColorModeValue("white", "gray.700")} fontFamily="'Cairo', 'Tajawal', sans-serif" />
+                </FormControl>
+                <FormControl>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">وصف الدرس (اختياري)</FormLabel>
+                  <Textarea name="description" value={lessonFormData.description} onChange={handleLessonInputChange} placeholder="أدخل وصف الدرس" rows={3} size="lg" borderWidth="2px" borderColor={inputBorder} _hover={{ borderColor: inputHoverBorder }} _focus={{ borderColor: inputFocusBorder, boxShadow: focusRingShadow }} borderRadius="lg" bg={useColorModeValue("white", "gray.700")} fontFamily="'Cairo', 'Tajawal', sans-serif" />
+                </FormControl>
+                <FormControl>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">صورة الدرس (اختياري)</FormLabel>
+                  <VStack align="stretch" spacing={3}>
+                    {!lessonImagePreview ? (
+                      <Button as="label" htmlFor="lesson-image-upload" leftIcon={<FiUpload />} variant="outline" size="md" cursor="pointer" borderWidth="2px" borderColor={inputHoverBorder} color={searchIconColor} _hover={{ bg: iconBg, borderColor: inputFocusBorder }} borderRadius="lg" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                        اختر صورة
+                      </Button>
+                    ) : (
+                      <Box position="relative" display="inline-block">
+                        <Image src={lessonImagePreview} alt="معاينة" maxH="160px" borderRadius="md" />
+                        <IconButton icon={<FiX />} position="absolute" top={2} right={2} colorScheme="red" size="sm" onClick={removeLessonImage} aria-label="إزالة الصورة" />
+                      </Box>
+                    )}
+                    <Input id="lesson-image-upload" type="file" accept="image/*" onChange={handleLessonImageChange} display="none" />
+                  </VStack>
+                </FormControl>
+              </VStack>
+            </form>
+          </ModalBody>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 2xl 2xl" py={5}>
+            <HStack spacing={3}>
+              <Button variant="ghost" onClick={resetLessonForm} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إعادة تعيين</Button>
+              <Button variant="ghost" onClick={onLessonAddClose} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إلغاء</Button>
+              <Button type="submit" form="lesson-add-form" bg={buttonPrimary} color="white" onClick={handleLessonSubmit} isLoading={lessonSubmitLoading} loadingText="جاري الإنشاء..." leftIcon={<FiPlus />} _hover={{ bg: buttonPrimaryHover }} boxShadow={iconShadow} borderRadius="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                إضافة الدرس
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Edit Lesson Modal */}
+      <Modal isOpen={isLessonEditOpen} onClose={onLessonEditClose} size="xl" isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(6px)" />
+        <ModalContent bg={modalBg} borderRadius="2xl" borderWidth="1px" borderColor={modalBorder} boxShadow={cardShadow}>
+          <ModalHeader bg={buttonSecondary} color="white" borderRadius="2xl 2xl 0 0" py={5}>
+            <HStack spacing={3}>
+              <Box w="10" h="10" bg="whiteAlpha.300" borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FiEdit} color="white" boxSize={5} />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">تعديل الدرس</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
+          <ModalBody py={6}>
+            <form onSubmit={handleLessonEditSubmit} id="lesson-edit-form">
+              <VStack spacing={5}>
+                <FormControl isRequired>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">اسم الدرس</FormLabel>
+                  <Input name="name" value={editLessonFormData.name} onChange={handleLessonEditInputChange} placeholder="أدخل اسم الدرس" size="lg" borderWidth="2px" borderColor={inputBorder} _hover={{ borderColor: inputHoverBorder }} _focus={{ borderColor: inputFocusBorder, boxShadow: focusRingShadow }} borderRadius="lg" bg={useColorModeValue("white", "gray.700")} fontFamily="'Cairo', 'Tajawal', sans-serif" />
+                </FormControl>
+                <FormControl>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">وصف الدرس (اختياري)</FormLabel>
+                  <Textarea name="description" value={editLessonFormData.description} onChange={handleLessonEditInputChange} placeholder="أدخل وصف الدرس" rows={3} size="lg" borderWidth="2px" borderColor={inputBorder} _hover={{ borderColor: inputHoverBorder }} _focus={{ borderColor: inputFocusBorder, boxShadow: focusRingShadow }} borderRadius="lg" bg={useColorModeValue("white", "gray.700")} fontFamily="'Cairo', 'Tajawal', sans-serif" />
+                </FormControl>
+                <FormControl>
+                  <FormLabel color={textPrimary} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">صورة الدرس (اختياري)</FormLabel>
+                  <VStack align="stretch" spacing={3}>
+                    {!editLessonImagePreview ? (
+                      <Button as="label" htmlFor="lesson-edit-image-upload" leftIcon={<FiUpload />} variant="outline" size="md" cursor="pointer" borderWidth="2px" borderColor={inputHoverBorder} color={searchIconColor} _hover={{ bg: iconBg, borderColor: inputFocusBorder }} borderRadius="lg" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                        اختر صورة
+                      </Button>
+                    ) : (
+                      <Box position="relative" display="inline-block">
+                        <Image src={editLessonImagePreview} alt="معاينة" maxH="160px" borderRadius="md" />
+                        <IconButton icon={<FiX />} position="absolute" top={2} right={2} colorScheme="red" size="sm" onClick={removeLessonEditImage} aria-label="إزالة الصورة" />
+                      </Box>
+                    )}
+                    <Input id="lesson-edit-image-upload" type="file" accept="image/*" onChange={handleLessonEditImageChange} display="none" />
+                  </VStack>
+                </FormControl>
+              </VStack>
+            </form>
+          </ModalBody>
+          <ModalFooter bg={modalFooterBg} borderRadius="0 0 2xl 2xl" py={5}>
+            <HStack spacing={3}>
+              <Button variant="ghost" onClick={resetLessonEditForm} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إعادة تعيين</Button>
+              <Button variant="ghost" onClick={onLessonEditClose} color={textPrimary} _hover={{ bg: iconBg }} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إلغاء</Button>
+              <Button type="submit" form="lesson-edit-form" bg={buttonSecondary} color="white" onClick={handleLessonEditSubmit} isLoading={lessonEditLoading} loadingText="جاري التحديث..." leftIcon={<FiEdit />} _hover={{ bg: buttonSecondaryHover }} boxShadow={iconShadow} borderRadius="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                تحديث الدرس
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Delete Lesson Modal */}
+      <Modal isOpen={isLessonDeleteOpen} onClose={onLessonDeleteClose} size="md" isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg={cardBackground} borderRadius="2xl" borderWidth="1px" borderColor={cardBorder} boxShadow={cardShadow}>
+          <ModalHeader borderBottomWidth="1px" borderColor={borderColor} py={5}>
+            <HStack spacing={3}>
+              <Box w="10" h="10" bg={useColorModeValue("red.50", "red.900")} borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FiTrash} color="red.500" boxSize={5} />
+              </Box>
+              <Text fontFamily="'Cairo', 'Tajawal', sans-serif" fontWeight="bold" color={textPrimary}>تأكيد حذف الدرس</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody py={6}>
+            <VStack spacing={4} align="stretch" textAlign="center">
+              <Box w="16" h="16" mx="auto" borderRadius="full" bg={useColorModeValue("red.50", "red.900")} display="flex" alignItems="center" justifyContent="center">
+                <Icon as={FiFileText} color="red.500" boxSize={8} />
+              </Box>
+              <Text fontSize="md" fontWeight="600" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                هل أنت متأكد من حذف الدرس؟
+              </Text>
+              <Text fontSize="sm" color={textSecondary} fontFamily="'Cairo', 'Tajawal', sans-serif">"{deletingLesson?.name}"</Text>
+              <Text fontSize="xs" color={textSecondary}>هذا الإجراء لا يمكن التراجع عنه</Text>
+            </VStack>
+          </ModalBody>
+          <ModalFooter borderTopWidth="1px" borderColor={borderColor} py={4}>
+            <HStack spacing={3}>
+              <Button variant="ghost" onClick={onLessonDeleteClose} fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">إلغاء</Button>
+              <Button colorScheme="red" onClick={handleLessonDeleteConfirm} isLoading={lessonDeleteLoading} loadingText="جاري الحذف..." leftIcon={<FiTrash />} borderRadius="xl" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                حذف الدرس
               </Button>
             </HStack>
           </ModalFooter>

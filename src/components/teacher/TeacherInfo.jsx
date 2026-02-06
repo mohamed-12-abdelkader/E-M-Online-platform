@@ -13,255 +13,227 @@ import {
   HStack,
   IconButton,
   Tooltip,
-  SimpleGrid,
-  Link as ChakraLink
+  useColorModeValue,
+  Link as ChakraLink,
+  Divider,
 } from "@chakra-ui/react";
-import { 
-  FaGraduationCap, 
-  FaBookOpen, 
-  FaPhone, 
-  FaEnvelope,
+import {
+  FaGraduationCap,
+  FaBookOpen,
   FaFacebook,
   FaYoutube,
   FaTiktok,
-  FaWhatsapp
+  FaWhatsapp,
 } from "react-icons/fa";
 
 const TeacherInfo = ({ teacher, number }) => {
-  const isMobile = useBreakpointValue({ base: true, md: false });
-  const imageSize = useBreakpointValue({ base: "200px", md: "300px" });
+  const imageSize = useBreakpointValue({ base: "140px", sm: "160px", md: "200px" });
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("gray.200", "gray.700");
+  const headingColor = useColorModeValue("gray.800", "white");
+  const subtextColor = useColorModeValue("gray.600", "gray.400");
+  const descBg = useColorModeValue("blue.50", "blue.900");
+  const descBorder = useColorModeValue("blue.100", "blue.800");
 
   return (
-    <Box position="relative" mb={8}>
-      {/* Hero Section بسيط */}
-      <Box
-        bg="blue.500"
-        py={8}
-        px={4}
-      >
-        <Container dir="rtl" maxW="container.xl">
-          <Flex
-            direction={{ base: "column", lg: "row" }}
-            align="center"
-            justify="space-between"
-            gap={6}
-          >
-            {/* معلومات المدرس */}
-            <Box flex={1} w="100%">
-              <VStack align={{ base: "center", lg: "flex-start" }} spacing={6}>
-                
-                {/* الاسم والمادة */}
-                <Box textAlign={{ base: "center", lg: "right" }} w="full">
-                  <Heading
-                    fontSize={{ base: "2xl", sm: "3xl", md: "4xl" }}
-                    fontWeight="bold"
-                    color="white"
-                    mb={4}
-                  >
-                    {teacher.name}
-                  </Heading>
-                  
-                  <Badge
-                    bg="orange.500"
-                    color="white"
-                    px={6}
-                    py={3}
-                    borderRadius="xl"
-                    fontSize="lg"
-                    display="flex"
-                    alignItems="center"
-                    gap={3}
-                    w="fit-content"
-                    mx={{ base: "auto", lg: "0" }}
-                    fontWeight="bold"
-                  >
-                    <Icon as={FaGraduationCap} boxSize={5} />
-                    <Text>محاضر {teacher.subject}</Text>
-                  </Badge>
-                </Box>
+    <Box position="relative" mb={8} dir="rtl">
+      <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
+        {/* كارت واحد — شريط أزرق + محتوى على خلفية الصفحة */}
+        <Box
+          borderRadius="2xl"
+          overflow="hidden"
+          boxShadow="xl"
+          borderWidth="1px"
+          borderColor={cardBorder}
+          bg={cardBg}
+        >
+          <Box h="1" w="100%" bgGradient="linear(to-r, blue.500, orange.500)" />
 
-                {/* الوصف */}
-                {teacher.description && (
-                  <Box 
-                    w="full" 
-                    maxW="600px"
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            align={{ base: "center", md: "flex-start" }}
+            gap={{ base: 6, md: 8 }}
+            p={{ base: 6, md: 8 }}
+          >
+            {/* أفاتار — يمين في RTL */}
+            <Box position="relative" flexShrink={0}>
+              <Avatar
+                src={teacher.avatar}
+                name={teacher.name}
+                width={imageSize}
+                height={imageSize}
+                borderWidth="4px"
+                borderColor="blue.500"
+                boxShadow="0 12px 40px rgba(66, 153, 225, 0.3)"
+                bg="blue.100"
+                color="blue.600"
+              />
+              <Box
+                position="absolute"
+                bottom="2"
+                right="2"
+                w="5"
+                h="5"
+                borderRadius="full"
+                bg="green.400"
+                borderWidth="3px"
+                borderColor={cardBg}
+              />
+            </Box>
+
+            {/* المحتوى — اسم، مادة، وصف، إجراءات */}
+            <VStack flex={1} align="stretch" spacing={5} w="full" maxW="640px">
+              <Box textAlign={{ base: "center", md: "right" }} w="full">
+                <Text fontSize="sm" color="orange.500" fontWeight="bold" letterSpacing="wider" mb={1}>
+                  محاضر
+                </Text>
+                <Heading size={{ base: "xl", md: "2xl" }} color={headingColor} fontWeight="bold" mb={3}>
+                  {teacher.name}
+                </Heading>
+                <Badge
+                  bg="blue.500"
+                  color="white"
+                  px={4}
+                  py={1.5}
+                  borderRadius="xl"
+                  fontSize="sm"
+                  fontWeight="bold"
+                  display="inline-flex"
+                  alignItems="center"
+                  gap={2}
+                >
+                  <Icon as={FaGraduationCap} boxSize={4} />
+                  {teacher.subject}
+                </Badge>
+              </Box>
+
+              {teacher.description && (
+                <>
+                  <Divider borderColor={cardBorder} />
+                  <Box
                     p={4}
-                    bg="whiteAlpha.200"
                     borderRadius="xl"
+                    bg={descBg}
+                    borderWidth="1px"
+                    borderColor={descBorder}
+                    textAlign={{ base: "center", md: "right" }}
                   >
-                    <Text
-                      fontSize="lg"
-                      color="white"
-                      textAlign={{ base: "center", lg: "right" }}
-                      lineHeight="1.6"
-                      fontWeight="medium"
-                    >
+                    <Text fontSize="md" color={subtextColor} lineHeight="tall">
                       {teacher.description}
                     </Text>
                   </Box>
-                )}
+                </>
+              )}
 
-                {/* إحصائيات */}
-             
-             <div className="flex">
-                      <Box w="full" maxW="500px">
-                  <Flex 
-                    direction={{ base: "column", sm: "row" }} 
-                    gap={4} 
-                    w="full" 
-                    justify={{ base: "center", lg: "flex-start" }}
+              {/* صف الإجراءات: عدد الكورسات | واتساب | سوشيال */}
+              <Flex
+                direction={{ base: "column", sm: "row" }}
+                gap={3}
+                flexWrap="wrap"
+                justify={{ base: "center", md: "flex-start" }}
+                align="center"
+              >
+                <Flex
+                  px={5}
+                  py={3}
+                  bg="orange.500"
+                  color="white"
+                  borderRadius="xl"
+                  align="center"
+                  gap={3}
+                  boxShadow="md"
+                  fontWeight="bold"
+                >
+                  <Icon as={FaBookOpen} boxSize={5} />
+                  <VStack align="flex-start" spacing={0}>
+                    <Text fontSize="xs" opacity={0.95}>الكورسات</Text>
+                    <Text fontSize="xl">{number || 0}</Text>
+                  </VStack>
+                </Flex>
+
+                {teacher.whatsapp_number && (
+                  <ChakraLink
+                    href={`https://wa.me/${teacher.whatsapp_number.replace(/[^0-9]/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    _hover={{ textDecoration: "none" }}
                   >
-                    <Box
+                    <Flex
                       px={5}
                       py={3}
-                      bg="orange.500"
+                      bg="#25D366"
+                      color="white"
                       borderRadius="xl"
-                      display="flex"
-                      alignItems="center"
+                      align="center"
                       gap={3}
+                      cursor="pointer"
+                      transition="all 0.2s"
+                      _hover={{ bg: "#128C7E", transform: "translateY(-2px)", boxShadow: "lg" }}
+                      fontWeight="bold"
                     >
-                      <Icon as={FaBookOpen} boxSize={5} color="white" />
-                      <VStack align="flex-start" spacing={0}>
-                        <Text color="white" fontSize="sm" fontWeight="medium">
-                          الكورسات
-                        </Text>
-                        <Text color="white" fontSize="xl" fontWeight="bold">
-                          {number || 0}
-                        </Text>
-                      </VStack>
-                    </Box>
-                  </Flex>
-                       </Box>
+                      <Icon as={FaWhatsapp} boxSize={5} />
+                      مراسلة
+                    </Flex>
+                  </ChakraLink>
+                )}
 
-                    {/* الواتساب */}
-                    {teacher.whatsapp_number && (
-                      <ChakraLink
-                      className="w-[130px] mx-3"
-                        href={`https://wa.me/${teacher.whatsapp_number.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        _hover={{ textDecoration: "none" }}
-                      >
-                        <Box
-                          p={4}
-                          bg="#25D366"
+                {(teacher.facebook_url || teacher.youtube_url || teacher.tiktok_url) && (
+                  <HStack spacing={2}>
+                    {teacher.facebook_url && (
+                      <Tooltip label="فيسبوك" hasArrow placement="top">
+                        <IconButton
+                          as={ChakraLink}
+                          href={teacher.facebook_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          icon={<FaFacebook />}
+                          size="md"
                           borderRadius="xl"
-                          cursor="pointer"
-                          transition="all 0.2s ease"
-                          _hover={{ bg: "#128C7E" }}
-                        >
-                          <HStack spacing={3}>
-                            <Box
-                              p={2}
-                              bg="whiteAlpha.200"
-                              borderRadius="lg"
-                            >
-                              <Icon as={FaWhatsapp} color="white" boxSize={5} />
-                            </Box>
-                            <VStack align="flex-start" spacing={0} flex={1}>
-                          
-                              <Text color="white" fontSize="lg" fontWeight="bold">
-                            مراسلة 
-                              </Text>
-                            </VStack>
-                          </HStack>
-                        </Box>
-                      </ChakraLink>
+                          bg="blue.500"
+                          color="white"
+                          _hover={{ bg: "blue.400", transform: "scale(1.08)" }}
+                        />
+                      </Tooltip>
                     )}
-             </div>
-
-                {/* معلومات الاتصال */}
-                <Box w="full" maxW="600px">
-                  <VStack className="flex" spacing={4} align="stretch">
-                 
-              
-
-                    {/* الوسائط الاجتماعية */}
-                    {(teacher.facebook_url || teacher.youtube_url || teacher.tiktok_url) && (
-                      <Box>
-                        <Text 
-                          color="white" 
-                          fontSize="md" 
-                          fontWeight="bold" 
-                          mb={3} 
-                          textAlign={{ base: "center", lg: "right" }}
-                        >
-                          تابعني على
-                        </Text>
-                        <HStack spacing={3} justify={{ base: "center", lg: "flex-start" }}>
-                          {teacher.facebook_url && (
-                            <Tooltip label="فيسبوك" hasArrow placement="top">
-                              <IconButton
-                                as={ChakraLink}
-                                href={teacher.facebook_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                icon={<FaFacebook />}
-                                size="md"
-                                borderRadius="lg"
-                                bg="#1877F2"
-                                color="white"
-                                _hover={{ bg: "#166FE5" }}
-                              />
-                            </Tooltip>
-                          )}
-                          
-                          {teacher.youtube_url && (
-                            <Tooltip label="يوتيوب" hasArrow placement="top">
-                              <IconButton
-                                as={ChakraLink}
-                                href={teacher.youtube_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                icon={<FaYoutube />}
-                                size="md"
-                                borderRadius="lg"
-                                bg="#FF0000"
-                                color="white"
-                                _hover={{ bg: "#E60000" }}
-                              />
-                            </Tooltip>
-                          )}
-                          
-                          {teacher.tiktok_url && (
-                            <Tooltip label="تيك توك" hasArrow placement="top">
-                              <IconButton
-                                as={ChakraLink}
-                                href={teacher.tiktok_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                icon={<FaTiktok />}
-                                size="md"
-                                borderRadius="lg"
-                                bg="#000000"
-                                color="white"
-                                _hover={{ bg: "#333333" }}
-                              />
-                            </Tooltip>
-                          )}
-                        </HStack>
-                      </Box>
+                    {teacher.youtube_url && (
+                      <Tooltip label="يوتيوب" hasArrow placement="top">
+                        <IconButton
+                          as={ChakraLink}
+                          href={teacher.youtube_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          icon={<FaYoutube />}
+                          size="md"
+                          borderRadius="xl"
+                          bg="red.500"
+                          color="white"
+                          _hover={{ bg: "red.400", transform: "scale(1.08)" }}
+                        />
+                      </Tooltip>
                     )}
-                  </VStack>
-                </Box>
-              </VStack>
-            </Box>
-
-            {/* صورة المدرس */}
-            <Box>
-              <Avatar
-                src={teacher.avatar}
-               
-                width={imageSize}
-                height={imageSize}
-                borderWidth="6px"
-                borderColor="white"
-                boxShadow="lg"
-              />
-            </Box>
+                    {teacher.tiktok_url && (
+                      <Tooltip label="تيك توك" hasArrow placement="top">
+                        <IconButton
+                          as={ChakraLink}
+                          href={teacher.tiktok_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          icon={<FaTiktok />}
+                          size="md"
+                          borderRadius="xl"
+                          bg="gray.800"
+                          color="white"
+                          _hover={{ bg: "gray.700", transform: "scale(1.08)" }}
+                        />
+                      </Tooltip>
+                    )}
+                  </HStack>
+                )}
+              </Flex>
+            </VStack>
           </Flex>
-        </Container>
-      </Box>
+        </Box>
+      </Container>
     </Box>
   );
 };

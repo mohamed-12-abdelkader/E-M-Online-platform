@@ -40,6 +40,7 @@ import {
     BreadcrumbItem,
     BreadcrumbLink,
     Divider,
+    Select,
 } from "@chakra-ui/react";
 import {
     FaUserGraduate,
@@ -71,8 +72,9 @@ const CourseStudentsPage = () => {
     const [enrollments, setEnrollments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchStudent, setSearchStudent] = useState('');
-    const [filteredEnrollments, setFilteredEnrollments] = useState([]);
+
     const [blockingLoading, setBlockingLoading] = useState(false);
+    const [sortBy, setSortBy] = useState("alphabetical");
     const [actionLoading, setActionLoading] = useState(false);
     const [selectedStudentsForBlock, setSelectedStudentsForBlock] = useState([]);
 
@@ -127,21 +129,102 @@ const CourseStudentsPage = () => {
         }
     };
 
-    // Filter Logic
-    useEffect(() => {
-        if (searchStudent.trim() === '') {
-            setFilteredEnrollments(enrollments);
-        } else {
-            const lowerSearch = searchStudent.toLowerCase();
-            const filtered = enrollments.filter(student =>
-                (student.name && student.name.toLowerCase().includes(lowerSearch)) ||
-                (student.phone && student.phone.includes(searchStudent)) ||
-                (student.email && student.email.toLowerCase().includes(lowerSearch)) ||
-                (student.activation_code && student.activation_code.toLowerCase().includes(lowerSearch))
-            );
-            setFilteredEnrollments(filtered);
+    // --- Search helpers (Arabic-friendly + phone normalization) ---
+    const normalizeLatin = (value) => {
+        if (value === null || value === undefined) return "";
+        return String(value)
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") // remove latin diacritics
+            .toLowerCase()
+            .trim();
+    };
+
+    const normalizeArabic = (value) => {
+        if (value === null || value === undefined) return "";
+        return String(value)
+            .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "") // tashkeel
+            .replace(/\u0640/g, "") // tatweel
+            .replace(/[إأآا]/g, "ا")
+            .replace(/[يى]/g, "ي")
+            .replace(/ة/g, "ه")
+            .toLowerCase()
+            .replace(/\s+/g, " ")
+            .trim();
+    };
+
+    const normalizeDigits = (value) => {
+        if (value === null || value === undefined) return "";
+        return String(value).replace(/\D/g, "");
+    };
+
+    const normalizeQuery = (q) => {
+        const raw = String(q || "").trim();
+        return {
+            raw,
+            ar: normalizeArabic(raw),
+            latin: normalizeLatin(raw),
+            digits: normalizeDigits(raw),
+        };
+    };
+
+    // Filter & Sort Logic using useMemo
+    const filteredEnrollments = React.useMemo(() => {
+        let result = [...enrollments];
+        const q = normalizeQuery(searchStudent);
+
+        // 1. Search Filter
+        if (q.raw) {
+            const tokens = q.ar.split(" ").filter(Boolean);
+            const digitToken = q.digits;
+
+            result = result.filter((student) => {
+                const name = normalizeArabic(student?.name);
+                const email = normalizeLatin(student?.email);
+                const code = normalizeLatin(student?.activation_code);
+                const phoneDigits = normalizeDigits(student?.phone);
+
+                // If query is only digits, prioritize phone match
+                if (digitToken && tokens.length === 0) {
+                    return phoneDigits.includes(digitToken);
+                }
+
+                // Otherwise require every token to match something
+                return tokens.every((t) => {
+                    const tDigits = normalizeDigits(t);
+                    if (tDigits) return phoneDigits.includes(tDigits);
+                    return (
+                        (name && name.includes(t)) ||
+                        (email && email.includes(t)) ||
+                        (code && code.includes(t))
+                    );
+                });
+            });
         }
-    }, [searchStudent, enrollments]);
+
+        // 2. Sorting
+        result.sort((a, b) => {
+            if (sortBy === "alphabetical") {
+                const aName = normalizeArabic(a?.name);
+                const bName = normalizeArabic(b?.name);
+                return aName.localeCompare(bName, "ar", { sensitivity: "base", numeric: true });
+            } else if (sortBy === "newest") {
+                // Sort by enrolled_at desc, fallback to ID desc
+                const dateA = new Date(a.enrolled_at || 0).getTime();
+                const dateB = new Date(b.enrolled_at || 0).getTime();
+                if (dateA !== dateB) return dateB - dateA;
+                return (b.id || 0) - (a.id || 0);
+            } else if (sortBy === "oldest") {
+                // Sort by enrolled_at asc, fallback to ID asc
+                const dateA = new Date(a.enrolled_at || 0).getTime();
+                const dateB = new Date(b.enrolled_at || 0).getTime();
+                if (dateA !== dateB) return dateA - dateB;
+                return (a.id || 0) - (b.id || 0);
+            }
+            return 0;
+        });
+
+        return result;
+    }, [enrollments, searchStudent, sortBy]);
 
     // Actions
     const handleBlockAllStudents = async () => {
@@ -403,7 +486,7 @@ const CourseStudentsPage = () => {
                 </BreadcrumbItem>
             </Breadcrumb>
 
-            <Box bg="white" p={6} borderRadius="xl" boxShadow="lg">
+            <Box bg="white" p={6} className="modern-card">
                 <Flex justify="space-between" align="center" mb={6} flexWrap="wrap" gap={4}>
                     <HStack spacing={4}>
                         <Icon as={FaUserGraduate} w={8} h={8} color="blue.500" />
@@ -449,6 +532,17 @@ const CourseStudentsPage = () => {
                             </InputRightElement>
                         )}
                     </InputGroup>
+
+                    <Select
+                        w={{ base: '100%', sm: '200px' }}
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        bg="white"
+                    >
+                        <option value="alphabetical">أبجدي (أ-ي)</option>
+                        <option value="newest">الأحدث انضماماً</option>
+                        <option value="oldest">الأقدم انضماماً</option>
+                    </Select>
 
                     {(isTeacher || isAdmin) && (
                         <HStack spacing={2} flexWrap="wrap">

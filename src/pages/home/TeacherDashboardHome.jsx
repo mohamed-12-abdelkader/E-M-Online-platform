@@ -36,11 +36,15 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   Select,
+  SimpleGrid,
   useToast,
   Divider,
   Icon,
   Flex,
-  Spacer,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
   Tooltip,
   AlertDialog,
   AlertDialogBody,
@@ -66,6 +70,11 @@ import {
   FaEnvelope,
   FaImage,
   FaTimes,
+  FaRocket,
+  FaGem,
+  FaBell,
+  FaSearch,
+  FaFilter,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -84,10 +93,41 @@ const MotionHStack = motion(HStack);
 const MotionGrid = motion(Grid);
 const MotionCenter = motion(Center);
 
+const StatsCard = ({ icon, label, value, color }) => (
+  <VStack
+    className="modern-card"
+    p={5}
+    spacing={2}
+    align="center"
+    justify="center"
+    role="group"
+  >
+    <Flex
+      w={12}
+      h={12}
+      align="center"
+      justify="center"
+      borderRadius="full"
+      bg={`${color}.50`}
+      color={`${color}.500`}
+      transition="all 0.3s"
+      _groupHover={{ bg: `${color}.500`, color: "white", transform: "scale(1.1) rotate(5deg)" }}
+    >
+      <Icon as={icon} boxSize={5} />
+    </Flex>
+    <Text fontSize="3xl" fontWeight="800" color="gray.800">
+      {value}
+    </Text>
+    <Text fontSize="sm" fontWeight="medium" color="gray.500">
+      {label}
+    </Text>
+  </VStack>
+);
+
 const TeacherDashboardHome = () => {
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const token = localStorage.getItem("token");
-  
+
   // States
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -96,12 +136,12 @@ const TeacherDashboardHome = () => {
   const [grades, setGrades] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [subjectsLoading, setSubjectsLoading] = useState(true);
-  
+
   // Modal states
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
-  
+
   // Form states
   const [formData, setFormData] = useState({
     title: "",
@@ -124,7 +164,7 @@ const TeacherDashboardHome = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  
+
   const toast = useToast();
   const cancelRef = useRef();
 
@@ -133,43 +173,39 @@ const TeacherDashboardHome = () => {
     {
       id: 1,
       title: "بنك الأسئلة",
-      description: "إدارة الأسئلة والامتحانات",
+      description: "اضافة اسئلة جديدة",
       icon: FaClipboardList,
       color: "blue",
       link: "/Teacher_subjects",
-      gradient: "linear(to-br, blue.400, blue.600)"
     },
     {
       id: 2,
-      title: "سيستم إدارة السنتر",
-      description: "إدارة الطلاب والصفوف",
+      title: "إدارة السنتر",
+      description: "المجموعات والطلاب",
       icon: FaUsers,
-      color: "green",
+      color: "orange",
       link: "/center_groups",
-      gradient: "linear(to-br, green.400, green.600)"
     },
     {
       id: 3,
       title: "الرسائل",
-      description: "التواصل مع الطلاب",
+      description: "تواصل مع طلابك",
       icon: FaEnvelope,
-      color: "purple",
+      color: "blue",
       link: "/TeacherChat",
-      gradient: "linear(to-br, purple.400, purple.600)"
     },
     {
       id: 4,
       title: "EM Social",
-      description: "الشبكة الاجتماعية التعليمية",
-      icon: FaChartLine,
+      description: "المجتمع التعليمي",
+      icon: FaRocket,
       color: "orange",
       link: "/social",
-      gradient: "linear(to-br, orange.400, orange.600)"
     }
   ];
 
   // Color mode values
-  const bg = useColorModeValue("gray.50", "gray.900");
+  const bg = useColorModeValue("white", "gray.900"); // Plain white background
   const cardBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("gray.800", "white");
   const textColor = useColorModeValue("gray.600", "gray.300");
@@ -188,25 +224,26 @@ const TeacherDashboardHome = () => {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: "easeOut" }
+      scale: 1,
+      transition: { type: "spring", stiffness: 100, damping: 12 }
     }
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
+    hidden: { opacity: 0, y: 30, scale: 0.9 },
     visible: {
       opacity: 1,
+      y: 0,
       scale: 1,
-      transition: { duration: 0.4, ease: "easeOut" }
+      transition: { duration: 0.5, ease: "easeOut" }
     },
     hover: {
-      scale: 1.02,
-      y: -5,
-      transition: { duration: 0.2 }
+      y: -8,
+      transition: { duration: 0.3 }
     }
   };
 
@@ -215,12 +252,12 @@ const TeacherDashboardHome = () => {
     try {
       setLoading(true);
       setError(null); // Clear any previous errors
-      
+
       // Check if token exists
       if (!token) {
         throw new Error('No token found');
       }
-      
+
       console.log('Fetching courses with token:', token); // Debug log
       const response = await baseUrl.get('api/course/my-courses', {
         headers: { Authorization: `Bearer ${token}` }
@@ -299,7 +336,7 @@ const TeacherDashboardHome = () => {
         });
         return;
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast({
@@ -313,7 +350,7 @@ const TeacherDashboardHome = () => {
       }
 
       setCourseAvatar(file);
-      
+
       // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -354,27 +391,28 @@ const TeacherDashboardHome = () => {
         status: "error",
         duration: 3000,
         isClosable: true,
+
       });
       return;
     }
 
     try {
       setFormLoading(true);
-      
+
       // Create FormData object
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
       formDataToSend.append('price', parseInt(formData.price));
       formDataToSend.append('description', formData.description);
       formDataToSend.append('grade_id', parseInt(formData.grade_id));
-      
+
       // Add avatar if selected
       if (courseAvatar) {
         formDataToSend.append('avatar', courseAvatar);
       }
 
       await baseUrl.post('api/course', formDataToSend, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
@@ -437,13 +475,13 @@ const TeacherDashboardHome = () => {
 
     try {
       setEditLoading(true);
-      
+
       const formData = new FormData();
       formData.append('title', editData.title);
       formData.append('price', editData.price);
       formData.append('description', editData.description);
       formData.append('grade_id', editData.grade_id);
-      
+
       if (editData.avatar) {
         formData.append('avatar', editData.avatar);
       } else if (!editAvatarPreview) {
@@ -452,7 +490,7 @@ const TeacherDashboardHome = () => {
       }
 
       await baseUrl.put(`api/course/${editData.id}`, formData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
@@ -525,7 +563,7 @@ const TeacherDashboardHome = () => {
   };
 
   // Filter courses by grade
-  const filteredCourses = selectedGrade 
+  const filteredCourses = selectedGrade
     ? courses.filter(course => course.grade_id === parseInt(selectedGrade))
     : courses;
 
@@ -539,461 +577,281 @@ const TeacherDashboardHome = () => {
   }, []);
 
   return (
-    <Box className="home-page" minH="100vh" bg={bg} p={{ base: 2, sm: 4, md: 6, lg: 8 }} dir="rtl">
-      <Container 
-        maxW={{ base: "100%", sm: "100%", md: "6xl", lg: "7xl", xl: "8xl" }} 
+    <Box className="home-page" bg="white" minH="100vh" p={{ base: 2, sm: 4, md: 6, lg: 8 }} dir="rtl">
+      <Container
+        maxW="8xl"
         mx="auto"
-        px={{ base: 1, sm: 2, md: 2 }}
-        sx={{
-          '@media (min-width: 840px) and (max-width: 850px)': {
-            paddingInline: '4px'
-          }
-        }}
+        px={{ base: 2, md: 4 }}
       >
         <MotionVStack
-          spacing={{ base: 4, sm: 6, md: 8, lg: 10 }}
+          spacing={{ base: 8, md: 10 }}
           initial="hidden"
           animate="visible"
           variants={containerVariants}
         >
-          {/* Welcome Section */}
-          <MotionCard
-          className="Welcome-Section"
+          {/* Modern Welcome Banner */}
+          <MotionBox
             w="full"
-            bgGradient="linear(135deg, blue.300 0%, blue.600 100%)"
-            color="white"
-            borderRadius={{ base: "lg", sm: "xl", md: "2xl" }}
-            shadow={{ base: "lg", md: "2xl" }}
+            bgGradient="linear(to-l, blue.600, orange.500)"
+            borderRadius="3xl"
+            p={{ base: 6, md: 10 }}
+            position="relative"
             overflow="hidden"
             variants={itemVariants}
+            boxShadow="0 10px 40px -10px rgba(66, 153, 225, 0.5)"
           >
-            <CardBody p={{ base: 3, sm: 4, md: 6, lg: 8 }}>
-              <VStack 
-                spacing={{ base: 3, sm: 4, md: 6 }} 
-                align={{ base: "center", lg: "flex-start" }}
-                direction={{ base: "column", lg: "row" }}
-              >
-                <Box position="relative" flexShrink={0}>
-                  <Image
-                    src={user.avatar}
-                    alt={user.name}
-                    w={{ base: "70px", sm: "90px", md: "110px", lg: "120px" }}
-                    h={{ base: "70px", sm: "90px", md: "110px", lg: "120px" }}
-                    borderRadius="full"
-                    objectFit="cover"
-                    border="4px solid"
-                    borderColor="white"
-                    shadow="lg"
-                  />
-                  <Box
-                    position="absolute"
-                    bottom={1}
-                    right={1}
-                    w={{ base: "16px", sm: "20px", md: "25px", lg: "30px" }}
-                    h={{ base: "16px", sm: "20px", md: "25px", lg: "30px" }}
-                    bg="green.500"
-                    borderRadius="full"
-                    border="3px solid"
-                    borderColor="white"
-                  />
-                </Box>
-                
-                <VStack 
-                  align={{ base: "center", lg: "flex-start" }} 
-                  spacing={{ base: 2, sm: 3, md: 4 }} 
-                  flex={1}
-                  textAlign={{ base: "center", lg: "left" }}
-                >
-                  <MotionHeading 
-                    size={{ base: "md", sm: "lg", md: "xl", lg: "2xl" }} 
-                    fontWeight="bold"
-                    textAlign={{ base: "center", lg: "left" }}
-                    lineHeight={{ base: 1.2, md: 1.3 }}
-                  >
-                    مرحباً بك، {user.name}! 👋
-                  </MotionHeading>
-                  <MotionText 
-                    fontSize={{ base: "sm", sm: "md", md: "lg" }} 
-                    opacity={0.9}
-                    textAlign={{ base: "center", lg: "left" }}
-                    lineHeight={{ base: 1.4, md: 1.5 }}
-                  >
-                    أهلاً وسهلاً بك في لوحة تحكم المدرس
-                  </MotionText>
-                  <HStack 
-                    spacing={{ base: 1, sm: 2, md: 3, lg: 4 }} 
-                    flexWrap="wrap" 
-                    justify={{ base: "center", lg: "flex-start" }}
-                    gap={{ base: 2, sm: 3 }}
-                  >
-                    <Badge 
-                      colorScheme="blue" 
-                      px={{ base: 2, sm: 3, md: 4 }} 
-                      py={1} 
-                      borderRadius="full"
-                      fontSize={{ base: "xs", sm: "sm" }}
-                    >
-                      <Icon as={FaUser} mr={1} boxSize={{ base: 3, sm: 4 }} />
-                      {user.role}
-                    </Badge>
-                    <Badge 
-                      colorScheme="green" 
-                      px={{ base: 2, sm: 3, md: 4 }} 
-                      py={1} 
-                      borderRadius="full"
-                      fontSize={{ base: "xs", sm: "sm" }}
-                    >
-                      <Icon as={FaCalendarAlt} mr={1} boxSize={{ base: 3, sm: 4 }} />
-                      عضو منذ 2024
-                    </Badge>
-                  </HStack>
-                </VStack>
-              </VStack>
-            </CardBody>
-          </MotionCard>
+            {/* Background patterns */}
+            <Box position="absolute" right="-10%" top="-50%" w="400px" h="400px" border="50px solid rgba(255,255,255,0.05)" borderRadius="full" />
+            <Box position="absolute" left="-10%" bottom="-50%" w="300px" h="300px" bg="white" opacity="0.05" borderRadius="full" />
 
-          {/* Quick Links Section */}
-          <MotionBox w="full" variants={itemVariants}>
-            <MotionHeading 
-              size={{ base: "md", sm: "lg", md: "xl", lg: "2xl" }} 
-              mb={{ base: 3, sm: 4, md: 6, lg: 8 }} 
-              color="blue.500" 
-              textAlign="center"
-              fontWeight={{ base: "semibold", md: "bold" }}
+            <Flex
+              direction={{ base: "column", md: "row" }}
+              align="center"
+              justify="space-between"
+              gap={8}
             >
-              روابط سريعة
-            </MotionHeading>
-            <MotionGrid
-              templateColumns={{ 
-                base: "1fr", 
-                sm: "repeat(2, 1fr)", 
-                md: "repeat(2, 1fr)", 
-                lg: "repeat(4, 1fr)",
-                xl: "repeat(4, 1fr)"
-              }}
-              gap={{ base: 3, sm: 4, md: 5, lg: 6 }}
-              variants={containerVariants}
-              w="full"
-            >
-              {quickLinks.map((link) => (
-                <Link key={link.id} to={link.link} style={{ textDecoration: 'none', width: '100%' }}>
-                  <MotionCard
-                  
-                    bg={cardBg}
-                    borderRadius={{ base: "md", sm: "lg", md: "xl" }}
-                    shadow={{ base: "sm", sm: "md", md: "lg" }}
-                    variants={cardVariants}
-                    whileHover="hover"
-                    cursor="pointer"
-                    border="1px solid"
-                    borderColor={borderColor}
-                    _hover={{
-                      transform: "translateY(-8px)",
-                      boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-                      borderColor: `${link.color}.300`
-                    }}
-                    transition="all 0.3s ease"
-                    minH={{ base: "120px", sm: "140px", md: "160px", lg: "180px" }}
-                    w="full"
-                    h="full"
-                    className="mx-auto link-div"
+              <HStack spacing={6}>
+                <Image
+                  src={user.avatar}
+                  alt={user.name}
+                  w={{ base: "80px", md: "100px" }}
+                  h={{ base: "80px", md: "100px" }}
+                  borderRadius="full"
+                  border="4px solid white"
+                  boxShadow="lg"
+                />
+                <VStack align="start" spacing={1} color="white">
+                  <Text fontSize="lg" opacity={0.9}>أهلاً بعودتك 👋</Text>
+                  <Heading size="xl" fontWeight="black">{user.name}</Heading>
+                  <Badge
+                    bg="whiteAlpha.300"
+                    color="white"
+                    px={3} py={1}
+                    borderRadius="full"
+                    backdropFilter="blur(10px)"
+                    fontSize="sm"
                   >
-                    <CardBody  p={{ base: 3, sm: 4, md: 5, lg: 6 }} textAlign="center" h="full">
-                      <VStack spacing={{ base: 2, sm: 3, md: 4 }} h="full" justify="center">
-                        <Box
-                          p={{ base: 2, sm: 3, md: 4 }}
-                          borderRadius="full"
-                          bgGradient={link.gradient}
-                          color="white"
-                          shadow="lg"
-                          _hover={{
-                            transform: "scale(1.1)",
-                            transition: "transform 0.2s ease"
-                          }}
-                          w="fit-content"
-                          mx="auto"
-                        >
-                          <Icon as={link.icon} boxSize={{ base: 5, sm: 6, md: 7, lg: 8 }} />
-                        </Box>
-                        <VStack spacing={{ base: 1, sm: 2 }} flex={1} justify="center">
-                          <Text 
-                            fontSize={{ base: "sm", sm: "md", md: "lg" }} 
-                            fontWeight={{ base: "semibold", md: "bold" }} 
-                            color="blue.500"
-                            noOfLines={2}
-                            lineHeight={{ base: 1.3, md: 1.4 }}
-                          >
-                            {link.title}
-                          </Text>
-                          <Text 
-                            color={textColor} 
-                            fontSize={{ base: "xs", sm: "sm", md: "sm" }} 
-                            textAlign="center"
-                            noOfLines={2}
-                            lineHeight={{ base: 1.4, md: 1.5 }}
-                          >
-                            {link.description}
-                          </Text>
-                        </VStack>
+                    {user.role}
+                  </Badge>
+                </VStack>
+              </HStack>
+
+              <HStack spacing={4} w={{ base: "full", md: "auto" }}>
+                <StatsCard icon={FaBookOpen} label="كورسات" value={courses.length} color="blue" />
+                <StatsCard icon={FaUsers} label="طلاب" value="250+" color="orange" />
+                <StatsCard icon={FaStar} label="تقييم" value="4.9" color="orange" />
+              </HStack>
+            </Flex>
+          </MotionBox>
+
+          {/* Quick Links with new clean design */}
+          <MotionBox w="full" variants={itemVariants}>
+            <Heading
+              size="lg"
+              className="brand-section-title"
+              mb={8}
+            >
+              الوصول السريع
+            </Heading>
+
+            <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6}>
+              {quickLinks.map((link) => (
+                <Link key={link.id} to={link.link} style={{ textDecoration: 'none' }}>
+                  <MotionBox
+                    className="modern-card"
+                    p={6}
+                    cursor="pointer"
+                    whileHover={{ y: -5 }}
+                    role="group"
+                  >
+                    <HStack spacing={4}>
+                      <Flex
+                        w={14}
+                        h={14}
+                        align="center"
+                        justify="center"
+                        borderRadius="2xl"
+                        bg={`${link.color}.50`}
+                        color={`${link.color}.500`}
+                        transition="all 0.3s"
+                        _groupHover={{
+                          bgGradient: `linear(to-br, ${link.color}.400, ${link.color}.600)`,
+                          color: "white",
+                          transform: "rotate(10deg)"
+                        }}
+                      >
+                        <Icon as={link.icon} boxSize={6} />
+                      </Flex>
+                      <VStack align="start" spacing={0}>
+                        <Text fontWeight="bold" fontSize="lg" color="gray.800">
+                          {link.title}
+                        </Text>
+
                       </VStack>
-                    </CardBody>
-                  </MotionCard>
+                    </HStack>
+                  </MotionBox>
                 </Link>
               ))}
-            </MotionGrid>
+            </SimpleGrid>
           </MotionBox>
 
           {/* Subjects Section */}
           {(subjectsLoading || subjects.length > 0) && (
             <MotionBox w="full" variants={itemVariants}>
-              <VStack spacing={{ base: 3, sm: 4, md: 6 }} align="stretch" mb={{ base: 4, sm: 5, md: 6, lg: 8 }}>
-                <MotionHeading 
-                  size={{ base: "md", sm: "lg", md: "xl", lg: "2xl" }} 
-                  color="blue.500"
-                  textAlign={{ base: "center",  }}
-                  fontWeight={{ base: "semibold", md: "bold" }}
-                >
-                  موادي داخل الباقات (المجموعات)
-                </MotionHeading>
+              <Heading
+                size="lg"
+                className="brand-section-title"
+                mb={8}
+              >
+                المواد الدراسية
+              </Heading>
 
-                {subjectsLoading ? (
-                  <MotionCenter py={12} variants={itemVariants}>
-                    <VStack spacing={4}>
-                      <Spinner size="xl" color="blue.500" thickness="4px" />
-                      <Text color={textColor}>جاري تحميل المواد...</Text>
-                    </VStack>
-                  </MotionCenter>
-                ) : subjects.length === 0 ? (
-                  <MotionCenter py={10} variants={itemVariants}>
-                    <VStack spacing={3}>
-                      <Icon as={FaBookOpen} boxSize={12} color="gray.400" />
-                      <Text color={textColor} fontSize="md">
-                        لا توجد مواد مرتبطة بمجموعات حالياً
-                      </Text>
-                    </VStack>
-                  </MotionCenter>
-                ) : (
-                  <MotionGrid
-                    templateColumns={{ 
-                      base: "1fr", 
-                      sm: "repeat(2, 1fr)", 
-                      md: "repeat(2, 1fr)", 
-                      lg: "repeat(3, 1fr)",
-                      xl: "repeat(3, 1fr)"
-                    }}
-                    gap={{ base: 3, sm: 3, md: 3, lg: 5 }}
-                    variants={containerVariants}
-                    w="full"
-                    className="mb-10"
-                    justifyItems="stretch"
-                  >
-                    {subjects.map((subject) => (
-                      <MotionCard
-                        key={subject.id}
-                        bg={cardBg}
-                        borderRadius={{ base: "md", sm: "lg", md: "xl" }}
-                        shadow={{ base: "sm", sm: "md", md: "lg" }}
-                        variants={cardVariants}
-                        whileHover="hover"
-                        border="1px solid"
-                        borderColor={borderColor}
-                        w="full"
-                        h="full"
-                        className="mx-auto teacher-subject"
-                        as={Link}
-                        to={`/subject/${subject.id}`}
-                        style={{ textDecoration: 'none' }}
-                        cursor="pointer"
-                      >
-                        {/* Subject Image */}
-                        {subject.image && (
-                          <Box position="relative" overflow="hidden">
-                            <Image
-                              src={subject.image}
-                              alt={subject.name}
-                              w="full"
-                              h={{ base: "180px", sm: "180px", md: "180px", lg: "200px" }}
-                              objectFit="cover"
-                              borderRadius={{ base: "md", sm: "lg", md: "xl" }}
-                            />
-                            <Badge
-                              position="absolute"
-                              top={1}
-                              right={1}
-                              colorScheme="purple"
-                              borderRadius="full"
-                              px={{ base: 1, sm: 2, md: 3 }}
-                              py={1}
-                              fontSize={{ base: "2xs", sm: "xs", md: "sm" }}
-                            >
-                              مادة دراسية
-                            </Badge>
-                          </Box>
-                        )}
-                        
-                        <CardHeader pb={{ base: 2, sm: 3, md: 4 }} px={{ base: 3, sm: 4, md: 5 }}>
-                          <VStack align="flex-start" spacing={{ base: 2, sm: 3 }} w="full">
-                            <VStack align="flex-start" spacing={{ base: 1, sm: 2 }} flex={1} minW={0} w="full">
-                              <Heading 
-                                size={{ base: "xs", sm: "sm", md: "md" }} 
-                                color="blue.500"
-                                noOfLines={2}
-                                w="full"
-                                lineHeight={{ base: 1.3, md: 1.4 }}
-                              >
-                                {subject.name}
-                              </Heading>
-                              <Text 
-                                fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
-                                color={textColor} 
-                                noOfLines={1}
-                                w="full"
-                                lineHeight={{ base: 1.4, md: 1.5 }}
-                              >
-                                {subject.package_name || "—"}
-                              </Text>
-                              <Text 
-                                fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
-                                color="blue.500" 
-                                fontWeight="medium"
-                                noOfLines={1}
-                                w="full"
-                              >
-                                الصف: {subject.grade_name || subject.grade_id || "—"}
-                              </Text>
-                            </VStack>
-                          </VStack>
-                        </CardHeader>
-                        
-                        <CardBody pt={0} px={{ base: 3, sm: 4, md: 5 }} pb={{ base: 3, sm: 4, md: 5 }}>
-                          <VStack spacing={{ base: 2, sm: 3, md: 4 }} align="stretch">
-                            <HStack justify="space-between" flexWrap="wrap" gap={2}>
-                              <HStack spacing={1} minW={0} flex={1}>
-                                <Icon as={FaUsers} color="blue.500" boxSize={{ base: 3, sm: 3, md: 4 }} />
-                                <Text 
-                                  fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
-                                  color={textColor}
-                                  noOfLines={1}
-                                >
-                                  {subject.groups_count || 0} مجموعة
-                                </Text>
-                              </HStack>
-                              <Badge 
-                                colorScheme="blue" 
-                                px={{ base: 1, sm: 2, md: 3 }} 
-                                py={1} 
-                                borderRadius="full"
-                                fontSize={{ base: "2xs", sm: "xs", md: "sm" }}
-                              >
-                                {subject.groups_count || 0} مجموعة
-                              </Badge>
+              {subjectsLoading ? (
+                <MotionCenter py={12} className="modern-card" borderRadius="xl">
+                  <VStack spacing={4}>
+                    <Spinner size="xl" color="orange.500" thickness="4px" />
+                    <Text color="gray.500">جاري تحميل المواد...</Text>
+                  </VStack>
+                </MotionCenter>
+              ) : subjects.length === 0 ? (
+                <MotionCenter py={10} className="modern-card" borderRadius="xl">
+                  <VStack spacing={3}>
+                    <Icon as={FaBookOpen} boxSize={12} color="gray.300" />
+                    <Text color="gray.500" fontSize="md">
+                      لا توجد مواد دراسية حالياً
+                    </Text>
+                  </VStack>
+                </MotionCenter>
+              ) : (
+                <SimpleGrid
+                  columns={{ base: 1, md: 2, lg: 3 }}
+                  spacing={6}
+                  w="full"
+                >
+                  {subjects.map((subject) => (
+                    <MotionBox
+                      key={subject.id}
+                      className="modern-card"
+                      borderRadius="2xl"
+                      overflow="hidden"
+                      variants={cardVariants}
+                      whileHover="hover"
+                      as={Link}
+                      to={`/subject/${subject.id}`}
+                      position="relative"
+                      bg="white"
+                      cursor="pointer"
+                      w="full"
+                      role="group"
+                    >
+                      {/* Image section with cleaner overlay */}
+                      <Box position="relative" h="200px" overflow="hidden">
+                        <Image
+                          src={subject.image || "https://placehold.co/600x400/e2e8f0/475569?text=Subject"}
+                          alt={subject.name}
+                          w="full"
+                          h="full"
+                          objectFit="cover"
+                          transition="transform 0.5s ease"
+                          _groupHover={{ transform: "scale(1.1)" }}
+                        />
+                        <Box
+                          position="absolute"
+                          inset={0}
+                          bgGradient="linear(to-t, blackAlpha.800 0%, transparent 60%)"
+                        />
+
+                        <Flex
+                          position="absolute"
+                          bottom={4}
+                          right={4}
+                          left={4}
+                          justify="space-between"
+                          align="flex-end"
+                        >
+                          <Badge
+                            bg="orange.500"
+                            color="white"
+                            px={3}
+                            py={1}
+                            borderRadius="lg"
+                            fontSize="xs"
+                            fontWeight="bold"
+                            boxShadow="md"
+                          >
+                            {subject.grade_name || "مادة دراسية"}
+                          </Badge>
+                        </Flex>
+                      </Box>
+
+                      <Box p={5}>
+                        <VStack align="start" spacing={3}>
+                          <Grid templateColumns="1fr auto" gap={2} w="full" alignItems="center">
+                            <Heading size="md" color="gray.800" noOfLines={1}>
+                              {subject.name}
+                            </Heading>
+                            <Box color="blue.500">
+                              <Icon as={FaBookOpen} />
+                            </Box>
+                          </Grid>
+
+                          <HStack fontSize="sm" color="gray.500" spacing={4}>
+                            <HStack>
+                              <Icon as={FaUsers} color="orange.400" />
+                              <Text>{subject.groups_count || 0} مجموعات</Text>
                             </HStack>
-                            
-                            {/* Groups List */}
-                            {subject.groups && subject.groups.length > 0 && (
-                              <>
-                                <Divider />
-                                <VStack align="stretch" spacing={2}>
-                                  <Text 
-                                    fontSize={{ base: "2xs", sm: "xs" }} 
-                                    color={textColor}
-                                    fontWeight="medium"
-                                  >
-                                    المجموعات:
-                                  </Text>
-                                  {subject.groups.slice(0, 3).map((group) => (
-                                    <HStack 
-                                      key={group.id}
-                                      spacing={2}
-                                      p={2}
-                                      bg={useColorModeValue("gray.50", "gray.700")}
-                                      borderRadius="md"
-                                      _hover={{ bg: useColorModeValue("gray.100", "gray.600") }}
-                                    >
-                                      <VStack align="start" spacing={0} flex={1} minW={0}>
-                                        <Text 
-                                          fontSize={{ base: "2xs", sm: "xs" }} 
-                                          color={textColor}
-                                          fontWeight="medium"
-                                          noOfLines={1}
-                                        >
-                                          {group.name}
-                                        </Text>
-                                        <Text 
-                                          fontSize={{ base: "2xs", sm: "xs" }} 
-                                          color="blue.500"
-                                          noOfLines={1}
-                                        >
-                                          {(group.schedule_days?.length ? `${formatDays(group.schedule_days)} • ` : "") + (group.schedule_time || "") || "—"}
-                                        </Text>
-                                      </VStack>
-                                    </HStack>
-                                  ))}
-                                  {subject.groups.length > 3 && (
-                                    <Text 
-                                      fontSize={{ base: "2xs", sm: "xs" }} 
-                                      color="blue.500"
-                                      textAlign="center"
-                                      fontWeight="medium"
-                                    >
-                                      +{subject.groups.length - 3} مجموعة أخرى
-                                    </Text>
-                                  )}
-                                </VStack>
-                              </>
-                            )}
-                            
-                            <Divider />
-                            
-                            <Button 
-                              colorScheme="blue" 
-                              w="full"
-                              size={{ base: "md", sm: "md", md: "md" }}
-                              borderRadius={{ base: "md", md: "lg" }}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                window.location.href = `/subject/${subject.id}`;
-                              }}
-                            >
-                              عرض المادة
-                            </Button>
-                          </VStack>
-                        </CardBody>
-                      </MotionCard>
-                    ))}
-                  </MotionGrid>
-                )}
-              </VStack>
+                          </HStack>
+
+                          <Divider borderColor="gray.100" />
+
+                          <Button
+                            w="full"
+                            variant="outline"
+                            colorScheme="blue"
+                            borderColor="blue.200"
+                            color="blue.600"
+                            _hover={{
+                              bg: "blue.50",
+                              borderColor: "blue.500",
+                              color: "blue.700"
+                            }}
+                            size="md"
+                            borderRadius="xl"
+                          >
+                            إدارة المادة
+                          </Button>
+                        </VStack>
+                      </Box>
+                    </MotionBox>
+                  ))}
+                </SimpleGrid>
+              )}
             </MotionBox>
           )}
 
           {/* Courses Section */}
           <MotionBox w="full" variants={itemVariants}>
-            <VStack spacing={{ base: 3, sm: 4, md: 6 }} align="stretch" mb={{ base: 4, sm: 5, md: 6, lg: 8 }}>
-              <MotionHeading 
-                size={{ base: "md", sm: "lg", md: "xl", lg: "2xl" }} 
-                color="blue.500"
-                textAlign={{ base: "center",  }}
-                fontWeight={{ base: "semibold", md: "bold" }}
+            <Flex mb={8} align="center" justify="space-between" wrap="wrap" gap={4}>
+              <Heading
+                size="lg"
+                className="brand-section-title"
               >
                 كورساتي
-              </MotionHeading>
-              <VStack 
-                spacing={{ base: 3, sm: 4 }} 
-                align={{ base: "stretch", lg: "flex-end" }}
-                direction={{ base: "column", lg: "row" }}
-                w="full"
-                
-              >
+              </Heading>
+
+              <HStack spacing={3}>
                 <Select
-                  placeholder="كل الصفوف"
+                  placeholder="تصفية حسب الصف"
                   value={selectedGrade}
                   onChange={(e) => setSelectedGrade(e.target.value)}
-                  w={{ base: "full", lg: "250px" }}
-                  bg={cardBg}
-                  borderColor={borderColor}
-                  size={{ base: "sm", sm: "md" }}
-                  borderRadius={{ base: "md", md: "lg" }}
+                  w={{ base: "full", md: "200px" }}
+                  bg="white"
+                  borderRadius="xl"
+                  border="1px solid"
+                  borderColor="gray.200"
+                  _focus={{ borderColor: "blue.500", ring: 2, ringColor: "blue.100" }}
+                  size="md"
+                  icon={<Icon as={FaFilter} color="blue.500" />}
                 >
                   {grades.map(grade => (
                     <option key={grade.id} value={grade.id}>
@@ -1001,204 +859,179 @@ const TeacherDashboardHome = () => {
                     </option>
                   ))}
                 </Select>
-
                 <MotionButton
-                  colorScheme="blue"
                   leftIcon={<FaPlus />}
                   onClick={onOpen}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  size={{ base: "sm", sm: "md" }}
-                  w={{ base: "full", lg: "auto" }}
-                  minW={{ base: "auto", lg: "200px" }}
-                  borderRadius={{ base: "md", md: "lg" }}
+                  size="md"
+                  borderRadius="xl"
+                  px={6}
+                  bg="blue.600"
+                  color="white"
+                  _hover={{
+                    bg: "blue.700",
+                    shadow: "lg"
+                  }}
                 >
-                  إضافة كورس جديد
+                  إضافة كورس
                 </MotionButton>
-              </VStack>
-            </VStack>
+              </HStack>
+            </Flex>
 
             <AnimatePresence mode="wait">
               {loading ? (
-                <MotionCenter py={12} variants={itemVariants}>
+                <MotionCenter py={12} className="modern-card" borderRadius="xl">
                   <VStack spacing={4}>
                     <Spinner size="xl" color="blue.500" thickness="4px" />
-                    <Text color={textColor}>جاري تحميل الكورسات...</Text>
+                    <Text color="gray.500">جاري تحميل الكورسات...</Text>
                   </VStack>
                 </MotionCenter>
               ) : error ? (
-                <MotionCenter py={12} variants={itemVariants}>
+                <MotionCenter py={12} className="modern-card" borderRadius="xl">
                   <VStack spacing={4}>
-                    <Icon as={FaBookOpen} boxSize={16} color="red.500" />
+                    <Icon as={FaBookOpen} boxSize={16} color="red.400" />
                     <Text color="red.500" fontSize="lg">{error}</Text>
-                    <Text color="gray.500" fontSize="sm">Debug: {JSON.stringify({loading, error, courses: courses.length})}</Text>
-                    <Button colorScheme="blue" onClick={fetchCourses}>
+                    <Button colorScheme="blue" onClick={fetchCourses} borderRadius="xl">
                       إعادة المحاولة
                     </Button>
                   </VStack>
                 </MotionCenter>
               ) : filteredCourses.length === 0 ? (
-                <MotionCenter py={12} variants={itemVariants}>
+                <MotionCenter py={12} className="modern-card" borderRadius="xl">
                   <VStack spacing={4}>
-                    <Icon as={FaBookOpen} boxSize={16} color="gray.400" />
+                    <Icon as={FaBookOpen} boxSize={16} color="gray.300" />
                     <Text color="gray.500" fontSize="lg">لا توجد كورسات متاحة</Text>
+                    <Button
+                      colorScheme="blue"
+                      variant="outline"
+                      onClick={onOpen}
+                      borderRadius="xl"
+                      leftIcon={<FaPlus />}
+                    >
+                      إضافة أول كورس
+                    </Button>
                   </VStack>
                 </MotionCenter>
               ) : (
-                <MotionGrid
-                  templateColumns={{ 
-                    base: "1fr", 
-                    sm: "repeat(2, 1fr)", 
-                    md: "repeat(2, 1fr)", 
-                    lg: "repeat(3, 1fr)",
-                    xl: "repeat(3, 1fr)"
-                  }}
-                  gap={{ base: 3, sm: 3, md: 3, lg: 5 }}
-                  variants={containerVariants}
+                <SimpleGrid
+                  columns={{ base: 1, md: 2, lg: 3 }}
+                  spacing={6}
                   w="full"
-                  className="mb-10"
-                  justifyItems="stretch"
-                  sx={{
-                    '@media (min-width: 840px) and (max-width: 850px)': {
-                      gridTemplateColumns: 'repeat(2, 1fr)',
-                      gap: '12px'
-                    }
-                  }}
                 >
                   {filteredCourses.map((course) => (
-                    <MotionCard
+                    <MotionBox
                       key={course.id}
-                      bg={cardBg}
-                      borderRadius={{ base: "md", sm: "lg", md: "xl" }}
-                      shadow={{ base: "sm", sm: "md", md: "lg" }}
+                      className="modern-card"
+                      borderRadius="2xl"
+                      overflow="hidden"
                       variants={cardVariants}
                       whileHover="hover"
-                      border="1px solid"
-                      borderColor={borderColor}
+                      position="relative"
+                      bg="white"
                       w="full"
-                      h="full"
-                      className="mx-auto teacher-course"
+                      role="group"
                     >
-                      {/* Course Image */}
-                      {course.avatar && (
-                        <Box position="relative" overflow="hidden">
-                          <Image
-                            src={course.avatar}
-                            alt={course.title}
-                            w="full"
-                            h={{ base: "180px", sm: "180px", md: "180px", lg: "200px" }}
-                            objectFit="cover"
-                            borderRadius={{ base: "md", sm: "lg", md: "xl" }}
-                          />
+                      {/* Image section */}
+                      <Box position="relative" h="200px" overflow="hidden">
+                        <Image
+                          src={course.avatar || "https://placehold.co/600x400/e2e8f0/475569?text=Course"}
+                          alt={course.title}
+                          w="full"
+                          h="full"
+                          objectFit="cover"
+                          transition="transform 0.5s ease"
+                          _groupHover={{ transform: "scale(1.1)" }}
+                        />
+                        <Box
+                          position="absolute"
+                          inset={0}
+                          bgGradient="linear(to-t, blackAlpha.800 0%, transparent 60%)"
+                        />
+
+                        <Flex
+                          position="absolute"
+                          top={3}
+                          right={3}
+                          left={3}
+                          justify="space-between"
+                          align="center"
+                        >
                           <Badge
-                            position="absolute"
-                            top={1}
-                            right={1}
-                            colorScheme="blue"
-                            borderRadius="full"
-                            px={{ base: 1, sm: 2, md: 3 }}
+                            bg="blue.500"
+                            color="white"
+                            px={3}
                             py={1}
-                            fontSize={{ base: "2xs", sm: "xs", md: "sm" }}
+                            borderRadius="lg"
+                            fontSize="xs"
+                            fontWeight="bold"
+                            boxShadow="lg"
                           >
-                            كورس تعليمي
+                            {course.price > 0 ? `${course.price} ج.م` : 'مجاني'}
                           </Badge>
-                        </Box>
-                      )}
-                      
-                      <CardHeader pb={{ base: 2, sm: 3, md: 4 }} px={{ base: 3, sm: 4, md: 5 }}>
-                        <VStack align="flex-start" spacing={{ base: 2, sm: 3 }} w="full">
-                          <HStack justify="space-between" align="flex-start" w="full" gap={2}>
-                            <VStack align="flex-start" spacing={{ base: 1, sm: 2 }} flex={1} minW={0}>
-                              <Heading 
-                                size={{ base: "xs", sm: "sm", md: "md" }} 
-                                color="blue.500"
-                                noOfLines={2}
-                                w="full"
-                                lineHeight={{ base: 1.3, md: 1.4 }}
-                              >
-                              {course.title}
-                            </Heading>
-                              <Text 
-                                fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
-                                color={textColor} 
-                                noOfLines={2}
-                                w="full"
-                                lineHeight={{ base: 1.4, md: 1.5 }}
-                              >
-                              {course.description}
-                            </Text>
-                          </VStack>
-                            <HStack spacing={1} flexShrink={0}>
-                            <Tooltip label="تعديل الكورس">
-                              <MotionIconButton
-                                icon={<FaEdit />}
-                                aria-label="تعديل"
-                                  size="2xs"
-                                colorScheme="blue"
-                                variant="ghost"
-                                onClick={() => handleEditCourse(course)}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                              />
-                            </Tooltip>
-                            <Tooltip label="حذف الكورس">
-                              <MotionIconButton
-                                icon={<FaTrash />}
-                                aria-label="حذف"
-                                  size="2xs"
-                                colorScheme="red"
-                                variant="ghost"
-                                onClick={() => handleDeleteCourse(course)}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                              />
-                            </Tooltip>
-                          </HStack>
-                        </HStack>
-                        </VStack>
-                      </CardHeader>
-                      
-                      <CardBody pt={0} px={{ base: 3, sm: 4, md: 5 }} pb={{ base: 3, sm: 4, md: 5 }}>
-                        <VStack spacing={{ base: 2, sm: 3, md: 4 }} align="stretch">
-                          <HStack justify="space-between" flexWrap="wrap" gap={2}>
-                            <HStack spacing={1} minW={0} flex={1}>
-                              <Icon as={FaCalendarAlt} color="blue.500" boxSize={{ base: 3, sm: 3, md: 4 }} />
-                              <Text 
-                                fontSize={{ base: "2xs", sm: "xs", md: "sm" }} 
-                                color={textColor}
-                                noOfLines={1}
-                              >
-                                {new Date(course.created_at).toLocaleDateString('ar-EG')}
-                              </Text>
-                            </HStack>
-                            <Badge 
-                              colorScheme="blue" 
-                              px={{ base: 1, sm: 2, md: 3 }} 
-                              py={1} 
+
+                          <HStack spacing={1}>
+                            <IconButton
+                              aria-label="Edit"
+                              icon={<Icon as={FaEdit} />}
+                              size="sm"
+                              bg="whiteAlpha.900"
+                              color="blue.600"
                               borderRadius="full"
-                              fontSize={{ base: "2xs", sm: "xs", md: "sm" }}
-                            >
-                              {course.price} ج.م
-                            </Badge>
+                              _hover={{ bg: "white", color: "blue.700" }}
+                              onClick={(e) => { e.stopPropagation(); handleEditCourse(course); }}
+                            />
+                            <IconButton
+                              aria-label="Delete"
+                              icon={<Icon as={FaTrash} />}
+                              size="sm"
+                              bg="whiteAlpha.900"
+                              color="red.500"
+                              borderRadius="full"
+                              _hover={{ bg: "white", color: "red.600" }}
+                              onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course); }}
+                            />
                           </HStack>
-                          
-                          <Divider />
-                          
+                        </Flex>
+                      </Box>
+
+                      <Box p={5}>
+                        <VStack align="start" spacing={3}>
+                          <Heading size="md" color="gray.800" noOfLines={1} lineHeight={1.4}>
+                            {course.title}
+                          </Heading>
+                          <Text fontSize="sm" color="gray.500" noOfLines={2} h="40px">
+                            {course.description}
+                          </Text>
+
+                          <HStack fontSize="xs" color="gray.400" spacing={4} w="full" pt={2} borderTop="1px solid" borderColor="gray.100">
+                            <HStack>
+                              <Icon as={FaCalendarAlt} color="blue.400" />
+                              <Text>{new Date(course.created_at).toLocaleDateString('ar-EG')}</Text>
+                            </HStack>
+                          </HStack>
+
                           <Link to={`/CourseDetailsPage/${course.id}`} style={{ width: '100%' }}>
-                            <Button 
-                              colorScheme="blue" 
+                            <Button
                               w="full"
-                              size={{ base: "md", sm: "md", md: "md" }}
-                              borderRadius={{ base: "md", md: "lg" }}
+                              bg="gray.900"
+                              color="white"
+                              _hover={{
+                                bg: "gray.700",
+                                shadow: "lg",
+                                transform: "translateY(-1px)"
+                              }}
+                              borderRadius="xl"
+                              rightIcon={<Icon as={FaBookOpen} />}
                             >
-                              ادارة الكورس 
+                              إدارة الكورس
                             </Button>
-                            </Link>
+                          </Link>
                         </VStack>
-                      </CardBody>
-                    </MotionCard>
+                      </Box>
+                    </MotionBox>
                   ))}
-                </MotionGrid>
+                </SimpleGrid>
               )}
             </AnimatePresence>
           </MotionBox>
@@ -1206,46 +1039,46 @@ const TeacherDashboardHome = () => {
       </Container>
 
       {/* Create Course Modal */}
-      <Modal 
-        isOpen={isOpen} 
-        onClose={onClose} 
-        size={{ base: "full", sm: "full", md: "lg", lg: "xl", xl: "2xl" }} 
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size={{ base: "full", sm: "full", md: "lg", lg: "xl", xl: "2xl" }}
         isCentered
         scrollBehavior="inside"
       >
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(5px)" />
-        <ModalContent 
-          bg={cardBg} 
-          borderRadius={{ base: "none", sm: "none", md: "xl", lg: "2xl" }} 
+        <ModalContent
+          bg={cardBg}
+          borderRadius={{ base: "none", sm: "none", md: "xl", lg: "2xl" }}
           shadow={{ base: "none", md: "2xl" }}
           m={{ base: 0, sm: 0, md: 4, lg: 6 }}
           maxH={{ base: "100vh", sm: "100vh", md: "90vh", lg: "85vh" }}
           maxW={{ base: "100%", sm: "100%", md: "90%", lg: "80%", xl: "70%" }}
         >
-          <ModalHeader 
-            borderBottom="1px solid" 
+          <ModalHeader
+            borderBottom="1px solid"
             borderColor={borderColor}
             p={{ base: 3, sm: 4, md: 5, lg: 6 }}
           >
             <HStack spacing={{ base: 2, sm: 3 }}>
               <Icon as={FaPlus} color="blue.500" boxSize={{ base: 4, sm: 5, md: 6 }} />
-              <Text 
-                fontWeight="bold" 
+              <Text
+                fontWeight="bold"
                 fontSize={{ base: "sm", sm: "md", md: "lg", lg: "xl" }}
               >
                 إضافة كورس جديد
               </Text>
             </HStack>
           </ModalHeader>
-          
-          <ModalBody 
-            py={{ base: 3, sm: 4, md: 5, lg: 6 }} 
+
+          <ModalBody
+            py={{ base: 3, sm: 4, md: 5, lg: 6 }}
             px={{ base: 3, sm: 4, md: 5, lg: 6 }}
           >
             <VStack spacing={{ base: 4, md: 6 }} align="stretch">
               <FormControl isRequired>
-                <FormLabel 
-                  fontWeight="bold" 
+                <FormLabel
+                  fontWeight="bold"
                   color={headingColor}
                   fontSize={{ base: "sm", md: "md" }}
                 >
@@ -1264,8 +1097,8 @@ const TeacherDashboardHome = () => {
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel 
-                  fontWeight="bold" 
+                <FormLabel
+                  fontWeight="bold"
                   color={headingColor}
                   fontSize={{ base: "sm", md: "md" }}
                 >
@@ -1286,8 +1119,8 @@ const TeacherDashboardHome = () => {
 
               <VStack spacing={4} direction={{ base: "column", sm: "row" }}>
                 <FormControl isRequired flex={1}>
-                  <FormLabel 
-                    fontWeight="bold" 
+                  <FormLabel
+                    fontWeight="bold"
                     color={headingColor}
                     fontSize={{ base: "sm", md: "md" }}
                   >
@@ -1314,8 +1147,8 @@ const TeacherDashboardHome = () => {
                 </FormControl>
 
                 <FormControl isRequired flex={1}>
-                  <FormLabel 
-                    fontWeight="bold" 
+                  <FormLabel
+                    fontWeight="bold"
                     color={headingColor}
                     fontSize={{ base: "sm", md: "md" }}
                   >
@@ -1342,8 +1175,8 @@ const TeacherDashboardHome = () => {
 
               {/* Avatar Upload Section */}
               <FormControl>
-                <FormLabel 
-                  fontWeight="bold" 
+                <FormLabel
+                  fontWeight="bold"
                   color={headingColor}
                   fontSize={{ base: "sm", md: "md" }}
                 >
@@ -1391,15 +1224,15 @@ const TeacherDashboardHome = () => {
                       <VStack spacing={4}>
                         <Icon as={FaFileAlt} boxSize={{ base: 6, md: 8 }} color="gray.400" />
                         <VStack spacing={2}>
-                          <Text 
-                            fontWeight="medium" 
+                          <Text
+                            fontWeight="medium"
                             color={textColor}
                             fontSize={{ base: "sm", md: "md" }}
                           >
                             انقر لاختيار صورة الكورس
                           </Text>
-                          <Text 
-                            fontSize={{ base: "xs", md: "sm" }} 
+                          <Text
+                            fontSize={{ base: "xs", md: "sm" }}
                             color={textColor}
                           >
                             PNG, JPG, JPEG حتى 5 ميجابايت
@@ -1432,9 +1265,9 @@ const TeacherDashboardHome = () => {
               >
                 <HStack spacing={3}>
                   <Icon as={FaFileAlt} color="green.500" boxSize={{ base: 4, md: 5 }} />
-                  <Text 
-                    fontSize={{ base: "xs", md: "sm" }} 
-                    color="green.700" 
+                  <Text
+                    fontSize={{ base: "xs", md: "sm" }}
+                    color="green.700"
                     fontWeight="medium"
                   >
                     يمكنك إضافة صورة للكورس لتحسين مظهره وجذب الطلاب. الصورة اختيارية.
@@ -1443,16 +1276,16 @@ const TeacherDashboardHome = () => {
               </Box>
             </VStack>
           </ModalBody>
-          <ModalFooter 
-            borderTop="1px solid" 
+          <ModalFooter
+            borderTop="1px solid"
             borderColor={borderColor}
             p={{ base: 4, md: 6 }}
             flexDirection={{ base: "column", sm: "row" }}
             gap={{ base: 3, sm: 0 }}
           >
-            <Button 
-              variant="ghost" 
-              mr={{ base: 0, sm: 3 }} 
+            <Button
+              variant="ghost"
+              mr={{ base: 0, sm: 3 }}
               onClick={onClose}
               w={{ base: "full", sm: "auto" }}
               size={{ base: "sm", md: "md" }}
@@ -1474,24 +1307,24 @@ const TeacherDashboardHome = () => {
       </Modal>
 
       {/* Edit Course Modal */}
-      <Modal 
-        isOpen={isEditOpen} 
-        onClose={onEditClose} 
-        size={{ base: "full", sm: "full", md: "lg", lg: "xl", xl: "2xl" }} 
+      <Modal
+        isOpen={isEditOpen}
+        onClose={onEditClose}
+        size={{ base: "full", sm: "full", md: "lg", lg: "xl", xl: "2xl" }}
         isCentered
         scrollBehavior="inside"
       >
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(5px)" />
-        <ModalContent 
-          bg={cardBg} 
-          borderRadius={{ base: "none", sm: "none", md: "xl", lg: "2xl" }} 
+        <ModalContent
+          bg={cardBg}
+          borderRadius={{ base: "none", sm: "none", md: "xl", lg: "2xl" }}
           shadow={{ base: "none", md: "2xl" }}
           m={{ base: 0, sm: 0, md: 4, lg: 6 }}
           maxH={{ base: "100vh", sm: "100vh", md: "90vh", lg: "85vh" }}
           maxW={{ base: "100%", sm: "100%", md: "90%", lg: "80%", xl: "70%" }}
         >
-          <ModalHeader 
-            borderBottom="1px solid" 
+          <ModalHeader
+            borderBottom="1px solid"
             borderColor={borderColor}
             p={{ base: 4, md: 6 }}
           >
@@ -1507,8 +1340,8 @@ const TeacherDashboardHome = () => {
             <VStack spacing={{ base: 4, md: 6 }} align="stretch">
               {/* Avatar Upload */}
               <FormControl>
-                <FormLabel 
-                  fontWeight="bold" 
+                <FormLabel
+                  fontWeight="bold"
                   color={headingColor}
                   fontSize={{ base: "sm", md: "md" }}
                 >
@@ -1545,7 +1378,7 @@ const TeacherDashboardHome = () => {
                       />
                     </Box>
                   )}
-                  
+
                   {/* Remove Current Image Button */}
                   {editAvatarPreview && (
                     <Button
@@ -1561,7 +1394,7 @@ const TeacherDashboardHome = () => {
                       إزالة الصورة الحالية
                     </Button>
                   )}
-                  
+
                   {/* Upload Button */}
                   <Box>
                     <Input
@@ -1590,11 +1423,11 @@ const TeacherDashboardHome = () => {
                       {editAvatarPreview ? "تغيير الصورة" : "اختر صورة للكورس"}
                     </Button>
                   </Box>
-                  
+
                   <Text fontSize="xs" color="gray.500" textAlign="center">
                     الصور المقبولة: JPG, PNG, GIF (حد أقصى 5MB)
                   </Text>
-                  
+
                   {!editAvatarPreview && (
                     <Text fontSize="sm" color="blue.600" textAlign="center" fontWeight="medium">
                       💡 يمكنك إضافة صورة للكورس أو تغيير الصورة الحالية
@@ -1604,8 +1437,8 @@ const TeacherDashboardHome = () => {
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel 
-                  fontWeight="bold" 
+                <FormLabel
+                  fontWeight="bold"
                   color={headingColor}
                   fontSize={{ base: "sm", md: "md" }}
                 >
@@ -1624,8 +1457,8 @@ const TeacherDashboardHome = () => {
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel 
-                  fontWeight="bold" 
+                <FormLabel
+                  fontWeight="bold"
                   color={headingColor}
                   fontSize={{ base: "sm", md: "md" }}
                 >
@@ -1646,8 +1479,8 @@ const TeacherDashboardHome = () => {
 
               <VStack spacing={4} direction={{ base: "column", sm: "row" }}>
                 <FormControl isRequired flex={1}>
-                  <FormLabel 
-                    fontWeight="bold" 
+                  <FormLabel
+                    fontWeight="bold"
                     color={headingColor}
                     fontSize={{ base: "sm", md: "md" }}
                   >
@@ -1674,8 +1507,8 @@ const TeacherDashboardHome = () => {
                 </FormControl>
 
                 <FormControl isRequired flex={1}>
-                  <FormLabel 
-                    fontWeight="bold" 
+                  <FormLabel
+                    fontWeight="bold"
                     color={headingColor}
                     fontSize={{ base: "sm", md: "md" }}
                   >
@@ -1701,16 +1534,16 @@ const TeacherDashboardHome = () => {
               </VStack>
             </VStack>
           </ModalBody>
-          <ModalFooter 
-            borderTop="1px solid" 
+          <ModalFooter
+            borderTop="1px solid"
             borderColor={borderColor}
             p={{ base: 4, md: 6 }}
             flexDirection={{ base: "column", sm: "row" }}
             gap={{ base: 3, sm: 0 }}
           >
-            <Button 
-              variant="ghost" 
-              mr={{ base: 0, sm: 3 }} 
+            <Button
+              variant="ghost"
+              mr={{ base: 0, sm: 3 }}
               onClick={onEditClose}
               w={{ base: "full", sm: "auto" }}
               size={{ base: "sm", md: "md" }}
@@ -1740,38 +1573,38 @@ const TeacherDashboardHome = () => {
         size={{ base: "xs", sm: "sm", md: "md", lg: "lg" }}
       >
         <AlertDialogOverlay>
-          <AlertDialogContent 
-            bg={cardBg} 
+          <AlertDialogContent
+            bg={cardBg}
             borderRadius={{ base: "lg", sm: "xl", md: "2xl" }}
             m={{ base: 3, sm: 4, md: 0 }}
             maxW={{ base: "95%", sm: "90%", md: "md", lg: "lg" }}
           >
-            <AlertDialogHeader 
-              fontSize={{ base: "md", md: "lg" }} 
-              fontWeight="bold" 
+            <AlertDialogHeader
+              fontSize={{ base: "md", md: "lg" }}
+              fontWeight="bold"
               color={headingColor}
               p={{ base: 4, md: 6 }}
             >
               تأكيد حذف الكورس
             </AlertDialogHeader>
             <AlertDialogBody p={{ base: 4, md: 6 }} pt={0}>
-              <Text 
+              <Text
                 color={textColor}
                 fontSize={{ base: "sm", md: "md" }}
                 lineHeight={{ base: 1.5, md: 1.6 }}
               >
-                هل أنت متأكد من حذف الكورس "{courseToDelete?.title}"؟ 
+                هل أنت متأكد من حذف الكورس "{courseToDelete?.title}"؟
                 هذا الإجراء لا يمكن التراجع عنه.
               </Text>
             </AlertDialogBody>
-            <AlertDialogFooter 
+            <AlertDialogFooter
               p={{ base: 4, md: 6 }}
               pt={0}
               flexDirection={{ base: "column", sm: "row" }}
               gap={{ base: 3, sm: 0 }}
             >
-              <Button 
-                ref={cancelRef} 
+              <Button
+                ref={cancelRef}
                 onClick={onDeleteClose}
                 w={{ base: "full", sm: "auto" }}
                 size={{ base: "sm", md: "md" }}

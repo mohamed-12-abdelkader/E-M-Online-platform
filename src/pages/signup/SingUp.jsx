@@ -3,18 +3,12 @@ import {
   Input,
   Button,
   Spinner,
-  RadioGroup,
-  Stack,
-  Radio,
   Box,
-  Flex,
   FormControl,
   FormLabel,
-  useToast,
   Text,
   VStack,
   HStack,
-  Divider,
   Progress,
   Icon,
   Modal,
@@ -23,8 +17,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   useDisclosure,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
 import { useState, useEffect } from "react";
@@ -41,6 +35,17 @@ const SignUp = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [currentStep, setCurrentStep] = useState(0);
   const [isUniversityStudent, setIsUniversityStudent] = useState("no");
+
+  const pageBg = useColorModeValue("gray.50", "gray.900");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("gray.200", "gray.700");
+  const headingColor = useColorModeValue("gray.800", "white");
+  const subtextColor = useColorModeValue("gray.600", "gray.400");
+  const labelColor = useColorModeValue("gray.700", "gray.300");
+  const inputBorder = useColorModeValue("gray.200", "gray.600");
+  const inputBg = useColorModeValue("white", "gray.700");
+  const stepInactiveBg = useColorModeValue("gray.200", "gray.600");
+  const stepInactiveColor = useColorModeValue("gray.500", "gray.400");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -612,39 +617,61 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen mt-[80px] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl flex flex-col lg:flex-row bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-white/20">
-        {/* Left side - Form */}
-        <div className="w-full lg:w-1/2 p-8 sm:p-10 lg:p-12" style={{ direction: "rtl" }}>
-          {/* Progress Bar */}
+    <Box
+      minH="100vh"
+      className="mt-[80px]"
+      bg={pageBg}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      p={4}
+      dir="rtl"
+      style={{ fontFamily: "'Changa', sans-serif" }}
+    >
+      <Box
+        w="full"
+        maxW="4xl"
+        display="flex"
+        flexDirection={{ base: "column", lg: "row" }}
+        bg={cardBg}
+        borderRadius="2xl"
+        boxShadow={useColorModeValue("0 25px 50px rgba(0,0,0,0.08)", "0 25px 50px rgba(0,0,0,0.3)")}
+        borderWidth="1px"
+        borderColor={cardBorder}
+        overflow="hidden"
+      >
+        <Box w="full" lg:w="1/2" p={{ base: 6, sm: 8, lg: 10 }}>
           <Box mb={8}>
-            <Progress 
-              value={(currentStep / (steps.length - 1)) * 100} 
-              colorScheme="blue" 
-              borderRadius="full" 
-              height="8px"
-              bg="gray.100"
+            <Progress
+              value={(currentStep / (steps.length - 1)) * 100}
+              colorScheme="blue"
+              borderRadius="full"
+              height="2"
+              bg={stepInactiveBg}
             />
-            <Text fontSize="sm" color="gray.600" mt={2} textAlign="center">
+            <Text fontSize="sm" color={subtextColor} mt={2} textAlign="center">
               الخطوة {currentStep + 1} من {steps.length}
             </Text>
           </Box>
 
-          {/* Step Indicators */}
-          <HStack spacing={4} mb={8} justify="center">
+          <HStack spacing={3} mb={8} justify="center" flexWrap="wrap">
             {steps.map((step, index) => (
               <Box
                 key={index}
-                className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
-                  index <= currentStep 
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' 
-                    : 'bg-gray-200 text-gray-500'
-                }`}
+                w="10"
+                h="10"
+                borderRadius="full"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bg={index <= currentStep ? "blue.500" : stepInactiveBg}
+                color={index <= currentStep ? "white" : stepInactiveColor}
+                transition="all 0.3s"
               >
                 {index < currentStep ? (
-                  <FiCheck className="w-5 h-5" />
+                  <Icon as={FiCheck} w="5" h="5" />
                 ) : (
-                  <Icon as={step.icon} className="w-5 h-5" />
+                  <Icon as={step.icon} w="5" h="5" />
                 )}
               </Box>
             ))}
@@ -664,9 +691,10 @@ const SignUp = () => {
                 size="lg"
                 flex={1}
                 borderRadius="xl"
-                borderColor="gray.300"
+                borderColor={inputBorder}
                 _hover={{ borderColor: "gray.400", bg: "gray.50" }}
-                transition="all 0.3s"
+                _dark={{ _hover: { bg: "gray.700" } }}
+                transition="all 0.2s"
               >
                 السابق
               </Button>
@@ -675,116 +703,86 @@ const SignUp = () => {
             {currentStep < steps.length - 1 ? (
               <Button
                 onClick={nextStep}
-                colorScheme="blue"
                 size="lg"
                 flex={1}
                 borderRadius="xl"
                 isDisabled={!validateCurrentStep()}
-                bg="linear-gradient(135deg, #667eea 0%, #667eea 100%)"
-                _hover={{ 
-                  bg: "linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)",
-                  transform: "translateY(-1px)",
-                  boxShadow: "0 5px 15px rgba(102, 126, 234, 0.4)"
-                }}
-                _disabled={{
-                  bg: "gray.300",
-                  cursor: "not-allowed",
-                  transform: "none",
-                  boxShadow: "none"
-                }}
-                transition="all 0.3s ease"
+                bg="blue.500"
+                color="white"
+                _hover={{ bg: "blue.400", boxShadow: "0 8px 20px rgba(66, 153, 225, 0.35)" }}
+                _disabled={{ bg: "gray.300", cursor: "not-allowed", _hover: {} }}
+                transition="all 0.2s"
               >
                 التالي
               </Button>
             ) : (
-          <Button
-            onClick={handleLSignUp}
-                colorScheme="blue"
-            size="lg"
+              <Button
+                onClick={handleLSignUp}
+                size="lg"
                 flex={1}
                 borderRadius="xl"
                 isDisabled={!validateCurrentStep() || loading}
-                bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                _hover={{ 
-                  bg: "linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)",
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 10px 25px rgba(102, 126, 234, 0.4)"
-                }}
-                _active={{ 
-                  bg: "linear-gradient(135deg, #4f5fc7 0%, #5f387f 100%)",
-                  transform: "translateY(0px)"
-                }}
-                _disabled={{
-                  bg: "gray.300",
-                  cursor: "not-allowed",
-                  transform: "none",
-                  boxShadow: "none"
-                }}
+                bg="orange.500"
+                color="white"
+                _hover={{ bg: "orange.400", boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)" }}
+                _disabled={{ bg: "gray.300", cursor: "not-allowed", _hover: {} }}
                 leftIcon={loading ? <Spinner size="sm" color="white" /> : undefined}
-                transition="all 0.3s ease"
+                transition="all 0.2s"
               >
                 إنشاء الحساب
-          </Button>
+              </Button>
             )}
           </HStack>
 
-        {/* Login link */}
-          <Box mt={6} textAlign="center">
-            <Text color="gray.600" fontSize="md">
-          هل لديك حساب بالفعل؟{" "}
-              <a 
-                href="#" 
-                className="text-blue-600 hover:text-blue-700 font-semibold transition-colors duration-200 underline decoration-2 underline-offset-2"
-              >
-            تسجيل الدخول
-          </a>
-            </Text>
-          </Box>
-        </div>
+        <Box mt={6} textAlign="center">
+          <Text color={subtextColor} fontSize="md">
+            هل لديك حساب بالفعل؟{" "}
+            <Box
+              as="span"
+              color="blue.500"
+              fontWeight="semibold"
+              cursor="pointer"
+              _hover={{ textDecoration: "underline" }}
+              onClick={() => navigate("/login")}
+            >
+              تسجيل الدخول
+            </Box>
+          </Text>
+        </Box>
+      </Box>
 
-        {/* Right side - Image */}
-        <div className="w-full lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-400 to-indigo-700 flex items-center justify-center p-8 relative overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
-            <div className="absolute top-1/4 right-0 w-24 h-24 bg-white rounded-full translate-x-12"></div>
-            <div className="absolute bottom-0 left-1/3 w-20 h-20 bg-white rounded-full translate-y-10"></div>
-          </div>
-          
-          <div className="text-center relative z-10">
-            <div className="mb-8">
+        <Box
+          w="full"
+          lg:w="1/2"
+          bgGradient="linear(to-br, blue.500, blue.600)"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          p={8}
+          position="relative"
+          overflow="hidden"
+        >
+          <Box position="absolute" inset="0" opacity={0.08} bg="white" />
+          <Box textAlign="center" position="relative" zIndex="1">
+            <Box mb={6}>
               <img
                 src="/fc65e2d7-5777-4a66-bc27-7fea10bc89a7-removebg-preview.png"
                 alt="Signup Illustration"
-                className="max-w-full h-auto max-h-80 mx-auto drop-shadow-2xl animate-pulse"
-                style={{ animationDuration: '3s' }}
+                style={{ maxWidth: "100%", height: "auto", maxHeight: "280px", margin: "0 auto" }}
               />
-            </div>
-            <h2 className="text-white text-3xl font-bold mb-4 drop-shadow-lg">
+            </Box>
+            <Text fontSize="2xl" fontWeight="bold" color="white" mb={3}>
               {steps[currentStep]?.title}
-            </h2>
-            <p className="text-blue-100 text-xl leading-relaxed max-w-md mx-auto">
+            </Text>
+            <Text color="blue.100" fontSize="lg" maxW="280px" mx="auto" lineHeight="1.6">
               {steps[currentStep]?.description}
-            </p>
-            
-            {/* Features */}
-            <div className="mt-8 space-y-3">
-              <div className="flex items-center justify-center space-x-3 text-blue-100">
-                <div className="w-2 h-2 bg-blue-200 rounded-full"></div>
-                <span>دروس تفاعلية</span>
-              </div>
-              <div className="flex items-center justify-center space-x-3 text-blue-100">
-                <div className="w-2 h-2 bg-blue-200 rounded-full"></div>
-                <span>معلمون خبراء</span>
-              </div>
-              <div className="flex items-center justify-center space-x-3 text-blue-100">
-                <div className="w-2 h-2 bg-blue-200 rounded-full"></div>
-                <span>متابعة مستمرة</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+            </Text>
+            <VStack mt={6} spacing={2} color="blue.100" fontSize="sm">
+              <Text>دروس تفاعلية • معلمون خبراء • متابعة مستمرة</Text>
+            </VStack>
+          </Box>
+        </Box>
+      </Box>
 
       <ScrollToTop />
       <ToastContainer position="top-center" />
@@ -793,12 +791,12 @@ const SignUp = () => {
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
         <ModalContent mx={4} borderRadius="2xl" overflow="hidden">
-          <ModalHeader textAlign="center" bg="blue.50" py={6}>
+          <ModalHeader textAlign="center" bg="blue.50" _dark={{ bg: "blue.900" }} py={6}>
             <VStack spacing={3}>
               <Box
                 w="60px"
                 h="60px"
-                bgGradient="linear(135deg, #10b981 0%, #059669 100%)"
+                bg="blue.500"
                 borderRadius="full"
                 display="flex"
                 alignItems="center"
@@ -806,7 +804,7 @@ const SignUp = () => {
               >
                 <Icon as={FiLogIn} w="30px" h="30px" color="white" />
               </Box>
-              <Text fontSize="xl" fontWeight="bold" color="gray.800">
+              <Text fontSize="xl" fontWeight="bold" color={headingColor}>
                 لديك حساب بالفعل!
               </Text>
             </VStack>
@@ -849,20 +847,17 @@ const SignUp = () => {
                 إلغاء
               </Button>
               <Button
-                bgGradient="linear(135deg, #10b981 0%, #059669 100%)"
+                bg="orange.500"
                 color="white"
-                _hover={{
-                  bgGradient: "linear(135deg, #059669 0%, #047857 100%)",
-                  boxShadow: "0 10px 25px rgba(16, 185, 129, 0.4)"
-                }}
+                _hover={{ bg: "orange.400", boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)" }}
                 flex={1}
                 borderRadius="xl"
                 leftIcon={<Icon as={FiLogIn} />}
                 onClick={() => {
                   onClose();
-                  navigate('/beautiful-login');
+                  navigate("/login");
                 }}
-                boxShadow="0 8px 20px rgba(16, 185, 129, 0.3)"
+                boxShadow="0 8px 20px rgba(237, 137, 54, 0.3)"
               >
                 تسجيل الدخول
               </Button>
@@ -870,7 +865,7 @@ const SignUp = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </div>
+    </Box>
   );
 };
 

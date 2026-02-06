@@ -19,6 +19,11 @@ import {
   ModalBody,
   ModalCloseButton,
   useDisclosure,
+  Container,
+  VStack,
+  Icon,
+  Avatar,
+  Tooltip
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -27,6 +32,9 @@ import {
   FaTimesCircle,
   FaEdit,
   FaTrash,
+  FaVideo,
+  FaCalendarAlt,
+  FaClock
 } from "react-icons/fa";
 import { useState } from "react";
 import baseUrl from "../../api/baseUrl";
@@ -43,15 +51,15 @@ const fetchStreams = async (courseId) => {
 };
 
 const statusLabel = {
-  started: "مباشر",
+  started: "مباشر الآن",
   idle: "قيد الانتظار",
-  ended: "انتهى",
+  ended: "منتهي",
 };
 
 const statusColor = {
-  started: "green",
+  started: "red",
   idle: "orange",
-  ended: "red",
+  ended: "gray",
 };
 
 const CourseStreamsList = ({ courseId }) => {
@@ -61,6 +69,9 @@ const CourseStreamsList = ({ courseId }) => {
   });
 
   const subTextColor = useColorModeValue("gray.500", "gray.400");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+
   const streams = data?.meetings || [];
 
   // state for edit & delete
@@ -120,71 +131,132 @@ const CourseStreamsList = ({ courseId }) => {
 
   if (isLoading) {
     return (
-      <Flex justify="center" py={10}>
-        <Spinner size="lg" />
+      <Flex justify="center" py={20} align="center" direction="column">
+        <Spinner size="xl" color="blue.500" thickness="4px" />
+        <Text mt={4} color="gray.500" fontWeight="medium">جاري تحميل الجلسات...</Text>
       </Flex>
     );
   }
 
   if (isError) {
     return (
-      <Text color="red.500" mt={10} textAlign="center">
-        حدث خطأ أثناء تحميل البيانات
-      </Text>
+      <Box textAlign="center" py={10} bg="red.50" borderRadius="xl" border="1px dashed" borderColor="red.200">
+        <Icon as={FaTimesCircle} color="red.500" boxSize={10} mb={3} />
+        <Text color="red.600" fontWeight="bold">حدث خطأ أثناء تحميل البيانات</Text>
+      </Box>
     );
   }
 
   return (
-    <Box maxW="1000px" mx="auto" mt={6}>
-      <Heading as="h2" size="lg" mb={6} textAlign="center">
-        جلسات الكورس
-      </Heading>
+    <Box mt={8}>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Heading as="h2" size="lg" color={useColorModeValue("gray.700", "white")}>
+          جلسات البث المباشر
+        </Heading>
+        <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>
+          {streams.length} جلسة
+        </Badge>
+      </Flex>
 
       {streams.length > 0 ? (
-        <Flex direction="column" gap={3}>
+        <VStack spacing={4} align="stretch">
           {streams.map((stream) => (
             <Flex
               key={stream.id}
-              p={3}
-              borderWidth={1}
-              borderRadius="md"
-              boxShadow="sm"
-              bg="white"
-              align="center"
+              className="modern-card"
+              p={{ base: 4, md: 5 }}
+              borderWidth="1px"
+              borderColor={stream.status === 'started' ? "red.200" : borderColor}
+              borderRadius="2xl"
+              boxShadow={stream.status === 'started' ? "0 4px 20px rgba(229, 62, 62, 0.15)" : "sm"}
+              bg={cardBg}
+              direction={{ base: "column", md: "row" }}
+              align={{ base: "stretch", md: "center" }}
               justify="space-between"
-              _hover={{ boxShadow: "md" }}
+              gap={{ base: 4, md: 6 }}
+              transition="all 0.3s ease"
+              _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+              position="relative"
+              overflow="hidden"
             >
-              {/* Left side: title + status */}
-              <Flex direction="column">
-                <Text fontSize="md" fontWeight="bold">
-                  {stream.title}
-                </Text>
-                <Text>
-                  {stream.id}
-                </Text>
-                <Badge
-                  mt={1}
-                  colorScheme={statusColor[stream.status]}
-                  width="fit-content"
-                >
-                  {statusLabel[stream.status]}
-                </Badge>
-              </Flex>
+              {stream.status === 'started' && (
+                <Box
+                  position="absolute"
+                  top={0}
+                  right={0}
+                  width="4px"
+                  height="100%"
+                  bg="red.500"
+                />
+              )}
 
-              <Flex align="center" gap={2}>
+              {/* Left side: Icon + Info */}
+              <HStack spacing={4} flex={1}>
+                <Flex
+                  align="center"
+                  justify="center"
+                  w={{ base: 12, md: 14 }}
+                  h={{ base: 12, md: 14 }}
+                  borderRadius="2xl"
+                  bg={stream.status === 'started' ? "red.50" : "blue.50"}
+                  color={stream.status === 'started' ? "red.500" : "blue.500"}
+                  flexShrink={0}
+                >
+                  <Icon as={FaVideo} boxSize={{ base: 5, md: 6 }} />
+                </Flex>
+
+                <VStack align="start" spacing={1} overflow="hidden">
+                  <HStack>
+                    <Heading size="md" noOfLines={1} color={useColorModeValue("gray.800", "white")}>
+                      {stream.title}
+                    </Heading>
+                    <Badge
+                      colorScheme={statusColor[stream.status]}
+                      px={2}
+                      py={0.5}
+                      borderRadius="md"
+                      fontSize="xs"
+                      variant="subtle"
+                    >
+                      {statusLabel[stream.status]}
+                    </Badge>
+                  </HStack>
+
+                  <HStack color="gray.500" fontSize="sm" spacing={3}>
+                    <HStack spacing={1}>
+                      <Icon as={FaCalendarAlt} boxSize={3} />
+                      <Text>{new Date(stream.created_at || Date.now()).toLocaleDateString('ar-EG')}</Text>
+                    </HStack>
+                    <Text color="gray.300">•</Text>
+                    <Text fontFamily="monospace" fontSize="xs" bg="gray.100" px={2} py={0.5} borderRadius="md">{stream.id}</Text>
+                  </HStack>
+                </VStack>
+              </HStack>
+
+              {/* Right side: Actions */}
+              <Flex
+                align="center"
+                gap={3}
+                direction={{ base: "column", sm: "row" }}
+                width={{ base: "full", md: "auto" }}
+                mt={{ base: 2, md: 0 }}
+              >
                 {(stream.status === "started" || stream.status === "idle") && (
                   <Button
                     as="a"
-                    href={`${STREAM_REDIRECT_URL}/${
-                      stream.id
-                    }?t=${localStorage.getItem("token")}`}
+                    href={`${STREAM_REDIRECT_URL}/${stream.id
+                      }?t=${localStorage.getItem("token")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    leftIcon={<FaPlay />}
-                    colorScheme="blue"
-                    size="sm"
+                    leftIcon={<Icon as={FaPlay} />}
+                    colorScheme={stream.status === 'started' ? "red" : "blue"}
+                    size="md"
+                    borderRadius="xl"
+                    width={{ base: "full", sm: "auto" }}
+                    _hover={{ transform: 'scale(1.02)' }}
+                    boxShadow={stream.status === 'started' ? "0 4px 12px rgba(229, 62, 62, 0.4)" : "none"}
                   >
-                    دخول البث
+                    {stream.status === 'started' ? "انضم الآن" : "دخول البث"}
                   </Button>
                 )}
 
@@ -193,55 +265,83 @@ const CourseStreamsList = ({ courseId }) => {
                     as={Link}
                     href={stream.egress_url}
                     isExternal
-                    leftIcon={<FaExternalLinkAlt />}
+                    leftIcon={<Icon as={FaExternalLinkAlt} />}
                     colorScheme="purple"
-                    size="sm"
+                    variant="outline"
+                    size="md"
+                    borderRadius="xl"
+                    width={{ base: "full", sm: "auto" }}
                   >
                     مشاهدة التسجيل
                   </Button>
                 )}
 
-                {(stream.status === "started" || stream.status === "idle") && (
-                  <IconButton
-                    icon={<FaTimesCircle />}
-                    aria-label="إغلاق البث"
-                    colorScheme="red"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCloseStream(stream.id)}
-                  />
-                )}
+                <HStack width={{ base: "full", sm: "auto" }} justify={{ base: "center", sm: "flex-end" }}>
+                  {(stream.status === "started" || stream.status === "idle") && (
+                    <Tooltip label="إغلاق البث">
+                      <IconButton
+                        icon={<FaTimesCircle />}
+                        aria-label="إغلاق البث"
+                        colorScheme="orange"
+                        variant="ghost"
+                        size="md"
+                        onClick={() => handleCloseStream(stream.id)}
+                        borderRadius="lg"
+                      />
+                    </Tooltip>
+                  )}
 
-                <IconButton
-                  icon={<FaEdit />}
-                  aria-label="تعديل"
-                  colorScheme="teal"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEditingStream(stream);
-                    setNewTitle(stream.title);
-                  }}
-                />
-                <IconButton
-                  icon={<FaTrash />}
-                  aria-label="حذف"
-                  colorScheme="red"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setDeletingStream(stream);
-                    onOpen();
-                  }}
-                />
+                  <Tooltip label="تعديل العنوان">
+                    <IconButton
+                      icon={<FaEdit />}
+                      aria-label="تعديل"
+                      colorScheme="blue"
+                      variant="ghost"
+                      size="md"
+                      onClick={() => {
+                        setEditingStream(stream);
+                        setNewTitle(stream.title);
+                      }}
+                      borderRadius="lg"
+                    />
+                  </Tooltip>
+
+                  <Tooltip label="حذف الجلسة">
+                    <IconButton
+                      icon={<FaTrash />}
+                      aria-label="حذف"
+                      colorScheme="red"
+                      variant="ghost"
+                      size="md"
+                      onClick={() => {
+                        setDeletingStream(stream);
+                        onOpen();
+                      }}
+                      borderRadius="lg"
+                    />
+                  </Tooltip>
+                </HStack>
               </Flex>
             </Flex>
           ))}
-        </Flex>
+        </VStack>
       ) : (
-        <Text color={subTextColor} textAlign="center" py={8}>
-          لا توجد جلسات مباشرة متاحة حالياً
-        </Text>
+        <Flex
+          direction="column"
+          align="center"
+          justify="center"
+          py={16}
+          bg="white"
+          borderRadius="2xl"
+          border="2px dashed"
+          borderColor="gray.200"
+        >
+          <Box p={4} bg="gray.50" borderRadius="full" mb={4}>
+            <Icon as={FaVideo} color="gray.400" boxSize={10} />
+          </Box>
+          <Text color="gray.500" fontSize="lg" fontWeight="bold">لا توجد جلسات مباشرة حالياً</Text>
+          <Text color="gray.400" fontSize="sm">عند بدء بث مباشر جديد سيظهر هنا</Text>
+        </Flex>
       )}
 
       {/* Edit Modal */}
@@ -249,29 +349,36 @@ const CourseStreamsList = ({ courseId }) => {
         isOpen={!!editingStream}
         onClose={() => setEditingStream(null)}
         isCentered
+        motionPreset="slideInBottom"
       >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>تعديل العنوان</ModalHeader>
+        <ModalOverlay backdropFilter="blur(5px)" bg="blackAlpha.300" />
+        <ModalContent borderRadius="2xl">
+          <ModalHeader borderBottomWidth="1px">تعديل عنوان الجلسة</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <HStack>
+          <ModalBody py={6}>
+            <VStack spacing={4} align="stretch">
+              <Text fontSize="sm" color="gray.500">قم بتحديث عنوان الجلسة ليظهر للطلاب بشكل صحيح.</Text>
               <Input
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="عنوان الجلسة"
+                size="lg"
+                borderRadius="xl"
+                focusBorderColor="blue.500"
               />
-            </HStack>
+            </VStack>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter borderTopWidth="1px">
             <Button
               variant="ghost"
               mr={3}
               onClick={() => setEditingStream(null)}
+              borderRadius="xl"
             >
               إلغاء
             </Button>
-            <Button colorScheme="blue" onClick={handleUpdateTitle}>
-              حفظ
+            <Button colorScheme="blue" onClick={handleUpdateTitle} borderRadius="xl" px={6}>
+              حفظ التغييرات
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -282,28 +389,32 @@ const CourseStreamsList = ({ courseId }) => {
         isOpen={!!deletingStream}
         onClose={() => setDeletingStream(null)}
         isCentered
+        size="sm"
       >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>تأكيد الحذف</ModalHeader>
-          <ModalCloseButton />
+        <ModalOverlay backdropFilter="blur(5px)" bg="blackAlpha.300" />
+        <ModalContent borderRadius="2xl" textAlign="center" pt={6}>
           <ModalBody>
-            <Text>
-              هل أنت متأكد أنك تريد حذف البث بعنوان{" "}
-              <strong>{deletingStream?.title}</strong>؟
+            <Icon as={FaTrash} color="red.500" boxSize={12} mb={4} />
+            <Heading size="md" mb={2}>حذف الجلسة؟</Heading>
+            <Text color="gray.500">
+              هل أنت متأكد من حذف <strong>"{deletingStream?.title}"</strong>؟ <br />
+              لا يمكن التراجع عن هذا الإجراء.
             </Text>
           </ModalBody>
-          <ModalFooter>
-            <Button
-              variant="ghost"
-              mr={3}
-              onClick={() => setDeletingStream(null)}
-            >
-              إلغاء
-            </Button>
-            <Button colorScheme="red" onClick={handleDelete}>
-              حذف
-            </Button>
+          <ModalFooter justify="center" pb={6} pt={2}>
+            <HStack spacing={3} w="full">
+              <Button
+                flex={1}
+                variant="outline"
+                onClick={() => setDeletingStream(null)}
+                borderRadius="xl"
+              >
+                إلغاء
+              </Button>
+              <Button flex={1} colorScheme="red" onClick={handleDelete} borderRadius="xl">
+                نعم، احذف
+              </Button>
+            </HStack>
           </ModalFooter>
         </ModalContent>
       </Modal>

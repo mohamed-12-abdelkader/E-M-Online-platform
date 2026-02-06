@@ -1,65 +1,115 @@
-import { Box, Flex, Text, Image } from "@chakra-ui/react";
+import React from "react";
+import { motion } from "framer-motion";
+import { useColorModeValue } from "@chakra-ui/react";
 import { FaGraduationCap, FaUserTie, FaRocket } from "react-icons/fa";
-import { motion, useInView } from "framer-motion";
-const  AboutUsSection = () => {
-  return (
-    <Box as="section"  py={16} >
-      <Box maxW="7xl" mx="auto" px={4}>
-        <Flex
-          direction={{ base: "column", md: "row" }}
-          align="center"
-          justify="space-between"
-          gap={12}
-        >
-          {/* الصورة على اليسار */}
-          <Box w={{ base: "100%", md: "50%" }} maxW="600px">
-            <Image
-              src="/9468add9-bc67-497d-9ce5-63d27c77416c-removebg-preview.png"
-              alt="منصة EM Online على أجهزة متعددة"
-              objectFit="cover"
-              w="100%"
-              maxH="500px"
-              borderRadius="xl"
-            
-              transition="transform 0.3s"
-              _hover={{ transform: "scale(1.05)" }}
-            />
-          </Box>
 
-          {/* النص على اليمين */}
-          <Box w={{ base: "100%", md: "50%" }} textAlign="right">
-            <Flex align="center" gap={2} mb={6}>
-              <FaRocket className="text-blue-600" />
-              <motion.h1
-             
-              className="text-6xl big-font  my-3 text-orange-500 sm:text-5xl lg:text-7xl font-extrabold leading-tight">
-                 EM Online
-              </motion.h1>
-            </Flex>
-            <Box className="space-y-6">
-              <Text fontSize="lg"  leading="relaxed">
-                منصة <Text as="span" fontWeight="semibold" color="blue.600">"EM Online"</Text> هي وجهتك المثالية للتعلم الإلكتروني بطريقة مبتكرة وسهلة. نحن هنا لنقدم لك تجربة تعليمية متكاملة تجمع بين المحتوى التعليمي المتميز والتقنيات الحديثة.
-              </Text>
-              <Flex align="center" gap={2}>
-                <FaGraduationCap className="text-blue-500" />
-                <Text fontSize="lg" leading="relaxed">
-                  لتمكين الطلاب من تحقيق أحلامهم الأكاديمية بكل يسر وسلاسة.
-                </Text>
-              </Flex>
-              <Flex align="center" gap={2}>
-                <FaUserTie className="text-blue-500" />
-                <Text fontSize="lg" leading="relaxed">
-                  سواء كنت طالبًا في المدرسة أو الجامعة، أو حتى محترفًا يسعى لتطوير مهاراته، فإن منصتنا مصممة لتلبية احتياجاتك التعليمية بأفضل طريقة ممكنة.
-                </Text>
-              </Flex>
-              <Text fontSize="lg" leading="relaxed">
-                انضم إلينا اليوم وابدأ رحلتك نحو النجاح!
-              </Text>
-            </Box>
-          </Box>
-        </Flex>
-      </Box>
-    </Box>
+const AboutUsSection = () => {
+  const sectionBg = useColorModeValue("bg-white", "bg-gray.900");
+  const headingColor = useColorModeValue("text-slate-900", "text-gray.100");
+  const subheadingColor = useColorModeValue("text-slate-600", "text-gray.400");
+  const textColor = useColorModeValue("text-slate-600", "text-gray.400");
+  const textBoldColor = useColorModeValue("text-slate-800", "text-gray.200");
+  const accentColor = useColorModeValue("text-orange-500", "text-orange-400");
+  const accentBg = useColorModeValue("bg-orange-500/10", "bg-orange-500/20");
+  const accentIconColor = useColorModeValue("text-orange-600", "text-orange-400");
+  const logoBoxBg = useColorModeValue("bg-slate-50/80", "bg-gray-800/80");
+  const logoBoxBorder = useColorModeValue("border-slate-100", "border-gray-700");
+  const ctaColor = useColorModeValue("text-slate-700", "text-gray.300");
+
+  const fadeInLeft = {
+    hidden: { opacity: 0, x: -24 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    },
+  };
+  const fadeInRight = {
+    hidden: { opacity: 0, x: 24 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    },
+  };
+
+  const points = [
+    {
+      icon: FaGraduationCap,
+      text: "تمكين الطلاب من تحقيق أحلامهم الأكاديمية بكل يسر وسلاسة.",
+    },
+    {
+      icon: FaUserTie,
+      text: "سواء طالب مدرسة أو جامعي أو محترف يطوّر مهاراته — منصتنا تلبي احتياجاتك.",
+    },
+  ];
+
+  return (
+    <section
+      dir="rtl"
+      className={`relative py-20 sm:py-24 ${sectionBg}`}
+      style={{ fontFamily: "'Changa', sans-serif" }}
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Image */}
+          <motion.div
+            className="relative order-2 lg:order-1 flex items-center justify-center"
+            variants={fadeInRight}
+            initial="hidden"
+            animate="visible"
+          >
+            <div className={`relative rounded-2xl overflow-hidden ${logoBoxBg} ${logoBoxBorder} p-8 flex items-center justify-center min-h-[320px] max-h-[420px] w-full shadow-xl border`}>
+              <img
+                src="/next%20logo.png"
+                alt="NextEdu School - شعار منصة التعليم"
+                className="w-full max-w-[320px] h-auto object-contain object-center"
+              />
+            </div>
+          </motion.div>
+
+          {/* Content */}
+          <motion.div
+            className="order-1 lg:order-2"
+            variants={fadeInLeft}
+            initial="hidden"
+            animate="visible"
+          >
+            <div className={`inline-flex items-center gap-2 ${accentColor} font-semibold text-sm mb-4`}>
+              <FaRocket className="text-base" />
+              <span>من نحن</span>
+            </div>
+            <h2 className={`text-3xl sm:text-4xl font-bold ${headingColor} mb-6 leading-tight`}>
+              Next Edu
+              <span className={`block ${subheadingColor} text-2xl sm:text-3xl font-medium mt-1`}>
+                منصتك للتعلم الذكي
+              </span>
+            </h2>
+            <p className={`${textColor} text-lg leading-relaxed mb-6`}>
+              منصة{" "}
+              <span className={`font-semibold ${textBoldColor}`}>Next Edu</span>{" "}
+              وجهتك للتعلم الإلكتروني بطريقة مبتكرة وسهلة. نقدّم تجربة تعليمية
+              متكاملة تجمع المحتوى المتميز والتقنيات الحديثة.
+            </p>
+            <ul className="space-y-4 mb-8">
+              {points.map(({ icon: Icon, text }) => (
+                <li key={text} className="flex gap-3 items-start">
+                  <span className={`flex-shrink-0 w-10 h-10 rounded-xl ${accentBg} flex items-center justify-center ${accentIconColor}`}>
+                    <Icon className="text-lg" />
+                  </span>
+                  <span className={`${textColor} leading-relaxed pt-1`}>
+                    {text}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className={`${ctaColor} font-medium`}>
+              انضم إلينا اليوم وابدأ رحلتك نحو النجاح.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    </section>
   );
 };
 

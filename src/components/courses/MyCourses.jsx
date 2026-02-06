@@ -23,6 +23,10 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Container,
+  IconButton,
+  Tooltip,
+  Divider
 } from '@chakra-ui/react';
 import {
   FaBookOpen,
@@ -32,69 +36,48 @@ import {
   FaCheckCircle,
   FaCamera,
   FaGraduationCap,
-  FaUsers,
   FaChevronDown,
   FaChevronUp,
+  FaLayerGroup
 } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
 import baseUrl from '../../api/baseUrl';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const MyCourses = () => {
+const MotionCard = motion(Card);
+const MotionBox = motion(Box);
+
+const MyCourses = ({ embedded = false }) => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // QR Scanner States
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
   const [qrScanner, setQrScanner] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [activationResult, setActivationResult] = useState(null);
-  const [expandedCards, setExpandedCards] = useState({}); 
-    const buttonColorScheme = useColorModeValue("blue", "teal");
+
+  const [expandedCards, setExpandedCards] = useState({});
+  const [stats, setStats] = useState({ courses_count: 0, packages_count: 0, total: 0 });
+
   const authHeader = useMemo(() => ({
     Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
   }), []);
+
   const toggleDescription = (courseId) => {
-    setExpandedCards(prev => ({
-      ...prev,
-      [courseId]: !prev[courseId]
-    }));
+    setExpandedCards(prev => ({ ...prev, [courseId]: !prev[courseId] }));
   };
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const subTextColor = useColorModeValue('gray.600', 'gray.300');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-  const hoverBorderColor = useColorModeValue('blue.300', 'blue.500');
-  const courseCardBgGradient = useColorModeValue(
-    'linear(to-br, white, gray.50)',
-    'linear(to-br, gray.800, gray.700)'
-  );
-  const courseButtonBgGradient = useColorModeValue(
-    'linear(to-r, blue.500, blue.600)',
-    'linear(to-r, teal.500, teal.600)'
-  );
-  const courseButtonHoverBgGradient = useColorModeValue(
-    'linear(to-r, blue.600, blue.700)',
-    'linear(to-r, teal.600, teal.700)'
-  );
 
-  const [stats, setStats] = useState({
-    courses_count: 0,
-    packages_count: 0,
-    total: 0,
-  });
-
-  // Fetch courses and packages from API
   const fetchCourses = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await baseUrl.get('api/course/my-enrollments', {
-        headers: authHeader,
-      });
-      
+      const response = await baseUrl.get('api/course/my-enrollments', { headers: authHeader });
+
       if (response.data && response.data.items) {
         setCourses(response.data.items);
         setStats({
@@ -110,25 +93,17 @@ const MyCourses = () => {
       console.error('Error fetching courses:', error);
       setError('حدث خطأ في تحميل الكورسات والباقات');
       setCourses([]);
-      setStats({ courses_count: 0, packages_count: 0, total: 0 });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchCourses();
-  }, [authHeader]);
+  useEffect(() => { fetchCourses(); }, [authHeader]);
 
-  // دالة تفعيل الكورس من خلال QR Code
+  // QR Logic Preserved
   const activateCourseWithQR = async (qrData) => {
     try {
-      const response = await baseUrl.post('api/course/scan-qr-activate', {
-        qr_data: qrData
-      }, {
-        headers: authHeader
-      });
-      
+      const response = await baseUrl.post('api/course/scan-qr-activate', { qr_data: qrData }, { headers: authHeader });
       if (response.data.success) {
         setActivationResult({
           success: true,
@@ -137,57 +112,31 @@ const MyCourses = () => {
         });
         setShowSuccessModal(true);
         setIsQrScannerOpen(false);
-        // إعادة تحميل البيانات بعد 2 ثوان
-        setTimeout(() => {
-          fetchCourses();
-        }, 2000);
+        setTimeout(() => fetchCourses(), 2000);
       }
     } catch (error) {
-      console.error('خطأ في تفعيل الكورس:', error);
-      
       let errorMessage = error.response?.data?.message || 'حدث خطأ في تفعيل الكورس';
       let errorReason = error.response?.data?.reason || 'يرجى المحاولة مرة أخرى';
-      
-      if (errorMessage.includes('Activation code has been fully used') || 
-          errorMessage.includes('fully used') ||
-          errorMessage.includes('مستخدم من قبل')) {
+      if (errorMessage.includes('Activation code has been fully used') || errorMessage.includes('fully used')) {
         errorMessage = 'هذا الكود مستخدم من قبل';
-        errorReason = 'تم استخدام كود التفعيل هذا مسبقاً. يرجى استخدام كود جديد أو التواصل مع الدعم الفني.';
+        errorReason = 'تم استخدام كود التفعيل هذا مسبقاً.';
       }
-      
-      setActivationResult({
-        success: false,
-        message: errorMessage,
-        reason: errorReason
-      });
+      setActivationResult({ success: false, message: errorMessage, reason: errorReason });
       setShowErrorModal(true);
       setIsQrScannerOpen(false);
     }
   };
 
-  // دالة بدء QR Scanner
   const startQrScanner = async () => {
     setIsScanning(true);
-    
     try {
       const element = document.getElementById("qr-reader");
-      if (!element) {
-        console.error("QR reader element not found");
-        setIsScanning(false);
-        return;
-      }
+      if (!element) return setIsScanning(false);
 
       const html5Qrcode = new Html5Qrcode("qr-reader");
-      
       try {
-        await html5Qrcode.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 }
-          },
-          (decodedText, decodedResult) => {
-            console.log("QR Code scanned:", decodedText);
+        await html5Qrcode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
             setIsScanning(false);
             html5Qrcode.stop().then(() => {
               html5Qrcode.clear();
@@ -200,841 +149,289 @@ const MyCourses = () => {
               setIsQrScannerOpen(false);
               activateCourseWithQR(decodedText);
             });
-          },
-          (errorMessage) => {
-            // خطأ في القراءة - لا نعرضه للمستخدم
-          }
-        ).catch((err) => {
-          console.error("Error starting camera:", err);
-          setIsScanning(false);
-        });
-        
+          }, () => { }
+        );
         setQrScanner(html5Qrcode);
-      } catch (err) {
-        console.error("Camera permission error:", err);
-        setIsScanning(false);
-      }
-    } catch (error) {
-      console.error("Error starting scanner:", error);
-      setIsScanning(false);
-    }
+      } catch (err) { setIsScanning(false); }
+    } catch (error) { setIsScanning(false); }
   };
 
-  // دالة بدء الـ Modal وفتح الكاميرا
-  const openQrScannerModal = () => {
-    setIsQrScannerOpen(true);
-  };
-
-  // دالة إغلاق QR Scanner
   const closeQrScanner = async () => {
     setIsScanning(false);
-    
     if (qrScanner) {
-      try {
-        const state = await qrScanner.getState();
-        if (state === 2) {
-          await qrScanner.stop();
-        }
-        qrScanner.clear();
-        setQrScanner(null);
-      } catch (error) {
-        console.error("Error clearing scanner:", error);
-        try {
-          qrScanner.clear();
-        } catch (e) {}
-        setQrScanner(null);
-      }
+      try { if ((await qrScanner.getState()) === 2) await qrScanner.stop(); qrScanner.clear(); setQrScanner(null); } catch (e) { }
     }
-    
     setIsQrScannerOpen(false);
   };
 
-  // بدء Scanner عندما يفتح الـ Modal
-  useEffect(() => {
-    if (isQrScannerOpen && !qrScanner) {
-      const timer = setTimeout(() => {
-        startQrScanner();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isQrScannerOpen]);
+  useEffect(() => { if (isQrScannerOpen && !qrScanner) { const t = setTimeout(startQrScanner, 500); return () => clearTimeout(t); } }, [isQrScannerOpen]);
+  useEffect(() => { if (!isQrScannerOpen && qrScanner) closeQrScanner(); }, [isQrScannerOpen]);
 
-  // تنظيف Scanner عند إغلاق الـ Modal
-  useEffect(() => {
-    if (!isQrScannerOpen && qrScanner) {
-      closeQrScanner();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isQrScannerOpen]);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('ar-EG', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      });
-    } catch {
-      return dateStr;
-    }
-  };
+  // Colors & Theme (براند: blue.500 & orange.500)
+  const mainBg = useColorModeValue("gray.50", "gray.900");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("gray.200", "gray.700");
+  const headingColor = useColorModeValue("gray.800", "white");
+  const subtextColor = useColorModeValue("gray.600", "gray.400");
+  const sectionBg = useColorModeValue("white", "gray.800");
+  const sectionBorder = useColorModeValue("gray.200", "gray.700");
+  const emptyBorder = useColorModeValue("gray.300", "gray.600");
+  const modalBg = useColorModeValue("white", "gray.800");
+  const modalBorder = useColorModeValue("gray.200", "gray.700");
+  const modalText = useColorModeValue("gray.600", "gray.400");
+  const cardHoverShadow = useColorModeValue("0 16px 40px rgba(66, 153, 225, 0.15)", "0 16px 40px rgba(0,0,0,0.35)");
 
   if (loading) {
     return (
-      <Center py={20}>
-        <VStack spacing={4}>
-          <Spinner size="xl" color="blue.500" thickness="4px" />
-          <Text color={subTextColor}>جاري تحميل الكورسات...</Text>
-        </VStack>
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Center py={20}>
-        <VStack spacing={4}>
-          <Icon as={FaBookOpen} boxSize={12} color="red.500" />
-          <Text color="red.500" fontSize="lg" fontWeight="bold">{error}</Text>
-          <Button onClick={fetchCourses} colorScheme="blue">
-            إعادة المحاولة
-          </Button>
-        </VStack>
-      </Center>
+      <Flex minH={embedded ? "200px" : "60vh"} align="center" justify="center" bg={embedded ? "transparent" : mainBg}>
+        <Spinner size="xl" color="blue.500" thickness="4px" />
+      </Flex>
     );
   }
 
   return (
-    <Box w="100%" py={8} px={{ base: 4, md: 6, lg: 8 }}>
-      {/* Header Section */}
+    <Box w="100%">
+      {/* Section Header — موحّد مع البراند (مدمج أو كامل) */}
       <Flex
-        direction={{ base: 'column', md: 'row' }}
+        direction={{ base: "column", sm: "row" }}
         justify="space-between"
-        align={{ base: 'flex-start', md: 'center' }}
-        mb={8}
+        align={{ base: "stretch", sm: "center" }}
         gap={4}
+        mb={6}
+        p={5}
+        borderRadius="2xl"
+        bg={sectionBg}
+        borderWidth="1px"
+        borderColor={sectionBorder}
+        boxShadow="sm"
       >
-        <VStack align={{ base: 'flex-start', md: 'flex-start' }} spacing={2}>
-          <Heading
-            size={{ base: 'xl', md: '2xl' }}
-            color="blue.500"
-            fontWeight="bold"
+        <HStack spacing={4} flexWrap="wrap">
+          <Flex
+            w="12"
+            h="12"
+            borderRadius="xl"
+            bg="blue.500"
+            color="white"
+            align="center"
+            justify="center"
+            boxShadow="md"
           >
-            كورساتي وباقاتي
-          </Heading>
-          <Text color={subTextColor} fontSize={{ base: 'sm', md: 'md' }}>
-            جميع الكورسات والباقات المشترك بها
-          </Text>
-          {/* Statistics */}
-          {stats.total > 0 && (
-            <HStack spacing={4} mt={2} flexWrap="wrap">
-              <Badge
-                colorScheme="blue"
-                borderRadius="full"
-                px={4}
-                py={1.5}
-                fontSize="sm"
-                fontWeight="bold"
-              >
-                {stats.total} إجمالي
-              </Badge>
-              <Badge
-                colorScheme="green"
-                borderRadius="full"
-                px={4}
-                py={1.5}
-                fontSize="sm"
-                fontWeight="bold"
-              >
-                {stats.courses_count} كورس
-              </Badge>
-              <Badge
-                colorScheme="purple"
-                borderRadius="full"
-                px={4}
-                py={1.5}
-                fontSize="sm"
-                fontWeight="bold"
-              >
-                {stats.packages_count} باقة
-              </Badge>
-            </HStack>
-          )}
-        </VStack>
-
-        {/* QR Activation Button */}
-        <Box
-          as="button"
-          onClick={openQrScannerModal}
-          bgGradient="linear(to-r, blue.500, blue.600)"
+            <Icon as={FaBookOpen} boxSize={6} />
+          </Flex>
+          <VStack align="flex-start" spacing={0}>
+            <Heading size="md" color={headingColor} fontWeight="bold">
+              كورساتي التعليمية
+            </Heading>
+            <Text fontSize="sm" color={subtextColor}>
+              لديك {stats.total} مواد ({stats.courses_count} كورس، {stats.packages_count} باقة)
+            </Text>
+          </VStack>
+        </HStack>
+        <Button
+          leftIcon={<Icon as={FaQrcode} />}
+          bg="orange.500"
           color="white"
-          borderRadius="2xl"
-          px={{ base: 6, md: 8 }}
-          py={{ base: 4, md: 5 }}
-          boxShadow="xl"
-          _hover={{
-            bgGradient: 'linear(to-r, blue.600, blue.700)',
-            transform: 'translateY(-3px)',
-            shadow: '2xl',
-          }}
-          transition="all 0.3s"
-          border="2px solid"
-          borderColor="blue.400"
-          position="relative"
-          overflow="hidden"
+          size="sm"
+          borderRadius="xl"
+          px={5}
+          _hover={{ bg: "orange.400", transform: "translateY(-2px)", boxShadow: "md" }}
+          transition="all 0.2s"
+          onClick={() => setIsQrScannerOpen(true)}
+          fontWeight="bold"
         >
-          {/* Background Animation */}
-          <Box
-            position="absolute"
-            top="0"
-            left="-100%"
-            w="100%"
-            h="100%"
-            bgGradient="linear(to-r, transparent, rgba(255,255,255,0.2), transparent)"
-            transition="left 0.5s"
-            _hover={{ left: '100%' }}
-          />
-          
-          <HStack spacing={3} position="relative" zIndex={1}>
-            <Box
-              bg="whiteAlpha.200"
-              borderRadius="lg"
-              p={2}
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Icon as={FaCamera} boxSize={{ base: 5, md: 6 }} />
-            </Box>
-            <VStack align="flex-start" spacing={0}>
-              <Text
-                fontSize={{ base: 'md', md: 'lg' }}
-                fontWeight="bold"
-                lineHeight="shorter"
-              >
-                📱 امسح QR Code
-              </Text>
-              <Text
-                fontSize={{ base: 'xs', md: 'sm' }}
-                opacity={0.9}
-                fontWeight="medium"
-              >
-                لتفعيل كورس جديد
-              </Text>
-            </VStack>
-            <Icon as={FaQrcode} boxSize={{ base: 5, md: 6 }} opacity={0.8} />
-          </HStack>
-        </Box>
+          تفعيل كورس جديد
+        </Button>
       </Flex>
 
-      {/* Courses and Packages Grid */}
-      {courses.length > 0 ? (
-        <div className="flex flex-wrap  ">
-          {courses.map((item) => {
-            const isPackage = item.type === 'package';
-            const linkTo = isPackage ? `/package/${item.id}` : `/CourseDetailsPage/${item.id}`;
-            
-            return (
-              <Link 
-                key={item.id}
-                className="w-full md:w-[330px] mx-3" 
-                to={linkTo} 
-                style={{ textDecoration: "none" }}
-              >
-                <Card
-                  className=" stu-course  md:w-[340px] my-3"
-                
-                  bg={cardBg}
-                  border="1px solid"
-                  borderColor={borderColor}
-                  borderRadius="2xl"
-                  overflow="hidden"
-                  shadow="lg"
-                  _hover={{
-                    shadow: "2xl",
-                    transform: "translateY(-8px)",
-                    borderColor: hoverBorderColor,
-                  }}
-                  transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
-                  display="flex"
-                  flexDirection="column"
-                  position="relative"
-                  bgGradient={courseCardBgGradient}
-                  role="group"
-                  cursor="pointer"
-                >
-                  <Box position="relative" overflow="hidden" borderRadius="2xl">
-                    <AspectRatio
-                      ratio={16 / 9}
-                      w="100%"
-                     
-                    >
-                      <Image
-                      style={{borderRadius:"20px"}}
-                       className="p-2"
-                        src={item.avatar || (isPackage ? 'https://via.placeholder.com/400x225/764BA2/FFFFFF?text=Package' : 'https://via.placeholder.com/400x225/4A90E2/FFFFFF?text=Course+Image')}
-                        alt={item.title}
-                        objectFit="cover"
-                        transition="transform 0.4s ease"
-                        _groupHover={{ transform: "scale(1.05)" }}
-                        fallbackSrc={isPackage ? 'https://via.placeholder.com/400x225/764BA2/FFFFFF?text=Package' : 'https://via.placeholder.com/400x225/4A90E2/FFFFFF?text=Course+Image'}
-                      />
-                    </AspectRatio>
-                    {/* Gradient overlay */}
-                    <Box
-                      position="absolute"
-                      bottom="0"
-                      left="0"
-                      right="0"
-                      height="50%"
-                      bgGradient="linear(to-t, blackAlpha.600, transparent)"
-                      opacity="0"
-                      _groupHover={{ opacity: 1 }}
-                      transition="opacity 0.3s ease"
-                    />
-                    {/* Overlay with play button */}
-                    <Box
-                      position="absolute"
-                      top="0"
-                      left="0"
-                      right="0"
-                      bottom="0"
-                      bg="blackAlpha.400"
-                      opacity="0"
-                      _groupHover={{ opacity: 1 }}
-                      transition="opacity 0.3s ease"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                    >
-                      <Icon
-                        as={FaPlay}
-                        boxSize={12}
-                        color="white"
-                        filter="drop-shadow(0 0 8px rgba(0,0,0,0.5))"
-                      />
-                    </Box>
-                    {/* Type Badge */}
-                    <Badge
-                      position="absolute"
-                      top={3}
-                      left={3}
-                      bg={isPackage ? "purple.500" : "blue.500"}
-                      color="white"
-                      px={3}
-                      py={1}
-                      borderRadius="full"
-                      fontSize="xs"
-                      fontWeight="bold"
-                      boxShadow="lg"
-                      zIndex={2}
-                    >
-                      {isPackage ? "📦 باقة" : "🎓 كورس"}
-                    </Badge>
-                  </Box>
-                  <CardBody p={{ base: 4, sm: 5, md: 6 }} display="flex" flexDirection="column" flex="1">
-                    <VStack align="flex-end" spacing={4} w="full" h="100%" justify="space-between">
-                      {/* Course Title */}
-                      <Box w="full">
-                        <Text
-                          fontWeight="bold"
-                          fontSize={{ base: "lg", sm: "xl", md: "xl" }}
-                          color={textColor}
-                          textAlign="right"
-                          noOfLines={2}
-                          lineHeight="shorter"
-                          mb={2}
-                        >
-                          {item.title}
-                        </Text>
-                        {/* Description */}
-                        {item.description && (
-                          <Box w="full">
-                            <Text
-                              fontSize={{ base: "sm", sm: "md" }}
-                              color={subTextColor}
-                              textAlign="right"
-                              lineHeight="tall"
-                              noOfLines={expandedCards[item.id] ? undefined : 1}
-                            >
-                              {item.description}
-                            </Text>
-                            {item.description.length > 50 && (
-                              <HStack 
-                                spacing={1} 
-                                mt={2} 
-                                justify="flex-end"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleDescription(item.id);
-                                }}
-                                cursor="pointer"
-                                _hover={{ opacity: 0.8 }}
-                                transition="opacity 0.2s ease"
-                              >
-                                <Text
-                                  color="blue.500"
-                                  fontSize="xs"
-                                  fontWeight="bold"
-                                >
-                                  {expandedCards[item.id] ? "عرض أقل" : "عرض المزيد"}
-                                </Text>
-                                <Icon
-                                  as={expandedCards[item.id] ? FaChevronUp : FaChevronDown}
-                                  color="blue.500"
-                                  boxSize={3}
-                                />
-                              </HStack>
-                            )}
-                          </Box>
-                        )}
-                      </Box>
+        {/* Content Grid */}
+        {error ? (
+          <Center py={10} flexDirection="column" bg={cardBg} borderRadius="2xl" borderWidth="1px" borderStyle="dashed" borderColor="red.300">
+            <Icon as={FaBookOpen} boxSize={10} color="red.400" mb={3} />
+            <Text color="red.500" fontWeight="bold">{error}</Text>
+            <Button mt={4} size="sm" onClick={fetchCourses} bg="blue.500" color="white" _hover={{ bg: "blue.600" }} borderRadius="xl">إعادة المحاولة</Button>
+          </Center>
+        ) : courses.length > 0 ? (
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+            <AnimatePresence>
+              {courses.map((item, index) => {
+                const isPackage = item.type === 'package';
+                const linkTo = isPackage ? `/package/${item.id}` : `/CourseDetailsPage/${item.id}`;
 
-                      {/* Stats */}
-                      <Box w="full">
-                        <HStack justify="space-between" mb={3} flexWrap="wrap" gap={2}>
-                          <HStack spacing={2}>
-                            <Icon as={isPackage ? FaBookOpen : FaGraduationCap} color={isPackage ? "purple.500" : "blue.500"} />
-                            <Text fontSize="sm" color={subTextColor}>
-                              {isPackage ? "باقة تعليمية" : "كورس تعليمي"}
-                            </Text>
-                          </HStack>
-                        </HStack>
-
-                        {/* Price and Date */}
-                        <HStack justify="space-between" w="full" mb={4}>
-                          <Badge
-                            colorScheme={isPackage ? "purple" : "green"}
-                            borderRadius="full"
-                            px={4}
-                            py={2}
-                            fontSize="sm"
-                            fontWeight="bold"
-                            bg={isPackage ? "purple.500" : "green.500"}
-                            color="white"
-                            boxShadow="md"
-                          >
-                            {item.price} جنيه 💰
-                          </Badge>
-                          <HStack spacing={1} color={subTextColor} fontSize="sm">
-                            <Icon as={FaCalendarAlt} />
-                            <Text>
-                              {new Date(item.created_at).toLocaleDateString('ar-EG', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </Text>
-                          </HStack>
-                        </HStack>
-                      </Box>
-
-                      {/* Action Button */}
-                      <Button
-                        colorScheme={isPackage ? "purple" : buttonColorScheme}
-                        w="full"
-                        size="lg"
-                        rightIcon={isPackage ? <FaBookOpen /> : <FaPlay />}
-                        borderRadius="xl"
-                        fontSize="md"
-                        fontWeight="bold"
-                        bgGradient={isPackage ? "linear(to-r, purple.500, purple.600)" : courseButtonBgGradient}
+                return (
+                  <MotionBox
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Link to={linkTo}>
+                      <Card
+                        bg={cardBg}
+                        borderRadius="2xl"
+                        overflow="hidden"
+                        boxShadow="md"
+                        borderWidth="1px"
+                        borderColor={cardBorder}
                         _hover={{
-                          bgGradient: isPackage ? "linear(to-r, purple.600, purple.700)" : courseButtonHoverBgGradient,
-                          transform: "translateY(-2px)",
-                          boxShadow: "xl"
+                          transform: "translateY(-6px)",
+                          boxShadow: cardHoverShadow,
+                          borderColor: "blue.400",
                         }}
-                        _active={{
-                          transform: "translateY(0px)"
-                        }}
-                        transition="all 0.2s ease"
-                        boxShadow="lg"
+                        transition="all 0.3s ease"
+                        h="100%"
                       >
-                        {isPackage ? "عرض الباقة" : "دخول الكورس"}
-                      </Button>
-                    </VStack>
-                  </CardBody>
-                  </Card>
-                </Link>
-              );
-            })}
-        </div>
-      ) : (
-        <Center py={20}>
-          <VStack spacing={6}>
-            <Box
-              w={{ base: '120px', md: '160px' }}
-              h={{ base: '120px', md: '160px' }}
-              borderRadius="full"
-              bgGradient="linear(135deg, blue.400, blue.600)"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              boxShadow="xl"
-            >
-              <Icon as={FaBookOpen} boxSize={{ base: '60px', md: '80px' }} color="white" />
+                        <Box position="relative">
+                          <AspectRatio ratio={16 / 9}>
+                            <Image
+                              src={item.avatar || (isPackage ? 'https://via.placeholder.com/400x225/ED8936/FFFFFF?text=Package' : 'https://via.placeholder.com/400x225/3182CE/FFFFFF?text=Course')}
+                              objectFit="cover"
+                            />
+                          </AspectRatio>
+                          <Box
+                            position="absolute" top={0} left={0} w="full" h="full"
+                            bgGradient="linear(to-t, blackAlpha.800, transparent)"
+                          />
+                          <Badge
+                            position="absolute" top={3} left={3}
+                            bg={isPackage ? "orange.500" : "blue.500"}
+                            color="white"
+                            variant="solid"
+                            borderRadius="md"
+                            px={2}
+                            py={1}
+                            fontSize="xs"
+                          >
+                            {isPackage ? "باقة" : "كورس"}
+                          </Badge>
+                          <Box position="absolute" bottom={3} right={3} color="white" w="90%">
+                            <Text fontSize="md" fontWeight="bold" noOfLines={1} textShadow="0 2px 4px rgba(0,0,0,0.5)">
+                              {item.title}
+                            </Text>
+                          </Box>
+                        </Box>
+
+                        <CardBody p={4}>
+                          <VStack align="stretch" spacing={3}>
+                            {item.description && (
+                              <Box>
+                                <Text
+                                  fontSize="sm"
+                                  color={subtextColor}
+                                  noOfLines={expandedCards[item.id] ? undefined : 2}
+                                  lineHeight="tall"
+                                >
+                                  {item.description}
+                                </Text>
+                                {item.description.length > 80 && (
+                                  <Button
+                                    size="xs"
+                                    variant="link"
+                                    color="blue.500"
+                                    mt={1}
+                                    onClick={(e) => { e.preventDefault(); toggleDescription(item.id); }}
+                                  >
+                                    {expandedCards[item.id] ? "عرض أقل" : "عرض المزيد"}
+                                  </Button>
+                                )}
+                              </Box>
+                            )}
+
+                            <Divider borderColor={cardBorder} />
+
+                            <HStack justify="space-between" fontSize="xs" color={subtextColor}>
+                              <HStack>
+                                <Icon as={FaCalendarAlt} color="blue.400" />
+                                <Text>{new Date(item.created_at).toLocaleDateString('ar-EG')}</Text>
+                              </HStack>
+                              <Badge bg="green.100" color="green.700" _dark={{ bg: "green.800", color: "green.200" }} fontSize="xs">{item.price} ج.م</Badge>
+                            </HStack>
+
+                            <Button
+                              w="full"
+                              bg={isPackage ? "orange.500" : "blue.500"}
+                              color="white"
+                              size="sm"
+                              borderRadius="xl"
+                              rightIcon={<Icon as={isPackage ? FaLayerGroup : FaPlay} size="sm" />}
+                              _hover={{ bg: isPackage ? "orange.400" : "blue.400", transform: "scale(1.02)" }}
+                              fontWeight="bold"
+                            >
+                              {isPackage ? "تصفح الباقة" : "دخول الكورس"}
+                            </Button>
+                          </VStack>
+                        </CardBody>
+                      </Card>
+                    </Link>
+                  </MotionBox>
+                );
+              })}
+            </AnimatePresence>
+          </SimpleGrid>
+        ) : (
+          <Flex direction="column" align="center" justify="center" minH="280px" bg={cardBg} borderRadius="2xl" borderWidth="2px" borderStyle="dashed" borderColor={emptyBorder} textAlign="center" p={8}>
+            <Box w="16" h="16" borderRadius="2xl" bg="blue.100" _dark={{ bg: "blue.900" }} display="flex" alignItems="center" justifyContent="center" mb={4}>
+              <Icon as={FaBookOpen} boxSize="8" color="blue.500" />
             </Box>
-            <VStack spacing={3}>
-              <Heading size="lg" color={textColor}>
-                لا توجد كورسات أو باقات مشترك بها
-              </Heading>
-              <Text color={subTextColor} textAlign="center" maxW="400px" fontSize={{ base: 'sm', md: 'md' }}>
-                ابدأ رحلتك التعليمية الآن! قم بمسح QR Code لتفعيل كورس أو باقة جديدة
-              </Text>
-              <Box
-                as="button"
-                onClick={openQrScannerModal}
-                bgGradient="linear(to-r, blue.500, blue.600)"
-                color="white"
-                borderRadius="2xl"
-                px={8}
-                py={5}
-                boxShadow="xl"
-                _hover={{
-                  bgGradient: 'linear(to-r, blue.600, blue.700)',
-                  transform: 'translateY(-3px)',
-                  shadow: '2xl',
-                }}
-                transition="all 0.3s"
-                border="2px solid"
-                borderColor="blue.400"
-                position="relative"
-                overflow="hidden"
-                mt={4}
-              >
-                {/* Background Animation */}
-                <Box
-                  position="absolute"
-                  top="0"
-                  left="-100%"
-                  w="100%"
-                  h="100%"
-                  bgGradient="linear(to-r, transparent, rgba(255,255,255,0.2), transparent)"
-                  transition="left 0.5s"
-                  _hover={{ left: '100%' }}
-                />
-                
-                <HStack spacing={4} position="relative" zIndex={1}>
-                  <Box
-                    bg="whiteAlpha.200"
-                    borderRadius="lg"
-                    p={3}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    <Icon as={FaCamera} boxSize={6} />
-                  </Box>
-                  <VStack align="flex-start" spacing={1}>
-                    <Text
-                      fontSize="xl"
-                      fontWeight="bold"
-                      lineHeight="shorter"
-                    >
-                      📱 امسح QR Code الآن
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      opacity={0.9}
-                      fontWeight="medium"
-                    >
-                      لتفعيل كورس جديد وبدء التعلم
-                    </Text>
-                  </VStack>
-                  <Icon as={FaQrcode} boxSize={7} opacity={0.8} />
-                </HStack>
-              </Box>
-            </VStack>
-          </VStack>
-        </Center>
-      )}
+            <Heading size="md" color={headingColor} mb={2}>لا توجد كورسات مفعلة</Heading>
+            <Text color={subtextColor} maxW="md" mb={6} fontSize="sm">
+              لم تقم بالاشتراك في أي كورسات أو باقات تعليمية حتى الآن.
+            </Text>
+            <Button
+              bg="orange.500"
+              color="white"
+              size="md"
+              leftIcon={<Icon as={FaQrcode} />}
+              borderRadius="xl"
+              _hover={{ bg: "orange.400" }}
+              onClick={() => setIsQrScannerOpen(true)}
+              fontWeight="bold"
+            >
+              تفعيل كورس الآن
+            </Button>
+          </Flex>
+        )}
 
-      {/* QR Scanner Modal */}
-      <Modal
-        isOpen={isQrScannerOpen}
-        onClose={closeQrScanner}
-        isCentered
-        size="xl"
-        closeOnOverlayClick={false}
-        closeOnEsc={true}
-      >
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent mx={4} borderRadius="2xl" overflow="hidden">
-          <ModalHeader textAlign="center" bg="blue.50" py={6}>
-            <VStack spacing={3}>
-              <Box
-                w="60px"
-                h="60px"
-                bgGradient="linear(135deg, blue.500, blue.600)"
-                borderRadius="full"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Icon as={FaQrcode} w="30px" h="30px" color="white" />
-              </Box>
-              <Text fontSize="xl" fontWeight="bold" color="blue.800">
-                📱 امسح QR Code لتفعيل كورس جديد
-              </Text>
-              <Text fontSize="md" color="blue.600" fontWeight="medium">
-                وجه الكاميرا نحو الكود المربع (QR Code) وسيتم التفعيل تلقائياً
-              </Text>
-            </VStack>
-          </ModalHeader>
 
+      {/* --- Modals (براند) --- */}
+      <Modal isOpen={isQrScannerOpen} onClose={closeQrScanner} isCentered size="xl" closeOnOverlayClick={false}>
+        <ModalOverlay backdropFilter="blur(8px)" bg="blackAlpha.600" />
+        <ModalContent borderRadius="2xl" bg={modalBg} borderWidth="1px" borderColor={modalBorder}>
+          <ModalHeader textAlign="center" bg="blue.500" color="white" borderTopRadius="2xl">تفعيل الكورس</ModalHeader>
           <ModalBody py={8}>
-            <VStack spacing={4} textAlign="center">
-              <Box
-                position="relative"
-                w="100%"
-                h="400px"
-                borderRadius="lg"
-                overflow="hidden"
-                border="2px solid"
-                borderColor="blue.200"
-                bg="gray.100"
-              >
-                <div
-                  id="qr-reader"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    position: 'relative',
-                  }}
-                />
-
-                {isScanning && (
-                  <Box
-                    position="absolute"
-                    top="50%"
-                    left="0"
-                    right="0"
-                    height="3px"
-                    bgGradient="linear(to-r, transparent, blue.500, transparent)"
-                    transform="translateY(-50%)"
-                    animation="scanning 2s linear infinite"
-                    sx={{
-                      '@keyframes scanning': {
-                        '0%': { transform: 'translateY(-50%) translateX(-100%)' },
-                        '100%': { transform: 'translateY(-50%) translateX(100%)' },
-                      },
-                    }}
-                    zIndex={10}
-                    pointerEvents="none"
-                  />
-                )}
-
-                {isScanning && (
-                  <Box
-                    position="absolute"
-                    bottom="20px"
-                    left="50%"
-                    transform="translateX(-50%)"
-                    bg="blackAlpha.700"
-                    color="white"
-                    px={4}
-                    py={2}
-                    borderRadius="full"
-                    fontSize="sm"
-                    fontWeight="bold"
-                    zIndex={10}
-                    pointerEvents="none"
-                  >
-                    🔍 جاري المسح...
-                  </Box>
-                )}
+            <VStack spacing={5}>
+              <Box w="100%" h="300px" bg="black" borderRadius="xl" overflow="hidden" position="relative">
+                <div id="qr-reader" style={{ width: "100%", height: "100%" }}></div>
+                {isScanning && <Box position="absolute" top="50%" left="50%" transform="translate(-50%, -50%)" zIndex={10}><Spinner color="blue.400" size="xl" /></Box>}
               </Box>
-
-              <Box
-                bgGradient="linear(to-r, blue.50, blue.100)"
-                borderRadius="xl"
-                p={5}
-                border="2px solid"
-                borderColor="blue.300"
-                w="full"
-                boxShadow="md"
-              >
-                <HStack spacing={3} mb={3}>
-                  <Box
-                    bg="blue.500"
-                    borderRadius="full"
-                    p={2}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    <Icon as={FaCamera} color="white" boxSize={5} />
-                  </Box>
-                  <Text fontSize="lg" color="blue.800" fontWeight="bold">
-                    📱 كيف تمسح QR Code؟
-                  </Text>
-                </HStack>
-                <VStack align="flex-start" spacing={2}>
-                  <HStack spacing={2} align="flex-start">
-                    <Text fontSize="lg" color="blue.600" fontWeight="bold">1️⃣</Text>
-                    <Text fontSize="md" color="blue.700" fontWeight="medium">
-                      امنح الإذن لاستخدام الكاميرا عند الطلب
-                    </Text>
-                  </HStack>
-                  <HStack spacing={2} align="flex-start">
-                    <Text fontSize="lg" color="blue.600" fontWeight="bold">2️⃣</Text>
-                    <Text fontSize="md" color="blue.700" fontWeight="medium">
-                      وجه الكاميرا نحو QR Code (الكود المربع)
-                    </Text>
-                  </HStack>
-                  <HStack spacing={2} align="flex-start">
-                    <Text fontSize="lg" color="blue.600" fontWeight="bold">3️⃣</Text>
-                    <Text fontSize="md" color="blue.700" fontWeight="medium">
-                      سيتم قراءة الكود تلقائياً وتفعيل الكورس! 🎉
-                    </Text>
-                  </HStack>
-                </VStack>
-              </Box>
+              <Text textAlign="center" color={modalText}>وجه الكاميرا نحو كود الـ QR الخاص بالكورس</Text>
             </VStack>
           </ModalBody>
-
-          <ModalFooter justifyContent="center" py={6}>
-            <Button
-              onClick={closeQrScanner}
-              bg="gray.500"
-              color="white"
-              _hover={{ bg: 'gray.600' }}
-              borderRadius="xl"
-              px={8}
-            >
-              إلغاء
-            </Button>
+          <ModalFooter justify="center" borderTopWidth="1px" borderColor={modalBorder}>
+            <Button variant="outline" colorScheme="red" onClick={closeQrScanner}>إلغاء</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
-      {/* Success Modal */}
-      <Modal
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        isCentered
-      >
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent mx={4} borderRadius="2xl" overflow="hidden">
-          <ModalHeader textAlign="center" bg="green.50" py={6}>
-            <VStack spacing={3}>
-              <Box
-                w="60px"
-                h="60px"
-                bgGradient="linear(135deg, green.500, green.600)"
-                borderRadius="full"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Icon as={FaCheckCircle} w="30px" h="30px" color="white" />
-              </Box>
-              <Text fontSize="xl" fontWeight="bold" color="green.800">
-                تم تفعيل الكورس بنجاح! 🎉
-              </Text>
-            </VStack>
-          </ModalHeader>
-
-          <ModalBody py={8}>
-            <VStack spacing={4} textAlign="center">
-              <Text fontSize="lg" color="green.600" fontWeight="medium">
-                {activationResult?.courseName}
-              </Text>
-              <Text fontSize="md" color="gray.600">
-                {activationResult?.message}
-              </Text>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter justifyContent="center" py={6}>
-            <Button
-              onClick={() => setShowSuccessModal(false)}
-              bgGradient="linear(135deg, green.500, green.600)"
-              color="white"
-              _hover={{
-                bgGradient: 'linear(135deg, green.600, green.700)',
-                boxShadow: 'xl',
-              }}
-              borderRadius="xl"
-              px={8}
-            >
-              متابعة
-            </Button>
-          </ModalFooter>
+      <Modal isOpen={showSuccessModal} onClose={() => setShowSuccessModal(false)} isCentered>
+        <ModalOverlay backdropFilter="blur(4px)" bg="blackAlpha.500" />
+        <ModalContent textAlign="center" borderRadius="2xl" p={8} bg={modalBg} borderWidth="1px" borderColor={modalBorder}>
+          <Icon as={FaBookOpen} color="green.500" boxSize={16} mx="auto" mb={4} />
+          <Heading size="md" color="green.600" mb={2}>تم التفعيل بنجاح!</Heading>
+          <Text color={modalText}>{activationResult?.courseName}</Text>
         </ModalContent>
       </Modal>
 
-      {/* Error Modal */}
-      <Modal
-        isOpen={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
-        isCentered
-      >
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-        <ModalContent mx={4} borderRadius="2xl" overflow="hidden">
-          <ModalHeader textAlign="center" bg="red.50" py={6}>
-            <VStack spacing={3}>
-              <Box
-                w="60px"
-                h="60px"
-                bgGradient="linear(135deg, red.500, red.600)"
-                borderRadius="full"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Icon as={FaQrcode} w="30px" h="30px" color="white" />
-              </Box>
-              <Text fontSize="xl" fontWeight="bold" color="red.800">
-                {activationResult?.message?.includes('مستخدم من قبل')
-                  ? 'الكود مستخدم من قبل'
-                  : 'لم يتم تفعيل الكورس'}
-              </Text>
-            </VStack>
-          </ModalHeader>
-
-          <ModalBody py={8}>
-            <VStack spacing={4} textAlign="center">
-              <Text fontSize="lg" color="red.600" fontWeight="medium">
-                {activationResult?.message}
-              </Text>
-
-              <Box
-                bg="red.50"
-                borderRadius="lg"
-                p={4}
-                border="1px solid"
-                borderColor="red.200"
-                w="full"
-              >
-                <Text fontSize="sm" color="red.700" fontWeight="medium" mb={2}>
-                  🔍 السبب:
-                </Text>
-                <Text fontSize="sm" color="red.600">
-                  {activationResult?.reason}
-                </Text>
-              </Box>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter justifyContent="center" py={6}>
-            <Button
-              onClick={() => setShowErrorModal(false)}
-              bg="gray.500"
-              color="white"
-              _hover={{ bg: 'gray.600' }}
-              borderRadius="xl"
-              px={8}
-            >
-              إغلاق
-            </Button>
-          </ModalFooter>
+      <Modal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)} isCentered>
+        <ModalOverlay backdropFilter="blur(4px)" bg="blackAlpha.500" />
+        <ModalContent textAlign="center" borderRadius="2xl" p={8} bg={modalBg} borderWidth="1px" borderColor={modalBorder}>
+          <Icon as={FaCamera} color="red.500" boxSize={16} mx="auto" mb={4} />
+          <Heading size="md" color="red.600" mb={2}>خطأ في التفعيل</Heading>
+          <Text color={modalText}>{activationResult?.message}</Text>
+          <Text fontSize="sm" mt={2} color={modalText}>{activationResult?.reason}</Text>
         </ModalContent>
       </Modal>
+
     </Box>
   );
 };

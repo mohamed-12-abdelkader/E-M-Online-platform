@@ -1,484 +1,623 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Heading,
   Skeleton,
-  // Stack,
-  Card,
-  CardBody,
-  Image,
   Flex,
   Text,
   VStack,
   HStack,
   SimpleGrid,
   useColorModeValue,
-  Badge,
   Icon,
-  Center,
   Button,
-  AspectRatio,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
+  Container,
+  Avatar,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  InputRightElement,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-import { FaVideo, FaSearch, FaChalkboardTeacher, FaBookOpen, FaUsers } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { FaChalkboardTeacher, FaBookOpen } from "react-icons/fa";
+import { BiSearch } from "react-icons/bi";
+import { MdCancelPresentation } from "react-icons/md";
+import { IoClose } from "react-icons/io5";
+import { motion, AnimatePresence } from "framer-motion";
 import useGitMyTeacher from "../../Hooks/student/useGitMyTeacher";
+import useGitTeacherByToken from "../../Hooks/student/GitTeacherByToken";
 
+const fuzzySearch = (query, text) => {
+  if (!query || !text) return 0;
+  const normalizedQuery = query.toLowerCase().trim();
+  const normalizedText = String(text).toLowerCase().trim();
+  if (normalizedText === normalizedQuery) return 100;
+  let score = 0;
+  const queryWords = normalizedQuery.split(/\s+/);
+  const textWords = normalizedText.split(/\s+/);
+  queryWords.forEach((qWord) => {
+    textWords.forEach((tWord) => {
+      if (tWord.includes(qWord)) score += (qWord.length / tWord.length) * 50;
+    });
+  });
+  let matchLength = 0;
+  for (let i = 0; i < normalizedText.length && i < normalizedQuery.length; i++) {
+    if (normalizedText[i] === normalizedQuery[i]) matchLength++;
+  }
+  score += (matchLength / normalizedText.length) * 50;
+  return Math.min(score, 100);
+};
 
-const MyTeacher = () => {
+const MyTeacher = ({ embedded = false }) => {
   const [loading, teachers, error] = useGitMyTeacher();
+  const [loadingAll, allTeachers] = useGitTeacherByToken();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchClicked, setSearchClicked] = useState(false);
 
-  const sessionExpired = error === "Session expired or replaced";
+  const mainBg = useColorModeValue("gray.50", "gray.900");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("gray.200", "gray.700");
+  const headingColor = useColorModeValue("gray.800", "white");
+  const subtextColor = useColorModeValue("gray.600", "gray.400");
+  const searchBoxBg = useColorModeValue("white", "gray.800");
+  const searchBoxBorder = useColorModeValue("gray.200", "gray.700");
+  const inputBg = useColorModeValue("gray.50", "gray.700");
+  const emptyBg = useColorModeValue("gray.50", "gray.800");
+  const emptyBorder = useColorModeValue("gray.200", "gray.600");
+  const pillBg = useColorModeValue("blue.50", "blue.900");
+  const pillColor = useColorModeValue("blue.600", "blue.200");
+  const sectionBg = useColorModeValue("white", "gray.800");
+  const sectionBorder = useColorModeValue("gray.200", "gray.700");
+  const searchShadow = useColorModeValue("0 10px 40px rgba(0,0,0,0.08)", "0 10px 40px rgba(0,0,0,0.3)");
+  const cardHoverShadow = useColorModeValue("0 24px 48px rgba(66, 153, 225, 0.15)", "0 24px 48px rgba(0,0,0,0.45)");
 
-  const handleForceLogout = () => {
-    try {
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      localStorage.removeItem("examAnswers");
-      localStorage.removeItem("examTimeLeft");
-    } catch (e) {}
-    window.location.href = "/login";
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setSearchClicked(false);
   };
 
-  const cardBg = useColorModeValue("white", "gray.800");
-  const textColor = useColorModeValue("blue.700", "blue.500");
-  const subTextColor = useColorModeValue("gray.500", "gray.400");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const emptyStateBgGradient = useColorModeValue(
-    "linear(to-br, blue.50, blue.50, blue.50)",
-    "linear(to-br, gray.800, gray.700, gray.800)"
+  const handleSearchClick = () => {
+    setSearchClicked(true);
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    let results = [];
+    if (Array.isArray(allTeachers)) {
+      results = allTeachers.filter(
+        (t) => t.name?.trim().toLowerCase() === searchQuery.trim().toLowerCase()
+      );
+      if (results.length === 0) {
+        results = allTeachers
+          .map((teacher) => ({
+            teacher,
+            score: fuzzySearch(searchQuery, teacher.name),
+          }))
+          .filter((item) => item.score > 20)
+          .sort((a, b) => b.score - a.score)
+          .map((item) => item.teacher);
+      }
+    }
+    setSearchResults(results);
+  };
+
+  const displayList = searchClicked ? searchResults : teachers?.teachers ?? [];
+  const isSearchMode = searchClicked;
+  const hasResults = displayList.length > 0;
+
+  const getInitials = (name) => {
+    if (!name) return "؟";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return parts[0][0] + parts[1][0];
+    return name.slice(0, 2);
+  };
+
+  const renderTeacherCard = (teacher, index = 0) => (
+    <motion.div
+      key={teacher.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: Math.min(index * 0.06, 0.3) }}
+    >
+      <Link to={`/teacher/${teacher.id}`} style={{ display: "block", height: "100%" }}>
+        <Box
+          as="article"
+          bg={cardBg}
+          borderRadius="2xl"
+          overflow="hidden"
+          borderWidth="1px"
+          borderColor={cardBorder}
+          boxShadow="md"
+          h="100%"
+          display="flex"
+          flexDirection="column"
+          transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+          _hover={{
+            transform: "translateY(-8px) scale(1.02)",
+            boxShadow: cardHoverShadow,
+            borderColor: "blue.400",
+          }}
+        >
+          {/* صورة المحاضر أو الحروف الأولى */}
+          <Box
+            position="relative"
+            h="168px"
+            bgGradient="linear(135deg, blue.500 0%, blue.600 50%, blue.700 100%)"
+            overflow="hidden"
+          >
+            {teacher.avatar ? (
+              <Box
+                as="img"
+                src={teacher.avatar}
+                alt=""
+                w="100%"
+                h="100%"
+                objectFit="cover"
+                opacity={0.92}
+              />
+            ) : (
+              <Flex
+                position="absolute"
+                inset="0"
+                align="center"
+                justify="center"
+                fontSize="4xl"
+                fontWeight="bold"
+                color="whiteAlpha.900"
+                letterSpacing="0.05em"
+              >
+                {getInitials(teacher.name)}
+              </Flex>
+            )}
+            <Box
+              position="absolute"
+              inset="0"
+              bgGradient="linear(to-t, blackAlpha.800 0%, transparent 40%)"
+            />
+            <Box
+              position="absolute"
+              bottom="3"
+              right="3"
+              px="3"
+              py="1"
+              borderRadius="full"
+              bg="blackAlpha.600"
+              backdropFilter="blur(10px)"
+            >
+              <Text fontSize="xs" fontWeight="bold" color="white">
+                {teacher.subject || "معلم متميز"}
+              </Text>
+            </Box>
+          </Box>
+
+          <VStack
+            flex="1"
+            align="stretch"
+            p="5"
+            pt="5"
+            spacing="4"
+            justify="space-between"
+          >
+            <VStack align="stretch" spacing="2">
+              <HStack justify="space-between" align="flex-start">
+                <Avatar
+                  size="lg"
+                  src={teacher.avatar}
+                  name={teacher.name}
+                  borderWidth="3px"
+                  borderColor={cardBg}
+                  boxShadow="lg"
+                  mt="-12"
+                  position="relative"
+                  zIndex="1"
+                  bg="blue.500"
+                  color="white"
+                />
+                <Box
+                  w="3.5"
+                  h="3.5"
+                  borderRadius="full"
+                  bg="green.400"
+                  borderWidth="2px"
+                  borderColor={cardBg}
+                  flexShrink={0}
+                  mt="0"
+                  boxShadow="sm"
+                />
+              </HStack>
+              <Heading
+                as="h3"
+                size="md"
+                color={headingColor}
+                noOfLines={2}
+                fontWeight="bold"
+                lineHeight="tight"
+              >
+                {teacher.name}
+              </Heading>
+            </VStack>
+
+            <Button
+              as="span"
+              w="full"
+              bg="orange.500"
+              color="white"
+              size="md"
+              borderRadius="xl"
+              rightIcon={<Icon as={FaBookOpen} boxSize="4" />}
+              _hover={{ bg: "orange.400" }}
+              fontWeight="bold"
+              fontSize="md"
+              py={3}
+              transition="all 0.2s"
+            >
+              عرض الكورسات
+            </Button>
+          </VStack>
+        </Box>
+      </Link>
+    </motion.div>
   );
-  const emptyStateBorderColor = useColorModeValue("blue.200", "gray.600");
-  const emptyStateParagraphColor = useColorModeValue("gray.600", "gray.300");
 
   if (loading) {
     return (
-      <VStack spacing={4} p={{ base: 4, sm: 6 }} w="100%">
-        <Skeleton height="20px" w="full" />
-        <Skeleton height="20px" w="full" />
-        <Skeleton height="20px" w="full" />
-        <Skeleton height="20px" w="full" />
-      </VStack>
+      <Box w="100%" py={embedded ? 0 : 8} bg={embedded ? "transparent" : mainBg} minH={embedded ? "200px" : "100vh"}>
+        {!embedded && <Container maxW="container.xl" px={4}><Skeleton height="140px" borderRadius="2xl" mb={8} /></Container>}
+        <Box px={embedded ? 0 : 4}>
+          <Skeleton height="64px" borderRadius="xl" mb={8} maxW="560px" display={embedded ? "none" : "block"} />
+          <Skeleton height={embedded ? "80px" : "64px"} borderRadius="xl" mb={6} />
+          <SimpleGrid columns={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing={6}>
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} height="340px" borderRadius="2xl" />
+            ))}
+          </SimpleGrid>
+        </Box>
+      </Box>
+    );
+  }
+
+  const sectionHeader = (
+    <Flex
+      direction={{ base: "column", sm: "row" }}
+      justify="space-between"
+      align={{ base: "stretch", sm: "center" }}
+      gap={4}
+      mb={6}
+      p={5}
+      borderRadius="2xl"
+      bg={sectionBg}
+      borderWidth="1px"
+      borderColor={sectionBorder}
+      boxShadow="sm"
+    >
+      <HStack spacing={4} flexWrap="wrap">
+        <Flex
+          w="12"
+          h="12"
+          borderRadius="xl"
+          bg="blue.500"
+          color="white"
+          align="center"
+          justify="center"
+          boxShadow="md"
+        >
+          <Icon as={FaChalkboardTeacher} boxSize={6} />
+        </Flex>
+        <VStack align="flex-start" spacing={0}>
+          <Heading size="md" color={headingColor} fontWeight="bold">
+            محاضروك والبحث عن محاضر
+          </Heading>
+          <Text fontSize="sm" color={subtextColor}>
+            ابحث بالاسم أو تصفح محاضريك المفضلين
+          </Text>
+        </VStack>
+      </HStack>
+    </Flex>
+  );
+
+  const searchBar = (
+    <Box
+      bg={searchBoxBg}
+      borderRadius="2xl"
+      p={{ base: 4, md: 5 }}
+      boxShadow={searchShadow}
+      borderWidth="1px"
+      borderColor={searchBoxBorder}
+      mb={6}
+    >
+          <Flex
+            direction={{ base: "column", sm: "row" }}
+            gap={3}
+            align={{ base: "stretch", sm: "center" }}
+          >
+            <InputGroup size="lg" flex="1">
+              <InputLeftElement height="52px" pointerEvents="none">
+                <Icon as={BiSearch} color="gray.400" boxSize={5} />
+              </InputLeftElement>
+              <Input
+                type="text"
+                placeholder="ابحث باسم المحاضر..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onKeyDown={(e) => e.key === "Enter" && handleSearchClick()}
+                borderRadius="xl"
+                height="52px"
+                pl="48px"
+                pr={searchQuery.trim() ? "44px" : "4"}
+                bg={inputBg}
+                borderWidth="2px"
+                borderColor={searchBoxBorder}
+                _focus={{
+                  borderColor: "blue.500",
+                  boxShadow: "0 0 0 3px rgba(66, 153, 225, 0.2)",
+                }}
+              />
+              {searchQuery.trim() && (
+                <InputRightElement height="52px">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    colorScheme="gray"
+                    borderRadius="full"
+                    p={0}
+                    minW="8"
+                    h="8"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSearchClicked(false);
+                    }}
+                    aria-label="مسح البحث"
+                  >
+                    <Icon as={IoClose} boxSize={5} />
+                  </Button>
+                </InputRightElement>
+              )}
+            </InputGroup>
+            <Button
+              onClick={handleSearchClick}
+              bg="orange.500"
+              color="white"
+              px={8}
+              h="52px"
+              borderRadius="xl"
+              leftIcon={<Icon as={BiSearch} />}
+              _hover={{ bg: "orange.400" }}
+              _active={{ transform: "scale(0.98)" }}
+              fontWeight="bold"
+              fontSize="md"
+              transition="all 0.2s"
+            >
+              بحث
+            </Button>
+          </Flex>
+          <Text fontSize="xs" color={subtextColor} mt={2}>
+            مثال: أحمد محمد
+          </Text>
+        </Box>
+  );
+
+  const sectionTitleRow = (
+        <Flex
+          justify="space-between"
+          align="center"
+          mt={6}
+          mb={6}
+          flexWrap="wrap"
+          gap={3}
+        >
+          <HStack spacing={3} flexWrap="wrap">
+            <Heading size="md" color={headingColor} fontWeight="bold">
+              {isSearchMode
+                ? hasResults
+                  ? "نتائج البحث"
+                  : "نتائج البحث"
+                : "محاضروك المفضلون"}
+            </Heading>
+            {hasResults && (
+              <Box
+                px="3"
+                py="1"
+                borderRadius="full"
+                bg={pillBg}
+                color={pillColor}
+                fontSize="sm"
+                fontWeight="bold"
+              >
+                {displayList.length} محاضر
+              </Box>
+            )}
+          </HStack>
+          {isSearchMode && (
+            <Button
+              variant="outline"
+              size="sm"
+              colorScheme="blue"
+              borderRadius="xl"
+              onClick={() => {
+                setSearchClicked(false);
+                setSearchQuery("");
+              }}
+            >
+              عرض محاضري
+            </Button>
+          )}
+        </Flex>
+  );
+
+  const contentBlock = (
+    <AnimatePresence mode="wait">
+      {hasResults ? (
+        <motion.div
+          key="grid"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <SimpleGrid
+            columns={{ base: 1, sm: 2, lg: 3, xl: 4 }}
+            spacing={6}
+          >
+            {displayList.map((teacher, index) =>
+              renderTeacherCard(teacher, index)
+            )}
+          </SimpleGrid>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="empty"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Flex
+            direction="column"
+            align="center"
+            justify="center"
+            minH="340px"
+            bg={emptyBg}
+            borderRadius="2xl"
+            borderWidth="1px"
+            borderColor={emptyBorder}
+            borderStyle="dashed"
+            textAlign="center"
+            p={10}
+          >
+            <Box
+              w="24"
+              h="24"
+              borderRadius="2xl"
+              bg={isSearchMode ? "red.50" : "blue.50"}
+              _dark={{ bg: isSearchMode ? "red.900" : "blue.900" }}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              mb={6}
+            >
+              <Icon
+                as={isSearchMode ? MdCancelPresentation : FaChalkboardTeacher}
+                boxSize="12"
+                color={isSearchMode ? "red.400" : "blue.500"}
+              />
+            </Box>
+            <Heading size="md" color={headingColor} mb={2}>
+              {isSearchMode ? "لا توجد نتائج" : "لا يوجد اشتراكات بعد"}
+            </Heading>
+            <Text color={subtextColor} maxW="sm" fontSize="sm" lineHeight="tall" mb={4}>
+              {isSearchMode
+                ? "لم نعثر على محاضر بهذا الاسم. جرّب كلمة أخرى أو اعرض قائمة محاضريك."
+                : "لم تشترك مع أي محاضر بعد. استخدم البحث أعلاه للعثور على محاضر والاشتراك معه."}
+            </Text>
+            {!isSearchMode && (
+              <Box
+                p={4}
+                borderRadius="xl"
+                bg={pillBg}
+                color={pillColor}
+                fontSize="xs"
+                maxW="xs"
+              >
+                💡 اكتب اسم المحاضر في مربع البحث ثم اضغط "بحث" للعثور عليه والاشتراك في كورساته.
+              </Box>
+            )}
+            {isSearchMode && (
+              <Button
+                mt={2}
+                variant="outline"
+                colorScheme="blue"
+                size="md"
+                borderRadius="xl"
+                onClick={() => {
+                  setSearchClicked(false);
+                  setSearchQuery("");
+                }}
+              >
+                عرض محاضري
+              </Button>
+            )}
+          </Flex>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  if (embedded) {
+    return (
+      <Box w="100%">
+        {sectionHeader}
+        {searchBar}
+        {sectionTitleRow}
+        {contentBlock}
+      </Box>
     );
   }
 
   return (
-    <Box 
-      w="100%" 
-    
-      py={8}
-      position="relative"
-      overflow="hidden"
+    <Box
+      w="100%"
+      minH="100vh"
+      bg={mainBg}
+      dir="rtl"
+      pb={20}
+      style={{ fontFamily: "'Changa', sans-serif" }}
     >
-      {/* CSS Animations */}
-      
-      
-      {/* Background Pattern */}
       <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        opacity={0.05}
-        bgImage="url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMwMDAwMDAiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')"
-        pointerEvents="none"
-        animation="gradientShift 20s ease-in-out infinite"
-      />
-      
-      {/* Additional Background Effects */}
-      <Box
-        position="absolute"
-        top="20%"
-        left="-10%"
-        w="30%"
-        h="60%"
-        bgGradient="radial(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)"
-        borderRadius="full"
-        animation="float 15s ease-in-out infinite"
-        pointerEvents="none"
-      />
-      <Box
-        position="absolute"
-        bottom="10%"
-        right="-5%"
-        w="25%"
-        h="50%"
-        bgGradient="radial(circle, rgba(147, 51, 234, 0.08) 0%, transparent 70%)"
-        borderRadius="full"
-        animation="float 12s ease-in-out infinite reverse"
-        pointerEvents="none"
-      />
-      <Modal isOpen={sessionExpired} onClose={() => {}} isCentered closeOnOverlayClick={false} closeOnEsc={false}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader textAlign="center">انتهاء الجلسة</ModalHeader>
-          <ModalBody>
-            <Text textAlign="center" color={subTextColor}>
-              لقد انتهت جلستك أو تم استبدالها. يجب تسجيل الدخول مرة أخرى.
-            </Text>
-            <Text textAlign="center" color={subTextColor}>
-          سجّل دخولك باستخدام رقم الهاتف وكلمة المرور التي قمت بالتسجيل بهما من قبل.
-إذا كنت قد نسيت كلمة المرور، يُرجى التواصل مع الدعم الفني لاستعادتها.
-            </Text>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" w="full" onClick={handleForceLogout}>
-              تسجيل الدخول مرة أخرى
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      
-      {/* Header Section */}
-     
-
-      {teachers?.teachers?.length > 0 ? (
-        <div >
-           <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, md: 8 }} position="relative" zIndex={1}>
-        <VStack spacing={{ base: 6, sm: 8, md: 10 }} mb={{ base: 12, sm: 16, md: 20 }}>
-          <VStack spacing={6} textAlign="center" position="relative">
-            <VStack spacing={4}>
-              <Heading
-                size={{ base: "2xl", sm: "3xl", md: "4xl" }}
-                fontWeight="black"
-               color="blue.500"
-                textAlign="center"        
-               
+        bgGradient="linear(135deg, blue.500 0%, blue.600 50%, blue.700 100%)"
+        position="relative"
+        overflow="hidden"
+      >
+        <Box
+          position="absolute"
+          inset="0"
+          opacity={0.08}
+          bgImage="radial-gradient(circle at 20% 80%, white 1px, transparent 1px)"
+          bgSize="24px 24px"
+        />
+        <Box
+          position="absolute"
+          bottom="0"
+          left="0"
+          right="0"
+          h="24px"
+          bg={mainBg}
+          borderRadius="2xl 2xl 0 0"
+        />
+        <Container maxW="container.xl" px={4} py={12} position="relative" zIndex="1">
+          <VStack spacing={4} align="flex-start" textAlign="right">
+            <HStack spacing={4}>
+              <Flex
+                w="16"
+                h="16"
+                borderRadius="2xl"
+                bg="whiteAlpha.200"
+                align="center"
+                justify="center"
+                borderWidth="1px"
+                borderColor="whiteAlpha.300"
               >
-                🎓 محاضروك المفضلون
-              </Heading> 
-            </VStack>
+                <Icon as={FaChalkboardTeacher} boxSize={8} color="white" />
+              </Flex>
+              <VStack align="flex-start" spacing={1}>
+                <Heading size="xl" color="white" fontWeight="bold">
+                  محاضروك والبحث عن محاضر
+                </Heading>
+                <Text color="whiteAlpha.900" fontSize="md">
+                  ابحث بالاسم أو تصفح محاضريك المفضلين
+                </Text>
+              </VStack>
+            </HStack>
           </VStack>
-        </VStack>
+        </Container>
       </Box>
-      <div className="flex flex-wrap">
-
-      
-            {teachers.teachers.map((teacher, index) => (
-              <Link className="w-full  md:w-[340px]  m-3 " key={teacher.id} to={`/teacher/${teacher.id}`} style={{ display: "block" }}>
-                <Card
-                 className=" w-full mx-auto md:w-[340px] md:mx-3 "
-                  h="full"
-                  bg={cardBg}
-                  borderRadius="2xl"
-                  overflow="hidden"
-                  border="1px solid"
-                  borderColor={borderColor}
-                  boxShadow="lg"
-                  transition="all 0.3s ease"
-                  cursor="pointer"
-                  position="relative"
-                  role="group"
-                  _hover={{
-                    transform: "translateY(-4px)",
-                    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
-                    borderColor: "blue.300"
-                  }}
-                  sx={{
-                    animation: `cardSlideUp 0.6s ease-out ${index * 0.1}s both`,
-                  }}
-                >
-                  {/* Image Section */}
-                  <Box position="relative" h="250px" overflow="hidden">
-                    <Image
-                      src={teacher.avatar || "https://via.placeholder.com/400x300/4fd1c5/ffffff?text=صورة+المدرس"}
-                      alt={teacher.name}
-                      w="100%"
-                      h="100%"
-                      objectFit="cover"
-                      transition="transform 0.3s ease"
-                      _groupHover={{ transform: "scale(1.05)" }}
-                    />
-
-                    {/* Gradient Overlay */}
-                    <Box
-                      position="absolute"
-                      top={0}
-                      left={0}
-                      right={0}
-                      bottom={0}
-                      bgGradient="linear(to-b, transparent 0%, rgba(0,0,0,0.2) 100%)"
-                    />
-
-                    {/* Subject Badge */}
-                    <Box
-                      position="absolute"
-                      top={3}
-                      right={3}
-                      bg="white"
-                      color="blue.600"
-                      px={3}
-                      py={1}
-                      borderRadius="lg"
-                      fontSize="xs"
-                      fontWeight="bold"
-                      boxShadow="md"
-                    >
-                      📚 {teacher.subject}
-                    </Box>
-
-                    {/* Online Status */}
-                    <Box
-                      position="absolute"
-                      bottom={3}
-                      right={3}
-                      bg="green.500"
-                      w="10px"
-                      h="10px"
-                      borderRadius="full"
-                      border="2px solid white"
-                      boxShadow="0 2px 4px rgba(0,0,0,0.2)"
-                    />
-                  </Box>
-
-                  {/* Content Section */}
-                  <CardBody p={4} display="flex" flexDirection="column" flex="1">
-                    <VStack align="flex-start" spacing={3} w="full" h="100%" justify="space-between">
-                      {/* Teacher Info */}
-                      <Box w="full">
-                        <Text
-                          fontWeight="bold"
-                          fontSize="lg"
-                          color={textColor}
-                          textAlign="right"
-                          mb={2}
-                          noOfLines={1}
-                        >
-                          {teacher.name}
-                        </Text>
-                        
-                        {teacher.description ? (
-                          <Text
-                            fontSize="sm"
-                            color={subTextColor}
-                            textAlign="right"
-                            noOfLines={2}
-                            lineHeight="1.4"
-                            mb={3}
-                          >
-                            {teacher.description}
-                          </Text>
-                        ) : (
-                          <Text
-                            fontSize="sm"
-                            color={subTextColor}
-                            textAlign="right"
-                            fontStyle="italic"
-                            mb={3}
-                          >
-                            محاضر متخصص في {teacher.subject}
-                          </Text>
-                        )}
-
-                        {/* Stats Row */}
-                        <HStack spacing={3} w="full" justify="space-between" mb={3}>
-                          
-
-                        </HStack>
-                      </Box>
-
-                      {/* Action Button */}
-                      <Button
-                        colorScheme="blue"
-                        w="full"
-                        borderRadius="lg"
-                        fontWeight="bold"
-                        fontSize="sm"
-                        h="40px"
-                        bgGradient="linear(to-r, blue.500, blue.600)"
-                        color="white"
-                        _hover={{
-                          transform: "translateY(-1px)",
-                          boxShadow: "0 8px 20px rgba(59, 130, 246, 0.3)",
-                          bgGradient: "linear(to-r, blue.600, purple.600)",
-                        }}
-                        _active={{
-                          transform: "translateY(0)",
-                        }}
-                        transition="all 0.2s ease"
-                        leftIcon={<Icon as={FaVideo} boxSize={3} />}
-                        boxShadow="sm"
-                      >
-                        عرض الكورسات
-                      </Button>
-                    </VStack>
-                  </CardBody>
-                </Card>
-              </Link>
-            ))}
-         </div>
-        </div>
-      ) : (
-        <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, md: 8 }} py={12}>
-          <Center flexDirection="column">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              style={{ width: "100%" }}
-            >
-              <Box
-                p={{ base: 8, md: 12 }}
-                borderRadius="3xl"
-                bgGradient={emptyStateBgGradient}
-                border="2px solid"
-                borderColor={emptyStateBorderColor}
-                boxShadow="2xl"
-                textAlign="center"
-                position="relative"
-                overflow="hidden"
-              >
-                {/* Decorative background elements */}
-                <Box
-                  position="absolute"
-                  top="-50px"
-                  right="-50px"
-                  w="200px"
-                  h="200px"
-                  bg="blue.200"
-                  borderRadius="full"
-                  opacity={0.1}
-                />
-                <Box
-                  position="absolute"
-                  bottom="-50px"
-                  left="-50px"
-                  w="150px"
-                  h="150px"
-                  bg="purple.200"
-                  borderRadius="full"
-                  opacity={0.1}
-                />
-                
-                <VStack spacing={8} align="center" position="relative" zIndex={1}>
-                  {/* Icon/Image Section */}
-                  <Box position="relative" mb={4}>
-                    <Box
-                      w={{ base: "120px", md: "160px" }}
-                      h={{ base: "120px", md: "160px" }}
-                      borderRadius="full"
-                      bgGradient="linear(135deg, blue.400, blue.600, blue.300)"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      boxShadow="xl"
-                      position="relative"
-                      _before={{
-                        content: '""',
-                        position: "absolute",
-                        top: "-10px",
-                        left: "-10px",
-                        right: "-10px",
-                        bottom: "-10px",
-                        borderRadius: "full",
-                        bg: "blue.200",
-                        opacity: 0.3,
-                        filter: "blur(20px)",
-                      }}
-                    >
-                      <Icon
-                        as={FaChalkboardTeacher}
-                        boxSize={{ base: "60px", md: "80px" }}
-                        color="white"
-                        filter="drop-shadow(0 4px 8px rgba(0,0,0,0.2))"
-                      />
-                    </Box>
-                    {/* Floating decoration */}
-                    <motion.div
-                      style={{
-                        position: "absolute",
-                        top: "-20px",
-                        right: "-20px",
-                      }}
-                      animate={{
-                        y: [0, -10, 0],
-                        rotate: [0, 5, -5, 0],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      <Box
-                        w="60px"
-                        h="60px"
-                        bg="orange.400"
-                        borderRadius="full"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        boxShadow="lg"
-                      >
-                        <Icon as={FaSearch} boxSize="30px" color="yellow.700" />
-                      </Box>
-                    </motion.div>
-                  </Box>
-
-                  {/* Text Content */}
-                  <VStack spacing={4} align="center">
-                    <Heading
-                      size={{ base: "lg", md: "xl" }}
-                      color="blue.500"
-                      fontWeight="bold"
-                      lineHeight="shorter"
-                    >
-                      لم تقم بالاشتراك مع أي محاضرين بعد! 👨‍🏫
-                    </Heading>
-                    
-                    <Text
-                      fontSize={{ base: "md", md: "lg" }}
-                      color={emptyStateParagraphColor}
-                      maxW="400px"
-                      lineHeight="tall"
-                    >
-                      ابدأ رحلتك التعليمية الآن! ابحث عن محاضرك المفضل واشترك معه لتحصل على أفضل تجربة تعليمية
-                    </Text>
-                  </VStack>
-
-                  {/* Action Button */}
-                  <Button
-                    as={Link}
-                    to="/teachers"
-                    size="lg"
-                    colorScheme="blue"
-                    bgGradient="linear(135deg, blue.400, blue.600)"
-                    color="white"
-                    borderRadius="xl"
-                    px={8}
-                    py={6}
-                    fontSize="md"
-                    fontWeight="bold"
-                    boxShadow="lg"
-                    _hover={{
-                      bgGradient: "linear(135deg, blue.600, purple.600)",
-                      transform: "translateY(-2px)",
-                      boxShadow: "xl",
-                    }}
-                    _active={{
-                      transform: "translateY(0px)",
-                    }}
-                    transition="all 0.2s ease"
-                    leftIcon={<Icon as={FaSearch} />}
-                    rightIcon={<Icon as={FaChalkboardTeacher} />}
-                  >
-                    ابحث عن محاضرك
-                  </Button>
-
-                
-                </VStack>
-              </Box>
-            </motion.div>
-          </Center>
+      <Container maxW="container.xl" px={4}>
+        <Box mt="-6" position="relative" zIndex="2">
+          {searchBar}
         </Box>
-      )}
+        {sectionTitleRow}
+        {contentBlock}
+      </Container>
     </Box>
   );
 };
