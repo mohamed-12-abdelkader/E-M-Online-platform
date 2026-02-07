@@ -152,19 +152,12 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
 
   const studentLinks = [
     { to: "/profile", Icon: MdPerson, label: "الملف الشخصي" },
-    { to: "/challenge_EM_Academy", Icon: FaFistRaised, label: "تحدي Next" },
+
     { to: "/exam_grades", Icon: MdGrading, label: "درجات الامتحانات" },
     { to: "/lectures_taple", Icon: MdSchedule, label: " جدول المحاضرات" },
     { to: "/teachers", Icon: MdSearch, label: "ابحث عن محاضرك" },
     { to: "/my-teachers", Icon: MdPeople, label: "محاضرينى" },
-    { to: "/view_exams", Icon: MdAssessment, label: "امتحانات المنصة" },
-    { to: "/my_courses", Icon: MdMenuBook, label: "كورساتي" },
-    { to: "/question_bank", Icon: MdQuestionAnswer, label: "بنك الأسئلة" },
-    { to: "/results", Icon: MdAssessment, label: "نتائج الامتحانات" },
-    { to: "/competitions", Icon: MdStars, label: "المسابقات" },
-    { to: "/the_Firsts", Icon: MdMilitaryTech, label: "أوائل المسابقات" },
-    { to: "/save_posts", Icon: MdBookmark, label: "المنشورات المحفوظة" },
-    { to: "/wallet", Icon: MdAccountBalanceWallet, label: "محفظة الطالب" },
+
     { to: "/leagues", Icon: MdLeaderboard, label: "الدوريات" },
   ];
 

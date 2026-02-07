@@ -25,6 +25,7 @@ import { MdCancelPresentation } from "react-icons/md";
 import { FaFileVideo, FaSearch } from "react-icons/fa";
 import baseUrl from "../../api/baseUrl";
 import ScrollToTop from "../../components/scollToTop/ScrollToTop";
+import BrandLoadingScreen from "../../components/loading/BrandLoadingScreen";
 import TeacherInfo from "../../components/teacher/TeacherInfo";
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input as ChakraInput } from "@chakra-ui/react";
 
@@ -71,52 +72,7 @@ const TeacherDetails = () => {
   }, [id, token]);
 
   if (loading) {
-    return (
-      <Box minH="100vh" bg={bgColor} dir="rtl" className="mb-[100px]">
-        <Container maxW="container.xl" px={{ base: 4, md: 6 }} pt={6} pb={4}>
-          <Box borderRadius="2xl" overflow="hidden" bg={cardBg} borderWidth="1px" borderColor={cardBorder}>
-            <Box h="4" bgGradient="linear(to-r, blue.400, blue.500)" />
-            <Flex p={8} gap={8} direction={{ base: "column", lg: "row" }} align="center">
-              <VStack flex={1} align={{ base: "center", lg: "flex-start" }} spacing={4}>
-                <Box h="10" w="64" bg="gray.200" _dark={{ bg: "gray.600" }} borderRadius="lg" />
-                <Box h="10" w="40" bg="orange.200" _dark={{ bg: "orange.800" }} borderRadius="xl" />
-                <Box h="20" w="full" maxW="400px" bg="gray.200" _dark={{ bg: "gray.600" }} borderRadius="md" />
-              </VStack>
-              <Box w={{ base: "200px", md: "280px" }} h={{ base: "200px", md: "280px" }} borderRadius="full" bg="gray.200" _dark={{ bg: "gray.600" }} />
-            </Flex>
-          </Box>
-        </Container>
-        <Container maxW="container.xl" px={{ base: 4, md: 6 }} py={8}>
-          <Box
-            p={5}
-            borderRadius="2xl"
-            bg={sectionBg}
-            borderWidth="1px"
-            borderColor={sectionBorder}
-            mb={6}
-          >
-            <Flex align="center" gap={3} mb={4}>
-              <Box w="12" h="12" borderRadius="xl" bg="blue.200" _dark={{ bg: "blue.700" }} />
-              <Box h="6" w="48" bg="gray.200" _dark={{ bg: "gray.600" }} borderRadius="md" />
-            </Flex>
-            <Box h="12" w="full" maxW="400px" bg="gray.200" _dark={{ bg: "gray.600" }} borderRadius="xl" />
-          </Box>
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-            {[1, 2, 3].map((i) => (
-              <Card key={i} bg={cardBg} borderRadius="2xl" overflow="hidden" borderWidth="1px" borderColor={cardBorder}>
-                <Box h="200px" bg="gray.200" _dark={{ bg: "gray.600" }} />
-                <Box p={5}>
-                  <Box h="5" w="80%" bg="gray.200" _dark={{ bg: "gray.600" }} borderRadius="md" mb={2} />
-                  <Box h="4" w="60%" bg="gray.200" _dark={{ bg: "gray.600" }} borderRadius="md" mb={4} />
-                  <Box h="10" w="full" bg="gray.200" _dark={{ bg: "gray.600" }} borderRadius="xl" />
-                </Box>
-              </Card>
-            ))}
-          </SimpleGrid>
-        </Container>
-        <ScrollToTop />
-      </Box>
-    );
+    return <BrandLoadingScreen />;
   }
 
   if (error || !data || !data.teacher) {

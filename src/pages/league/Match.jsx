@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import baseUrl from '../../api/baseUrl'
 import UserType from '../../Hooks/auth/userType'
 import ScrollToTop from '../../components/scollToTop/ScrollToTop'
+import BrandLoadingScreen from '../../components/loading/BrandLoadingScreen'
 
 const Match = () => {
   const { id } = useParams()
@@ -300,25 +301,18 @@ const Match = () => {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="flex items-center space-x-3 space-x-reverse">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-          <span className="text-lg text-slate-600">جارِ تحميل تفاصيل المباراة...</span>
-        </div>
-      </div>
-    )
+    return <BrandLoadingScreen />
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md mx-4">
-          <div className="flex items-center">
-            <svg className="w-5 h-5 text-red-400 ml-3" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <span className="text-red-700">{error}</span>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-[100px] pb-12 flex items-center justify-center" dir="rtl">
+        <div className="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 rounded-2xl p-6 max-w-md mx-4 shadow-lg">
+          <div className="flex items-center justify-center flex-col gap-3">
+            <span className="text-red-600 dark:text-red-400 font-semibold">{error}</span>
+            <Link to="/leagues" className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium">
+              العودة للدوريات
+            </Link>
           </div>
         </div>
       </div>
@@ -327,10 +321,12 @@ const Match = () => {
 
   if (!matchData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-xl font-semibold text-slate-700 mb-2">المباراة غير موجودة</h3>
-          <Link to="/leagues" className="text-indigo-600 hover:text-indigo-700">العودة للدوريات</Link>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-[100px] pb-12 flex items-center justify-center" dir="rtl">
+        <div className="text-center bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700 shadow-lg">
+          <h3 className="text-xl font-semibold text-slate-700 dark:text-gray-200 mb-4">المباراة غير موجودة</h3>
+          <Link to="/leagues" className="inline-block px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium">
+            العودة للدوريات
+          </Link>
         </div>
       </div>
     )
@@ -339,18 +335,19 @@ const Match = () => {
   const available = isAvailableNow(matchData)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-40">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-[72px]" dir="rtl">
+      {/* Header - براند */}
+      <div className="bg-white dark:bg-gray-800 backdrop-blur-sm border-b border-slate-200 dark:border-gray-700 sticky top-[72px] z-40">
+        <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-orange-500" />
         <div className="max-w-6xl mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 space-x-reverse">
-              <Link to={`/league/${matchData.league_id}`} className="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="عودة للدوري">
-                <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <Link to={`/league/${matchData.league_id}`} className="p-2 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="عودة للدوري">
+                <svg className="w-6 h-6 text-slate-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </Link>
-              <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <div className="w-11 h-11 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
@@ -372,14 +369,15 @@ const Match = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 backdrop-blur-sm border border-slate-200 dark:border-gray-700 rounded-2xl shadow-md overflow-hidden">
+          <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-orange-500" />
           {/* Image Section */}
           <div className="relative h-[260px] md:h-[360px] overflow-hidden">
             {matchData.image_url ? (
               <img src={matchData.image_url} alt={matchData.name} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                <svg className="w-14 h-14 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-full h-full bg-gradient-to-r from-blue-100 to-orange-100 dark:from-blue-900/30 dark:to-orange-900/30 flex items-center justify-center">
+                <svg className="w-14 h-14 text-blue-300 dark:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
@@ -436,7 +434,7 @@ const Match = () => {
                 العودة للدوري
               </Link>
               {available && matchData.is_visible && !matchData.is_ended && (
-                <button className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-orange-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
                   ابدأ الآن
                 </button>
               )}
@@ -452,7 +450,7 @@ const Match = () => {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setShowBulkForm(v => !v)} 
-                  className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700"
+                  className="px-3 py-1.5 bg-blue-500 text-white rounded-xl text-sm hover:bg-blue-600"
                 >
                   إضافة نص حر
                 </button>
@@ -464,7 +462,7 @@ const Match = () => {
                 </button>
                 <button 
                   onClick={() => setShowImageForm(v => !v)} 
-                  className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700"
+                  className="px-3 py-1.5 bg-orange-500 text-white rounded-xl text-sm hover:bg-orange-600"
                 >
                   إضافة صور
                 </button>
@@ -488,13 +486,13 @@ const Match = () => {
                     <textarea
                       value={bulkText}
                       onChange={(e) => setBulkText(e.target.value)}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={6}
                       placeholder={"السؤال الأول؟\nA) الخيار الأول\nB) الخيار الثاني\nC) الخيار الثالث\nD) الخيار الرابع\n\nالسؤال الثاني؟\nA) الخيار الأول\nB) الخيار الثاني\nC) الخيار الثالث\nD) الخيار الرابع"}
                     />
                     <div className="mt-3 flex items-center justify-end gap-2">
                       <button onClick={() => setShowBulkForm(false)} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700">إلغاء</button>
-                      <button onClick={handleCreateBulk} disabled={creatingBulk} className="px-5 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50">
+                      <button onClick={handleCreateBulk} disabled={creatingBulk} className="px-5 py-2 bg-blue-500 text-white rounded-xl disabled:opacity-50 hover:bg-blue-600">
                         {creatingBulk ? 'جارٍ الإضافة...' : 'إضافة'}
                       </button>
                     </div>
@@ -560,7 +558,7 @@ const Match = () => {
                         }
                         setSelectedImages(files)
                       }}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                     {selectedImages.length > 0 && (
                       <div className="mt-3">
@@ -582,7 +580,7 @@ const Match = () => {
                     )}
                     <div className="mt-3 flex items-center justify-end gap-2">
                       <button onClick={() => { setShowImageForm(false); setSelectedImages([]); }} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700">إلغاء</button>
-                      <button onClick={handleUploadImages} disabled={uploadingImages || selectedImages.length === 0} className="px-5 py-2 bg-purple-600 text-white rounded-lg disabled:opacity-50">
+                      <button onClick={handleUploadImages} disabled={uploadingImages || selectedImages.length === 0} className="px-5 py-2 bg-orange-500 text-white rounded-xl disabled:opacity-50 hover:bg-orange-600">
                         {uploadingImages ? 'جارٍ الرفع...' : 'رفع الصور'}
                       </button>
                     </div>
@@ -624,7 +622,7 @@ const Match = () => {
                               </div>
                               <div className="flex items-center justify-end gap-2">
                                 <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700">إلغاء</button>
-                                <button onClick={saveEdit} disabled={savingEdit} className="px-5 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50">{savingEdit ? 'جارٍ الحفظ...' : 'حفظ'}</button>
+                                <button onClick={saveEdit} disabled={savingEdit} className="px-5 py-2 bg-blue-500 text-white rounded-xl disabled:opacity-50 hover:bg-blue-600">{savingEdit ? 'جارٍ الحفظ...' : 'حفظ'}</button>
                               </div>
                             </div>
                           ) : (
@@ -650,7 +648,7 @@ const Match = () => {
                                   )}
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
-                                  <button onClick={() => startEdit(q)} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm hover:bg-indigo-100">تعديل</button>
+                                  <button onClick={() => startEdit(q)} className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded-xl text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50">تعديل</button>
                                   <button onClick={() => setDeletingId(q.id)} className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100">حذف</button>
                                   <label className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200 cursor-pointer">
                                     رفع صورة
@@ -760,7 +758,7 @@ const Match = () => {
                               const isCurrent = idx === studentIndex
                               const isAnswered = !!selectedAnswers[qq.id]
                               return (
-                                <button key={qq.id} onClick={() => setStudentIndex(idx)} className={`w-8 h-8 rounded-lg text-xs font-semibold border transition-all flex items-center justify-center ${isCurrent ? 'bg-indigo-600 text-white border-indigo-600 shadow' : isAnswered ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`}>
+                                <button key={qq.id} onClick={() => setStudentIndex(idx)} className={`w-8 h-8 rounded-lg text-xs font-semibold border transition-all flex items-center justify-center ${isCurrent ? 'bg-blue-500 text-white border-blue-500 shadow' : isAnswered ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-700' : 'bg-white dark:bg-gray-800 text-slate-700 dark:text-gray-200 border-slate-300 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-700'}`}>
                                   {isAnswered ? (
                                     <svg className={`w-4 h-4 ${isCurrent ? 'text-white' : 'text-emerald-600'}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4A1 1 0 014.707 9.293L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
                                   ) : (
@@ -793,14 +791,14 @@ const Match = () => {
                                   key={idx}
                                   type="button"
                                   onClick={() => handleSelectOption(q.id, letter)}
-                                  className={`group text-right px-4 py-3 rounded-xl border text-sm transition-all flex items-center justify-between hover:-translate-y-0.5 ${isSelected ? 'bg-gradient-to-br from-indigo-50 to-violet-50 border-indigo-300 text-indigo-900 ring-2 ring-indigo-300 shadow' : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50'}`}
+                                  className={`group text-right px-4 py-3 rounded-xl border text-sm transition-all flex items-center justify-between hover:-translate-y-0.5 ${isSelected ? 'bg-gradient-to-r from-blue-50 to-orange-50 dark:from-blue-900/20 dark:to-orange-900/20 border-blue-300 dark:border-blue-600 text-blue-900 dark:text-blue-100 ring-2 ring-blue-300 dark:ring-blue-600 shadow' : 'bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-600 text-slate-800 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700'}`}
                                 >
                                   <span className="flex items-start gap-3">
-                                    <span className={`mt-0.5 inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold border ${isSelected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-700 border-slate-200 group-hover:bg-slate-200'}`}>{letter}</span>
+                                    <span className={`mt-0.5 inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold border ${isSelected ? 'bg-blue-500 text-white border-blue-500' : 'bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-300 border-slate-200 dark:border-gray-600 group-hover:bg-slate-200 dark:group-hover:bg-gray-600'}`}>{letter}</span>
                                     <span className="leading-6">{opt}</span>
                                   </span>
                                   {isSelected ? (
-                                    <svg className="w-5 h-5 text-indigo-600" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4A1 1 0 014.707 9.293L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                                    <svg className="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4A1 1 0 014.707 9.293L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
                                   ) : (
                                     <span className="w-5 h-5 rounded-full border border-slate-300"></span>
                                   )}
@@ -817,7 +815,7 @@ const Match = () => {
                             <div className="flex items-center gap-2">
                               <button onClick={() => setStudentIndex((i) => Math.min(total - 1, i + 1))} disabled={studentIndex >= total - 1} className="px-4 py-2 rounded-xl bg-slate-200 text-slate-900 disabled:opacity-50 hover:bg-slate-300">التالي</button>
                               {allAnswered && (
-                                <button onClick={handleSubmitAnswers} disabled={submittingSolve} className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium shadow-lg hover:shadow-xl disabled:opacity-50">
+                                <button onClick={handleSubmitAnswers} disabled={submittingSolve} className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-orange-500 text-white font-medium shadow-lg hover:shadow-xl disabled:opacity-50">
                                   {submittingSolve ? 'جارِ الإرسال...' : 'إرسال الإجابات'}
                                 </button>
                               )}

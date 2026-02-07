@@ -48,10 +48,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 const MotionCard = motion(Card);
 const MotionBox = motion(Box);
 
-const MyCourses = ({ embedded = false }) => {
+const MyCourses = ({ embedded = false, onLoadingChange }) => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (typeof onLoadingChange === "function") onLoadingChange(loading);
+  }, [loading, onLoadingChange]);
 
   // QR Scanner States
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);

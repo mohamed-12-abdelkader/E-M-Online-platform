@@ -56,6 +56,7 @@ import {
 import { FaCheckCircle, FaTimesCircle, FaBookOpen, FaGraduationCap, FaChartLine, FaUserGraduate } from "react-icons/fa";
 import { FiArrowLeft, FiBook, FiBarChart2, FiAward, FiClock } from "react-icons/fi";
 import baseUrl from "../../api/baseUrl";
+import BrandLoadingScreen from "../../components/loading/BrandLoadingScreen";
 import { useParams, useNavigate } from "react-router-dom";
 import UserType from "../../Hooks/auth/userType";
 
@@ -133,31 +134,7 @@ const StudentReport = () => {
   };
 
   if (loading) {
-    return (
-      <Box minH="100vh" bg={bgGradient} pt="100px" pb={12}>
-        <Container maxW="7xl">
-          <Center minH="70vh">
-            <VStack spacing={6}>
-              <Spinner
-                size="xl"
-                thickness="4px"
-                speed="0.65s"
-                color="white"
-                emptyColor="whiteAlpha.300"
-              />
-              <VStack spacing={2}>
-                <Text fontSize="xl" fontWeight="bold" color="white">
-                  جاري تحميل التقرير...
-                </Text>
-                <Text fontSize="sm" color="whiteAlpha.800">
-                  يرجى الانتظار قليلاً
-                </Text>
-              </VStack>
-            </VStack>
-          </Center>
-        </Container>
-      </Box>
-    );
+    return <BrandLoadingScreen />;
   }
 
   if (error || !report) {

@@ -47,6 +47,7 @@ import {
 } from "react-icons/ai";
 import { CircularProgress, CircularProgressLabel } from "@chakra-ui/react";
 import baseUrl from "../../api/baseUrl";
+import BrandLoadingScreen from "../../components/loading/BrandLoadingScreen";
 import { useParams } from "react-router-dom";
 import UserType from "../../Hooks/auth/userType";
 
@@ -1200,26 +1201,7 @@ const ComprehensiveExam = () => {
   };
 
   if (loading) {
-    return (
-      <Box minH="100vh" bg={pageBg} pt="100px" pb={10} dir="rtl">
-        <Container maxW="container.md">
-          <Box
-            p={8}
-            borderRadius="2xl"
-            bg={cardBg}
-            borderWidth="1px"
-            borderColor={cardBorder}
-            textAlign="center"
-            boxShadow="lg"
-          >
-            <Spinner size="xl" color="blue.500" thickness="4px" />
-            <Text mt={4} color={headingColor} fontWeight="medium">
-              جاري تحميل بيانات الامتحان...
-            </Text>
-          </Box>
-        </Container>
-      </Box>
-    );
+    return <BrandLoadingScreen />;
   }
 
   if (error) {

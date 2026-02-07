@@ -48,6 +48,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import { io } from "socket.io-client";
 import MyCourses from "../../components/courses/MyCourses";
 import MyTeacher from "../myTeacher/MyTeacher";
+import BrandLoadingScreen from "../../components/loading/BrandLoadingScreen";
 
 const MotionBox = motion(Box);
 const MotionCard = motion(Card);
@@ -75,6 +76,10 @@ const HomePage = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [activationResult, setActivationResult] = useState(null);
+
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [teachersLoading, setTeachersLoading] = useState(true);
+  const sectionsLoading = coursesLoading || teachersLoading;
 
   const authHeader = useMemo(
     () => ({
@@ -397,8 +402,8 @@ const HomePage = () => {
       desc: "مجتمع طلابي متفاعل",
     },
     {
-      name: "كورساتي",
-      href: "/my_courses",
+      name: "محاضريني",
+      href: "/my_teachers",
       icon: FaBookOpen,
       iconBg: "blue.500",
       desc: "تابع دروسك وتقدمك",
@@ -639,10 +644,13 @@ const HomePage = () => {
         </SimpleGrid>
 
         {/* 3. كورساتي + محاضروك — سكاشن موحّدة مع البراند */}
-        <VStack width="100%" align="stretch" spacing={10}>
-          <MyCourses embedded />
-          <MyTeacher embedded />
-        </VStack>
+        <Box position="relative" width="100%">
+          {sectionsLoading && <BrandLoadingScreen />}
+          <VStack width="100%" align="stretch" spacing={10}>
+            <MyCourses embedded onLoadingChange={setCoursesLoading} />
+            <MyTeacher embedded onLoadingChange={setTeachersLoading} />
+          </VStack>
+        </Box>
       </Container>
 
       {/* --- Modals --- */}

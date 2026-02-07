@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Heading,
@@ -48,10 +48,15 @@ const fuzzySearch = (query, text) => {
   return Math.min(score, 100);
 };
 
-const MyTeacher = ({ embedded = false }) => {
+const MyTeacher = ({ embedded = false, onLoadingChange }) => {
   const [loading, teachers, error] = useGitMyTeacher();
   const [loadingAll, allTeachers] = useGitTeacherByToken();
   const [searchQuery, setSearchQuery] = useState("");
+
+  const isLoading = loading || loadingAll;
+  useEffect(() => {
+    if (typeof onLoadingChange === "function") onLoadingChange(isLoading);
+  }, [isLoading, onLoadingChange]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchClicked, setSearchClicked] = useState(false);
 

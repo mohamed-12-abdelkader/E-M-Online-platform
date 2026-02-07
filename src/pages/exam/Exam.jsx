@@ -7,6 +7,7 @@ import {
 import { AiFillEdit, AiFillDelete, AiFillCheckCircle, AiOutlineCheckCircle, AiOutlineCloseCircle, AiFillStar } from "react-icons/ai";
 import { CircularProgress, CircularProgressLabel } from "@chakra-ui/react";
 import baseUrl from "../../api/baseUrl";
+import BrandLoadingScreen from "../../components/loading/BrandLoadingScreen";
 import { useParams } from "react-router-dom";
 import UserType from "../../Hooks/auth/userType";
 import {
@@ -213,29 +214,7 @@ const Exam = () => {
   };
 
   if (loading) {
-    return (
-      <Center minH="70vh">
-        <Box
-          p={10}
-          borderRadius="2xl"
-          boxShadow="2xl"
-          bgGradient="linear(to-br, blue.50, white)"
-          border="2px solid #90cdf4"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          minW={{ base: '90vw', md: '400px' }}
-        >
-          <FaBookOpen size={54} color="#3182ce" style={{ marginBottom: 16, animation: 'spin 2s linear infinite' }} />
-          <Spinner size="xl" color="blue.500" thickness="6px" speed="0.7s" mb={6} />
-          <Text mt={2} fontSize="xl" color="blue.700" fontWeight="bold">
-            جاري تحميل أسئلة الامتحان...
-          </Text>
-        </Box>
-        <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
-      </Center>
-    );
+    return <BrandLoadingScreen />;
   }
 
   if (error) {

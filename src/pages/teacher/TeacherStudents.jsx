@@ -49,6 +49,7 @@ import { BiSearch } from "react-icons/bi";
 import { FiCheckCircle, FiBook, FiUser } from "react-icons/fi";
 import { FaUserGraduate } from "react-icons/fa";
 import baseUrl from "../../api/baseUrl";
+import BrandLoadingScreen from "../../components/loading/BrandLoadingScreen";
 import { useNavigate } from "react-router-dom";
 import UserType from "../../Hooks/auth/userType";
 
@@ -194,20 +195,7 @@ const TeacherStudents = () => {
   });
 
   if (loading) {
-    return (
-      <Box minH="100vh" bg={bgColor} pt="100px" pb={12}>
-        <Container maxW="7xl">
-          <Center minH="70vh">
-            <VStack spacing={4}>
-              <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
-              <Text fontSize="lg" color={subTextColor}>
-                جاري تحميل قائمة الطلاب...
-              </Text>
-            </VStack>
-          </Center>
-        </Container>
-      </Box>
-    );
+    return <BrandLoadingScreen />;
   }
 
   if (error) {

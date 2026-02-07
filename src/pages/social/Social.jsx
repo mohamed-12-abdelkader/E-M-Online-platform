@@ -39,6 +39,7 @@ import UserType from '../../Hooks/auth/userType'
 import { io } from 'socket.io-client'
 import img from "../../../public/Picsart_25-08-26_23-28-39-014.png"
 import ScrollToTop from '../../components/scollToTop/ScrollToTop'
+import BrandLoadingScreen from '../../components/loading/BrandLoadingScreen'
 
 // Function to convert URLs in text to clickable links
 const linkifyText = (text) => {
@@ -1067,7 +1068,7 @@ const Social = () => {
 
         {/* Feed */}
         {loading ? (
-          <Flex align='center' justify='center' py={16}><Spinner color='teal.500' /></Flex>
+          <BrandLoadingScreen />
         ) : posts.length === 0 ? (
           <Text textAlign='center' color={useColorModeValue('gray.600','gray.400')}>لا توجد منشورات بعد</Text>
         ) : (
