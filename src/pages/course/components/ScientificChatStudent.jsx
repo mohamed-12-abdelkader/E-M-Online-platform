@@ -21,15 +21,19 @@ import {
 import { FaRobot, FaPaperPlane, FaUserGraduate, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import baseUrl from "../../../api/baseUrl";
 
+const HISTORY_PAGE_SIZE = 20;
+
 /**
- * شات الدعم العلمي للطالب - نفس الصفحة (تبويب الدعم العلمي)
- * يتوافق مع الـ doc: POST ask + GET history
- * - جلب سجل المحادثة (GET /courses/:courseId/history)
- * - طرح سؤال (POST /courses/:courseId/ask) وعرض الإجابة + retrieved_chunks اختياري
+ * شات الدعم العلمي للطالب
+ * يتوافق مع Scientific Chatbot API - Student:
+ * - GET  /api/scientific-chatbot/courses/:courseId/history?limit=20&beforeId=  — سجل المحادثة (أحدث لأقدم)
+ * - POST /api/scientific-chatbot/courses/:courseId/ask { question }           — طرح سؤال، الاستجابة: answer + retrieved_chunks
  */
 const ScientificChatStudent = ({ courseId, token }) => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
+  const [hasMoreHistory, setHasMoreHistory] = useState(true);
   const [sending, setSending] = useState(false);
   const [questionInput, setQuestionInput] = useState("");
   const [error, setError] = useState(null);
@@ -109,10 +113,17 @@ const ScientificChatStudent = ({ courseId, token }) => {
         err?.message ||
         "فشل في الحصول على الإجابة";
       setError(msg);
-      if (status === 404) {
+      if (status === 400) {
+        toast({
+          title: "السؤال مطلوب",
+          description: msg || "يرجى كتابة سؤال غير فارغ.",
+          status: "warning",
+          isClosable: true,
+        });
+      } else if (status === 404) {
         toast({
           title: "لا يوجد محتوى علمي",
-          description: "هذا الكورس لا يحتوي على محتوى علمي بعد. اطلب من المدرس رفع المواد.",
+          description: msg || "هذا الكورس لا يحتوي على محتوى مرفوع بعد. اطلب من المدرس رفع المواد.",
           status: "warning",
           isClosable: true,
         });
@@ -243,7 +254,7 @@ const ScientificChatStudent = ({ courseId, token }) => {
                             <VStack align="stretch" gap={2} mt={2}>
                               {item.retrieved_chunks.map((chunk, idx) => (
                                 <Box
-                                  key={chunk.id || idx}
+                                  key={chunk.file_id != null ? `f${chunk.file_id}-${chunk.chunk_index ?? idx}` : idx}
                                   fontSize="xs"
                                   p={2}
                                   bg={cardBg}
@@ -251,14 +262,23 @@ const ScientificChatStudent = ({ courseId, token }) => {
                                   borderWidth="1px"
                                   borderColor={borderColor}
                                 >
-                                  <Flex gap={2} mb={1}>
-                                    {chunk.similarity_score != null && (
-                                      <Badge size="sm" colorScheme="green">
-                                        {(chunk.similarity_score * 100).toFixed(0)}%
-                                      </Badge>
-                                    )}
-                                  </Flex>
-                                  <Text noOfLines={4}>{chunk.content}</Text>
+                                  {(chunk.file_id != null || chunk.chunk_index != null) && (
+                                    <Flex gap={2} mb={1}>
+                                      {chunk.file_id != null && (
+                                        <Badge size="sm" colorScheme="blue">
+                                          ملف #{chunk.file_id}
+                                        </Badge>
+                                      )}
+                                      {chunk.chunk_index != null && (
+                                        <Badge size="sm" colorScheme="gray">
+                                          جزء {chunk.chunk_index + 1}
+                                        </Badge>
+                                      )}
+                                    </Flex>
+                                  )}
+                                  <Text noOfLines={6} whiteSpace="pre-wrap">
+                                    {chunk.chunk_text ?? chunk.content ?? "—"}
+                                  </Text>
                                 </Box>
                               ))}
                             </VStack>
@@ -270,6 +290,18 @@ const ScientificChatStudent = ({ courseId, token }) => {
                 </HStack>
               </Box>
             ))}
+            {hasMoreHistory && history.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                colorScheme="blue"
+                onClick={loadMoreHistory}
+                isLoading={historyLoadingMore}
+                loadingText="جاري تحميل المزيد..."
+              >
+                تحميل رسائل أقدم
+              </Button>
+            )}
             <div ref={messagesEndRef} />
           </VStack>
         )}

@@ -29,6 +29,7 @@ import {
   MdPublic,
   MdSchedule,
   MdBook,
+  MdSupportAgent,
 } from "react-icons/md";
 import { FaFistRaised } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
@@ -146,18 +147,18 @@ const Links = ({ isSidebarOpen, setIsSidebarOpen, onClose }) => {
     },
     { to: "/center_groups", Icon: MdGroups, label: "سيستم إدارة السنتر" },
     { to: "/TeacherChat", Icon: MdForum, label: " الرسائل " },
+    { to: "/support-teacher", Icon: MdSupportAgent, label: "الدعم الفني" },
     { to: "/teacher-students", Icon: MdPeople, label: "طلابي" },
     { to: "/social", Icon: MdPublic, label: "EM Social" },
   ];
 
   const studentLinks = [
     { to: "/profile", Icon: MdPerson, label: "الملف الشخصي" },
-
+    { to: "/support", Icon: MdSupportAgent, label: "الدعم الفني" },
     { to: "/exam_grades", Icon: MdGrading, label: "درجات الامتحانات" },
     { to: "/lectures_taple", Icon: MdSchedule, label: " جدول المحاضرات" },
     { to: "/teachers", Icon: MdSearch, label: "ابحث عن محاضرك" },
     { to: "/my-teachers", Icon: MdPeople, label: "محاضرينى" },
-
     { to: "/leagues", Icon: MdLeaderboard, label: "الدوريات" },
   ];
 

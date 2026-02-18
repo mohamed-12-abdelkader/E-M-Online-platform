@@ -59,14 +59,14 @@ const MotionButton = motion(Button);
 const QuestionBank = () => {
   const { id } = useParams();
   const toast = useToast();
-  
+
   // States
   const [questionBank, setQuestionBank] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Form states
   const [formData, setFormData] = useState({
     name: '',
@@ -74,19 +74,19 @@ const QuestionBank = () => {
   });
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  
+
   // Edit states
   const [editingSubject, setEditingSubject] = useState(null);
   const [editFormData, setEditFormData] = useState({
     name: '',
     description: ''
   });
-  
+
   // Loading states
   const [submitLoading, setSubmitLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  
+
   // Modal states
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
@@ -127,59 +127,45 @@ const QuestionBank = () => {
   const [lessonEditLoading, setLessonEditLoading] = useState(false);
   const [lessonDeleteLoading, setLessonDeleteLoading] = useState(false);
 
-  // ألوان مخصصة للثيم الفاتح والداكن
+  // ألوان بسيطة تتناسب مع البراند
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
-  const headerBg = useColorModeValue("white", "gray.800");
-  const headingColor = useColorModeValue("gray.800", "whiteAlpha.900");
-  const textColor = useColorModeValue("gray.600", "gray.400");
   const borderColor = useColorModeValue("gray.200", "gray.700");
-  const accentColor = useColorModeValue("blue.500", "blue.300");
-  const accentLightBg = useColorModeValue("blue.50", "blue.900");
-  
-  // Colors for light/dark mode with blue.500 as primary
-  const pageBg = useColorModeValue("blue.50", "gray.900");
   const cardBackground = useColorModeValue("white", "gray.800");
-  const cardBorder = useColorModeValue("blue.100", "blue.900");
-  const cardHoverBorder = useColorModeValue("blue.300", "blue.700");
-  const textPrimary = useColorModeValue("blue.600", "blue.300");
+  const cardBorder = useColorModeValue("gray.200", "gray.700");
+  const textPrimary = useColorModeValue("gray.800", "gray.200");
   const textSecondary = useColorModeValue("gray.600", "gray.400");
-  const inputBg = useColorModeValue("blue.50", "gray.700");
-  const inputBorder = useColorModeValue("blue.200", "blue.800");
-  const inputHoverBorder = useColorModeValue("blue.300", "blue.700");
-  const inputFocusBorder = useColorModeValue("blue.500", "blue.400");
-  const modalBg = useColorModeValue("white", "gray.800");
-  const modalBorder = useColorModeValue("blue.200", "blue.900");
-  const modalHeaderBg = useColorModeValue("blue.500", "blue.600");
-  const modalFooterBg = useColorModeValue("blue.50", "gray.700");
   const buttonPrimary = useColorModeValue("blue.500", "blue.400");
   const buttonPrimaryHover = useColorModeValue("blue.600", "blue.500");
-  const buttonSecondary = useColorModeValue("blue.400", "blue.500");
-  const buttonSecondaryHover = useColorModeValue("blue.500", "blue.600");
+  const buttonSecondary = useColorModeValue("orange.500", "orange.400");
+  const buttonSecondaryHover = useColorModeValue("orange.600", "orange.500");
   const iconBg = useColorModeValue("blue.50", "blue.900");
   const iconBorder = useColorModeValue("blue.200", "blue.800");
-  const spinnerColor = useColorModeValue("blue.500", "blue.400");
-  const badgeActiveBg = useColorModeValue("blue.100", "blue.900");
-  const badgeActiveColor = useColorModeValue("blue.700", "blue.300");
-  const buttonHoverShadow = useColorModeValue("0 10px 30px rgba(66, 153, 225, 0.45)", "0 10px 30px rgba(0, 0, 0, 0.5)");
-  const cardShadow = useColorModeValue("0 8px 30px rgba(66, 153, 225, 0.12)", "0 8px 30px rgba(0, 0, 0, 0.3)");
-  const headerShadow = useColorModeValue("0 4px 20px rgba(66, 153, 225, 0.15)", "0 4px 20px rgba(0, 0, 0, 0.3)");
-  const iconShadow = useColorModeValue("0 4px 15px rgba(66, 153, 225, 0.35)", "0 4px 15px rgba(0, 0, 0, 0.4)");
-  const inputShadow = useColorModeValue("0 5px 15px rgba(66, 153, 225, 0.1)", "0 5px 15px rgba(0, 0, 0, 0.2)");
+  const iconShadow = "sm";
+  const inputBg = useColorModeValue("white", "gray.700");
+  const inputBorder = useColorModeValue("gray.300", "gray.600");
   const searchIconColor = useColorModeValue("#4299e1", "#63b3ed");
-  const inputFocusBg = useColorModeValue("blue.100", "gray.600");
-  const accordionHoverBg = useColorModeValue("blue.50", "gray.700");
+  const accordionHoverBg = useColorModeValue("gray.50", "gray.700");
   const lessonCardBg = useColorModeValue("gray.50", "gray.700");
   const lessonCardHoverBg = useColorModeValue("blue.50", "gray.600");
-  const loadingGradient = useColorModeValue("linear(to-b, blue.50 0%, white 50%)", "linear(to-b, gray.900 0%, gray.800 50%)");
+  const badgeActiveBg = useColorModeValue("green.100", "green.900");
+  const badgeActiveColor = useColorModeValue("green.700", "green.300");
+  const cardShadow = "sm";
+  const inputHoverBorder = useColorModeValue("blue.300", "blue.700");
+  const inputFocusBorder = useColorModeValue("blue.500", "blue.400");
+  const inputFocusBg = useColorModeValue("white", "gray.600");
   const focusRingShadow = useColorModeValue("0 0 0 3px rgba(66, 153, 225, 0.2)", "0 0 0 3px rgba(66, 153, 225, 0.3)");
+  const modalBg = useColorModeValue("white", "gray.800");
+  const modalBorder = useColorModeValue("gray.200", "gray.700");
+  const modalHeaderBg = useColorModeValue("blue.500", "blue.600");
+  const modalFooterBg = useColorModeValue("gray.50", "gray.700");
 
   // Fetch question bank data
   const fetchQuestionBankData = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = localStorage.getItem("token");
       if (!token) {
         toast({
@@ -199,7 +185,7 @@ const QuestionBank = () => {
       });
 
       console.log("Question Bank API Response:", response.data);
-      
+
       if (response.data.success) {
         setQuestionBank(response.data.data.question_bank);
         setSubjects(response.data.data.subjects);
@@ -217,7 +203,7 @@ const QuestionBank = () => {
   const createSubject = async (formData) => {
     try {
       setSubmitLoading(true);
-      
+
       const token = localStorage.getItem("token");
       if (!token) {
         toast({
@@ -233,13 +219,13 @@ const QuestionBank = () => {
       const submitFormData = new FormData();
       submitFormData.append("name", formData.name);
       submitFormData.append("description", formData.description);
-      
+
       if (selectedImage) {
         submitFormData.append("image", selectedImage);
       }
 
       console.log("Creating subject with data:", formData);
-      
+
       const response = await baseUrl.post(`/api/question-banks/${id}/subjects`, submitFormData, {
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -248,7 +234,7 @@ const QuestionBank = () => {
       });
 
       console.log("Create Subject API Response:", response.data);
-      
+
       toast({
         title: "نجح",
         description: "تم إنشاء المادة بنجاح",
@@ -256,11 +242,11 @@ const QuestionBank = () => {
         duration: 3000,
         isClosable: true,
       });
-      
+
       return { success: true, data: response.data };
     } catch (error) {
       console.error("Error creating subject:", error);
-      
+
       const errorMessage = error.response?.data?.message || "حدث خطأ في إنشاء المادة";
       toast({
         title: "خطأ",
@@ -279,7 +265,7 @@ const QuestionBank = () => {
   const updateSubject = async (formData) => {
     try {
       setEditLoading(true);
-      
+
       const token = localStorage.getItem("token");
       if (!token) {
         toast({
@@ -295,13 +281,13 @@ const QuestionBank = () => {
       const submitFormData = new FormData();
       submitFormData.append("name", formData.name);
       submitFormData.append("description", formData.description);
-      
+
       if (selectedImage) {
         submitFormData.append("image", selectedImage);
       }
 
       console.log("Updating subject:", editingSubject.id);
-      
+
       const response = await baseUrl.put(`/api/subjects/${editingSubject.id}`, submitFormData, {
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -310,7 +296,7 @@ const QuestionBank = () => {
       });
 
       console.log("Update Subject API Response:", response.data);
-      
+
       toast({
         title: "نجح",
         description: "تم تحديث المادة بنجاح",
@@ -318,11 +304,11 @@ const QuestionBank = () => {
         duration: 3000,
         isClosable: true,
       });
-      
+
       return { success: true, data: response.data };
     } catch (error) {
       console.error("Error updating subject:", error);
-      
+
       const errorMessage = error.response?.data?.message || "حدث خطأ في تحديث المادة";
       toast({
         title: "خطأ",
@@ -341,7 +327,7 @@ const QuestionBank = () => {
   const deleteSubject = async () => {
     try {
       setDeleteLoading(true);
-      
+
       const token = localStorage.getItem("token");
       if (!token) {
         toast({
@@ -355,7 +341,7 @@ const QuestionBank = () => {
       }
 
       console.log("Deleting subject:", deletingSubject.id);
-      
+
       const response = await baseUrl.delete(`/api/subjects/${deletingSubject.id}`, {
         headers: {
           "Authorization": `Bearer ${token}`
@@ -363,7 +349,7 @@ const QuestionBank = () => {
       });
 
       console.log("Delete Subject API Response:", response.data);
-      
+
       toast({
         title: "نجح",
         description: "تم حذف المادة بنجاح",
@@ -371,11 +357,11 @@ const QuestionBank = () => {
         duration: 3000,
         isClosable: true,
       });
-      
+
       return { success: true, data: response.data };
     } catch (error) {
       console.error("Error deleting subject:", error);
-      
+
       const errorMessage = error.response?.data?.message || "حدث خطأ في حذف المادة";
       toast({
         title: "خطأ",
@@ -520,7 +506,7 @@ const QuestionBank = () => {
   // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.name) {
       toast({
         title: "خطأ في البيانات",
@@ -533,7 +519,7 @@ const QuestionBank = () => {
     }
 
     const result = await createSubject(formData);
-    
+
     if (result.success) {
       onClose();
       resetForm();
@@ -544,7 +530,7 @@ const QuestionBank = () => {
   // Handle edit submit
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!editFormData.name) {
       toast({
         title: "خطأ في البيانات",
@@ -557,7 +543,7 @@ const QuestionBank = () => {
     }
 
     const result = await updateSubject(editFormData);
-    
+
     if (result.success) {
       onEditClose();
       resetEditForm();
@@ -568,7 +554,7 @@ const QuestionBank = () => {
   // Handle delete confirm
   const handleDeleteConfirm = async () => {
     const result = await deleteSubject();
-    
+
     if (result.success) {
       onDeleteClose();
       setDeletingSubject(null);
@@ -913,12 +899,10 @@ const QuestionBank = () => {
 
   if (loading) {
     return (
-      <Flex minH="100vh" bg={pageBg} justify="center" align="center" position="relative" overflow="hidden">
-        <Box position="absolute" inset={0} bgGradient={loadingGradient} opacity={0.9} />
-        <VStack spacing={6} position="relative" zIndex={1} p={8} bg={cardBackground} borderRadius="2xl" boxShadow={cardShadow} borderWidth="1px" borderColor={cardBorder}>
-          <Spinner size="xl" color={buttonPrimary} thickness="3px" />
-          <Text color={textPrimary} fontWeight="600" fontFamily="'Cairo', 'Tajawal', sans-serif">جاري تحميل بنك الأسئلة...</Text>
-          <Text color={textSecondary} fontSize="sm">الرجاء الانتظار</Text>
+      <Flex minH="100vh" bg={bgColor} justify="center" align="center">
+        <VStack spacing={4} p={8} bg={cardBg} borderRadius="xl" shadow="sm">
+          <Spinner size="xl" color="blue.500" thickness="3px" />
+          <Text color="gray.700" fontWeight="600">جاري تحميل بنك الأسئلة...</Text>
         </VStack>
       </Flex>
     );
@@ -926,13 +910,11 @@ const QuestionBank = () => {
 
   if (error) {
     return (
-      <Flex minH="100vh" bg={pageBg} justify="center" align="center" p={4}>
-        <Box textAlign="center" p={8} bg={cardBackground} borderRadius="2xl" boxShadow={cardShadow} borderWidth="2px" borderColor={useColorModeValue("red.200", "red.900")} maxW="md">
-          <Box w="16" h="16" mx="auto" mb={4} borderRadius="full" bg={useColorModeValue("red.50", "red.900")} display="flex" alignItems="center" justifyContent="center">
-            <Icon as={FiX} color="red.500" boxSize={8} />
-          </Box>
-          <Heading size="md" color={textPrimary} mb={2} fontFamily="'Cairo', 'Tajawal', sans-serif">فشل تحميل البيانات</Heading>
-          <Text color={textSecondary} mb={4}>{error}</Text>
+      <Flex minH="100vh" bg={bgColor} justify="center" align="center" p={4}>
+        <Box textAlign="center" p={8} bg={cardBg} borderRadius="xl" shadow="sm" maxW="md">
+          <Icon as={FiX} color="red.500" boxSize={16} mb={4} />
+          <Heading size="md" color="gray.700" mb={2}>فشل تحميل البيانات</Heading>
+          <Text color="gray.600">{error}</Text>
         </Box>
       </Flex>
     );
@@ -953,87 +935,30 @@ const QuestionBank = () => {
   }
 
   return (
-    <Box minH="100vh" bg={pageBg} position="relative">
-      {/* Background */}
-      <Box
-        position="absolute"
-        inset={0}
-        bgGradient={useColorModeValue("linear(to-br, blue.50 0%, white 40%, blue.50 100%)", "linear(to-br, gray.900 0%, gray.800 50%, gray.900 100%)")}
-        opacity={1}
-      />
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        opacity={useColorModeValue(0.04, 0.06)}
-        backgroundImage={useColorModeValue(
-          "radial-gradient(circle at 25px 25px, blue.400 1.5px, transparent 0), radial-gradient(circle at 75px 75px, blue.400 1.5px, transparent 0)",
-          "radial-gradient(circle at 25px 25px, blue.500 1.5px, transparent 0), radial-gradient(circle at 75px 75px, blue.500 1.5px, transparent 0)"
-        )}
-        backgroundSize="80px 80px"
-      />
+    <Box minH="100vh" bg={bgColor}>
 
       {/* Header */}
-      <Box
-        as={motion.header}
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        bg={headerBg}
-        borderBottomWidth="2px"
-        borderBottomColor={cardBorder}
-        boxShadow={headerShadow}
-        position="sticky"
-        top={0}
-        zIndex={10}
-        backdropFilter="blur(8px)"
-      >
-        <Flex justify="space-between" align="center" maxW="1280px" mx="auto" px={{ base: 4, md: 6, lg: 8 }} py={{ base: 4, md: 5 }}>
-          <Flex align="center" gap={{ base: 3, md: 5 }}>
-            <Box
-              w={{ base: "56px", md: "64px" }}
-              h={{ base: "56px", md: "64px" }}
-              bg={buttonPrimary}
-              borderRadius="2xl"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              boxShadow={iconShadow}
-              transition="all 0.25s ease"
-              _hover={{ transform: "scale(1.05)", boxShadow: buttonHoverShadow }}
-            >
-              <Icon as={FiGrid} color="white" boxSize={6} />
-            </Box>
-            <Box>
-              <Heading size={{ base: "lg", md: "xl" }} color={textPrimary} fontWeight="800" fontFamily="'Cairo', 'Tajawal', sans-serif" letterSpacing="-0.02em" lineHeight="1.2">
-                {questionBank.name}
-              </Heading>
-              <Text color={textSecondary} fontSize={{ base: "sm", md: "md" }} mt={0.5} fontWeight="500" fontFamily="'Cairo', 'Tajawal', sans-serif">
-                إدارة المواد والفصول والدروس
-              </Text>
-            </Box>
-          </Flex>
+      <Box bgGradient="linear(to-r, blue.500, orange.500)" py={8} mb={6}>
+        <Flex justify="space-between" align="center" maxW="1280px" mx="auto" px={{ base: 4, md: 8 }}>
+          <VStack align="start" spacing={1}>
+            <Heading size="xl" color="white">
+              {questionBank.name}
+            </Heading>
+            <Text color="whiteAlpha.900" fontSize="md">
+              إدارة المواد والفصول والدروس
+            </Text>
+          </VStack>
 
-          <MotionButton
+          <Button
             leftIcon={<FiPlus />}
-            bg={buttonPrimary}
-            color="white"
+            bg="white"
+            color="blue.500"
             onClick={onOpen}
-            size={{ base: "md", md: "lg" }}
-            borderRadius="xl"
-            boxShadow={iconShadow}
-            _hover={{ bg: buttonPrimaryHover, boxShadow: buttonHoverShadow, transform: "translateY(-2px)" }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            px={{ base: 5, md: 6 }}
-            py={{ base: 5, md: 6 }}
-            fontWeight="bold"
-            fontFamily="'Cairo', 'Tajawal', sans-serif"
+            size="lg"
+            _hover={{ bg: "whiteAlpha.900" }}
           >
             إضافة مادة
-          </MotionButton>
+          </Button>
         </Flex>
       </Box>
 
@@ -1214,142 +1139,250 @@ const QuestionBank = () => {
               )}
             </MotionBox>
           ) : (
-            <Accordion allowToggle allowMultiple defaultIndex={[]} bg={cardBackground} borderRadius="2xl" borderWidth="1px" borderColor={cardBorder} overflow="hidden" boxShadow={cardShadow}>
+            <VStack spacing={4} align="stretch">
               {filteredSubjects.map((subject) => (
-                <AccordionItem key={subject.id} border="none" borderBottomWidth="1px" borderColor={borderColor} _last={{ borderBottom: "none" }}>
-                  {({ isExpanded }) => (
-                    <>
-                      <AccordionButton py={5} px={{ base: 4, md: 6 }} _hover={{ bg: accordionHoverBg }} transition="all 0.2s" borderLeftWidth="4px" borderLeftColor={isExpanded ? "blue.500" : "transparent"}>
-                        <Flex flex={1} align="center" gap={{ base: 3, md: 4 }} direction={{ base: "column", sm: "row" }} textAlign="right" w="full">
-                          <Avatar src={subject.image_url || undefined} name={subject.name} size="lg" borderRadius="xl" bg={buttonPrimary} color="white" flexShrink={0} />
-                          <VStack align="flex-start" spacing={0.5} flex={1} minW={0} w="full">
-                            <HStack justify="space-between" w="full" flexWrap="wrap" gap={2}>
-                              <Heading size="sm" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif" fontWeight="700">
-                                {subject.name}
-                              </Heading>
-                              <Badge bg={subject.is_active ? badgeActiveBg : useColorModeValue("gray.200", "gray.600")} color={subject.is_active ? badgeActiveColor : useColorModeValue("gray.600", "gray.400")} borderRadius="full" px={3} py={0.5} fontSize="xs">
-                                {subject.is_active ? "نشط" : "غير نشط"}
-                              </Badge>
+                <Accordion key={subject.id} allowToggle bg={cardBackground} borderRadius="xl" borderWidth="1px" borderColor={cardBorder} overflow="hidden" shadow={cardShadow}>
+                  <AccordionItem border="none">
+                    {({ isExpanded }) => (
+                      <>
+                        <AccordionButton
+                          py={4}
+                          px={{ base: 4, md: 6 }}
+                          _hover={{ bg: accordionHoverBg }}
+                          transition="all 0.2s"
+                          borderLeftWidth="3px"
+                          borderLeftColor={isExpanded ? "blue.500" : "transparent"}
+                        >
+                          <Flex flex={1} align="center" gap={4} w="full">
+                            {/* صورة المادة */}
+                            <Avatar
+                              src={subject.image_url || undefined}
+                              name={subject.name}
+                              size="md"
+                              borderRadius="lg"
+                              bg="blue.500"
+                              color="white"
+                            />
+
+                            {/* معلومات المادة */}
+                            <VStack align="flex-start" spacing={1} flex={1} minW={0}>
+                              <HStack justify="space-between" w="full">
+                                <Heading size="sm" color={textPrimary} fontWeight="700">
+                                  {subject.name}
+                                </Heading>
+                                <Badge
+                                  colorScheme={subject.is_active ? "green" : "gray"}
+                                  borderRadius="full"
+                                  px={2}
+                                  fontSize="xs"
+                                >
+                                  {subject.is_active ? "نشط" : "غير نشط"}
+                                </Badge>
+                              </HStack>
+
+                              {subject.description && (
+                                <Text fontSize="xs" color={textSecondary} noOfLines={1}>
+                                  {subject.description}
+                                </Text>
+                              )}
+
+                              <HStack spacing={2} fontSize="xs" color={textSecondary}>
+                                <Icon as={FiFolder} />
+                                <Text>{subject.chapters?.length || 0} فصل</Text>
+                                <Text>•</Text>
+                                <Icon as={FiFileText} />
+                                <Text>{(subject.chapters || []).reduce((acc, ch) => acc + (ch.lessons?.length || 0), 0)} درس</Text>
+                              </HStack>
+                            </VStack>
+
+                            {/* أزرار التحكم */}
+                            <HStack spacing={2} onClick={(e) => e.stopPropagation()}>
+                              <IconButton
+                                aria-label="تعديل"
+                                icon={<FiEdit />}
+                                size="sm"
+                                colorScheme="orange"
+                                onClick={() => handleEditClick(subject)}
+                              />
+                              <IconButton
+                                aria-label="حذف"
+                                icon={<FiTrash />}
+                                size="sm"
+                                colorScheme="red"
+                                onClick={() => handleDeleteClick(subject)}
+                              />
+                              <Link to={`/supject/${subject.id}`}>
+                                <Button
+                                  size="sm"
+                                  rightIcon={<FiArrowRight />}
+                                  colorScheme="blue"
+                                >
+                                  عرض الأسئلة
+                                </Button>
+                              </Link>
                             </HStack>
-                            {subject.description && (
-                              <Text fontSize="xs" color={textSecondary} noOfLines={1} fontFamily="'Cairo', 'Tajawal', sans-serif">
-                                {subject.description}
-                              </Text>
-                            )}
-                            <HStack spacing={2} fontSize="xs" color={textSecondary} mt={1}>
-                              <Text>{subject.chapters?.length || 0} فصل</Text>
-                              <Text>·</Text>
-                              <Text>{(subject.chapters || []).reduce((acc, ch) => acc + (ch.lessons?.length || 0), 0)} درس</Text>
-                            </HStack>
-                          </VStack>
-                          <HStack spacing={2} onClick={(e) => e.stopPropagation()} flexShrink={0} flexWrap="wrap">
-                            <IconButton aria-label="تعديل" icon={<FiEdit />} size="sm" bg={buttonSecondary} color="white" borderRadius="lg" onClick={() => handleEditClick(subject)} _hover={{ bg: buttonSecondaryHover }} />
-                            <IconButton aria-label="حذف" icon={<FiTrash />} size="sm" bg={useColorModeValue("red.400", "red.600")} color="white" borderRadius="lg" onClick={() => handleDeleteClick(subject)} _hover={{ opacity: 0.9 }} />
-                            <Link to={`/supject/${subject.id}`}>
-                              <Button size="sm" rightIcon={<FiArrowRight />} bg={buttonPrimary} color="white" borderRadius="lg" _hover={{ bg: buttonPrimaryHover }} fontFamily="'Cairo', 'Tajawal', sans-serif">
-                                عرض الأسئلة
-                              </Button>
-                            </Link>
-                          </HStack>
-                          <AccordionIcon color={textSecondary} fontSize="lg" />
-                        </Flex>
-                      </AccordionButton>
-                      <AccordionPanel pb={6} pt={2} bg={accordionHoverBg} borderTopWidth="1px" borderColor={borderColor} px={{ base: 4, md: 6 }}>
-                        <Flex justify="flex-end" mb={3}>
-                          <Button size="sm" leftIcon={<FiPlus />} bg={buttonPrimary} color="white" borderRadius="lg" onClick={() => openAddChapter(subject)} _hover={{ bg: buttonPrimaryHover }} fontFamily="'Cairo', 'Tajawal', sans-serif">
-                            إضافة فصل جديد
-                          </Button>
-                        </Flex>
-                        {subject.chapters && subject.chapters.length > 0 ? (
-                          <VStack spacing={3} align="stretch">
-                            {subject.chapters.map((chapter) => (
-                              <Accordion key={chapter.id} allowToggle>
-                                <AccordionItem border="none" bg={cardBackground} borderRadius="xl" boxShadow="sm" overflow="hidden" borderWidth="1px" borderColor={borderColor}>
-                                  <AccordionButton py={3} px={4} borderRadius="xl" _hover={{ bg: accordionHoverBg }}>
-                                    <Flex flex={1} align="center" gap={3} w="full">
-                                      <Box p={2} bg={iconBg} borderRadius="lg" color={buttonPrimary}>
-                                        <Icon as={FiFolder} boxSize={4} />
-                                      </Box>
-                                      <VStack align="flex-start" spacing={0} flex={1} minW={0}>
-                                        <Text fontWeight="bold" fontSize="sm" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif">
-                                          {chapter.name}
-                                        </Text>
-                                        {chapter.description && (
-                                          <Text fontSize="xs" color={textSecondary} noOfLines={1}>{chapter.description}</Text>
-                                        )}
-                                        <Text fontSize="xs" color={textSecondary}>{chapter.lessons?.length || 0} درس</Text>
-                                      </VStack>
-                                      <HStack spacing={1} onClick={(e) => e.stopPropagation()} flexShrink={0}>
-                                        <IconButton aria-label="تعديل الفصل" icon={<FiEdit />} size="sm" bg={buttonSecondary} color="white" borderRadius="lg" onClick={() => handleChapterEditClick(chapter)} _hover={{ bg: buttonSecondaryHover }} />
-                                        <IconButton aria-label="حذف الفصل" icon={<FiTrash />} size="sm" bg={useColorModeValue("red.400", "red.600")} color="white" borderRadius="lg" onClick={() => handleChapterDeleteClick(chapter)} _hover={{ opacity: 0.9 }} />
-                                        <Link to={`/chapter/${chapter.id}`}>
-                                          <Button size="sm" rightIcon={<FiArrowRight />} bg={buttonPrimary} color="white" borderRadius="lg" _hover={{ bg: buttonPrimaryHover }} fontFamily="'Cairo', 'Tajawal', sans-serif">
-                                            عرض الدروس
-                                          </Button>
-                                        </Link>
-                                      </HStack>
-                                      <AccordionIcon />
-                                    </Flex>
-                                  </AccordionButton>
-                                  <AccordionPanel pb={4} px={4}>
-                                    <Flex justify="flex-end" mb={2}>
-                                      <Button size="xs" leftIcon={<FiPlus />} bg={buttonPrimary} color="white" borderRadius="lg" onClick={() => openAddLesson(chapter)} _hover={{ bg: buttonPrimaryHover }} fontFamily="'Cairo', 'Tajawal', sans-serif">
-                                        إضافة درس جديد
-                                      </Button>
-                                    </Flex>
-                                    {chapter.lessons && chapter.lessons.length > 0 ? (
-                                      <VStack spacing={2} align="stretch">
-                                        {chapter.lessons.map((lesson) => (
-                                          <Flex
-                                            key={lesson.id}
-                                            p={3}
-                                            bg={lessonCardBg}
-                                            borderRadius="lg"
-                                            align="center"
-                                            gap={3}
-                                            _hover={{ bg: lessonCardHoverBg, borderColor: "blue.300" }}
-                                            borderWidth="1px"
-                                            borderColor="transparent"
-                                            transition="all 0.2s"
-                                          >
-                                            <Icon as={FiFileText} color={buttonPrimary} boxSize={4} flexShrink={0} />
-                                            <Text fontSize="sm" fontWeight="500" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif" flex={1} noOfLines={1}>
-                                              {lesson.name}
-                                            </Text>
-                                            <HStack spacing={1} flexShrink={0} onClick={(e) => e.stopPropagation()}>
-                                              <IconButton aria-label="تعديل الدرس" icon={<FiEdit />} size="xs" bg={buttonSecondary} color="white" borderRadius="md" onClick={() => handleLessonEditClick(lesson)} _hover={{ bg: buttonSecondaryHover }} />
-                                              <IconButton aria-label="حذف الدرس" icon={<FiTrash />} size="xs" bg={useColorModeValue("red.400", "red.600")} color="white" borderRadius="md" onClick={() => handleLessonDeleteClick(lesson)} _hover={{ opacity: 0.9 }} />
-                                              <Link to={`/lesson/${lesson.id}`}>
-                                                <Button size="xs" rightIcon={<FiArrowRight />} bg={buttonPrimary} color="white" borderRadius="md" _hover={{ bg: buttonPrimaryHover }} fontFamily="'Cairo', 'Tajawal', sans-serif">
-                                                  عرض
-                                                </Button>
-                                              </Link>
-                                            </HStack>
-                                          </Flex>
-                                        ))}
-                                      </VStack>
-                                    ) : (
-                                      <Text fontSize="sm" color={textSecondary} textAlign="center" py={4}>
-                                        لا توجد دروس في هذا الفصل
-                                      </Text>
-                                    )}
-                                  </AccordionPanel>
-                                </AccordionItem>
-                              </Accordion>
-                            ))}
-                          </VStack>
-                        ) : (
-                          <Flex direction="column" align="center" justify="center" py={8} color={textSecondary}>
-                            <Icon as={FiFolder} boxSize={8} mb={2} opacity={0.4} />
-                            <Text fontSize="sm" fontFamily="'Cairo', 'Tajawal', sans-serif">لا توجد فصول في هذه المادة بعد</Text>
+
+                            <AccordionIcon color={textSecondary} fontSize="xl" />
                           </Flex>
-                        )}
-                      </AccordionPanel>
-                    </>
-                  )}
-                </AccordionItem>
+                        </AccordionButton>
+                        <AccordionPanel pb={4} pt={2} bg={accordionHoverBg} px={{ base: 4, md: 6 }}>
+                          <Flex justify="flex-end" mb={3}>
+                            <Button
+                              size="sm"
+                              leftIcon={<FiPlus />}
+                              colorScheme="blue"
+                              onClick={() => openAddChapter(subject)}
+                            >
+                              إضافة فصل جديد
+                            </Button>
+                          </Flex>
+
+                          {subject.chapters && subject.chapters.length > 0 ? (
+                            <VStack spacing={3} align="stretch">
+                              {subject.chapters.map((chapter) => (
+                                <Accordion key={chapter.id} allowToggle>
+                                  <AccordionItem
+                                    border="none"
+                                    bg={cardBackground}
+                                    borderRadius="lg"
+                                    shadow="sm"
+                                    overflow="hidden"
+                                  >
+                                    <AccordionButton
+                                      py={3}
+                                      px={4}
+                                      _hover={{ bg: accordionHoverBg }}
+                                    >
+                                      <Flex flex={1} align="center" gap={3} w="full">
+                                        <Box p={2} bg={iconBg} borderRadius="md" color="blue.500">
+                                          <Icon as={FiFolder} boxSize={4} />
+                                        </Box>
+
+                                        <VStack align="flex-start" spacing={0} flex={1} minW={0}>
+                                          <Text fontWeight="600" fontSize="sm" color={textPrimary}>
+                                            {chapter.name}
+                                          </Text>
+                                          {chapter.description && (
+                                            <Text fontSize="xs" color={textSecondary} noOfLines={1}>
+                                              {chapter.description}
+                                            </Text>
+                                          )}
+                                          <Text fontSize="xs" color={textSecondary}>
+                                            {chapter.lessons?.length || 0} درس
+                                          </Text>
+                                        </VStack>
+
+                                        <HStack spacing={1} onClick={(e) => e.stopPropagation()}>
+                                          <IconButton
+                                            aria-label="تعديل الفصل"
+                                            icon={<FiEdit />}
+                                            size="sm"
+                                            colorScheme="orange"
+                                            onClick={() => handleChapterEditClick(chapter)}
+                                          />
+                                          <IconButton
+                                            aria-label="حذف الفصل"
+                                            icon={<FiTrash />}
+                                            size="sm"
+                                            colorScheme="red"
+                                            onClick={() => handleChapterDeleteClick(chapter)}
+                                          />
+                                          <Link to={`/chapter/${chapter.id}`}>
+                                            <Button
+                                              size="sm"
+                                              rightIcon={<FiArrowRight />}
+                                              colorScheme="blue"
+                                            >
+                                              عرض
+                                            </Button>
+                                          </Link>
+                                        </HStack>
+
+                                        <AccordionIcon />
+                                      </Flex>
+                                    </AccordionButton>
+
+                                    <AccordionPanel pb={3} px={4}>
+                                      <Flex justify="flex-end" mb={2}>
+                                        <Button
+                                          size="xs"
+                                          leftIcon={<FiPlus />}
+                                          colorScheme="blue"
+                                          onClick={() => openAddLesson(chapter)}
+                                        >
+                                          إضافة درس
+                                        </Button>
+                                      </Flex>
+
+                                      {chapter.lessons && chapter.lessons.length > 0 ? (
+                                        <VStack spacing={2} align="stretch">
+                                          {chapter.lessons.map((lesson) => (
+                                            <Flex
+                                              key={lesson.id}
+                                              p={3}
+                                              bg={lessonCardBg}
+                                              borderRadius="md"
+                                              align="center"
+                                              gap={3}
+                                              _hover={{ bg: lessonCardHoverBg }}
+                                              transition="all 0.2s"
+                                            >
+                                              <Icon as={FiFileText} color="blue.500" boxSize={4} />
+                                              <Text fontSize="sm" fontWeight="500" color={textPrimary} flex={1} noOfLines={1}>
+                                                {lesson.name}
+                                              </Text>
+
+                                              <HStack spacing={1} onClick={(e) => e.stopPropagation()}>
+                                                <IconButton
+                                                  aria-label="تعديل الدرس"
+                                                  icon={<FiEdit />}
+                                                  size="xs"
+                                                  colorScheme="orange"
+                                                  onClick={() => handleLessonEditClick(lesson)}
+                                                />
+                                                <IconButton
+                                                  aria-label="حذف الدرس"
+                                                  icon={<FiTrash />}
+                                                  size="xs"
+                                                  colorScheme="red"
+                                                  onClick={() => handleLessonDeleteClick(lesson)}
+                                                />
+                                                <Link to={`/lesson/${lesson.id}`}>
+                                                  <Button
+                                                    size="xs"
+                                                    rightIcon={<FiArrowRight />}
+                                                    colorScheme="blue"
+                                                  >
+                                                    عرض
+                                                  </Button>
+                                                </Link>
+                                              </HStack>
+                                            </Flex>
+                                          ))}
+                                        </VStack>
+                                      ) : (
+                                        <Text fontSize="sm" color={textSecondary} textAlign="center" py={4}>
+                                          لا توجد دروس في هذا الفصل
+                                        </Text>
+                                      )}
+                                    </AccordionPanel>
+                                  </AccordionItem>
+                                </Accordion>
+                              ))}
+                            </VStack>
+                          ) : (
+                            <Flex direction="column" align="center" justify="center" py={8} color={textSecondary}>
+                              <Icon as={FiFolder} boxSize={8} mb={2} opacity={0.4} />
+                              <Text fontSize="sm" fontFamily="'Cairo', 'Tajawal', sans-serif">لا توجد فصول في هذه المادة بعد</Text>
+                            </Flex>
+                          )}
+                        </AccordionPanel>
+                      </>
+                    )}
+                  </AccordionItem>
+                </Accordion>
               ))}
-            </Accordion>
+            </VStack>
           )}
         </MotionBox>
       </MotionBox>
@@ -1366,7 +1399,7 @@ const QuestionBank = () => {
             </HStack>
           </ModalHeader>
           <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
-          
+
           <ModalBody>
             <form onSubmit={handleSubmit}>
               <VStack spacing={6}>
@@ -1487,7 +1520,7 @@ const QuestionBank = () => {
             </HStack>
           </ModalHeader>
           <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
-          
+
           <ModalBody>
             <form onSubmit={handleEditSubmit}>
               <VStack spacing={6}>

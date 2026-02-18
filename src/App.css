@@ -32,9 +32,9 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url(../public/3.png);
+    width: 70%;
+    height: 70%;
+    background-image: url(../public/next\ logo.png);
     background-position: center;
     background-size: contain; /* لضمان تناسب الخلفية مع حجم العنصر */
     background-repeat: no-repeat;
@@ -225,7 +225,7 @@ body {
     display: block !important;
   }
   .teacher-card {
-    width:  100% !important
+    width: 100% !important;
   }
   .manth-content {
     display: block !important;
@@ -233,9 +233,8 @@ body {
   .chakra-card {
     width: 90% !important;
   }
-  .stu-course{
+  .stu-course {
     width: 100% !important;
-    
   }
 }
 
@@ -280,21 +279,22 @@ body {
     width: 100% !important;
     margin-right: 30px !important;
   }
-  .link-div{
-     width: 100% !important;
+  .link-div {
+    width: 100% !important;
     margin-right: 10px !important;
   }
-  .teacher-course ,.teacher-card{
-     width: 330px !important;
-     margin-right: 15px !important;
+  .teacher-course,
+  .teacher-card {
+    width: 330px !important;
+    margin-right: 15px !important;
   }
-  .stu-course{
+  .stu-course {
     width: 320px !important;
   }
- .home-page{
-  margin-right: 25px !important;
- }
-  .lecture_container{
+  .home-page {
+    margin-right: 25px !important;
+  }
+  .lecture_container {
     margin-right: 10px !important;
   }
 }

@@ -45,7 +45,7 @@ baseUrl.interceptors.response.use(
 
     // Return the error so components can still handle it
     return Promise.reject(error);
-  }
+  },
 );
 
 export default baseUrl;

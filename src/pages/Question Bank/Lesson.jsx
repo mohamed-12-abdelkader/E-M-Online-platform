@@ -73,16 +73,30 @@ const Lesson = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // المستخدم مدرس؟ (لإظهار إضافة أسئلة/قطع للامتحان)
+  const [isTeacher] = useState(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      return user?.role === "teacher";
+    } catch {
+      return false;
+    }
+  });
+
   // Data states
   const [questions, setQuestions] = useState([]);
   const [exams, setExams] = useState([]);
+  const [comprehensiveExams, setComprehensiveExams] = useState([]);
   const [passagesList, setPassagesList] = useState([]); // [{ passage: {...}, questions: [...] }]
   const [passagesLoading, setPassagesLoading] = useState(false);
   const [passagesError, setPassagesError] = useState(null);
 
   // Selection states
   const [selectedQuestions, setSelectedQuestions] = useState([]);
+  const [selectedPassageIds, setSelectedPassageIds] = useState([]);
   const [selectedExamId, setSelectedExamId] = useState("");
+  const [examModalTab, setExamModalTab] = useState("lecture"); // "lecture" | "comprehensive"
+  const [examModalMode, setExamModalMode] = useState("questions"); // "questions" | "passages"
 
   // Form states
   const [bulkQuestions, setBulkQuestions] = useState("");
@@ -216,24 +230,42 @@ const Lesson = () => {
     }
   };
 
-  // Fetch exams data
-  const fetchExams = async () => {
+  // جلب امتحانات المحاضرة
+  const fetchLectureExams = async () => {
     try {
-      setExamLoading(true);
       const token = localStorage.getItem("token");
-      const response = await baseUrl.get(`/api/exams/teacher/lecture-exams`, {
-        headers: { "Authorization": `Bearer ${token}` }
+      const response = await baseUrl.get("/api/exams/teacher/lecture-exams", {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (response.data && response.data.exams) {
-        setExams(response.data.exams);
-      }
+      if (response.data?.exams) setExams(response.data.exams);
+      else setExams([]);
     } catch (err) {
-      console.error("Error fetching exams:", err);
-      toast({ title: "خطأ", description: "فشل تحميل قائمة الامتحانات", status: "error", duration: 3000, isClosable: true });
-    } finally {
-      setExamLoading(false);
+      console.error("Error fetching lecture exams:", err);
+      setExams([]);
+      toast({ title: "خطأ", description: "فشل تحميل امتحانات المحاضرة", status: "error", isClosable: true });
     }
+  };
+
+  // جلب الامتحانات الشاملة (كورس)
+  const fetchComprehensiveExams = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await baseUrl.get("/api/exams/teacher", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.data?.exams) setComprehensiveExams(response.data.exams);
+      else setComprehensiveExams([]);
+    } catch (err) {
+      console.error("Error fetching comprehensive exams:", err);
+      setComprehensiveExams([]);
+      toast({ title: "خطأ", description: "فشل تحميل الامتحانات الشاملة", status: "error", isClosable: true });
+    }
+  };
+
+  const fetchExams = async () => {
+    setExamLoading(true);
+    await Promise.all([fetchLectureExams(), fetchComprehensiveExams()]);
+    setExamLoading(false);
   };
 
   // Parse bulk text questions
@@ -518,10 +550,16 @@ const Lesson = () => {
     }
   };
 
-  // Add selected questions to exam
+  // إضافة الأسئلة من بنك الأسئلة إلى الامتحان
+  // امتحان محاضرة: POST /api/exams/:examId/questions/from-bank → يُنشئ نسخة داخل الامتحان، الاستجابة تحتوي examQuestionIds
+  // امتحان كورس: نفس الـ endpoint (تمييز تلقائي) أو POST /api/exams/course-level/:examId/questions/from-bank
   const handleAddQuestionsToExam = async () => {
     if (!selectedExamId) {
       toast({ title: "تنبيه", description: "الرجاء اختيار امتحان", status: "warning" });
+      return;
+    }
+    if (!selectedQuestions.length) {
+      toast({ title: "تنبيه", description: "الرجاء اختيار أسئلة من البنك", status: "warning" });
       return;
     }
 
@@ -529,27 +567,35 @@ const Lesson = () => {
       setAddToExamLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await baseUrl.post(`/api/exams/${selectedExamId}/questions/from-bank`, {
-        questionIds: selectedQuestions
-      }, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
+      const response = await baseUrl.post(
+        `/api/exams/${selectedExamId}/questions/from-bank`,
+        { questionIds: selectedQuestions },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
-      if (response.data) {
-        toast({
-          title: "نجح",
-          description: `تم إضافة ${selectedQuestions.length} سؤال للامتحان بنجاح`,
-          status: "success",
-          duration: 3000
-        });
-        onExamClose();
-        setSelectedQuestions([]);
-        setSelectedExamId("");
-      }
+      const data = response.data;
+      const count = data?.count ?? selectedQuestions.length;
+      const message = data?.message || `تم إضافة ${count} سؤال للامتحان بنجاح`;
+
+      toast({
+        title: "نجح",
+        description: message,
+        status: "success",
+        duration: 3000,
+        isClosable: true
+      });
+      onExamClose();
+      setSelectedQuestions([]);
+      setSelectedExamId("");
     } catch (err) {
       console.error("Error adding questions to exam:", err);
       const msg = err.response?.data?.message || "حدث خطأ أثناء إضافة الأسئلة للامتحان";
-      toast({ title: "خطأ", description: msg, status: "error" });
+      toast({ title: "خطأ", description: msg, status: "error", isClosable: true });
     } finally {
       setAddToExamLoading(false);
     }
@@ -608,12 +654,65 @@ const Lesson = () => {
   };
 
   const handleOpenExamModal = () => {
-    if (selectedQuestions.length === 0) {
+    if (examModalMode === "questions" && selectedQuestions.length === 0) {
       toast({ title: "تنبيه", description: "اختر أسئلة أولاً", status: "info" });
       return;
     }
+    if (examModalMode === "passages" && selectedPassageIds.length === 0) {
+      toast({ title: "تنبيه", description: "اختر قطعاً أولاً", status: "info" });
+      return;
+    }
+    setSelectedExamId("");
+    setExamModalTab("lecture");
     fetchExams();
     onExamOpen();
+  };
+
+  const handleOpenPassagesToExamModal = () => {
+    if (selectedPassageIds.length === 0) {
+      toast({ title: "تنبيه", description: "اختر قطعاً من تبويب أسئلة القطع", status: "info" });
+      return;
+    }
+    setExamModalMode("passages");
+    setSelectedExamId("");
+    setExamModalTab("lecture");
+    fetchExams();
+    onExamOpen();
+  };
+
+  const handleAddPassagesToExam = async () => {
+    if (!selectedExamId) {
+      toast({ title: "تنبيه", description: "الرجاء اختيار امتحان", status: "warning" });
+      return;
+    }
+    try {
+      setAddToExamLoading(true);
+      const token = localStorage.getItem("token");
+      let lastMessage = "تم إضافة القطع للامتحان بنجاح";
+      for (const passageId of selectedPassageIds) {
+        const res = await baseUrl.post(
+          `/api/exams/${selectedExamId}/questions/from-bank/passage`,
+          { passageId: Number(passageId) },
+          { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+        );
+        if (res.data?.message) lastMessage = res.data.message;
+      }
+      toast({ title: "نجح", description: lastMessage, status: "success", isClosable: true });
+      onExamClose();
+      setSelectedPassageIds([]);
+      setExamModalMode("questions");
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || "فشل في إضافة القطع للامتحان";
+      toast({ title: "خطأ", description: msg, status: "error", isClosable: true });
+    } finally {
+      setAddToExamLoading(false);
+    }
+  };
+
+  const handleTogglePassageId = (passageId) => {
+    setSelectedPassageIds((prev) =>
+      prev.includes(passageId) ? prev.filter((id) => id !== passageId) : [...prev, passageId]
+    );
   };
 
   const resetBulkForm = () => {
@@ -800,7 +899,7 @@ const Lesson = () => {
           </VStack>
 
           <HStack spacing={3} mt={{ base: 4, md: 0 }} zIndex={1} flexWrap="wrap" justify="center">
-            {questions.length > 0 && (
+            {isTeacher && questions.length > 0 && (
               <Button
                 variant="outline"
                 colorScheme="whiteAlpha"
@@ -814,17 +913,17 @@ const Lesson = () => {
                 {selectedQuestions.length === questions.length ? "إلغاء الكل" : "تحديد الكل"}
               </Button>
             )}
-            {selectedQuestions.length > 0 && (
+            {isTeacher && selectedQuestions.length > 0 && (
               <Button
                 leftIcon={<Icon as={FaClipboardList} />}
                 bg="orange.400"
                 _hover={{ bg: "orange.500" }}
                 color="white"
-                onClick={handleOpenExamModal}
+                onClick={() => { setExamModalMode("questions"); handleOpenExamModal(); }}
                 size="sm"
                 fontFamily={fontCairo}
               >
-                للامتحان ({selectedQuestions.length})
+                إضافة للامتحان ({selectedQuestions.length})
               </Button>
             )}
             <Button
@@ -879,25 +978,36 @@ const Lesson = () => {
                       h="100%"
                       display="flex"
                       flexDirection="column"
-                      cursor="pointer"
-                      onClick={() => handleToggleSelectId(question.id)}
+                      cursor={isTeacher ? "pointer" : "default"}
+                      onClick={() => isTeacher && handleToggleSelectId(question.id)}
                     >
                       <CardHeader pb={2} pt={5} px={5}>
-                        <Flex justify="space-between" align="center" wrap="wrap" gap={2}>
-                          <HStack spacing={3}>
-                            <Checkbox
-                              isChecked={selectedQuestions.includes(question.id)}
-                              onChange={() => handleToggleSelectId(question.id)}
-                              size="md"
-                              colorScheme="blue"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <Badge bg="blue.500" color="white" borderRadius="lg" px={3} py={1} fontSize="sm" fontFamily={fontCairo} fontWeight="bold">
+                        <Flex justify="space-between" align="flex-start" wrap="wrap" gap={3}>
+                          <HStack spacing={3} flex={1} minW={0}>
+                            {isTeacher && (
+                              <Checkbox
+                                isChecked={selectedQuestions.includes(question.id)}
+                                onChange={() => handleToggleSelectId(question.id)}
+                                size="md"
+                                colorScheme="blue"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            )}
+                            <Flex w="10" h="10" borderRadius="full" bgGradient="linear(to-br, blue.400, blue.600)" color="white" align="center" justify="center" fontWeight="bold" fontSize="lg" fontFamily={fontCairo} flexShrink={0}>
                               {index + 1}
-                            </Badge>
-                            <Badge colorScheme={question.difficulty_level === "hard" ? "red" : "green"} variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo}>
-                              {question.difficulty_level || "متوسط"}
-                            </Badge>
+                            </Flex>
+                            <VStack align="flex-start" spacing={0}>
+                              <HStack spacing={2} flexWrap="wrap">
+                                <Badge colorScheme={question.difficulty_level === "hard" ? "red" : question.difficulty_level === "easy" ? "green" : "blue"} variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo}>
+                                  {question.difficulty_level === "hard" ? "صعب" : question.difficulty_level === "easy" ? "سهل" : "متوسط"}
+                                </Badge>
+                                {(question.points != null || question.points === 0) && (
+                                  <Badge colorScheme="yellow" variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo}>
+                                    {Number(question.points) || 1} نقطة
+                                  </Badge>
+                                )}
+                              </HStack>
+                            </VStack>
                           </HStack>
                           <HStack spacing={1} onClick={(e) => e.stopPropagation()}>
                             <Tooltip label="تعديل" hasArrow>
@@ -1019,14 +1129,51 @@ const Lesson = () => {
                 </Flex>
               ) : (
                 <VStack align="stretch" spacing={6}>
+                  {isTeacher && passagesList.length > 0 && (
+                    <Flex justify="flex-end" w="full">
+                      <Button
+                        size="sm"
+                        colorScheme="orange"
+                        leftIcon={<Icon as={FaClipboardList} />}
+                        onClick={handleOpenPassagesToExamModal}
+                        isDisabled={selectedPassageIds.length === 0}
+                        fontFamily={fontCairo}
+                      >
+                        إضافة القطع المحددة للامتحان ({selectedPassageIds.length})
+                      </Button>
+                    </Flex>
+                  )}
                   {passagesList.map((item, pIdx) => {
                     const passage = item.passage || {};
                     const qList = item.questions || [];
+                    const passageId = passage.id;
+                    const isPassageSelected = passageId != null && selectedPassageIds.includes(passageId);
                     return (
-                      <Card key={passage.id || pIdx} bg={cardBg} borderRadius="2xl" overflow="hidden" boxShadow={cardShadow} borderWidth="1px" borderColor={cardBorder} fontFamily={fontCairo}>
+                      <Card
+                        key={passage.id || pIdx}
+                        bg={isPassageSelected ? selectedCardBg : cardBg}
+                        borderRadius="2xl"
+                        overflow="hidden"
+                        boxShadow={cardShadow}
+                        borderWidth="2px"
+                        borderColor={isPassageSelected ? "blue.400" : cardBorder}
+                        fontFamily={fontCairo}
+                        cursor={isTeacher ? "pointer" : "default"}
+                        onClick={() => isTeacher && passageId != null && handleTogglePassageId(passageId)}
+                        _hover={isTeacher ? { boxShadow: cardShadowHover } : undefined}
+                      >
                         <CardHeader bg={optionBg} borderBottomWidth="1px" borderColor={borderColor} py={4}>
                           <Flex justify="space-between" align="center" wrap="wrap" gap={2}>
                             <HStack spacing={3}>
+                              {isTeacher && passageId != null && (
+                                <Checkbox
+                                  isChecked={isPassageSelected}
+                                  onChange={() => handleTogglePassageId(passageId)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  size="md"
+                                  colorScheme="blue"
+                                />
+                              )}
                               <Badge colorScheme="blue" borderRadius="lg" px={3} py={1} fontSize="sm" fontWeight="bold">قطعة {pIdx + 1}</Badge>
                               {passage.title && (
                                 <Text fontWeight="700" color={textPrimary} fontSize="lg">{passage.title}</Text>
@@ -1088,59 +1235,106 @@ const Lesson = () => {
       </Container>
 
 
-      {/* --- ADD TO EXAM MODAL --- */}
-      <Modal isOpen={isExamOpen} onClose={onExamClose} size="lg" isCentered>
+      {/* --- ADD TO EXAM MODAL (مدرس) — امتحان محاضرة | امتحان شامل، أسئلة أو قطع --- */}
+      {isTeacher && (
+      <Modal isOpen={isExamOpen} onClose={() => { onExamClose(); setExamModalMode("questions"); }} size="lg" isCentered>
         <ModalOverlay backdropFilter="blur(6px)" bg="blackAlpha.600" />
         <ModalContent borderRadius="2xl" boxShadow={headerShadow} borderWidth="1px" borderColor={cardBorder}>
           <ModalHeader bg="blue.500" color="white" borderRadius="2xl 2xl 0 0" py={5} fontFamily={fontCairo}>
             <HStack spacing={3}>
               <Box p={2} bg="whiteAlpha.200" borderRadius="xl"><Icon as={FaClipboardList} boxSize={5} /></Box>
-              <Text fontWeight="bold" fontSize="xl">إضافة الأسئلة للامتحان</Text>
+              <Text fontWeight="bold" fontSize="xl">
+                {examModalMode === "passages" ? "إضافة القطع للامتحان" : "إضافة الأسئلة للامتحان"}
+              </Text>
             </HStack>
           </ModalHeader>
           <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
-          <ModalBody py={6}>
+          <ModalBody py={4}>
+            <Tabs index={examModalTab === "lecture" ? 0 : 1} onChange={(i) => setExamModalTab(i === 0 ? "lecture" : "comprehensive")} variant="soft-rounded" colorScheme="blue" mb={4}>
+              <TabList bg="gray.100" p={1} borderRadius="xl">
+                <Tab fontSize="sm" fontWeight="600">امتحان محاضرة</Tab>
+                {examModalMode !== "passages" && <Tab fontSize="sm" fontWeight="600">امتحان شامل</Tab>}
+              </TabList>
+            </Tabs>
             {examLoading ? (
               <Flex justify="center" p={8}><Spinner color="blue.500" /></Flex>
-            ) : exams.length === 0 ? (
-              <Text textAlign="center" color="gray.500" py={8}>لا توجد امتحانات متاحة حالياً.</Text>
+            ) : examModalTab === "lecture" ? (
+              exams.length === 0 ? (
+                <Text textAlign="center" color="gray.500" py={8}>لا توجد امتحانات محاضرة متاحة.</Text>
+              ) : (
+                <RadioGroup value={selectedExamId} onChange={setSelectedExamId}>
+                  <VStack align="stretch" spacing={3} maxH="360px" overflowY="auto" pr={1}>
+                    {exams.map((exam) => (
+                      <Box
+                        key={exam.id}
+                        p={4}
+                        bg={selectedExamId === String(exam.id) ? "blue.50" : "gray.50"}
+                        borderRadius="xl"
+                        borderWidth="2px"
+                        borderColor={selectedExamId === String(exam.id) ? "blue.500" : "transparent"}
+                        cursor="pointer"
+                        onClick={() => setSelectedExamId(String(exam.id))}
+                        _hover={{ bg: "blue.50" }}
+                      >
+                        <Radio value={String(exam.id)} mb={2}>
+                          <Text fontWeight="bold" fontSize="md">{exam.title}</Text>
+                        </Radio>
+                        <HStack fontSize="sm" color="gray.500" spacing={4} pl={6}>
+                          {exam.courseTitle && <Text>{exam.courseTitle}</Text>}
+                          {exam.lectureTitle && (<><Text>•</Text><Text>{exam.lectureTitle}</Text></>)}
+                        </HStack>
+                      </Box>
+                    ))}
+                  </VStack>
+                </RadioGroup>
+              )
             ) : (
-              <RadioGroup value={selectedExamId} onChange={setSelectedExamId}>
-                <VStack align="stretch" spacing={3} maxH="400px" overflowY="auto" pr={1}>
-                  {exams.map((exam) => (
-                    <Box
-                      key={exam.id}
-                      p={4}
-                      bg={selectedExamId === String(exam.id) ? "blue.50" : "gray.50"}
-                      borderRadius="xl"
-                      border="1px solid"
-                      borderColor={selectedExamId === String(exam.id) ? "blue.500" : "transparent"}
-                      cursor="pointer"
-                      onClick={() => setSelectedExamId(String(exam.id))}
-                      _hover={{ bg: "blue.50" }}
-                    >
-                      <Radio value={String(exam.id)} mb={2}>
-                        <Text fontWeight="bold" fontSize="md">{exam.title}</Text>
-                      </Radio>
-                      <HStack fontSize="sm" color="gray.500" spacing={4} pl={6}>
-                        <Text>{exam.courseTitle}</Text>
-                        <Text>•</Text>
-                        <Text>{exam.lectureTitle}</Text>
-                      </HStack>
-                    </Box>
-                  ))}
-                </VStack>
-              </RadioGroup>
+              comprehensiveExams.length === 0 ? (
+                <Text textAlign="center" color="gray.500" py={8}>لا توجد امتحانات شاملة متاحة.</Text>
+              ) : (
+                <RadioGroup value={selectedExamId} onChange={setSelectedExamId}>
+                  <VStack align="stretch" spacing={3} maxH="360px" overflowY="auto" pr={1}>
+                    {comprehensiveExams.map((exam) => (
+                      <Box
+                        key={exam.id}
+                        p={4}
+                        bg={selectedExamId === String(exam.id) ? "blue.50" : "gray.50"}
+                        borderRadius="xl"
+                        borderWidth="2px"
+                        borderColor={selectedExamId === String(exam.id) ? "blue.500" : "transparent"}
+                        cursor="pointer"
+                        onClick={() => setSelectedExamId(String(exam.id))}
+                        _hover={{ bg: "blue.50" }}
+                      >
+                        <Radio value={String(exam.id)} mb={2}>
+                          <Text fontWeight="bold" fontSize="md">{exam.title}</Text>
+                        </Radio>
+                        <HStack fontSize="sm" color="gray.500" spacing={4} pl={6}>
+                          <Text>{exam.course_title || exam.courseTitle || ""}</Text>
+                          {exam.duration_minutes != null && <Text>• {exam.duration_minutes} د</Text>}
+                        </HStack>
+                      </Box>
+                    ))}
+                  </VStack>
+                </RadioGroup>
+              )
             )}
           </ModalBody>
           <ModalFooter borderTopWidth="1px" borderColor={borderColor} py={4}>
-            <Button variant="ghost" mr={3} onClick={onExamClose} fontFamily={fontCairo}>إلغاء</Button>
-            <Button colorScheme="blue" onClick={handleAddQuestionsToExam} isLoading={addToExamLoading} isDisabled={!selectedExamId} fontFamily={fontCairo} fontWeight="bold">
-              إضافة ({selectedQuestions.length})
-            </Button>
+            <Button variant="ghost" mr={3} onClick={() => { onExamClose(); setExamModalMode("questions"); }} fontFamily={fontCairo}>إلغاء</Button>
+            {examModalMode === "passages" ? (
+              <Button colorScheme="blue" onClick={handleAddPassagesToExam} isLoading={addToExamLoading} isDisabled={!selectedExamId} fontFamily={fontCairo} fontWeight="bold">
+                إضافة {selectedPassageIds.length} قطعة
+              </Button>
+            ) : (
+              <Button colorScheme="blue" onClick={handleAddQuestionsToExam} isLoading={addToExamLoading} isDisabled={!selectedExamId} fontFamily={fontCairo} fontWeight="bold">
+                إضافة {selectedQuestions.length} سؤال
+              </Button>
+            )}
           </ModalFooter>
         </ModalContent>
       </Modal>
+      )}
 
       {/* --- OTHER MODALS --- */}
 

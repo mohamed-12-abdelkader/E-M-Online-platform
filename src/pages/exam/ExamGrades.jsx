@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Text,
@@ -10,6 +10,17 @@ import {
   HStack,
   Icon,
   SimpleGrid,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+  Spinner,
+  Badge,
+  Divider,
+  useDisclosure,
 } from "@chakra-ui/react";
 import {
   MdAssignment,
@@ -17,6 +28,7 @@ import {
   MdCancel,
   MdSchedule,
   MdReceiptLong,
+  MdVisibility,
 } from "react-icons/md";
 import { FaPlay } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -28,10 +40,16 @@ const ExamGrades = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [reportData, setReportData] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState(null);
+  const { isOpen: isReportOpen, onOpen: onReportOpen, onClose: onReportClose } = useDisclosure();
+
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
   const secondaryColor = useColorModeValue("gray.600", "gray.400");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
 
   const submittedExams = useMemo(
     () => exams.filter((exam) => exam.status === "submitted"),
@@ -79,12 +97,55 @@ const ExamGrades = () => {
     fetchGrades();
   }, []);
 
+  const openReport = useCallback(async (examId) => {
+    setReportData(null);
+    setReportError(null);
+    onReportOpen();
+    setReportLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await baseUrl.get(`/api/exams/${examId}/my-report`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setReportData(res.data);
+    } catch (err) {
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message || err?.message;
+      if (status === 403) setReportError("غير مسموح بعرض التقرير في هذا التوقيت.");
+      else if (status === 404) setReportError("التقرير غير متوفر.");
+      else setReportError(msg || "حدث خطأ أثناء تحميل التقرير.");
+    } finally {
+      setReportLoading(false);
+    }
+  }, [onReportOpen]);
+
+  const closeReport = useCallback(() => {
+    onReportClose();
+    setReportData(null);
+    setReportError(null);
+  }, [onReportClose]);
+
   const formatDate = (value) => {
     if (!value) return "---";
     try {
       return new Date(value).toLocaleDateString("ar-EG", {
         month: "short",
         day: "numeric",
+      });
+    } catch {
+      return value;
+    }
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return "—";
+    try {
+      return new Date(value).toLocaleDateString("ar-EG", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch {
       return value;
@@ -272,10 +333,50 @@ const ExamGrades = () => {
                 bgColor={bgColor}
                 formatDate={formatDate}
                 getExamTypeLabel={getExamTypeLabel}
+                onViewReport={openReport}
               />
             ))
           )}
         </VStack>
+
+        {/* مودال تقرير الامتحان */}
+        <Modal isOpen={isReportOpen} onClose={closeReport} size="2xl" scrollBehavior="inside">
+          <ModalOverlay />
+          <ModalContent bg={cardBg} maxH="90vh" dir="rtl">
+            <ModalHeader>
+              تقرير الامتحان
+              {reportData?.exam?.title && (
+                <Text as="span" fontWeight="normal" fontSize="md" color={secondaryColor} mr={2}>
+                  — {reportData.exam.title}
+                </Text>
+              )}
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>
+              {reportLoading && (
+                <Center py={12}>
+                  <Spinner size="lg" color="blue.500" />
+                </Center>
+              )}
+              {reportError && !reportLoading && (
+                <VStack py={8} spacing={3}>
+                  <Icon as={MdCancel} boxSize={12} color="red.500" />
+                  <Text color={textColor}>{reportError}</Text>
+                </VStack>
+              )}
+              {reportData && !reportLoading && (
+                <ExamReportBody
+                  report={reportData}
+                  formatDateTime={formatDateTime}
+                  cardBg={cardBg}
+                  textColor={textColor}
+                  secondaryColor={secondaryColor}
+                  borderColor={borderColor}
+                />
+              )}
+            </ModalBody>
+          </ModalContent>
+        </Modal>
       </Container>
     </Box>
   );
@@ -322,6 +423,80 @@ function StatCard({
   );
 }
 
+function ExamReportBody({ report, formatDateTime, cardBg, textColor, secondaryColor, borderColor }) {
+  const { examType, exam, attempt, questions = [] } = report;
+  const isLecture = examType === "lecture";
+
+  return (
+    <VStack align="stretch" spacing={5}>
+      <Flex justify="space-between" align="center" flexWrap="wrap" gap={2}>
+        <Text fontSize="lg" fontWeight="bold" color={textColor}>
+          {exam?.title}
+        </Text>
+        <Badge colorScheme={attempt?.passed ? "green" : "red"} fontSize="sm">
+          {attempt?.passed ? "ناجح" : "راسب"}
+        </Badge>
+      </Flex>
+      <HStack spacing={4} flexWrap="wrap">
+        <Text fontSize="sm" color={secondaryColor}>
+          الدرجة: <Text as="span" fontWeight="700" color={textColor}>{attempt?.obtainedGrade} / {attempt?.totalGrade}</Text>
+        </Text>
+        <Text fontSize="sm" color={secondaryColor}>
+          تاريخ التسليم: {formatDateTime(attempt?.submittedAt)}
+        </Text>
+      </HStack>
+      <Divider borderColor={borderColor} />
+      <Text fontWeight="bold" color={textColor} fontSize="md">
+        الأسئلة والإجابات
+      </Text>
+      <VStack align="stretch" spacing={4}>
+        {questions.map((q, i) => (
+          <Box
+            key={q.questionId || i}
+            p={4}
+            borderRadius="lg"
+            bg={cardBg}
+            borderWidth="1px"
+            borderColor={q.isCorrect ? "green.200" : "red.200"}
+            borderLeftWidth="4px"
+            borderLeftColor={q.isCorrect ? "green.500" : "red.500"}
+          >
+            <Text fontWeight="600" color={textColor} mb={2}>
+              {i + 1}. {q.questionText}
+            </Text>
+            {q.questionImage && (
+              <Box as="img" src={q.questionImage} alt="" maxW="200px" borderRadius="md" mb={2} />
+            )}
+            <VStack align="stretch" spacing={1} fontSize="sm">
+              <HStack justify="space-between">
+                <Text color={secondaryColor}>إجابتك:</Text>
+                <Text fontWeight="medium" color={textColor}>
+                  {isLecture
+                    ? (q.yourAnswer?.text ?? q.yourAnswer?.letter ?? "—")
+                    : (q.yourAnswer ?? "—")}
+                </Text>
+              </HStack>
+              <HStack justify="space-between">
+                <Text color={secondaryColor}>الإجابة الصحيحة:</Text>
+                <Text fontWeight="medium" color="green.600">
+                  {isLecture
+                    ? (q.correctAnswer?.text ?? q.correctAnswer?.letter ?? "—")
+                    : (q.correctAnswer ?? "—")}
+                </Text>
+              </HStack>
+              {!isLecture && (q.optionA ?? q.optionB ?? q.optionC ?? q.optionD) && (
+                <Text fontSize="xs" color={secondaryColor} mt={1}>
+                  الخيارات: أ: {q.optionA ?? "—"} | ب: {q.optionB ?? "—"} | ج: {q.optionC ?? "—"} | د: {q.optionD ?? "—"}
+                </Text>
+              )}
+            </VStack>
+          </Box>
+        ))}
+      </VStack>
+    </VStack>
+  );
+}
+
 function ExamTicket({
   exam,
   cardBg,
@@ -330,6 +505,7 @@ function ExamTicket({
   bgColor,
   formatDate,
   getExamTypeLabel,
+  onViewReport,
 }) {
   const isSubmitted = exam.status === "submitted";
   const isPassed = !!exam.passed;
@@ -464,12 +640,29 @@ function ExamTicket({
         >
           {exam.course_title || "عام"} • {getExamTypeLabel(exam.exam_type)}
         </Text>
-        <Flex justify="space-between" align="center" direction="row-reverse">
+        <Flex justify="space-between" align="center" direction="row-reverse" flexWrap="wrap" gap={2}>
           {isSubmitted ? (
             <>
-              <Text fontSize="12px" color={secondaryColor}>
-                {formatDate(exam.submitted_at)}
-              </Text>
+              <HStack spacing={2} flexWrap="wrap">
+                <Text fontSize="12px" color={secondaryColor}>
+                  {formatDate(exam.submitted_at)}
+                </Text>
+                {onViewReport && (
+                  <Button
+                    size="xs"
+                    leftIcon={<Icon as={MdVisibility} />}
+                    colorScheme="blue"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onViewReport(exam.exam_id);
+                    }}
+                  >
+                    عرض التقرير
+                  </Button>
+                )}
+              </HStack>
               <Text fontSize="14px" fontWeight="700" color={textColor}>
                 {studentGrade} / {totalGrade}
               </Text>

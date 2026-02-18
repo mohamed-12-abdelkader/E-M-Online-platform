@@ -75,6 +75,7 @@ import {
   FaBell,
   FaSearch,
   FaFilter,
+  FaHeadset,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -201,7 +202,15 @@ const TeacherDashboardHome = () => {
       icon: FaRocket,
       color: "orange",
       link: "/social",
-    }
+    },
+    {
+      id: 5,
+      title: "الدعم الفني",
+      description: "شات دعم المدرس",
+      icon: FaHeadset,
+      color: "green",
+      link: "/support-teacher",
+    },
   ];
 
   // Color mode values

@@ -133,24 +133,24 @@ import StudentStreamsList from "../../components/stream/studentStreamsList";
 // Modal Components
 const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
   const [formData, setFormData] = useState({
-    title: data?.title || '',
-    description: data?.description || '',
-    position: data?.position || 1
+    title: data?.title || "",
+    description: data?.description || "",
+    position: data?.position || 1,
   });
 
   useEffect(() => {
     if (data) {
       setFormData({
-        title: data.title || '',
-        description: data.description || '',
-        position: data.position || 1
+        title: data.title || "",
+        description: data.description || "",
+        position: data.position || 1,
       });
     }
   }, [data]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (type === 'edit') {
+    if (type === "edit") {
       onSubmit(data.id, formData);
     } else {
       onSubmit(formData);
@@ -159,10 +159,21 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading} size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={loading ? undefined : onClose}
+      closeOnOverlayClick={!loading}
+      size="lg"
+    >
       <ModalOverlay />
       <ModalContent borderRadius="2xl" boxShadow="2xl">
-        <ModalHeader display="flex" alignItems="center" fontWeight="bold" fontSize="xl" color="blue.600">
+        <ModalHeader
+          display="flex"
+          alignItems="center"
+          fontWeight="bold"
+          fontSize="xl"
+          color="blue.600"
+        >
           <Icon as={FaChalkboardTeacher} className="ml-2" />
           {type === "add" ? "إضافة محاضرة جديدة" : "تعديل المحاضرة"}
         </ModalHeader>
@@ -177,7 +188,9 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
                 </FormLabel>
                 <Input
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   placeholder="أدخل عنوان المحاضرة"
                   borderRadius="lg"
                 />
@@ -190,7 +203,9 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
                 </FormLabel>
                 <Textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   placeholder="أدخل وصف المحاضرة"
                   rows={3}
                   borderRadius="lg"
@@ -206,7 +221,10 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
                   type="number"
                   value={formData.position}
                   onChange={(e) =>
-                    setFormData({ ...formData, position: parseInt(e.target.value) })
+                    setFormData({
+                      ...formData,
+                      position: parseInt(e.target.value),
+                    })
                   }
                   placeholder="أدخل ترتيب المحاضرة"
                   borderRadius="lg"
@@ -243,26 +261,34 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
   );
 };
 
-const VideoModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading }) => {
+const VideoModal = ({
+  isOpen,
+  onClose,
+  type,
+  data,
+  lectureId,
+  onSubmit,
+  loading,
+}) => {
   const [formData, setFormData] = useState({
-    video_url: data?.video_url || '',
-    title: data?.title || '',
-    position: data?.position || 1
+    video_url: data?.video_url || "",
+    title: data?.title || "",
+    position: data?.position || 1,
   });
 
   useEffect(() => {
     if (data) {
       setFormData({
-        video_url: data.video_url || '',
-        title: data.title || '',
-        position: data.position || 1
+        video_url: data.video_url || "",
+        title: data.title || "",
+        position: data.position || 1,
       });
     }
   }, [data]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (type === 'edit') {
+    if (type === "edit") {
       onSubmit(data.id, formData);
     } else {
       onSubmit(lectureId, formData);
@@ -296,7 +322,6 @@ const VideoModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading 
             <VStack spacing={5} align="stretch">
               {/* رابط الفيديو */}
 
-
               {/* عنوان الفيديو */}
               <FormControl>
                 <FormLabel display="flex" alignItems="center" gap={2}>
@@ -304,7 +329,9 @@ const VideoModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading 
                 </FormLabel>
                 <Input
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   placeholder="أدخل عنوان الفيديو"
                   isDisabled={loading}
                   borderRadius="lg"
@@ -316,7 +343,9 @@ const VideoModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading 
                 </FormLabel>
                 <Input
                   value={formData.video_url}
-                  onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, video_url: e.target.value })
+                  }
                   placeholder="أدخل رابط الفيديو"
                   isDisabled={loading}
                   borderRadius="lg"
@@ -330,7 +359,12 @@ const VideoModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading 
                 <Input
                   type="number"
                   value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      position: parseInt(e.target.value),
+                    })
+                  }
                   placeholder="أدخل ترتيب الفيديو"
                   isDisabled={loading}
                   borderRadius="lg"
@@ -355,7 +389,9 @@ const VideoModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading 
               colorScheme="blue"
               type="submit"
               isLoading={loading}
-              loadingText={type === "add" ? "جاري الإضافة..." : "جاري التعديل..."}
+              loadingText={
+                type === "add" ? "جاري الإضافة..." : "جاري التعديل..."
+              }
               leftIcon={!loading && <FaCheck />}
               borderRadius="xl"
               className="mx-2"
@@ -369,24 +405,32 @@ const VideoModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading 
   );
 };
 
-const FileModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading }) => {
+const FileModal = ({
+  isOpen,
+  onClose,
+  type,
+  data,
+  lectureId,
+  onSubmit,
+  loading,
+}) => {
   const [formData, setFormData] = useState({
-    file_url: data?.file_url || '',
-    filename: data?.filename || ''
+    file_url: data?.file_url || "",
+    filename: data?.filename || "",
   });
 
   useEffect(() => {
     if (data) {
       setFormData({
-        file_url: data.file_url || '',
-        filename: data.filename || ''
+        file_url: data.file_url || "",
+        filename: data.filename || "",
       });
     }
   }, [data]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (type === 'edit') {
+    if (type === "edit") {
       onSubmit(data.id, formData);
     } else {
       onSubmit(lectureId, formData);
@@ -395,11 +439,15 @@ const FileModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading}>
+    <Modal
+      isOpen={isOpen}
+      onClose={loading ? undefined : onClose}
+      closeOnOverlayClick={!loading}
+    >
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>
-          {type === 'add' ? 'إضافة ملف جديد' : 'تعديل الملف'}
+          {type === "add" ? "إضافة ملف جديد" : "تعديل الملف"}
         </ModalHeader>
         <ModalCloseButton isDisabled={loading} />
         <form onSubmit={handleSubmit}>
@@ -409,7 +457,9 @@ const FileModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading }
                 <FormLabel>رابط الملف</FormLabel>
                 <Input
                   value={formData.file_url}
-                  onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, file_url: e.target.value })
+                  }
                   placeholder="أدخل رابط الملف"
                   isDisabled={loading}
                 />
@@ -418,7 +468,9 @@ const FileModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading }
                 <FormLabel>اسم الملف</FormLabel>
                 <Input
                   value={formData.filename}
-                  onChange={(e) => setFormData({ ...formData, filename: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, filename: e.target.value })
+                  }
                   placeholder="أدخل اسم الملف"
                   isDisabled={loading}
                 />
@@ -426,11 +478,23 @@ const FileModal = ({ isOpen, onClose, type, data, lectureId, onSubmit, loading }
             </VStack>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose} isDisabled={loading}>
+            <Button
+              variant="ghost"
+              mr={3}
+              onClick={onClose}
+              isDisabled={loading}
+            >
               إلغاء
             </Button>
-            <Button colorScheme="blue" type="submit" isLoading={loading} loadingText={type === 'add' ? 'جاري الإضافة...' : 'جاري التعديل...'}>
-              {type === 'add' ? 'إضافة' : 'تعديل'}
+            <Button
+              colorScheme="blue"
+              type="submit"
+              isLoading={loading}
+              loadingText={
+                type === "add" ? "جاري الإضافة..." : "جاري التعديل..."
+              }
+            >
+              {type === "add" ? "إضافة" : "تعديل"}
             </Button>
           </ModalFooter>
         </form>
@@ -455,7 +519,7 @@ const MotionVStack = motion(VStack);
 const MotionHStack = motion(HStack);
 
 const CourseDetailsPage = () => {
-  const { id } = useParams()
+  const { id } = useParams();
   const navigate = useNavigate();
   const [userData, isAdmin, isTeacher, student] = UserType();
   const [showFullDescription, setShowFullDescription] = React.useState(false);
@@ -466,26 +530,57 @@ const CourseDetailsPage = () => {
   const [courseLoading, setCourseLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
-
   // Lecture management states
-  const [lectureModal, setLectureModal] = useState({ isOpen: false, type: 'add', data: null });
-  const [videoModal, setVideoModal] = useState({ isOpen: false, type: 'add', lectureId: null, data: null });
-  const [fileModal, setFileModal] = useState({ isOpen: false, type: 'add', lectureId: null, data: null });
-  const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, type: '', id: null, title: '' });
+  const [lectureModal, setLectureModal] = useState({
+    isOpen: false,
+    type: "add",
+    data: null,
+  });
+  const [videoModal, setVideoModal] = useState({
+    isOpen: false,
+    type: "add",
+    lectureId: null,
+    data: null,
+  });
+  const [fileModal, setFileModal] = useState({
+    isOpen: false,
+    type: "add",
+    lectureId: null,
+    data: null,
+  });
+  const [deleteDialog, setDeleteDialog] = useState({
+    isOpen: false,
+    type: "",
+    id: null,
+    title: "",
+  });
   const [actionLoading, setActionLoading] = useState(false);
   const toast = useToast();
   const cancelRef = React.useRef();
 
   // 1. أضف State لإدارة مودال الامتحان وحذف الامتحان
-  const [examModal, setExamModal] = useState({ isOpen: false, type: 'add', lectureId: null, data: null });
-  const [deleteExamDialog, setDeleteExamDialog] = useState({ isOpen: false, examId: null, title: '' });
+  const [examModal, setExamModal] = useState({
+    isOpen: false,
+    type: "add",
+    lectureId: null,
+    data: null,
+  });
+  const [deleteExamDialog, setDeleteExamDialog] = useState({
+    isOpen: false,
+    examId: null,
+    title: "",
+  });
   const [examActionLoading, setExamActionLoading] = useState(false);
 
   // State لمودال إضافة الأسئلة بالجملة
-  const [bulkQuestionsModal, setBulkQuestionsModal] = useState({ isOpen: false, examId: null, examTitle: '', examType: '' });
+  const [bulkQuestionsModal, setBulkQuestionsModal] = useState({
+    isOpen: false,
+    examId: null,
+    examTitle: "",
+    examType: "",
+  });
   const [bulkQuestionsLoading, setBulkQuestionsLoading] = useState(false);
-  const [bulkQuestionsText, setBulkQuestionsText] = useState('');
+  const [bulkQuestionsText, setBulkQuestionsText] = useState("");
 
   // دالة فتح مودال إضافة الأسئلة بالجملة
   const handleOpenBulkQuestionsModal = (examId, examTitle, examType) => {
@@ -501,7 +596,9 @@ const CourseDetailsPage = () => {
   // State لمودال إنشاء الأكواد
   const [codeModalOpen, setCodeModalOpen] = useState(false);
   const [codeCount, setCodeCount] = useState(1);
-  const [codeExpiresAt, setCodeExpiresAt] = useState(dayjs().add(30, 'day').format('YYYY-MM-DDTHH:mm'));
+  const [codeExpiresAt, setCodeExpiresAt] = useState(
+    dayjs().add(30, "day").format("YYYY-MM-DDTHH:mm")
+  );
   const [codeLoading, setCodeLoading] = useState(false);
 
   // State لمودال عرض الأكواد
@@ -512,15 +609,15 @@ const CourseDetailsPage = () => {
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [exportStartIndex, setExportStartIndex] = useState(1);
   const [exportEndIndex, setExportEndIndex] = useState(50);
-  const [searchCode, setSearchCode] = useState('');
+  const [searchCode, setSearchCode] = useState("");
   const [filteredCodes, setFilteredCodes] = useState([]);
 
   // State للفيديو
   const [videoPlayer, setVideoPlayer] = useState({
     isVisible: false,
-    videoUrl: '',
-    videoTitle: '',
-    isVisible: false
+    videoUrl: "",
+    videoTitle: "",
+    isVisible: false,
   });
 
   // تحديث نطاق التصدير عند تغيير عدد الأكواد
@@ -532,17 +629,15 @@ const CourseDetailsPage = () => {
 
   // فلترة الأكواد عند تغيير نص البحث
   useEffect(() => {
-    if (searchCode.trim() === '') {
+    if (searchCode.trim() === "") {
       setFilteredCodes(activationCodes);
     } else {
-      const filtered = activationCodes.filter(code =>
+      const filtered = activationCodes.filter((code) =>
         code.code.toLowerCase().includes(searchCode.toLowerCase())
       );
       setFilteredCodes(filtered);
     }
   }, [searchCode, activationCodes]);
-
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -564,8 +659,6 @@ const CourseDetailsPage = () => {
     fetchData();
   }, [token]);
 
-
-
   // 2. جلب الامتحانات الشاملة
   useEffect(() => {
     const fetchCourseExams = async () => {
@@ -573,15 +666,16 @@ const CourseDetailsPage = () => {
         setCourseExamsLoading(true);
         setCourseExamsError(null);
         // استخدام endpoint مختلف للطلاب مع timestamp لمنع الـ caching
-        const baseEndpoint = (isAdmin || isTeacher)
-          ? `api/course/${id}/course-exams`
-          : `api/exams/course/${id}/student`;
+        const baseEndpoint =
+          isAdmin || isTeacher
+            ? `api/course/${id}/course-exams`
+            : `api/exams/course/${id}/student`;
         const endpoint = `${baseEndpoint}?_t=${Date.now()}`;
         const response = await baseUrl.get(endpoint, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
           },
         });
 
@@ -593,7 +687,11 @@ const CourseDetailsPage = () => {
 
         if (responseData) {
           // الحالة 1: البيانات في responseData.exams
-          if (responseData.exams !== undefined && responseData.exams !== null && Array.isArray(responseData.exams)) {
+          if (
+            responseData.exams !== undefined &&
+            responseData.exams !== null &&
+            Array.isArray(responseData.exams)
+          ) {
             examsData = responseData.exams;
           }
           // الحالة 2: البيانات مصفوفة مباشرة
@@ -611,7 +709,7 @@ const CourseDetailsPage = () => {
           setCourseExamsError(null);
         }
       } catch (error) {
-        console.error('Error fetching course exams:', error);
+        console.error("Error fetching course exams:", error);
         // التحقق من نوع الخطأ
         if (error.response) {
           const status = error.response.status;
@@ -625,15 +723,21 @@ const CourseDetailsPage = () => {
               setCourseExams([]);
               setCourseExamsError(null); // لا نعرض خطأ للطلاب
             } else {
-              setCourseExamsError(errorMessage || 'غير مصرح لك بالوصول إلى هذه الامتحانات');
+              setCourseExamsError(
+                errorMessage || "غير مصرح لك بالوصول إلى هذه الامتحانات"
+              );
               setCourseExams([]);
             }
           } else {
-            setCourseExamsError(errorMessage || 'حدث خطأ في تحميل الامتحانات الشاملة');
+            setCourseExamsError(
+              errorMessage || "حدث خطأ في تحميل الامتحانات الشاملة"
+            );
             setCourseExams([]);
           }
         } else {
-          setCourseExamsError(error.message || 'حدث خطأ في تحميل الامتحانات الشاملة');
+          setCourseExamsError(
+            error.message || "حدث خطأ في تحميل الامتحانات الشاملة"
+          );
           setCourseExams([]);
         }
       } finally {
@@ -651,15 +755,16 @@ const CourseDetailsPage = () => {
       setCourseExamsLoading(true);
       setCourseExamsError(null);
       // استخدام endpoint مختلف للطلاب مع timestamp لمنع الـ caching
-      const baseEndpoint = (isAdmin || isTeacher)
-        ? `api/course/${id}/course-exams`
-        : `api/exams/course/${id}/student`;
+      const baseEndpoint =
+        isAdmin || isTeacher
+          ? `api/course/${id}/course-exams`
+          : `api/exams/course/${id}/student`;
       const endpoint = `${baseEndpoint}?_t=${Date.now()}`;
       const response = await baseUrl.get(endpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
         },
       });
 
@@ -671,7 +776,11 @@ const CourseDetailsPage = () => {
 
       if (responseData) {
         // الحالة 1: البيانات في responseData.exams
-        if (responseData.exams !== undefined && responseData.exams !== null && Array.isArray(responseData.exams)) {
+        if (
+          responseData.exams !== undefined &&
+          responseData.exams !== null &&
+          Array.isArray(responseData.exams)
+        ) {
           examsData = responseData.exams;
         }
         // الحالة 2: البيانات مصفوفة مباشرة
@@ -689,7 +798,7 @@ const CourseDetailsPage = () => {
         setCourseExamsError(null);
       }
     } catch (error) {
-      console.error('Error refreshing course exams:', error);
+      console.error("Error refreshing course exams:", error);
       // التحقق من نوع الخطأ
       if (error.response) {
         const status = error.response.status;
@@ -703,15 +812,21 @@ const CourseDetailsPage = () => {
             setCourseExams([]);
             setCourseExamsError(null); // لا نعرض خطأ للطلاب
           } else {
-            setCourseExamsError(errorMessage || 'غير مصرح لك بالوصول إلى هذه الامتحانات');
+            setCourseExamsError(
+              errorMessage || "غير مصرح لك بالوصول إلى هذه الامتحانات"
+            );
             setCourseExams([]);
           }
         } else {
-          setCourseExamsError(errorMessage || 'حدث خطأ في تحميل الامتحانات الشاملة');
+          setCourseExamsError(
+            errorMessage || "حدث خطأ في تحميل الامتحانات الشاملة"
+          );
           setCourseExams([]);
         }
       } else {
-        setCourseExamsError(error.message || 'حدث خطأ في تحميل الامتحانات الشاملة');
+        setCourseExamsError(
+          error.message || "حدث خطأ في تحميل الامتحانات الشاملة"
+        );
         setCourseExams([]);
       }
     } finally {
@@ -724,9 +839,12 @@ const CourseDetailsPage = () => {
     setCodesLoading(true);
     setCodesError(null);
     try {
-      const res = await baseUrl.get(`api/course/my-activation-codes?course_id=${course.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await baseUrl.get(
+        `api/course/my-activation-codes?course_id=${course.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setActivationCodes(res.data.activation_codes || []);
     } catch (error) {
       setCodesError("حدث خطأ في جلب الأكواد");
@@ -739,9 +857,12 @@ const CourseDetailsPage = () => {
   // دالة جلب امتحان المحاضرة
   const fetchLectureExam = async (lectureId) => {
     try {
-      const response = await baseUrl.get(`/api/course/lecture/${lectureId}/exam`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await baseUrl.get(
+        `/api/course/lecture/${lectureId}/exam`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       return response.data;
     } catch (error) {
       console.log("Error fetching lecture exam:", error);
@@ -778,7 +899,11 @@ const CourseDetailsPage = () => {
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
   };
 
   const resourceIconMap = {
@@ -789,39 +914,39 @@ const CourseDetailsPage = () => {
 
   // Lecture Management Functions
   const handleAddLecture = () => {
-    setLectureModal({ isOpen: true, type: 'add', data: null });
+    setLectureModal({ isOpen: true, type: "add", data: null });
   };
 
   const handleEditLecture = (lecture) => {
-    setLectureModal({ isOpen: true, type: 'edit', data: lecture });
+    setLectureModal({ isOpen: true, type: "edit", data: lecture });
   };
 
   const handleDeleteLecture = (lectureId, title) => {
-    setDeleteDialog({ isOpen: true, type: 'lecture', id: lectureId, title });
+    setDeleteDialog({ isOpen: true, type: "lecture", id: lectureId, title });
   };
 
   const handleAddVideo = (lectureId) => {
-    setVideoModal({ isOpen: true, type: 'add', lectureId, data: null });
+    setVideoModal({ isOpen: true, type: "add", lectureId, data: null });
   };
 
   const handleEditVideo = (video, lectureId) => {
-    setVideoModal({ isOpen: true, type: 'edit', lectureId, data: video });
+    setVideoModal({ isOpen: true, type: "edit", lectureId, data: video });
   };
 
   const handleDeleteVideo = (videoId, title) => {
-    setDeleteDialog({ isOpen: true, type: 'video', id: videoId, title });
+    setDeleteDialog({ isOpen: true, type: "video", id: videoId, title });
   };
 
   const handleAddFile = (lectureId) => {
-    setFileModal({ isOpen: true, type: 'add', lectureId, data: null });
+    setFileModal({ isOpen: true, type: "add", lectureId, data: null });
   };
 
   const handleEditFile = (file, lectureId) => {
-    setFileModal({ isOpen: true, type: 'edit', lectureId, data: file });
+    setFileModal({ isOpen: true, type: "edit", lectureId, data: file });
   };
 
   const handleDeleteFile = (fileId, title) => {
-    setDeleteDialog({ isOpen: true, type: 'file', id: fileId, title });
+    setDeleteDialog({ isOpen: true, type: "file", id: fileId, title });
   };
 
   // API Functions
@@ -840,7 +965,7 @@ const CourseDetailsPage = () => {
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
-      setLectureModal({ isOpen: false, type: 'add', data: null });
+      setLectureModal({ isOpen: false, type: "add", data: null });
     } catch (error) {
       toast({
         title: "خطأ في إضافة المحاضرة",
@@ -857,9 +982,13 @@ const CourseDetailsPage = () => {
   const updateLecture = async (lectureId, data) => {
     try {
       setActionLoading(true);
-      const response = await baseUrl.put(`api/course-content/lectures/${lectureId}`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await baseUrl.put(
+        `api/course-content/lectures/${lectureId}`,
+        data,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       toast({
         title: "تم تعديل المحاضرة بنجاح",
         status: "success",
@@ -869,7 +998,7 @@ const CourseDetailsPage = () => {
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
-      setLectureModal({ isOpen: false, type: 'edit', data: null });
+      setLectureModal({ isOpen: false, type: "edit", data: null });
     } catch (error) {
       toast({
         title: "خطأ في تعديل المحاضرة",
@@ -913,9 +1042,13 @@ const CourseDetailsPage = () => {
   const createVideo = async (lectureId, data) => {
     try {
       setActionLoading(true);
-      const response = await baseUrl.post(`api/course/lecture/${lectureId}/videos`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await baseUrl.post(
+        `api/course/lecture/${lectureId}/videos`,
+        data,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       toast({
         title: "تم إضافة الفيديو بنجاح",
         status: "success",
@@ -925,7 +1058,12 @@ const CourseDetailsPage = () => {
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
-      setVideoModal({ isOpen: false, type: 'add', data: null, lectureId: null });
+      setVideoModal({
+        isOpen: false,
+        type: "add",
+        data: null,
+        lectureId: null,
+      });
     } catch (error) {
       toast({
         title: "خطأ في إضافة الفيديو",
@@ -942,9 +1080,13 @@ const CourseDetailsPage = () => {
   const updateVideo = async (videoId, data) => {
     try {
       setActionLoading(true);
-      const response = await baseUrl.put(`api/course/lecture-video/${videoId}`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await baseUrl.put(
+        `api/course/lecture-video/${videoId}`,
+        data,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       toast({
         title: "تم تعديل الفيديو بنجاح",
         status: "success",
@@ -954,7 +1096,12 @@ const CourseDetailsPage = () => {
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
-      setVideoModal({ isOpen: false, type: 'edit', data: null, lectureId: null });
+      setVideoModal({
+        isOpen: false,
+        type: "edit",
+        data: null,
+        lectureId: null,
+      });
     } catch (error) {
       toast({
         title: "خطأ في تعديل الفيديو",
@@ -998,9 +1145,13 @@ const CourseDetailsPage = () => {
   const createFile = async (lectureId, data) => {
     try {
       setActionLoading(true);
-      const response = await baseUrl.post(`api/course/lecture/${lectureId}/files`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await baseUrl.post(
+        `api/course/lecture/${lectureId}/files`,
+        data,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       toast({
         title: "تم إضافة الملف بنجاح",
         status: "success",
@@ -1010,7 +1161,7 @@ const CourseDetailsPage = () => {
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
-      setFileModal({ isOpen: false, type: 'add', data: null, lectureId: null });
+      setFileModal({ isOpen: false, type: "add", data: null, lectureId: null });
     } catch (error) {
       toast({
         title: "خطأ في إضافة الملف",
@@ -1027,9 +1178,13 @@ const CourseDetailsPage = () => {
   const updateFile = async (fileId, data) => {
     try {
       setActionLoading(true);
-      const response = await baseUrl.put(`api/course/lecture-file/${fileId}`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await baseUrl.put(
+        `api/course/lecture-file/${fileId}`,
+        data,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       toast({
         title: "تم تعديل الملف بنجاح",
         status: "success",
@@ -1039,7 +1194,12 @@ const CourseDetailsPage = () => {
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
-      setFileModal({ isOpen: false, type: 'edit', data: null, lectureId: null });
+      setFileModal({
+        isOpen: false,
+        type: "edit",
+        data: null,
+        lectureId: null,
+      });
     } catch (error) {
       toast({
         title: "خطأ في تعديل الملف",
@@ -1084,24 +1244,30 @@ const CourseDetailsPage = () => {
     const { type, id } = deleteDialog;
 
     switch (type) {
-      case 'lecture':
+      case "lecture":
         await deleteLecture(id);
         break;
-      case 'video':
+      case "video":
         await deleteVideo(id);
         break;
-      case 'file':
+      case "file":
         await deleteFile(id);
         break;
     }
 
-    setDeleteDialog({ isOpen: false, type: '', id: null, title: '' });
+    setDeleteDialog({ isOpen: false, type: "", id: null, title: "" });
   };
 
   // 2. دوال API للامتحان محسنة
   const createExam = async (lectureId, data) => {
     if (!lectureId) {
-      toast({ title: 'خطأ', description: 'لم يتم تحديد المحاضرة. أعد فتح نافذة إضافة الامتحان.', status: 'error', duration: 4000, isClosable: true });
+      toast({
+        title: "خطأ",
+        description: "لم يتم تحديد المحاضرة. أعد فتح نافذة إضافة الامتحان.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
       return;
     }
     try {
@@ -1115,7 +1281,7 @@ const CourseDetailsPage = () => {
         is_visible: data.is_visible,
         lock_next_lectures: data.lock_next_lectures,
         show_answers_immediately: data.show_answers_immediately,
-        show_answers_after_hours: data.show_answers_after_hours
+        show_answers_after_hours: data.show_answers_after_hours,
       };
 
       // إضافة التواريخ إذا تم تحديدها
@@ -1131,25 +1297,25 @@ const CourseDetailsPage = () => {
       });
 
       toast({
-        title: 'تم إضافة الامتحان بنجاح',
+        title: "تم إضافة الامتحان بنجاح",
         description: `تم إنشاء امتحان "${data.title}" بنجاح`,
-        status: 'success',
+        status: "success",
         duration: 4000,
-        isClosable: true
+        isClosable: true,
       });
 
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
-      setExamModal({ isOpen: false, type: 'add', lectureId: null, data: null });
+      setExamModal({ isOpen: false, type: "add", lectureId: null, data: null });
     } catch (error) {
-      console.error('Error creating exam:', error);
+      console.error("Error creating exam:", error);
       toast({
-        title: 'خطأ في إضافة الامتحان',
-        description: error.response?.data?.message || 'حدث خطأ غير متوقع',
-        status: 'error',
+        title: "خطأ في إضافة الامتحان",
+        description: error.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
         duration: 4000,
-        isClosable: true
+        isClosable: true,
       });
     } finally {
       setExamActionLoading(false);
@@ -1167,7 +1333,7 @@ const CourseDetailsPage = () => {
         is_visible: data.is_visible,
         lock_next_lectures: data.lock_next_lectures,
         show_answers_immediately: data.show_answers_immediately,
-        show_answers_after_hours: data.show_answers_after_hours
+        show_answers_after_hours: data.show_answers_after_hours,
       };
 
       // إضافة التواريخ إذا تم تحديدها
@@ -1183,25 +1349,25 @@ const CourseDetailsPage = () => {
       });
 
       toast({
-        title: 'تم تعديل الامتحان بنجاح',
+        title: "تم تعديل الامتحان بنجاح",
         description: `تم تحديث امتحان "${data.title}" بنجاح`,
-        status: 'success',
+        status: "success",
         duration: 4000,
-        isClosable: true
+        isClosable: true,
       });
 
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
       // إغلاق الموديل بعد النجاح
-      setExamModal({ isOpen: false, type: 'edit', data: null });
+      setExamModal({ isOpen: false, type: "edit", data: null });
     } catch (error) {
-      console.error('Error updating exam:', error);
+      console.error("Error updating exam:", error);
       toast({
-        title: 'خطأ في تعديل الامتحان',
-        description: error.response?.data?.message || 'حدث خطأ غير متوقع',
-        status: 'error',
+        title: "خطأ في تعديل الامتحان",
+        description: error.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
         duration: 4000,
-        isClosable: true
+        isClosable: true,
       });
     } finally {
       setExamActionLoading(false);
@@ -1213,11 +1379,22 @@ const CourseDetailsPage = () => {
       await baseUrl.delete(`api/course/lecture/exam/${examId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast({ title: 'تم حذف الامتحان بنجاح', status: 'success', duration: 3000, isClosable: true });
+      toast({
+        title: "تم حذف الامتحان بنجاح",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
     } catch (error) {
-      toast({ title: 'خطأ في حذف الامتحان', description: error.response?.data?.message || 'حدث خطأ غير متوقع', status: 'error', duration: 3000, isClosable: true });
+      toast({
+        title: "خطأ في حذف الامتحان",
+        description: error.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setExamActionLoading(false);
     }
@@ -1228,51 +1405,61 @@ const CourseDetailsPage = () => {
     try {
       setBulkQuestionsLoading(true);
 
-      if (questionType === 'text') {
+      if (questionType === "text") {
         // Handle text questions
-        const endpoint = examType === 'comprehensive'
-          ? `/api/course/course-exam/${examId}/bulk-questions`
-          : `/api/questions/lecture-exam/${examId}/bulk`;
-        await baseUrl.post(endpoint, {
-          bulk_text: data
-        }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const endpoint =
+          examType === "comprehensive"
+            ? `/api/course/course-exam/${examId}/bulk-questions`
+            : `/api/questions/lecture-exam/${examId}/bulk`;
+        await baseUrl.post(
+          endpoint,
+          {
+            bulk_text: data,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       } else {
         // Handle image questions
         const formData = new FormData();
-        formData.append('exam_id', examId);
+        formData.append("exam_id", examId);
 
         // Append each image file
         data.forEach((file, index) => {
-          formData.append('images', file);
+          formData.append("images", file);
         });
 
-        await baseUrl.post('/api/questions/lecture-exam-question', formData, {
+        await baseUrl.post("/api/questions/lecture-exam-question", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
+            "Content-Type": "multipart/form-data",
           },
         });
       }
 
       toast({
-        title: 'تم إضافة الأسئلة بنجاح',
-        status: 'success',
+        title: "تم إضافة الأسئلة بنجاح",
+        status: "success",
         duration: 3000,
-        isClosable: true
+        isClosable: true,
       });
-      setBulkQuestionsModal({ isOpen: false, examId: null, examTitle: '', examType: '' });
-      setBulkQuestionsText('');
+      setBulkQuestionsModal({
+        isOpen: false,
+        examId: null,
+        examTitle: "",
+        examType: "",
+      });
+      setBulkQuestionsText("");
       // تحديث البيانات بدون إعادة تحميل
       await refreshCourseData();
     } catch (error) {
       toast({
-        title: 'خطأ في إضافة الأسئلة',
-        description: error.response?.data?.message || 'حدث خطأ غير متوقع',
-        status: 'error',
+        title: "خطأ في إضافة الأسئلة",
+        description: error.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
         duration: 3000,
-        isClosable: true
+        isClosable: true,
       });
     } finally {
       setBulkQuestionsLoading(false);
@@ -1289,12 +1476,12 @@ const CourseDetailsPage = () => {
     const footerBorder = useColorModeValue("gray.200", "gray.600");
 
     const [formData, setFormData] = useState({
-      title: data?.title || '',
+      title: data?.title || "",
       total_grade: data?.total_grade || 100,
       duration: data?.duration || 60,
       is_visible: data?.is_visible ?? true,
-      show_at: data?.show_at || '',
-      hide_at: data?.hide_at || '',
+      show_at: data?.show_at || "",
+      hide_at: data?.hide_at || "",
       lock_next_lectures: data?.lock_next_lectures ?? true,
       show_answers_immediately: data?.show_answers_immediately ?? false,
       show_answers_after_hours: data?.show_answers_after_hours || 24,
@@ -1303,24 +1490,24 @@ const CourseDetailsPage = () => {
     useEffect(() => {
       if (data) {
         setFormData({
-          title: data.title || '',
+          title: data.title || "",
           total_grade: data.total_grade || 100,
           duration: data.duration || 60,
           is_visible: data.is_visible ?? true,
-          show_at: data.show_at || '',
-          hide_at: data.hide_at || '',
+          show_at: data.show_at || "",
+          hide_at: data.hide_at || "",
           lock_next_lectures: data.lock_next_lectures ?? true,
           show_answers_immediately: data.show_answers_immediately ?? false,
           show_answers_after_hours: data.show_answers_after_hours || 24,
         });
       } else {
         setFormData({
-          title: '',
+          title: "",
           total_grade: 100,
           duration: 60,
           is_visible: true,
-          show_at: '',
-          hide_at: '',
+          show_at: "",
+          hide_at: "",
           lock_next_lectures: true,
           show_answers_immediately: false,
           show_answers_after_hours: 24,
@@ -1330,63 +1517,138 @@ const CourseDetailsPage = () => {
 
     const handleSubmit = (e) => {
       e.preventDefault();
-      if (type === 'edit') onSubmit(data.id, formData);
+      if (type === "edit") onSubmit(data.id, formData);
       else onSubmit(formData);
     };
 
     return (
-      <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} closeOnOverlayClick={!loading} size="4xl">
+      <Modal
+        isOpen={isOpen}
+        onClose={loading ? undefined : onClose}
+        closeOnOverlayClick={!loading}
+        size="4xl"
+      >
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(8px)" />
-        <ModalContent borderRadius="2xl" overflow="hidden" bg={cardBg} borderWidth="1px" borderColor={cardBorder} boxShadow="xl">
-          <Box h="1" w="100%" bgGradient="linear(to-r, blue.500, orange.500)" flexShrink={0} />
-          <ModalHeader py={6} px={8} bg="blue.500" color="white" borderRadius="0">
+        <ModalContent
+          borderRadius="2xl"
+          overflow="hidden"
+          bg={cardBg}
+          borderWidth="1px"
+          borderColor={cardBorder}
+          boxShadow="xl"
+        >
+          <Box
+            h="1"
+            w="100%"
+            bgGradient="linear(to-r, blue.500, orange.500)"
+            flexShrink={0}
+          />
+          <ModalHeader
+            py={6}
+            px={8}
+            bg="blue.500"
+            color="white"
+            borderRadius="0"
+          >
             <HStack spacing={4}>
               <Box p={2} bg="whiteAlpha.200" borderRadius="xl">
                 <Icon as={FaGraduationCap} boxSize={6} />
               </Box>
               <VStack align="start" spacing={0}>
                 <Text fontSize="xl" fontWeight="bold">
-                  {type === 'add' ? 'إضافة امتحان جديد' : 'تعديل الامتحان'}
+                  {type === "add" ? "إضافة امتحان جديد" : "تعديل الامتحان"}
                 </Text>
                 <Text fontSize="sm" opacity={0.9}>
-                  {type === 'add' ? 'إنشاء امتحان محاضرة جديد مع إعدادات متقدمة' : 'تعديل إعدادات الامتحان'}
+                  {type === "add"
+                    ? "إنشاء امتحان محاضرة جديد مع إعدادات متقدمة"
+                    : "تعديل إعدادات الامتحان"}
                 </Text>
               </VStack>
             </HStack>
           </ModalHeader>
-          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} top={4} right={4} isDisabled={loading} />
+          <ModalCloseButton
+            color="white"
+            _hover={{ bg: "whiteAlpha.200" }}
+            top={4}
+            right={4}
+            isDisabled={loading}
+          />
           <form onSubmit={handleSubmit}>
             <ModalBody py={8} px={8} bg={modalBg}>
               <VStack spacing={6} align="stretch">
                 {/* عنوان الامتحان */}
-                <Box p={5} bg={cardBg} borderRadius="xl" borderWidth="1px" borderColor={cardBorder}>
+                <Box
+                  p={5}
+                  bg={cardBg}
+                  borderRadius="xl"
+                  borderWidth="1px"
+                  borderColor={cardBorder}
+                >
                   <FormControl isRequired>
-                    <FormLabel display="flex" alignItems="center" gap={3} fontWeight="600" color={labelColor} fontSize="md" mb={3}>
-                      <Box p={2} bg="blue.50" borderRadius="lg" _dark={{ bg: "blue.900" }}>
+                    <FormLabel
+                      display="flex"
+                      alignItems="center"
+                      gap={3}
+                      fontWeight="600"
+                      color={labelColor}
+                      fontSize="md"
+                      mb={3}
+                    >
+                      <Box
+                        p={2}
+                        bg="blue.50"
+                        borderRadius="lg"
+                        _dark={{ bg: "blue.900" }}
+                      >
                         <Icon as={FaRegFileAlt} color="blue.500" boxSize={4} />
                       </Box>
                       عنوان الامتحان
                     </FormLabel>
                     <Input
                       value={formData.title}
-                      onChange={e => setFormData({ ...formData, title: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
                       placeholder="أدخل عنوان الامتحان"
                       isDisabled={loading}
                       borderRadius="lg"
                       borderWidth="1px"
                       borderColor={cardBorder}
-                      _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.3)", outline: "none" }}
+                      _focus={{
+                        borderColor: "blue.500",
+                        boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.3)",
+                        outline: "none",
+                      }}
                       size="lg"
                     />
                   </FormControl>
                 </Box>
 
                 {/* الدرجة الكلية ومدة الامتحان */}
-                <Box p={5} bg={cardBg} borderRadius="xl" borderWidth="1px" borderColor={cardBorder}>
+                <Box
+                  p={5}
+                  bg={cardBg}
+                  borderRadius="xl"
+                  borderWidth="1px"
+                  borderColor={cardBorder}
+                >
                   <HStack spacing={6} align="flex-start">
                     <FormControl isRequired flex={1}>
-                      <FormLabel display="flex" alignItems="center" gap={3} fontWeight="600" color={labelColor} fontSize="md" mb={3}>
-                        <Box p={2} bg="orange.50" borderRadius="lg" _dark={{ bg: "orange.900" }}>
+                      <FormLabel
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                        fontWeight="600"
+                        color={labelColor}
+                        fontSize="md"
+                        mb={3}
+                      >
+                        <Box
+                          p={2}
+                          bg="orange.50"
+                          borderRadius="lg"
+                          _dark={{ bg: "orange.900" }}
+                        >
                           <Icon as={FaStar} color="orange.500" boxSize={4} />
                         </Box>
                         الدرجة الكلية
@@ -1394,7 +1656,12 @@ const CourseDetailsPage = () => {
                       <Input
                         type="number"
                         value={formData.total_grade}
-                        onChange={e => setFormData({ ...formData, total_grade: parseInt(e.target.value) || 100 })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            total_grade: parseInt(e.target.value) || 100,
+                          })
+                        }
                         placeholder="100"
                         min={1}
                         max={1000}
@@ -1402,13 +1669,30 @@ const CourseDetailsPage = () => {
                         borderRadius="lg"
                         borderWidth="1px"
                         borderColor={cardBorder}
-                        _focus={{ borderColor: "orange.500", boxShadow: "0 0 0 2px rgba(237, 137, 54, 0.3)", outline: "none" }}
+                        _focus={{
+                          borderColor: "orange.500",
+                          boxShadow: "0 0 0 2px rgba(237, 137, 54, 0.3)",
+                          outline: "none",
+                        }}
                         size="lg"
                       />
                     </FormControl>
                     <FormControl isRequired flex={1}>
-                      <FormLabel display="flex" alignItems="center" gap={3} fontWeight="600" color={labelColor} fontSize="md" mb={3}>
-                        <Box p={2} bg="blue.50" borderRadius="lg" _dark={{ bg: "blue.900" }}>
+                      <FormLabel
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                        fontWeight="600"
+                        color={labelColor}
+                        fontSize="md"
+                        mb={3}
+                      >
+                        <Box
+                          p={2}
+                          bg="blue.50"
+                          borderRadius="lg"
+                          _dark={{ bg: "blue.900" }}
+                        >
                           <Icon as={FaClock} color="blue.500" boxSize={4} />
                         </Box>
                         المدة (بالدقائق)
@@ -1416,7 +1700,12 @@ const CourseDetailsPage = () => {
                       <Input
                         type="number"
                         value={formData.duration}
-                        onChange={e => setFormData({ ...formData, duration: parseInt(e.target.value) || 60 })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            duration: parseInt(e.target.value) || 60,
+                          })
+                        }
                         placeholder="60"
                         min={1}
                         max={300}
@@ -1424,7 +1713,11 @@ const CourseDetailsPage = () => {
                         borderRadius="lg"
                         borderWidth="1px"
                         borderColor={cardBorder}
-                        _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.3)", outline: "none" }}
+                        _focus={{
+                          borderColor: "blue.500",
+                          boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.3)",
+                          outline: "none",
+                        }}
                         size="lg"
                       />
                     </FormControl>
@@ -1432,43 +1725,95 @@ const CourseDetailsPage = () => {
                 </Box>
 
                 {/* تواريخ الظهور والإخفاء */}
-                <Box p={5} bg={cardBg} borderRadius="xl" borderWidth="1px" borderColor={cardBorder}>
+                <Box
+                  p={5}
+                  bg={cardBg}
+                  borderRadius="xl"
+                  borderWidth="1px"
+                  borderColor={cardBorder}
+                >
                   <HStack spacing={6} align="flex-start">
                     <FormControl flex={1}>
-                      <FormLabel display="flex" alignItems="center" gap={3} fontWeight="600" color={labelColor} fontSize="md" mb={3}>
-                        <Box p={2} bg="blue.50" borderRadius="lg" _dark={{ bg: "blue.900" }}>
-                          <Icon as={FaCalendarAlt} color="blue.500" boxSize={4} />
+                      <FormLabel
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                        fontWeight="600"
+                        color={labelColor}
+                        fontSize="md"
+                        mb={3}
+                      >
+                        <Box
+                          p={2}
+                          bg="blue.50"
+                          borderRadius="lg"
+                          _dark={{ bg: "blue.900" }}
+                        >
+                          <Icon
+                            as={FaCalendarAlt}
+                            color="blue.500"
+                            boxSize={4}
+                          />
                         </Box>
                         تاريخ الظهور
                       </FormLabel>
                       <Input
                         type="datetime-local"
                         value={formData.show_at}
-                        onChange={e => setFormData({ ...formData, show_at: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, show_at: e.target.value })
+                        }
                         isDisabled={loading}
                         borderRadius="lg"
                         borderWidth="1px"
                         borderColor={cardBorder}
-                        _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.3)", outline: "none" }}
+                        _focus={{
+                          borderColor: "blue.500",
+                          boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.3)",
+                          outline: "none",
+                        }}
                         size="lg"
                       />
                     </FormControl>
                     <FormControl flex={1}>
-                      <FormLabel display="flex" alignItems="center" gap={3} fontWeight="600" color={labelColor} fontSize="md" mb={3}>
-                        <Box p={2} bg="orange.50" borderRadius="lg" _dark={{ bg: "orange.900" }}>
-                          <Icon as={FaCalendarAlt} color="orange.500" boxSize={4} />
+                      <FormLabel
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                        fontWeight="600"
+                        color={labelColor}
+                        fontSize="md"
+                        mb={3}
+                      >
+                        <Box
+                          p={2}
+                          bg="orange.50"
+                          borderRadius="lg"
+                          _dark={{ bg: "orange.900" }}
+                        >
+                          <Icon
+                            as={FaCalendarAlt}
+                            color="orange.500"
+                            boxSize={4}
+                          />
                         </Box>
                         تاريخ الإخفاء
                       </FormLabel>
                       <Input
                         type="datetime-local"
                         value={formData.hide_at}
-                        onChange={e => setFormData({ ...formData, hide_at: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, hide_at: e.target.value })
+                        }
                         isDisabled={loading}
                         borderRadius="lg"
                         borderWidth="1px"
                         borderColor={cardBorder}
-                        _focus={{ borderColor: "orange.500", boxShadow: "0 0 0 2px rgba(237, 137, 54, 0.3)", outline: "none" }}
+                        _focus={{
+                          borderColor: "orange.500",
+                          boxShadow: "0 0 0 2px rgba(237, 137, 54, 0.3)",
+                          outline: "none",
+                        }}
                         size="lg"
                       />
                     </FormControl>
@@ -1476,26 +1821,68 @@ const CourseDetailsPage = () => {
                 </Box>
 
                 {/* إعدادات الإجابات */}
-                <Box p={5} bg={cardBg} borderRadius="xl" borderWidth="1px" borderColor={cardBorder}>
+                <Box
+                  p={5}
+                  bg={cardBg}
+                  borderRadius="xl"
+                  borderWidth="1px"
+                  borderColor={cardBorder}
+                >
                   <HStack spacing={3} mb={4}>
-                    <Box p={2} bg="blue.50" borderRadius="lg" _dark={{ bg: "blue.900" }}>
+                    <Box
+                      p={2}
+                      bg="blue.50"
+                      borderRadius="lg"
+                      _dark={{ bg: "blue.900" }}
+                    >
                       <Icon as={FaLightbulb} color="blue.500" boxSize={5} />
                     </Box>
                     <VStack align="start" spacing={0}>
-                      <Text fontSize="md" fontWeight="600" color={labelColor}>إعدادات عرض الإجابات</Text>
-                      <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>تحكم في كيفية ومتى يتم عرض الإجابات للطلاب</Text>
+                      <Text fontSize="md" fontWeight="600" color={labelColor}>
+                        إعدادات عرض الإجابات
+                      </Text>
+                      <Text
+                        fontSize="sm"
+                        color="gray.500"
+                        _dark={{ color: "gray.400" }}
+                      >
+                        تحكم في كيفية ومتى يتم عرض الإجابات للطلاب
+                      </Text>
                     </VStack>
                   </HStack>
                   <VStack spacing={4} align="stretch">
-                    <Box p={4} bg={modalBg} borderRadius="lg" borderWidth="1px" borderColor={cardBorder}>
+                    <Box
+                      p={4}
+                      bg={modalBg}
+                      borderRadius="lg"
+                      borderWidth="1px"
+                      borderColor={cardBorder}
+                    >
                       <HStack justify="space-between" align="center">
                         <VStack align="start" spacing={0}>
-                          <Text fontWeight="600" color={labelColor} fontSize="md">إظهار الإجابات فوراً</Text>
-                          <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>عرض الإجابات مباشرة بعد انتهاء الامتحان</Text>
+                          <Text
+                            fontWeight="600"
+                            color={labelColor}
+                            fontSize="md"
+                          >
+                            إظهار الإجابات فوراً
+                          </Text>
+                          <Text
+                            fontSize="sm"
+                            color="gray.500"
+                            _dark={{ color: "gray.400" }}
+                          >
+                            عرض الإجابات مباشرة بعد انتهاء الامتحان
+                          </Text>
                         </VStack>
                         <Switch
                           isChecked={formData.show_answers_immediately}
-                          onChange={e => setFormData({ ...formData, show_answers_immediately: e.target.checked })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              show_answers_immediately: e.target.checked,
+                            })
+                          }
                           colorScheme="blue"
                           size="lg"
                           isDisabled={loading}
@@ -1503,18 +1890,47 @@ const CourseDetailsPage = () => {
                       </HStack>
                     </Box>
                     {!formData.show_answers_immediately && (
-                      <Box p={4} bg={modalBg} borderRadius="lg" borderWidth="1px" borderColor={cardBorder}>
+                      <Box
+                        p={4}
+                        bg={modalBg}
+                        borderRadius="lg"
+                        borderWidth="1px"
+                        borderColor={cardBorder}
+                      >
                         <FormControl>
-                          <FormLabel display="flex" alignItems="center" gap={3} fontWeight="600" color={labelColor} fontSize="md" mb={2}>
-                            <Box p={2} bg="orange.50" borderRadius="lg" _dark={{ bg: "orange.900" }}>
-                              <Icon as={FaClock} color="orange.500" boxSize={4} />
+                          <FormLabel
+                            display="flex"
+                            alignItems="center"
+                            gap={3}
+                            fontWeight="600"
+                            color={labelColor}
+                            fontSize="md"
+                            mb={2}
+                          >
+                            <Box
+                              p={2}
+                              bg="orange.50"
+                              borderRadius="lg"
+                              _dark={{ bg: "orange.900" }}
+                            >
+                              <Icon
+                                as={FaClock}
+                                color="orange.500"
+                                boxSize={4}
+                              />
                             </Box>
                             إظهار الإجابات بعد (ساعات)
                           </FormLabel>
                           <Input
                             type="number"
                             value={formData.show_answers_after_hours}
-                            onChange={e => setFormData({ ...formData, show_answers_after_hours: parseInt(e.target.value) || 24 })}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                show_answers_after_hours:
+                                  parseInt(e.target.value) || 24,
+                              })
+                            }
                             placeholder="24"
                             min={1}
                             max={168}
@@ -1522,7 +1938,11 @@ const CourseDetailsPage = () => {
                             borderRadius="lg"
                             borderWidth="1px"
                             borderColor={cardBorder}
-                            _focus={{ borderColor: "orange.500", boxShadow: "0 0 0 2px rgba(237, 137, 54, 0.3)", outline: "none" }}
+                            _focus={{
+                              borderColor: "orange.500",
+                              boxShadow: "0 0 0 2px rgba(237, 137, 54, 0.3)",
+                              outline: "none",
+                            }}
                             size="lg"
                           />
                         </FormControl>
@@ -1532,41 +1952,106 @@ const CourseDetailsPage = () => {
                 </Box>
 
                 {/* إعدادات إضافية */}
-                <Box p={5} bg={cardBg} borderRadius="xl" borderWidth="1px" borderColor={cardBorder}>
+                <Box
+                  p={5}
+                  bg={cardBg}
+                  borderRadius="xl"
+                  borderWidth="1px"
+                  borderColor={cardBorder}
+                >
                   <HStack spacing={3} mb={4}>
-                    <Box p={2} bg="blue.50" borderRadius="lg" _dark={{ bg: "blue.900" }}>
+                    <Box
+                      p={2}
+                      bg="blue.50"
+                      borderRadius="lg"
+                      _dark={{ bg: "blue.900" }}
+                    >
                       <Icon as={FaCog} color="blue.500" boxSize={5} />
                     </Box>
                     <VStack align="start" spacing={0}>
-                      <Text fontSize="md" fontWeight="600" color={labelColor}>إعدادات إضافية</Text>
-                      <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>تحكم في رؤية الامتحان وسلوك المحاضرات</Text>
+                      <Text fontSize="md" fontWeight="600" color={labelColor}>
+                        إعدادات إضافية
+                      </Text>
+                      <Text
+                        fontSize="sm"
+                        color="gray.500"
+                        _dark={{ color: "gray.400" }}
+                      >
+                        تحكم في رؤية الامتحان وسلوك المحاضرات
+                      </Text>
                     </VStack>
                   </HStack>
                   <VStack spacing={4} align="stretch">
-                    <Box p={4} bg={modalBg} borderRadius="lg" borderWidth="1px" borderColor={cardBorder}>
+                    <Box
+                      p={4}
+                      bg={modalBg}
+                      borderRadius="lg"
+                      borderWidth="1px"
+                      borderColor={cardBorder}
+                    >
                       <HStack justify="space-between" align="center">
                         <VStack align="start" spacing={0}>
-                          <Text fontWeight="600" color={labelColor} fontSize="md">إظهار الامتحان</Text>
-                          <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>جعل الامتحان مرئياً للطلاب</Text>
+                          <Text
+                            fontWeight="600"
+                            color={labelColor}
+                            fontSize="md"
+                          >
+                            إظهار الامتحان
+                          </Text>
+                          <Text
+                            fontSize="sm"
+                            color="gray.500"
+                            _dark={{ color: "gray.400" }}
+                          >
+                            جعل الامتحان مرئياً للطلاب
+                          </Text>
                         </VStack>
                         <Switch
                           isChecked={formData.is_visible}
-                          onChange={e => setFormData({ ...formData, is_visible: e.target.checked })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              is_visible: e.target.checked,
+                            })
+                          }
                           colorScheme="blue"
                           size="lg"
                           isDisabled={loading}
                         />
                       </HStack>
                     </Box>
-                    <Box p={4} bg={modalBg} borderRadius="lg" borderWidth="1px" borderColor={cardBorder}>
+                    <Box
+                      p={4}
+                      bg={modalBg}
+                      borderRadius="lg"
+                      borderWidth="1px"
+                      borderColor={cardBorder}
+                    >
                       <HStack justify="space-between" align="center">
                         <VStack align="start" spacing={0}>
-                          <Text fontWeight="600" color={labelColor} fontSize="md">قفل المحاضرات التالية</Text>
-                          <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>منع الوصول للمحاضرات التالية حتى اجتياز الامتحان</Text>
+                          <Text
+                            fontWeight="600"
+                            color={labelColor}
+                            fontSize="md"
+                          >
+                            قفل المحاضرات التالية
+                          </Text>
+                          <Text
+                            fontSize="sm"
+                            color="gray.500"
+                            _dark={{ color: "gray.400" }}
+                          >
+                            منع الوصول للمحاضرات التالية حتى اجتياز الامتحان
+                          </Text>
                         </VStack>
                         <Switch
                           isChecked={formData.lock_next_lectures}
-                          onChange={e => setFormData({ ...formData, lock_next_lectures: e.target.checked })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              lock_next_lectures: e.target.checked,
+                            })
+                          }
                           colorScheme="orange"
                           size="lg"
                           isDisabled={loading}
@@ -1578,21 +2063,35 @@ const CourseDetailsPage = () => {
               </VStack>
             </ModalBody>
 
-            <ModalFooter py={6} px={8} borderTopWidth="1px" borderColor={footerBorder} bg={footerBg} borderRadius="0 0 2xl 2xl">
+            <ModalFooter
+              py={6}
+              px={8}
+              borderTopWidth="1px"
+              borderColor={footerBorder}
+              bg={footerBg}
+              borderRadius="0 0 2xl 2xl"
+            >
               <HStack spacing={4} w="full" justify="flex-end">
-                <Button variant="ghost" onClick={onClose} isDisabled={loading} fontWeight="600">
+                <Button
+                  variant="ghost"
+                  onClick={onClose}
+                  isDisabled={loading}
+                  fontWeight="600"
+                >
                   إلغاء
                 </Button>
                 <Button
                   colorScheme="orange"
                   type="submit"
                   isLoading={loading}
-                  loadingText={type === 'add' ? 'جاري الإضافة...' : 'جاري التعديل...'}
+                  loadingText={
+                    type === "add" ? "جاري الإضافة..." : "جاري التعديل..."
+                  }
                   leftIcon={!loading ? <Icon as={FaCheck} /> : undefined}
                   borderRadius="xl"
                   fontWeight="bold"
                 >
-                  {type === 'add' ? 'إضافة الامتحان' : 'تعديل الامتحان'}
+                  {type === "add" ? "إضافة الامتحان" : "تعديل الامتحان"}
                 </Button>
               </HStack>
             </ModalFooter>
@@ -1603,19 +2102,33 @@ const CourseDetailsPage = () => {
   };
 
   // مودال إضافة الأسئلة بالجملة
-  const BulkQuestionsModal = ({ isOpen, onClose, examId, examTitle, onSubmit, loading }) => {
-    const [questionType, setQuestionType] = useState('text'); // 'text' or 'images'
+  const BulkQuestionsModal = ({
+    isOpen,
+    onClose,
+    examId,
+    examTitle,
+    onSubmit,
+    loading,
+  }) => {
+    const [questionType, setQuestionType] = useState("text"); // 'text' or 'images'
     const [formData, setFormData] = useState({
-      bulk_text: '',
-      images: []
+      bulk_text: "",
+      images: [],
     });
     const [imagePreviews, setImagePreviews] = useState([]);
 
     useEffect(() => {
-      console.log('BulkQuestionsModal useEffect - isOpen:', isOpen, 'examId:', examId, 'examTitle:', examTitle);
-      setFormData({ bulk_text: '', images: [] });
+      console.log(
+        "BulkQuestionsModal useEffect - isOpen:",
+        isOpen,
+        "examId:",
+        examId,
+        "examTitle:",
+        examTitle
+      );
+      setFormData({ bulk_text: "", images: [] });
       setImagePreviews([]);
-      setQuestionType('text');
+      setQuestionType("text");
     }, [isOpen, examId, examTitle]);
 
     const handleImageChange = (event) => {
@@ -1634,8 +2147,10 @@ const CourseDetailsPage = () => {
       }
 
       // Validate file types
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+      const invalidFiles = files.filter(
+        (file) => !validTypes.includes(file.type)
+      );
 
       if (invalidFiles.length > 0) {
         toast({
@@ -1649,7 +2164,9 @@ const CourseDetailsPage = () => {
       }
 
       // Validate file sizes (max 5MB each)
-      const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+      const oversizedFiles = files.filter(
+        (file) => file.size > 5 * 1024 * 1024
+      );
       if (oversizedFiles.length > 0) {
         toast({
           title: "خطأ في حجم الملفات",
@@ -1661,10 +2178,10 @@ const CourseDetailsPage = () => {
         return;
       }
 
-      setFormData(prev => ({ ...prev, images: files }));
+      setFormData((prev) => ({ ...prev, images: files }));
 
       // Create previews
-      const previews = files.map(file => URL.createObjectURL(file));
+      const previews = files.map((file) => URL.createObjectURL(file));
       setImagePreviews(previews);
     };
 
@@ -1675,23 +2192,36 @@ const CourseDetailsPage = () => {
       // Revoke the URL to free memory
       URL.revokeObjectURL(imagePreviews[index]);
 
-      setFormData(prev => ({ ...prev, images: newImages }));
+      setFormData((prev) => ({ ...prev, images: newImages }));
       setImagePreviews(newPreviews);
     };
 
     const handleSubmit = (e) => {
       e.preventDefault();
-      if (questionType === 'text') {
-        onSubmit(examId, formData.bulk_text, 'text');
+      if (questionType === "text") {
+        onSubmit(examId, formData.bulk_text, "text");
       } else {
-        onSubmit(examId, formData.images, 'images');
+        onSubmit(examId, formData.images, "images");
       }
       // لا نغلق الموديل هنا، سيتم إغلاقه بعد نجاح العملية
     };
 
-    console.log('BulkQuestionsModal render - isOpen:', isOpen, 'examId:', examId, 'examTitle:', examTitle);
+    console.log(
+      "BulkQuestionsModal render - isOpen:",
+      isOpen,
+      "examId:",
+      examId,
+      "examTitle:",
+      examTitle
+    );
     return (
-      <Modal isOpen={isOpen} onClose={loading ? undefined : onClose} size="4xl" closeOnOverlayClick={!loading} closeOnEsc={!loading}>
+      <Modal
+        isOpen={isOpen}
+        onClose={loading ? undefined : onClose}
+        size="4xl"
+        closeOnOverlayClick={!loading}
+        closeOnEsc={!loading}
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
@@ -1699,12 +2229,12 @@ const CourseDetailsPage = () => {
               <Icon as={FaPlus} color="blue.500" mr={3} />
               <Text>إضافة أسئلة بالجملة - {examTitle}</Text>
             </Flex>
-            {console.log('Modal header rendered with examTitle:', examTitle)}
+            {console.log("Modal header rendered with examTitle:", examTitle)}
           </ModalHeader>
           <ModalCloseButton isDisabled={loading} />
           <form onSubmit={handleSubmit}>
             <ModalBody>
-              {console.log('Modal body content starting')}
+              {console.log("Modal body content starting")}
               <VStack spacing={6} align="stretch">
                 {/* Question Type Selection */}
                 <Box>
@@ -1713,17 +2243,17 @@ const CourseDetailsPage = () => {
                   </FormLabel>
                   <HStack spacing={4} mb={4}>
                     <Button
-                      colorScheme={questionType === 'text' ? 'blue' : 'gray'}
-                      variant={questionType === 'text' ? 'solid' : 'outline'}
-                      onClick={() => setQuestionType('text')}
+                      colorScheme={questionType === "text" ? "blue" : "gray"}
+                      variant={questionType === "text" ? "solid" : "outline"}
+                      onClick={() => setQuestionType("text")}
                       leftIcon={<Icon as={FaRegFileAlt} />}
                     >
                       أسئلة نصية
                     </Button>
                     <Button
-                      colorScheme={questionType === 'images' ? 'blue' : 'gray'}
-                      variant={questionType === 'images' ? 'solid' : 'outline'}
-                      onClick={() => setQuestionType('images')}
+                      colorScheme={questionType === "images" ? "blue" : "gray"}
+                      variant={questionType === "images" ? "solid" : "outline"}
+                      onClick={() => setQuestionType("images")}
                       leftIcon={<Icon as={FaFilePdf} />}
                     >
                       أسئلة بالصور
@@ -1732,7 +2262,7 @@ const CourseDetailsPage = () => {
                 </Box>
 
                 {/* Text Questions Section */}
-                {questionType === 'text' && (
+                {questionType === "text" && (
                   <Box>
                     <FormLabel fontWeight="bold" mb={2}>
                       نص الأسئلة
@@ -1764,7 +2294,9 @@ D) has made`}
                     </Box>
                     <Textarea
                       value={formData.bulk_text}
-                      onChange={(e) => setFormData({ ...formData, bulk_text: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, bulk_text: e.target.value })
+                      }
                       placeholder="أدخل الأسئلة هنا..."
                       rows={15}
                       fontFamily="mono"
@@ -1793,7 +2325,7 @@ D) has made`}
                 )}
 
                 {/* Image Questions Section */}
-                {questionType === 'images' && (
+                {questionType === "images" && (
                   <Box>
                     <FormLabel fontWeight="bold" mb={2}>
                       رفع صور الأسئلة
@@ -1812,7 +2344,7 @@ D) has made`}
                       cursor="pointer"
                       _hover={{
                         borderColor: "blue.400",
-                        bg: "blue.50"
+                        bg: "blue.50",
                       }}
                       transition="all 0.2s"
                       mb={4}
@@ -1849,7 +2381,10 @@ D) has made`}
                         <Text fontSize="sm" fontWeight="medium" mb={3}>
                           الصور المحددة ({imagePreviews.length}/10):
                         </Text>
-                        <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={4}>
+                        <SimpleGrid
+                          columns={{ base: 2, md: 3, lg: 4 }}
+                          spacing={4}
+                        >
                           {imagePreviews.map((preview, index) => (
                             <Box key={index} position="relative">
                               <Image
@@ -1901,7 +2436,12 @@ D) has made`}
               </VStack>
             </ModalBody>
             <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onClose} isDisabled={loading}>
+              <Button
+                variant="ghost"
+                mr={3}
+                onClick={onClose}
+                isDisabled={loading}
+              >
                 إلغاء
               </Button>
               <Button
@@ -1911,11 +2451,13 @@ D) has made`}
                 loadingText="جاري إضافة الأسئلة..."
                 isDisabled={
                   loading ||
-                  (questionType === 'text' && !formData.bulk_text.trim()) ||
-                  (questionType === 'images' && formData.images.length === 0)
+                  (questionType === "text" && !formData.bulk_text.trim()) ||
+                  (questionType === "images" && formData.images.length === 0)
                 }
               >
-                {questionType === 'text' ? 'إضافة الأسئلة النصية' : 'إضافة الأسئلة بالصور'}
+                {questionType === "text"
+                  ? "إضافة الأسئلة النصية"
+                  : "إضافة الأسئلة بالصور"}
               </Button>
             </ModalFooter>
           </form>
@@ -1929,13 +2471,17 @@ D) has made`}
     e.preventDefault();
     setCodeLoading(true);
     try {
-      await baseUrl.post("api/course/activation-code", {
-        course_id: course.id,
-        count: parseInt(codeCount),
-        expires_at: new Date(codeExpiresAt).toISOString(),
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await baseUrl.post(
+        "api/course/activation-code",
+        {
+          course_id: course.id,
+          count: parseInt(codeCount),
+          expires_at: new Date(codeExpiresAt).toISOString(),
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       toast({
         title: "تم إنشاء الأكواد بنجاح!",
         status: "success",
@@ -1944,7 +2490,7 @@ D) has made`}
       });
       setCodeModalOpen(false);
       setCodeCount(1);
-      setCodeExpiresAt(dayjs().add(30, 'day').format('YYYY-MM-DDTHH:mm'));
+      setCodeExpiresAt(dayjs().add(30, "day").format("YYYY-MM-DDTHH:mm"));
       // تحديث البيانات بدون إعادة تحميل
       await fetchActivationCodes();
     } catch (error) {
@@ -2004,7 +2550,9 @@ D) has made`}
       const codesPerPage = 12; // 3 columns × 4 rows
       const pageWidth = 297; // mm
       const pageHeight = 210; // mm
-      const pdf = new jsPDF('l', 'mm', 'a4');
+      const logoUrl = `${window.location.origin}/next%20logo.png`;
+      const courseName = courseData?.course?.title || "الكورس";
+      const pdf = new jsPDF("l", "mm", "a4");
       for (let i = 0; i < codesToExport.length; i += codesPerPage) {
         const tempDiv = document.createElement("div");
         tempDiv.style.display = "block";
@@ -2015,49 +2563,50 @@ D) has made`}
         tempDiv.innerHTML = `
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 3mm; width: 100%; height: 100%; align-content: start;">
             ${codesToExport
-            .slice(i, i + codesPerPage)
-            .map(
-              (code, index) => `
-                  <div class="code" style="padding: 3mm; width: 100%; height: 100%; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; position: relative; overflow: hidden; background: #fff; display: flex; flex-direction: column; justify-content: space-between; min-height: 40mm; direction: rtl;">
-                    
-                    <!-- Header with Logo and Grade -->
-                    <div style='display: flex; background-color:"#e98036" align-items: center; justify-content: space-between; margin-bottom: 3px; padding: 2px 0;'>
-                      <div style='display: flex; align-items: center;'>
-                         
-                          <div style='margin-bottom: 3px;'>
-                      <h2 style='font-size: 14px; font-weight: bold; color: #3182ce; margin: 0; text-align: center;'>
-                        ${user.name || 'عمرو علي'}
-                      </h2>
+              .slice(i, i + codesPerPage)
+              .map(
+                (code, index) => `
+                  <div  style="padding: 0; width: 100%; height: 100%; border-radius: 12px; box-shadow: 0 2px 12px rgba(49,130,206,0.18); position: relative; overflow: hidden; background: #f8fafc; display: flex; flex-direction: column; justify-content: space-between; min-height: 40mm; direction: rtl; border: 1px solid rgba(49,130,206,0.25);">
+                    <!-- Background watermark: NextEdu logo -->
+                    <div style="position: absolute; inset: 0; background-image: url('${logoUrl}'); background-size: 50% auto; background-repeat: no-repeat; background-position: center; opacity: 0.22; pointer-events: none;"></div>
+                    <!-- الهيدر: اسم المدرس + الصف -->
+                    <div style="position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px; background: #3182ce; padding: 8px 8px; min-height: 32px;">
+                      <h2 style="font-size: 14px; font-weight: 800; color: #fff; margin: 0; text-align: right; flex: 1; min-width: 0; line-height: 1.3; word-break: break-word;">${
+                        user.name || "عمرو علي"
+                      }</h2>
+                      <span style="font-size: 10px; color: #fff; font-weight: 700; background: rgba(0,0,0,0.15); padding: 4px 8px; border-radius: 8px; white-space: nowrap;">${
+                        code.grade_name || "الصف الثاني الثانوي"
+                      }</span>
                     </div>
-                      </div>
-                      <div style='font-size: 9px; color: #3182ce; font-weight: bold;'>${code.grade_name || 'الصف الثاني الثانوي'}</div>
+                    <!-- اسم الكورس -->
+                    <div style="position: relative; padding: 3px 8px; background: #ebf8ff; border-bottom: 1px solid rgba(49,130,206,0.2);">
+                      <p style="font-size: 10px; font-weight: 700; color: #2b6cb0; margin: 0; text-align: right;">${courseName}</p>
                     </div>
-                    <!-- QR Code and Activation Code -->
-                    <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; margin-top: 10px;'>
-                      <!-- Activation Code Section - Left -->
-                      <div style='text-align: center;'>
-                        <div style='font-size: 9px; color: #3182ce; font-weight: bold; margin-bottom: 2px;'>كود التفعيل</div>
-                        <div style='font-size: 9px; color: #3182ce; font-weight: bold;'>${code.code}</div>
+                    <!-- المحتوى: كود التفعيل + QR -->
+                    <div style="position: relative; display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; flex: 1; gap: 8px;">
+                      <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 9px; color: #2b6cb0; font-weight: 700;">كود التفعيل</div>
+                        <div style="margin-top: 12px; margin-bottom: 12px;">
+                          <div style="display: inline-block; font-size: 16px; color: #1a365d; font-weight: 800; letter-spacing: 1.5px; font-family: monospace; padding: 4px 10px; background: #fff; border-left: 4px solid #3182ce; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">${
+                            code.code
+                          }</div>
+                        </div>
                       </div>
-                      
-                      <!-- Empty Middle Space -->
-                      <div style='flex: 1;'></div>
-                      
-                      <!-- QR Code Section - Right -->
-                      <div style='text-align: center;'>
-                        ${code.qr_code ? `<img src="${code.qr_code}" alt="QR Code" style="width: 110px; height: 110px; border: 1px solid #ddd; border-radius: 4px; background: white; padding: 2px; display: block; margin: 0 auto;" />` : '<div style="width: 50px; height: 50px; border: 1px dashed #ccc; border-radius: 4px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 8px; color: #999;">QR</div>'}
+                      <div style="flex-shrink: 0;">
+                        ${
+                          code.qr_code
+                            ? `<img src="${code.qr_code}" alt="QR" style="width: 72px; height: 72px; border: 2px solid #3182ce; border-radius: 10px; background: #fff; padding: 3px; display: block;" />`
+                            : '<div style="width: 72px; height: 72px; border: 2px dashed #3182ce; border-radius: 10px; background: #ebf8ff; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #3182ce; font-weight: bold;">QR</div>'
+                        }
                       </div>
                     </div>
-                    
-                    <!-- Contact Numbers -->
-                    <div style='margin-top: auto; padding-top: 3px; border-top: 1px solid #e2e8f0;  height: 20px;'>
-                      <p style='font-size: 9px; font-weight: 600; color: #3182ce; text-align: center; margin: 0;'>
-                        01111272393 | 01288781012 | 01210726096
-                      </p>
+                    <!-- الفوتر: أرقام التواصل - أزرق فقط + أكبر -->
+                    <div style="position: relative; padding: 8px 8px; background: #3182ce;">
+                      <p style="font-size: 10px; font-weight: 700; color: #fff; text-align: center; margin: 0; line-height: 1.4;">01111272393 | 01288781012 | 01210726096</p>
                     </div>
                   </div>`
-            )
-            .join("")}
+              )
+              .join("")}
           </div>
         `;
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -2116,17 +2665,15 @@ D) has made`}
     navigate(`/CourseStudentsPage/${id}`);
   };
 
-
-
   // Format date function
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ar-EG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("ar-EG", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -2136,7 +2683,7 @@ D) has made`}
       isVisible: true,
       videoUrl,
       videoTitle,
-      isVisible: true
+      isVisible: true,
     });
   };
 
@@ -2144,17 +2691,17 @@ D) has made`}
   const handleCloseVideo = () => {
     setVideoPlayer({
       isVisible: false,
-      videoUrl: '',
-      videoTitle: '',
-      isVisible: false
+      videoUrl: "",
+      videoTitle: "",
+      isVisible: false,
     });
   };
 
   // دالة تبديل ظهور الفيديو
   const handleToggleVideoVisibility = () => {
-    setVideoPlayer(prev => ({
+    setVideoPlayer((prev) => ({
       ...prev,
-      isVisible: !prev.isVisible
+      isVisible: !prev.isVisible,
     }));
   };
 
@@ -2187,8 +2734,8 @@ D) has made`}
                 boxSize={20}
                 color="red.500"
                 style={{
-                  animation: 'shake 0.5s ease-in-out infinite',
-                  filter: 'drop-shadow(0 2px 4px rgba(245, 101, 101, 0.3))'
+                  animation: "shake 0.5s ease-in-out infinite",
+                  filter: "drop-shadow(0 2px 4px rgba(245, 101, 101, 0.3))",
                 }}
               />
               <Box
@@ -2213,7 +2760,7 @@ D) has made`}
               border="2px solid"
               borderColor="red.200"
               textAlign="center"
-              maxW={{ base: '90vw', md: '500px' }}
+              maxW={{ base: "90vw", md: "500px" }}
             >
               <VStack spacing={6}>
                 <Text
@@ -2223,11 +2770,7 @@ D) has made`}
                 >
                   حدث خطأ أثناء تحميل البيانات
                 </Text>
-                <Text
-                  fontSize="md"
-                  color="red.500"
-                  opacity="0.9"
-                >
+                <Text fontSize="md" color="red.500" opacity="0.9">
                   {error}
                 </Text>
                 <Button
@@ -2236,7 +2779,7 @@ D) has made`}
                   size="lg"
                   px={8}
                   borderRadius="full"
-                  _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+                  _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
                   transition="all 0.2s"
                 >
                   إعادة المحاولة
@@ -2275,8 +2818,8 @@ D) has made`}
                 boxSize={20}
                 color="gray.500"
                 style={{
-                  animation: 'float 3s ease-in-out infinite',
-                  filter: 'drop-shadow(0 2px 4px rgba(113, 128, 150, 0.3))'
+                  animation: "float 3s ease-in-out infinite",
+                  filter: "drop-shadow(0 2px 4px rgba(113, 128, 150, 0.3))",
                 }}
               />
             </Box>
@@ -2290,7 +2833,7 @@ D) has made`}
               border="2px solid"
               borderColor="gray.200"
               textAlign="center"
-              maxW={{ base: '90vw', md: '500px' }}
+              maxW={{ base: "90vw", md: "500px" }}
             >
               <VStack spacing={6}>
                 <Text
@@ -2300,11 +2843,7 @@ D) has made`}
                 >
                   لا توجد بيانات متاحة
                 </Text>
-                <Text
-                  fontSize="md"
-                  color="gray.500"
-                  opacity="0.8"
-                >
+                <Text fontSize="md" color="gray.500" opacity="0.8">
                   لم يتم العثور على معلومات الكورس المطلوب
                 </Text>
                 <Button
@@ -2313,7 +2852,7 @@ D) has made`}
                   size="md"
                   px={6}
                   borderRadius="full"
-                  _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
+                  _hover={{ transform: "translateY(-1px)", boxShadow: "md" }}
                   transition="all 0.2s"
                 >
                   تحديث الصفحة
@@ -2336,7 +2875,12 @@ D) has made`}
 
   const { course, lectures } = courseData;
   return (
-    <Box minH={{ base: '100vh', md: '100vh' }} bg={pageBg} dir="rtl" className="mt-[=5 0px]">
+    <Box
+      minH={{ base: "100vh", md: "100vh" }}
+      bg={pageBg}
+      dir="rtl"
+      className="mt-[=5 0px]"
+    >
       {/* Hero Section - Full Width Image with Overlay */}
       <CourseHeroSection
         course={course}
@@ -2357,13 +2901,13 @@ D) has made`}
       {/* زر إنشاء أكواد للمدرس فقط */}
       {isTeacher && (
         <Flex
-          justify={{ base: 'center', md: 'flex-end' }}
+          justify={{ base: "center", md: "flex-end" }}
           align="center"
           px={{ base: 4, sm: 6, md: 10 }}
           mt={{ base: 2, md: 4 }}
           mb={{ base: 0, md: -8 }}
           gap={{ base: 2, md: 3 }}
-          direction={{ base: 'column', sm: 'row' }}
+          direction={{ base: "column", sm: "row" }}
           flexWrap="wrap"
         >
           <Button
@@ -2371,9 +2915,9 @@ D) has made`}
             leftIcon={<FaKey />}
             borderRadius="xl"
             onClick={() => setCodeModalOpen(true)}
-            w={{ base: '100%', sm: 'auto' }}
-            size={{ base: 'sm', md: 'md' }}
-            fontSize={{ base: 'xs', md: 'sm' }}
+            w={{ base: "100%", sm: "auto" }}
+            size={{ base: "sm", md: "md" }}
+            fontSize={{ base: "xs", md: "sm" }}
           >
             إنشاء أكواد
           </Button>
@@ -2381,17 +2925,24 @@ D) has made`}
             colorScheme="blue"
             leftIcon={<FaKey />}
             borderRadius="xl"
-            onClick={() => { setShowCodesModal(true); fetchActivationCodes(); }}
-            w={{ base: '100%', sm: 'auto' }}
-            size={{ base: 'sm', md: 'md' }}
-            fontSize={{ base: 'xs', md: 'sm' }}
+            onClick={() => {
+              setShowCodesModal(true);
+              fetchActivationCodes();
+            }}
+            w={{ base: "100%", sm: "auto" }}
+            size={{ base: "sm", md: "md" }}
+            fontSize={{ base: "xs", md: "sm" }}
           >
             عرض أكواد الكورس
           </Button>
         </Flex>
       )}
       {/* مودال إنشاء الأكواد */}
-      <Modal isOpen={codeModalOpen} onClose={() => setCodeModalOpen(false)} isCentered>
+      <Modal
+        isOpen={codeModalOpen}
+        onClose={() => setCodeModalOpen(false)}
+        isCentered
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>إنشاء أكواد تفعيل للكورس</ModalHeader>
@@ -2405,7 +2956,7 @@ D) has made`}
                     type="number"
                     min={1}
                     value={codeCount}
-                    onChange={e => setCodeCount(e.target.value)}
+                    onChange={(e) => setCodeCount(e.target.value)}
                   />
                 </FormControl>
                 <FormControl isRequired>
@@ -2413,33 +2964,55 @@ D) has made`}
                   <Input
                     type="datetime-local"
                     value={codeExpiresAt}
-                    onChange={e => setCodeExpiresAt(e.target.value)}
+                    onChange={(e) => setCodeExpiresAt(e.target.value)}
                   />
                 </FormControl>
               </VStack>
             </ModalBody>
             <ModalFooter>
-              <Button variant="ghost" onClick={() => setCodeModalOpen(false)} mr={3}>إلغاء</Button>
-              <Button colorScheme="purple" type="submit" isLoading={codeLoading}>إنشاء</Button>
+              <Button
+                variant="ghost"
+                onClick={() => setCodeModalOpen(false)}
+                mr={3}
+              >
+                إلغاء
+              </Button>
+              <Button
+                colorScheme="purple"
+                type="submit"
+                isLoading={codeLoading}
+              >
+                إنشاء
+              </Button>
             </ModalFooter>
           </form>
         </ModalContent>
       </Modal>
 
       {/* مودال عرض الأكواد */}
-      <Modal isOpen={showCodesModal} onClose={() => {
-        setShowCodesModal(false);
-        setSearchCode('');
-      }} size="3xl" isCentered>
+      <Modal
+        isOpen={showCodesModal}
+        onClose={() => {
+          setShowCodesModal(false);
+          setSearchCode("");
+        }}
+        size="6xl"
+        isCentered
+      >
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>أكواد تفعيل الكورس</ModalHeader>
+        <ModalContent borderRadius="2xl" overflow="hidden">
+          <Box h="1" w="full" bg="blue.500" />
+          <ModalHeader bg="blue.50" _dark={{ bg: "whiteAlpha.100" }} borderBottomWidth="1px" borderColor="blue.100" _dark={{ borderColor: "whiteAlpha.200" }}>
+            أكواد تفعيل الكورس
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {/* حقل البحث */}
             {activationCodes.length > 0 && (
-              <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="blue.50">
-                <Text fontWeight="bold" mb={3} color="blue.700">البحث في الأكواد:</Text>
+              <Box mb={4} p={4} borderWidth={1} borderRadius="xl" bg="blue.50" _dark={{ bg: "whiteAlpha.50" }} borderColor="blue.100">
+                <Text fontWeight="bold" mb={3} color="blue.700" _dark={{ color: "blue.200" }}>
+                  البحث في الأكواد:
+                </Text>
                 <InputGroup>
                   <InputLeftElement>
                     <Icon as={FaSearch} color="blue.500" />
@@ -2450,7 +3023,10 @@ D) has made`}
                     onChange={(e) => setSearchCode(e.target.value)}
                     bg="white"
                     borderColor="blue.200"
-                    _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 1px blue.400" }}
+                    _focus={{
+                      borderColor: "blue.400",
+                      boxShadow: "0 0 0 1px blue.400",
+                    }}
                   />
                   {searchCode && (
                     <InputRightElement>
@@ -2458,7 +3034,7 @@ D) has made`}
                         size="sm"
                         variant="ghost"
                         icon={<Icon as={FaTimes} />}
-                        onClick={() => setSearchCode('')}
+                        onClick={() => setSearchCode("")}
                         aria-label="مسح البحث"
                       />
                     </InputRightElement>
@@ -2466,23 +3042,30 @@ D) has made`}
                 </InputGroup>
                 {searchCode && (
                   <Text fontSize="sm" color="blue.600" mt={2}>
-                    تم العثور على {filteredCodes.length} كود من أصل {activationCodes.length}
+                    تم العثور على {filteredCodes.length} كود من أصل{" "}
+                    {activationCodes.length}
                   </Text>
                 )}
               </Box>
             )}
 
             {activationCodes.length > 0 && (
-              <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="gray.50">
-                <Text fontWeight="bold" mb={3}>تحديد نطاق التصدير:</Text>
+              <Box mb={4} p={4} borderWidth={1} borderRadius="xl" bg="blue.50" _dark={{ bg: "whiteAlpha.50" }} borderColor="blue.100" _dark={{ borderColor: "whiteAlpha.200" }}>
+                <Text fontWeight="bold" mb={3} color="blue.700" _dark={{ color: "blue.200" }}>
+                  تحديد نطاق التصدير:
+                </Text>
                 <Flex gap={4} alignItems="center" flexWrap="wrap">
                   <Box>
-                    <Text fontSize="sm" mb={1}>من الكود رقم:</Text>
+                    <Text fontSize="sm" mb={1}>
+                      من الكود رقم:
+                    </Text>
                     <NumberInput
                       min={1}
                       max={activationCodes.length}
                       value={exportStartIndex}
-                      onChange={(valueString, valueNumber) => setExportStartIndex(valueNumber)}
+                      onChange={(valueString, valueNumber) =>
+                        setExportStartIndex(valueNumber)
+                      }
                       size="sm"
                       w="100px"
                     >
@@ -2494,12 +3077,16 @@ D) has made`}
                     </NumberInput>
                   </Box>
                   <Box>
-                    <Text fontSize="sm" mb={1}>إلى الكود رقم:</Text>
+                    <Text fontSize="sm" mb={1}>
+                      إلى الكود رقم:
+                    </Text>
                     <NumberInput
                       min={1}
                       max={activationCodes.length}
                       value={exportEndIndex}
-                      onChange={(valueString, valueNumber) => setExportEndIndex(valueNumber)}
+                      onChange={(valueString, valueNumber) =>
+                        setExportEndIndex(valueNumber)
+                      }
                       size="sm"
                       w="100px"
                     >
@@ -2512,7 +3099,9 @@ D) has made`}
                   </Box>
                   <Button
                     size="sm"
-                    colorScheme="blue"
+                    bg="blue.500"
+                    color="white"
+                    _hover={{ bg: "blue.600" }}
                     onClick={() => {
                       setExportStartIndex(1);
                       setExportEndIndex(activationCodes.length);
@@ -2520,12 +3109,14 @@ D) has made`}
                   >
                     تحديد الكل
                   </Button>
-                  <Text fontSize="sm" color="gray.600">
+                  <Text fontSize="sm" color="blue.600" _dark={{ color: "blue.300" }}>
                     (إجمالي {activationCodes.length} كود)
                   </Text>
                 </Flex>
                 <Button
-                  colorScheme="teal"
+                  bg="blue.500"
+                  color="white"
+                  _hover={{ bg: "blue.600" }}
                   mt={3}
                   onClick={handleExportCodesPdf}
                   disabled={isExportingPdf || exportStartIndex > exportEndIndex}
@@ -2536,22 +3127,32 @@ D) has made`}
               </Box>
             )}
             {codesLoading ? (
-              <Center py={8}><Spinner size="lg" color="blue.500" /></Center>
+              <Center py={8}>
+                <Spinner size="lg" color="blue.500" />
+              </Center>
             ) : codesError ? (
-              <Text color="red.500" textAlign="center">{codesError}</Text>
+              <Text color="red.500" textAlign="center">
+                {codesError}
+              </Text>
             ) : activationCodes.length === 0 ? (
-              <Text color="gray.500" textAlign="center">لا توجد أكواد لهذا الكورس</Text>
+              <Text color="gray.500" textAlign="center">
+                لا توجد أكواد لهذا الكورس
+              </Text>
             ) : filteredCodes.length === 0 && searchCode ? (
               <Box textAlign="center" py={8}>
                 <Icon as={FaSearch} boxSize={12} color="gray.400" mb={4} />
-                <Text color="gray.500" fontSize="lg" mb={2}>لم يتم العثور على نتائج</Text>
-                <Text color="gray.400" fontSize="sm">لا توجد أكواد تطابق البحث: "{searchCode}"</Text>
+                <Text color="gray.500" fontSize="lg" mb={2}>
+                  لم يتم العثور على نتائج
+                </Text>
+                <Text color="gray.400" fontSize="sm">
+                  لا توجد أكواد تطابق البحث: "{searchCode}"
+                </Text>
                 <Button
                   size="sm"
                   colorScheme="blue"
                   variant="outline"
                   mt={3}
-                  onClick={() => setSearchCode('')}
+                  onClick={() => setSearchCode("")}
                 >
                   مسح البحث
                 </Button>
@@ -2559,129 +3160,94 @@ D) has made`}
             ) : (
               <>
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                  {filteredCodes.map(code => (
+                  {filteredCodes.map((code) => (
                     <Box
                       key={code.id}
                       bg="white"
-                      borderRadius="xl"
-                      p={6}
+                      _dark={{ bg: "gray.800" }}
+                      borderRadius="2xl"
+                      p={5}
                       boxShadow="lg"
                       border="1px solid"
-                      borderColor="gray.200"
+                      borderColor="blue.100"
+                      _dark={{ borderColor: "whiteAlpha.200" }}
                       _hover={{
                         transform: "translateY(-2px)",
                         boxShadow: "xl",
-                        borderColor: "blue.300"
+                        borderColor: "blue.300",
+                        _dark: { borderColor: "blue.500" },
                       }}
                       transition="all 0.3s ease"
                       position="relative"
                       overflow="hidden"
                     >
-                      {/* Header with gradient */}
-                      <Box
-                        bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
-                        borderRadius="lg"
-                        p={4}
-                        mb={4}
-                        color="white"
-                        textAlign="center"
-                        position="relative"
-                        _before={{
-                          content: '""',
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          background: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)",
-                          borderRadius: "lg"
-                        }}
-                      >
-                        <Text fontSize="lg" fontWeight="bold" mb={1}>
-                          {user.name || 'اسم المستخدم'}
-                        </Text>
-                        <Text fontSize="sm" opacity="0.9">
-                          {course?.title || 'اسم الكورس'}
-                        </Text>
-                      </Box>
-
-                      {/* QR Code */}
-                      {code.qr_code && (
-                        <Box textAlign="center" mb={4}>
+                      <Box h="1" w="full" bg="blue.500" position="absolute" top={0} left={0} right={0} />
+                      <Flex direction={{ base: "column", sm: "row" }} align="center" justify="space-between" gap={4}>
+                        {/* كود التفعيل - عرض صغير وشكل واضح */}
+                        <Box flex="1" minW={0} textAlign="center">
+                          <Text fontSize="xs" color="blue.600" _dark={{ color: "blue.300" }} fontWeight="bold" mb={1}>
+                            كود التفعيل
+                          </Text>
+                          <Text
+                            fontFamily="mono"
+                            fontSize="md"
+                            fontWeight="800"
+                            color="blue.800"
+                            _dark={{ color: "blue.100" }}
+                            letterSpacing="2px"
+                            display="inline-block"
+                            w="fit-content"
+                            maxW="100%"
+                            px={3}
+                            py={2}
+                            bg="blue.50"
+                            _dark={{ bg: "whiteAlpha.100" }}
+                            borderRadius="lg"
+                            borderLeft="4px solid"
+                            borderColor="blue.500"
+                          >
+                            {code.code}
+                          </Text>
+                        </Box>
+                        {/* QR */}
+                        {code.qr_code ? (
                           <Image
                             src={code.qr_code}
-                            alt={`QR Code for ${code.code}`}
-                            maxW="150px"
-                            maxH="150px"
-                            mx="auto"
-                            borderRadius="md"
+                            alt={`QR ${code.code}`}
+                            w="80px"
+                            h="80px"
+                            flexShrink={0}
+                            borderRadius="xl"
                             border="2px solid"
-                            borderColor="gray.100"
+                            borderColor="blue.200"
+                            _dark={{ borderColor: "blue.600" }}
                             bg="white"
-                            p={2}
+                            _dark={{ bg: "gray.700" }}
+                            p={1}
                           />
-                        </Box>
-                      )}
-
-                      {/* Code Display */}
-                      <Box
-                        bg="red.50"
-                        borderRadius="lg"
-                        p={4}
-                        mb={4}
-                        border="2px solid"
-                        borderColor="red.200"
-                        textAlign="center"
-                      >
-                        <Text fontSize="sm" color="red.600" fontWeight="bold" mb={2}>
-                          كود التفعيل:
-                        </Text>
-                        <Text
-                          fontFamily="mono"
-                          fontSize="lg"
-                          fontWeight="bold"
-                          color="red.700"
-                          wordBreak="break-all"
-                          bg="white"
-                          p={2}
-                          borderRadius="md"
-                          border="1px solid"
-                          borderColor="red.300"
-                        >
-                          {code.code}
-                        </Text>
-                      </Box>
-
-                      {/* Course Info */}
-                      <Box mb={4}>
-                        <HStack justify="space-between" mb={2}>
-                          <Text fontSize="sm" color="gray.600" fontWeight="medium">
-                            الصف:
-                          </Text>
-                          <Text fontSize="sm" fontWeight="bold" color="blue.600">
-                            {code.grade_name || 'غير محدد'}
-                          </Text>
-                        </HStack>
-                        <HStack justify="space-between" mb={2}>
-                          <Text fontSize="sm" color="gray.600" fontWeight="medium">
-                            الاستخدامات:
-                          </Text>
-                          <Text fontSize="sm" fontWeight="bold" color="purple.600">
-                            {code.uses} / {code.max_uses}
-                          </Text>
-                        </HStack>
-                        <HStack justify="space-between" mb={2}>
-                          <Text fontSize="sm" color="gray.600" fontWeight="medium">
-                            تاريخ الانتهاء:
-                          </Text>
-                          <Text fontSize="sm" fontWeight="bold" color="orange.600">
-                            {code.expires_at ? new Date(code.expires_at).toLocaleDateString('ar-EG') : 'غير محدد'}
-                          </Text>
-                        </HStack>
-                      </Box>
-
-                      {/* Status Badge */}
-                      <Box textAlign="center">
+                        ) : (
+                          <Box
+                            w="80px"
+                            h="80px"
+                            flexShrink={0}
+                            borderRadius="xl"
+                            border="2px dashed"
+                            borderColor="blue.300"
+                            bg="blue.50"
+                            _dark={{ bg: "whiteAlpha.100" }}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            fontSize="xs"
+                            color="blue.500"
+                            fontWeight="bold"
+                          >
+                            QR
+                          </Box>
+                        )}
+                      </Flex>
+                      {/* الحالة فقط */}
+                      <Box textAlign="center" mt={4}>
                         {code.is_expired ? (
                           <Badge colorScheme="red" fontSize="sm" px={3} py={1} borderRadius="full">
                             منتهي الصلاحية
@@ -2696,149 +3262,106 @@ D) has made`}
                           </Badge>
                         )}
                       </Box>
-
-                      {/* Contact Info */}
-                      <Box mt={4} pt={4} borderTop="1px solid" borderColor="gray.200">
-                        <Text fontSize="xs" color="gray.500" textAlign="center" fontWeight="600">
-                          01210726096 | 01288781012 | 01111272393
-                        </Text>
-                      </Box>
                     </Box>
                   ))}
                 </SimpleGrid>
                 {/* عنصر مخفي لتصدير الأكواد ككروت PDF */}
-                <Box id="codes-pdf-export" style={{ display: "none", width: "297mm", height: "210mm", background: "#fff", position: "absolute", top: 0, left: 0, zIndex: -1, direction: "rtl" }}>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gridTemplateRows: 'repeat(4, 1fr)',
-                    gap: '5mm',
-                    width: '100%',
-                    height: '100%',
-                    alignContent: 'start'
-                  }}>
-                    {activationCodes.slice(exportStartIndex - 1, exportEndIndex).map((code, index) => (
-                      <div
-                        key={code.id}
-                        style={{
-                          margin: '3px',
-                          padding: '3mm',
-                          width: '100%',
-                          height: '100%',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '6px',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                          textAlign: 'center',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          background: '#fff',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          minHeight: '40mm',
-                          direction: 'rtl'
-                        }}
-                      >
-                        {/* Header with Logo and Grade */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px', padding: '2px 0' }}>
-                          <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <div style={{ marginBottom: '3px' }}>
-                              <h2 style={{ fontSize: '14px', fontWeight: 'bold', color: '#3182ce', margin: '0', textAlign: 'center' }}>
-                                {user.name || 'عمرو علي'}
-                              </h2>
-                            </div>
+                <Box
+                  id="codes-pdf-export"
+                  style={{
+                    display: "none",
+                    width: "297mm",
+                    height: "210mm",
+                    background: "#fff",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    zIndex: -1,
+                    direction: "rtl",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, 1fr)",
+                      gridTemplateRows: "repeat(4, 1fr)",
+                      gap: "5mm",
+                      width: "100%",
+                      height: "100%",
+                      alignContent: "start",
+                    }}
+                  >
+                    {activationCodes
+                      .slice(exportStartIndex - 1, exportEndIndex)
+                      .map((code, index) => (
+                        <div
+                          key={code.id}
+                          style={{
+                            margin: "3px",
+                            padding: "0",
+                            width: "100%",
+                            height: "100%",
+                            border: "1px solid rgba(49,130,206,0.25)",
+                            borderRadius: "12px",
+                            boxShadow: "0 2px 12px rgba(49,130,206,0.18)",
+                            position: "relative",
+                            overflow: "hidden",
+                            background: "#f8fafc",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            minHeight: "40mm",
+                            direction: "rtl",
+                          }}
+                        >
+                          <div style={{ background: "#3182ce", padding: "6px 8px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "4px" }}>
+                            <h2 style={{ fontSize: "13px", fontWeight: "800", color: "#fff", margin: "0", textAlign: "right", flex: "1", minWidth: "0" }}>{user.name || "عمرو علي"}</h2>
+                            <span style={{ fontSize: "9px", color: "#fff", fontWeight: "700", background: "rgba(0,0,0,0.15)", padding: "3px 6px", borderRadius: "8px" }}>{code.grade_name || "الصف الثاني الثانوي"}</span>
                           </div>
-                          <div style={{ fontSize: '9px', color: '#3182ce', fontWeight: 'bold' }}>{code.grade_name || 'الصف الثاني الثانوي'}</div>
-                        </div>
-
-                        {/* Student Name */}
-
-
-                        {/* Registration Steps */}
-
-                        {/* QR Code and Activation Code */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          {/* Activation Code Section - Left */}
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '8px', color: '#c53030', fontWeight: 'bold', marginBottom: '2px' }}>كود التفعيل</div>
-                            <div style={{
-                              fontSize: '10px',
-                              color: '#c53030',
-                              fontWeight: 'bold',
-                              fontFamily: 'monospace',
-                              background: '#fef2f2',
-                              padding: '3px 4px',
-                              borderRadius: '3px',
-                              border: '1px solid #fecaca',
-                              display: 'inline-block'
-                            }}>
-                              {code.code}
-                            </div>
+                          <div style={{ padding: "3px 8px", background: "#bee3f8", borderBottom: "1px solid rgba(49,130,206,0.25)" }}>
+                            <p style={{ fontSize: "10px", fontWeight: "800", color: "#1a365d", margin: "0", textAlign: "right" }}>{course?.title || "الكورس"}</p>
                           </div>
-
-                          {/* Empty Middle Space */}
-                          <div style={{ flex: '1' }}></div>
-
-                          {/* QR Code Section - Right */}
-                          <div style={{ textAlign: 'center' }}>
-                            {code.qr_code ? (
-                              <img
-                                src={code.qr_code}
-                                alt="QR Code"
-                                style={{
-                                  width: '50px',
-                                  height: '50px',
-                                  border: '1px solid #ddd',
-                                  borderRadius: '4px',
-                                  background: 'white',
-                                  padding: '2px',
-                                  display: 'block',
-                                  margin: '0 auto'
-                                }}
-                              />
-                            ) : (
-                              <div style={{
-                                width: '50px',
-                                height: '50px',
-                                border: '1px dashed #ccc',
-                                borderRadius: '4px',
-                                background: '#f9f9f9',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                margin: '0 auto',
-                                fontSize: '8px',
-                                color: '#999'
-                              }}>
-                                QR
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 8px", flex: "1", gap: "8px" }}>
+                            <div style={{ flex: "1", textAlign: "center" }}>
+                              <div style={{ fontSize: "8px", color: "#2b6cb0", fontWeight: "700" }}>كود التفعيل</div>
+                              <div style={{ marginTop: "8px" }}>
+                                <span style={{ display: "inline-block", fontSize: "14px", color: "#1a365d", fontWeight: "800", letterSpacing: "1px", fontFamily: "monospace", padding: "4px 10px", background: "#fff", borderLeft: "4px solid #3182ce", borderRadius: "6px", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>{code.code}</span>
                               </div>
-                            )}
+                            </div>
+                            <div style={{ flexShrink: "0" }}>
+                              {code.qr_code ? (
+                                <img src={code.qr_code} alt="QR" style={{ width: "60px", height: "60px", border: "2px solid #3182ce", borderRadius: "10px", background: "#fff", padding: "2px", display: "block" }} />
+                              ) : (
+                                <div style={{ width: "60px", height: "60px", border: "2px dashed #3182ce", borderRadius: "10px", background: "#ebf8ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", color: "#3182ce", fontWeight: "bold" }}>QR</div>
+                              )}
+                            </div>
+                          </div>
+                          <div style={{ padding: "6px 8px", background: "#3182ce" }}>
+                            <p style={{ fontSize: "8px", fontWeight: "700", color: "#fff", textAlign: "center", margin: "0" }}>01111272393 | 01288781012 | 01210726096</p>
                           </div>
                         </div>
-
-                        {/* Contact Numbers */}
-                        <div style={{ marginTop: 'auto', paddingTop: '3px', borderTop: '1px solid #e2e8f0' }}>
-                          <p style={{ fontSize: '7px', fontWeight: '600', color: '#3182ce', textAlign: 'center', margin: '0' }}>
-                            01111272393 | 01288781012 | 01210726096
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </Box>
               </>
             )}
           </ModalBody>
-          <ModalFooter>
-            <Button onClick={() => {
-              setShowCodesModal(false);
-              setSearchCode('');
-            }} colorScheme="blue">إغلاق</Button>
+          <ModalFooter borderTopWidth="1px" borderColor="blue.100" _dark={{ borderColor: "whiteAlpha.200" }}>
+            <Button
+              onClick={() => {
+                setShowCodesModal(false);
+                setSearchCode("");
+              }}
+              bg="blue.500"
+              color="white"
+              _hover={{ bg: "blue.600" }}
+              borderRadius="xl"
+            >
+              إغلاق
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-
 
       <VStack
         spacing={{ base: 4, sm: 6, md: 12, lg: 16 }}
@@ -2862,166 +3385,203 @@ D) has made`}
           minW={0}
           overflowX="hidden"
         >
-          <Box h="1" w="100%" bgGradient="linear(to-r, blue.500, orange.500)" flexShrink={0} />
+          <Box
+            h="1"
+            w="100%"
+            bgGradient="linear(to-r, blue.500, orange.500)"
+            flexShrink={0}
+          />
           <Box px={{ base: 3, sm: 4, md: 6 }} pt={4}>
-          <Tabs
-            index={tabIndex}
-            onChange={setTabIndex}
-            variant="unstyled"
-            size={{ base: "sm", md: "md" }}
-          >
-            <Box mb={6} borderBottomWidth="2px" borderColor={borderColor}>
-              <TabList gap={0} flexWrap="wrap" bg="transparent">
-                <Tab
-                  fontWeight="bold"
-                  fontSize={{ base: "sm", md: "md" }}
-                  color={subTextColor}
-                  borderBottomWidth="3px"
-                  borderBottomColor="transparent"
-                  mb="-2px"
-                  py={3}
-                  px={4}
-                  _selected={{
-                    color: "blue.500",
-                    borderBottomColor: "blue.500",
-                  }}
-                  _hover={{ color: headingColor }}
-                  transition="all 0.2s"
-                >
-                  المحاضرات
-                </Tab>
-                <Tab
-                  fontWeight="bold"
-                  fontSize={{ base: "sm", md: "md" }}
-                  color={subTextColor}
-                  borderBottomWidth="3px"
-                  borderBottomColor="transparent"
-                  mb="-2px"
-                  py={3}
-                  px={4}
-                  _selected={{
-                    color: "blue.500",
-                    borderBottomColor: "blue.500",
-                  }}
-                  _hover={{ color: headingColor }}
-                  transition="all 0.2s"
-                >
-                  الجلسات المباشرة
-                </Tab>
-                <Tab
-                  fontWeight="bold"
-                  fontSize={{ base: "sm", md: "md" }}
-                  color={subTextColor}
-                  borderBottomWidth="3px"
-                  borderBottomColor="transparent"
-                  mb="-2px"
-                  py={3}
-                  px={4}
-                  _selected={{
-                    color: "blue.500",
-                    borderBottomColor: "blue.500",
-                  }}
-                  _hover={{ color: headingColor }}
-                  transition="all 0.2s"
-                >
-                  الدعم العلمي
-                </Tab>
-                <Tab
-                  fontWeight="bold"
-                  fontSize={{ base: "sm", md: "md" }}
-                  color={subTextColor}
-                  borderBottomWidth="3px"
-                  borderBottomColor="transparent"
-                  mb="-2px"
-                  py={3}
-                  px={4}
-                  _selected={{
-                    color: "orange.500",
-                    borderBottomColor: "orange.500",
-                  }}
-                  _hover={{ color: headingColor }}
-                  transition="all 0.2s"
-                >
-                  الامتحانات
-                </Tab>
-              </TabList>
-            </Box>
+            <Tabs
+              index={tabIndex}
+              onChange={setTabIndex}
+              variant="unstyled"
+              size={{ base: "sm", md: "md" }}
+            >
+              <Box mb={6} borderBottomWidth="2px" borderColor={borderColor}>
+                <TabList gap={0} flexWrap="wrap" bg="transparent">
+                  <Tab
+                    fontWeight="bold"
+                    fontSize={{ base: "sm", md: "md" }}
+                    color={subTextColor}
+                    borderBottomWidth="3px"
+                    borderBottomColor="transparent"
+                    mb="-2px"
+                    py={3}
+                    px={4}
+                    _selected={{
+                      color: "blue.500",
+                      borderBottomColor: "blue.500",
+                    }}
+                    _hover={{ color: headingColor }}
+                    transition="all 0.2s"
+                  >
+                    المحاضرات
+                  </Tab>
+                  <Tab
+                    fontWeight="bold"
+                    fontSize={{ base: "sm", md: "md" }}
+                    color={subTextColor}
+                    borderBottomWidth="3px"
+                    borderBottomColor="transparent"
+                    mb="-2px"
+                    py={3}
+                    px={4}
+                    _selected={{
+                      color: "blue.500",
+                      borderBottomColor: "blue.500",
+                    }}
+                    _hover={{ color: headingColor }}
+                    transition="all 0.2s"
+                  >
+                    الجلسات المباشرة
+                  </Tab>
+                  <Tab
+                    fontWeight="bold"
+                    fontSize={{ base: "sm", md: "md" }}
+                    color={subTextColor}
+                    borderBottomWidth="3px"
+                    borderBottomColor="transparent"
+                    mb="-2px"
+                    py={3}
+                    px={4}
+                    _selected={{
+                      color: "blue.500",
+                      borderBottomColor: "blue.500",
+                    }}
+                    _hover={{ color: headingColor }}
+                    transition="all 0.2s"
+                  >
+                    الدعم العلمي
+                  </Tab>
+                  <Tab
+                    fontWeight="bold"
+                    fontSize={{ base: "sm", md: "md" }}
+                    color={subTextColor}
+                    borderBottomWidth="3px"
+                    borderBottomColor="transparent"
+                    mb="-2px"
+                    py={3}
+                    px={4}
+                    _selected={{
+                      color: "orange.500",
+                      borderBottomColor: "orange.500",
+                    }}
+                    _hover={{ color: headingColor }}
+                    transition="all 0.2s"
+                  >
+                    الامتحانات
+                  </Tab>
+                </TabList>
+              </Box>
 
-            <TabPanels p={0}>
-              {/* Tab Panel للمحاضرات — يعرض المحاضرات فقط */}
-              <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
-                <Box bg={sectionBg} borderRadius="2xl" borderWidth="1px" borderColor={borderColor} p={{ base: 4, md: 6 }} minH="280px">
-                  <LecturesTab
-                    lectures={lectures}
-                    isTeacher={isTeacher}
-                    isAdmin={isAdmin}
-                    expandedLecture={expandedLecture}
-                    setExpandedLecture={setExpandedLecture}
-                    handleAddLecture={handleAddLecture}
-                    handleEditLecture={handleEditLecture}
-                    handleDeleteLecture={handleDeleteLecture}
-                    handleAddVideo={handleAddVideo}
-                    handleEditVideo={handleEditVideo}
-                    handleDeleteVideo={handleDeleteVideo}
-                    handleAddFile={handleAddFile}
-                    handleEditFile={handleEditFile}
-                    handleDeleteFile={handleDeleteFile}
-                    setExamModal={setExamModal}
-                    setDeleteExamDialog={setDeleteExamDialog}
-                    examActionLoading={actionLoading}
-                    itemBg={itemBg}
-                    sectionBg={sectionBg}
-                    headingColor={headingColor}
-                    subTextColor={subTextColor}
+              <TabPanels p={0}>
+                {/* Tab Panel للمحاضرات — يعرض المحاضرات فقط */}
+                <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
+                  <Box
+                    bg={sectionBg}
+                    borderRadius="2xl"
+                    borderWidth="1px"
                     borderColor={borderColor}
-                    dividerColor={dividerColor}
-                    textColor={textColor}
-                    formatDate={formatDate}
-                    onAddBulkQuestions={handleOpenBulkQuestionsModal}
-                    handleOpenVideo={handleOpenVideo}
-                  />
-                </Box>
-              </TabPanel>
+                    p={{ base: 4, md: 6 }}
+                    minH="280px"
+                  >
+                    <LecturesTab
+                      lectures={lectures}
+                      isTeacher={isTeacher}
+                      isAdmin={isAdmin}
+                      expandedLecture={expandedLecture}
+                      setExpandedLecture={setExpandedLecture}
+                      handleAddLecture={handleAddLecture}
+                      handleEditLecture={handleEditLecture}
+                      handleDeleteLecture={handleDeleteLecture}
+                      handleAddVideo={handleAddVideo}
+                      handleEditVideo={handleEditVideo}
+                      handleDeleteVideo={handleDeleteVideo}
+                      handleAddFile={handleAddFile}
+                      handleEditFile={handleEditFile}
+                      handleDeleteFile={handleDeleteFile}
+                      setExamModal={setExamModal}
+                      setDeleteExamDialog={setDeleteExamDialog}
+                      examActionLoading={actionLoading}
+                      itemBg={itemBg}
+                      sectionBg={sectionBg}
+                      headingColor={headingColor}
+                      subTextColor={subTextColor}
+                      borderColor={borderColor}
+                      dividerColor={dividerColor}
+                      textColor={textColor}
+                      formatDate={formatDate}
+                      onAddBulkQuestions={handleOpenBulkQuestionsModal}
+                      handleOpenVideo={handleOpenVideo}
+                    />
+                  </Box>
+                </TabPanel>
 
-              {/* Tab Panel للجلسات المباشرة — يعرض الجلسات المباشرة فقط */}
-              <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
-                <Box bg={sectionBg} borderRadius="2xl" borderWidth="1px" borderColor={borderColor} p={{ base: 4, md: 6 }} minH="280px">
-                  {(isAdmin || isTeacher) ? <CourseStreams courseId={id} /> : <StudentStreamsList courseId={id} />}
-                </Box>
-              </TabPanel>
+                {/* Tab Panel للجلسات المباشرة — يعرض الجلسات المباشرة فقط */}
+                <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
+                  <Box
+                    bg={sectionBg}
+                    borderRadius="2xl"
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                    p={{ base: 4, md: 6 }}
+                    minH="280px"
+                  >
+                    {isAdmin || isTeacher ? (
+                      <CourseStreams courseId={id} />
+                    ) : (
+                      <StudentStreamsList courseId={id} />
+                    )}
+                  </Box>
+                </TabPanel>
 
-              {/* Tab Panel للدعم العلمي — يعرض الدعم العلمي فقط */}
-              <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
-                <Box bg={sectionBg} borderRadius="2xl" borderWidth="1px" borderColor={borderColor} p={{ base: 4, md: 6 }} minH="280px">
-                  {(isAdmin || isTeacher) ? (
-                    <ScientificChatTab courseId={id} token={token} />
-                  ) : (
-                    <ScientificChatStudent courseId={id} token={token} />
-                  )}
-                </Box>
-              </TabPanel>
+                {/* Tab Panel للدعم العلمي — يعرض الدعم العلمي فقط */}
+                <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
+                  <Box
+                    bg={sectionBg}
+                    borderRadius="2xl"
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                    p={{ base: 4, md: 6 }}
+                    minH="280px"
+                  >
+                    {isAdmin || isTeacher ? (
+                      <ScientificChatTab courseId={id} token={token} />
+                    ) : (
+                      <ScientificChatStudent courseId={id} token={token} />
+                    )}
+                  </Box>
+                </TabPanel>
 
-              {/* Tab Panel للامتحانات — يعرض الامتحانات فقط */}
-              <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
-                <Box bg={sectionBg} borderRadius="2xl" borderWidth="1px" borderColor={borderColor} p={{ base: 4, md: 6 }} minH="280px">
-                  <CourseExamsTab
-                    courseExams={courseExams}
-                    courseExamsLoading={courseExamsLoading}
-                    courseExamsError={courseExamsError}
-                    headingColor={headingColor}
-                    sectionBg={sectionBg}
-                    dividerColor={dividerColor}
-                    formatDate={formatDate}
-                    isTeacher={isTeacher}
-                    token={token}
-                    courseId={id}
-                    refreshExams={refreshExams}
-                    onAddBulkQuestions={handleOpenBulkQuestionsModal}
-                  />
-                </Box>
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
+                {/* Tab Panel للامتحانات — يعرض الامتحانات فقط */}
+                <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
+                  <Box
+                    bg={sectionBg}
+                    borderRadius="2xl"
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                    p={{ base: 4, md: 6 }}
+                    minH="280px"
+                  >
+                    <CourseExamsTab
+                      courseExams={courseExams}
+                      courseExamsLoading={courseExamsLoading}
+                      courseExamsError={courseExamsError}
+                      headingColor={headingColor}
+                      sectionBg={sectionBg}
+                      dividerColor={dividerColor}
+                      formatDate={formatDate}
+                      isTeacher={isTeacher}
+                      token={token}
+                      courseId={id}
+                      refreshExams={refreshExams}
+                      onAddBulkQuestions={handleOpenBulkQuestionsModal}
+                    />
+                  </Box>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
           </Box>
         </MotionBox>
       </VStack>
@@ -3029,42 +3589,69 @@ D) has made`}
       {/* Lecture Modal */}
       <LectureModal
         isOpen={lectureModal.isOpen}
-        onClose={() => setLectureModal({ isOpen: false, type: 'add', data: null })}
+        onClose={() =>
+          setLectureModal({ isOpen: false, type: "add", data: null })
+        }
         type={lectureModal.type}
         data={lectureModal.data}
-        onSubmit={lectureModal.type === 'add' ? createLecture : updateLecture}
+        onSubmit={lectureModal.type === "add" ? createLecture : updateLecture}
         loading={actionLoading}
       />
 
       {/* Video Modal */}
       <VideoModal
         isOpen={videoModal.isOpen}
-        onClose={() => setVideoModal({ isOpen: false, type: 'add', lectureId: null, data: null })}
+        onClose={() =>
+          setVideoModal({
+            isOpen: false,
+            type: "add",
+            lectureId: null,
+            data: null,
+          })
+        }
         type={videoModal.type}
         data={videoModal.data}
         lectureId={videoModal.lectureId}
-        onSubmit={videoModal.type === 'add' ? createVideo : updateVideo}
+        onSubmit={videoModal.type === "add" ? createVideo : updateVideo}
         loading={actionLoading}
       />
 
       {/* File Modal */}
       <FileModal
         isOpen={fileModal.isOpen}
-        onClose={() => setFileModal({ isOpen: false, type: 'add', lectureId: null, data: null })}
+        onClose={() =>
+          setFileModal({
+            isOpen: false,
+            type: "add",
+            lectureId: null,
+            data: null,
+          })
+        }
         type={fileModal.type}
         data={fileModal.data}
         lectureId={fileModal.lectureId}
-        onSubmit={fileModal.type === 'add' ? createFile : updateFile}
+        onSubmit={fileModal.type === "add" ? createFile : updateFile}
         loading={actionLoading}
       />
 
       {/* Exam Modal */}
       <ExamModal
         isOpen={examModal.isOpen}
-        onClose={() => setExamModal({ isOpen: false, type: 'add', lectureId: null, data: null })}
+        onClose={() =>
+          setExamModal({
+            isOpen: false,
+            type: "add",
+            lectureId: null,
+            data: null,
+          })
+        }
         type={examModal.type}
         data={examModal.data}
-        onSubmit={examModal.type === 'add' ? (formData => createExam(examModal.lectureId, formData)) : updateExam}
+        onSubmit={
+          examModal.type === "add"
+            ? (formData) => createExam(examModal.lectureId, formData)
+            : updateExam
+        }
         loading={examActionLoading}
       />
 
@@ -3072,7 +3659,9 @@ D) has made`}
       <AlertDialog
         isOpen={deleteDialog.isOpen}
         leastDestructiveRef={cancelRef}
-        onClose={() => setDeleteDialog({ isOpen: false, type: '', id: null, title: '' })}
+        onClose={() =>
+          setDeleteDialog({ isOpen: false, type: "", id: null, title: "" })
+        }
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -3081,14 +3670,30 @@ D) has made`}
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              هل أنت متأكد من حذف "{deleteDialog.title}"؟ لا يمكن التراجع عن هذا الإجراء.
+              هل أنت متأكد من حذف "{deleteDialog.title}"؟ لا يمكن التراجع عن هذا
+              الإجراء.
             </AlertDialogBody>
 
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={() => setDeleteDialog({ isOpen: false, type: '', id: null, title: '' })}>
+              <Button
+                ref={cancelRef}
+                onClick={() =>
+                  setDeleteDialog({
+                    isOpen: false,
+                    type: "",
+                    id: null,
+                    title: "",
+                  })
+                }
+              >
                 إلغاء
               </Button>
-              <Button colorScheme="red" onClick={handleDeleteConfirm} ml={3} isLoading={actionLoading}>
+              <Button
+                colorScheme="red"
+                onClick={handleDeleteConfirm}
+                ml={3}
+                isLoading={actionLoading}
+              >
                 حذف
               </Button>
             </AlertDialogFooter>
@@ -3100,15 +3705,47 @@ D) has made`}
       <AlertDialog
         isOpen={deleteExamDialog.isOpen}
         leastDestructiveRef={cancelRef}
-        onClose={() => setDeleteExamDialog({ isOpen: false, examId: null, title: '' })}
+        onClose={() =>
+          setDeleteExamDialog({ isOpen: false, examId: null, title: "" })
+        }
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">تأكيد حذف الامتحان</AlertDialogHeader>
-            <AlertDialogBody>هل أنت متأكد من حذف "{deleteExamDialog.title}"؟ لا يمكن التراجع عن هذا الإجراء.</AlertDialogBody>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              تأكيد حذف الامتحان
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              هل أنت متأكد من حذف "{deleteExamDialog.title}"؟ لا يمكن التراجع عن
+              هذا الإجراء.
+            </AlertDialogBody>
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={() => setDeleteExamDialog({ isOpen: false, examId: null, title: '' })}>إلغاء</Button>
-              <Button colorScheme="red" onClick={() => { deleteExam(deleteExamDialog.examId); setDeleteExamDialog({ isOpen: false, examId: null, title: '' }); }} ml={3} isLoading={examActionLoading}>حذف</Button>
+              <Button
+                ref={cancelRef}
+                onClick={() =>
+                  setDeleteExamDialog({
+                    isOpen: false,
+                    examId: null,
+                    title: "",
+                  })
+                }
+              >
+                إلغاء
+              </Button>
+              <Button
+                colorScheme="red"
+                onClick={() => {
+                  deleteExam(deleteExamDialog.examId);
+                  setDeleteExamDialog({
+                    isOpen: false,
+                    examId: null,
+                    title: "",
+                  });
+                }}
+                ml={3}
+                isLoading={examActionLoading}
+              >
+                حذف
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialogOverlay>
@@ -3118,18 +3755,28 @@ D) has made`}
       <BulkQuestionsModal
         isOpen={bulkQuestionsModal.isOpen}
         onClose={() => {
-          setBulkQuestionsModal({ isOpen: false, examId: null, examTitle: '', examType: '' });
+          setBulkQuestionsModal({
+            isOpen: false,
+            examId: null,
+            examTitle: "",
+            examType: "",
+          });
         }}
         examId={bulkQuestionsModal.examId}
         examTitle={bulkQuestionsModal.examTitle}
         examType={bulkQuestionsModal.examType}
-        onSubmit={(examId, data, questionType) => addBulkQuestions(examId, data, questionType, bulkQuestionsModal.examType)}
+        onSubmit={(examId, data, questionType) =>
+          addBulkQuestions(
+            examId,
+            data,
+            questionType,
+            bulkQuestionsModal.examType
+          )
+        }
         loading={bulkQuestionsLoading}
       />
-      {console.log('BulkQuestionsModal state:', bulkQuestionsModal)}
-      {console.log('BulkQuestionsModal isOpen:', bulkQuestionsModal.isOpen)}
-
-
+      {console.log("BulkQuestionsModal state:", bulkQuestionsModal)}
+      {console.log("BulkQuestionsModal isOpen:", bulkQuestionsModal.isOpen)}
 
       <ScrollToTop />
     </Box>

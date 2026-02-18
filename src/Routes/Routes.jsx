@@ -17,6 +17,7 @@ import NotFound from "../components/not found/NotFound";
 import Admin from "../pages/Admin/Admin";
 import AdminMange from "../components/admin/AdminMange";
 import AdminCreateCode from "../components/admin/AdminCreateCode";
+import AdminActivationCodes from "../components/admin/AdminActivationCodes";
 import AdminTeacherBalances from "../components/admin/AdminTeacherBalances";
 import AddTeacher from "../components/admin/AddTeacher";
 import AddEmployees from "../components/admin/AddEmployees";
@@ -86,6 +87,9 @@ import TeacherChat from "../pages/chat/TeacherChatPage";
 import ChatbotPage from "../pages/chatbot/ChatbotPage";
 import TeamChat from "../pages/teamChatPage/TeamChat";
 import SupportChatAdmin from "../pages/support/SupportChatAdmin";
+import SupportChatStudent from "../pages/support/SupportChatStudent";
+import SupportChatTeacher from "../pages/support/SupportChatTeacher";
+import SupportGuestPage from "../pages/support/SupportGuestPage";
 
 // Center System Components
 import GroupsPage from "../pages/centerSystem/GroupsPage";
@@ -131,6 +135,7 @@ const AppRouter = () => {
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/landing" element={<LandingPage />} />
+        <Route path="/support-guest" element={<SupportGuestPage />} />
         <Route path="*" element={<NotFound />} />
 
         {/* Auth Routes */}
@@ -292,6 +297,16 @@ const AppRouter = () => {
             }
           />
 
+          {/* Admin standalone: إدارة أكواد التفعيل (صفحة عادية خارج لوحة التحكم) */}
+          <Route
+            path="activation-codes"
+            element={
+              <ProtectedRoute auth={isAdmin}>
+                <AdminActivationCodes />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Profile & Settings */}
           <Route path="profile" element={<Profile />} />
           <Route path="wallet" element={<Wallet />} />
@@ -394,19 +409,18 @@ const AppRouter = () => {
           </Route>
           <Route path="teacher-students" element={<TeacherStudents />} />
           <Route path="teacher-students/:studentId" element={<StudentReport />} />
+          <Route path="support-teacher" element={<SupportChatTeacher />} />
         </Route>
 
         {/* Student Specific Routes */}
         <Route element={<ProtectedRoute auth={student} />}>
           <Route path="studentStats" element={<StudentStats />} />
           <Route path="course_statistics" element={<CourseStatistics />} />
-
         </Route>
 
-        {/* Shared Routes */}
+        {/* Shared Routes (طالب + مدرس) */}
         <Route element={<ProtectedRoute auth={isTeacher || student} />}>
-
-
+          <Route path="support" element={<SupportChatStudent />} />
           <Route path="video/:videoId/:token?" element={<Vedio />} />
         </Route>
       </Routes>

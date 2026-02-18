@@ -35,11 +35,11 @@ import baseUrl from "../../../api/baseUrl";
 
 /**
  * تبويب إدارة الشات الدعم العلمي للمدرس
- * يتوافق مع API: /api/scientific-chatbot
- * - عرض ملفات المحتوى العلمي للكورس
- * - رفع ملفات (.txt, .md)
- * - حذف ملف
- * - إعادة توليد الـ embeddings
+ * يتوافق مع Scientific Chatbot API - Teacher:
+ * - GET  /api/scientific-chatbot/courses/:courseId/files   — قائمة الملفات
+ * - POST /api/scientific-chatbot/courses/:courseId/files   — رفع ملف (.txt, .md, .pdf حتى 10MB)
+ * - DELETE /api/scientific-chatbot/files/:fileId           — حذف ملف
+ * - POST /api/scientific-chatbot/courses/:courseId/reset-embeddings — إعادة توليد الـ embeddings
  */
 const ScientificChatTab = ({ courseId, token }) => {
   const [files, setFiles] = useState([]);
@@ -93,19 +93,31 @@ const ScientificChatTab = ({ courseId, token }) => {
     fetchFiles();
   }, [courseId, token]);
 
+  const MAX_FILE_SIZE_MB = 10;
+
   const handleUpload = async (e) => {
     const file = e?.target?.files?.[0];
     if (!file) return;
-    const allowed = ["text/plain", "text/markdown"];
+    const allowedTypes = ["text/plain", "text/markdown", "application/pdf"];
     const ext = (file.name || "").toLowerCase();
     const ok =
-      allowed.includes(file.type) ||
+      allowedTypes.includes(file.type) ||
       ext.endsWith(".txt") ||
-      ext.endsWith(".md");
+      ext.endsWith(".md") ||
+      ext.endsWith(".pdf");
     if (!ok) {
       toast({
         title: "نوع ملف غير مدعوم",
-        description: "المسموح: .txt أو .md فقط",
+        description: "المسموح: .txt أو .md أو .pdf",
+        status: "warning",
+        isClosable: true,
+      });
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast({
+        title: "حجم الملف كبير",
+        description: `الحد الأقصى ${MAX_FILE_SIZE_MB} ميجابايت`,
         status: "warning",
         isClosable: true,
       });
@@ -115,19 +127,22 @@ const ScientificChatTab = ({ courseId, token }) => {
     formData.append("file", file);
     try {
       setUploading(true);
-      await baseUrl.post(
+      const response = await baseUrl.post(
         `/api/scientific-chatbot/courses/${courseId}/files`,
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
+            // لا نضع Content-Type حتى يضيف المتصفح boundary تلقائياً
           },
         }
       );
+      const resFile = response.data?.file;
       toast({
         title: "تم رفع الملف",
-        description: "تمت معالجة الملف وإضافته للمساعد العلمي.",
+        description: resFile
+          ? `تمت معالجة "${resFile.file_name || resFile.fileName}" وإضافته للمساعد العلمي.`
+          : "تمت معالجة الملف وإضافته للمساعد العلمي.",
         status: "success",
         isClosable: true,
       });
@@ -251,7 +266,7 @@ const ScientificChatTab = ({ courseId, token }) => {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".txt,.md,text/plain,text/markdown"
+            accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf"
             style={{ display: "none" }}
             onChange={handleUpload}
           />
@@ -316,7 +331,7 @@ const ScientificChatTab = ({ courseId, token }) => {
         >
           <Icon as={FaFileAlt} boxSize={12} color="gray.400" mb={3} />
           <Text color={subTextColor} mb={4}>
-            لا توجد ملفات محتوى علمي بعد. ارفع ملف .txt أو .md لتفعيل الدعم العلمي.
+            لا توجد ملفات محتوى علمي بعد. ارفع ملف .txt أو .md أو .pdf لتفعيل الدعم العلمي.
           </Text>
           <Button
             colorScheme="blue"

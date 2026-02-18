@@ -24,14 +24,26 @@ import ScrollToTop from "../../components/scollToTop/ScrollToTop";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
-import { FiUser, FiPhone, FiLock, FiBookOpen, FiCheck, FiLogIn } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import {
+  FiUser,
+  FiPhone,
+  FiLock,
+  FiBookOpen,
+  FiCheck,
+  FiLogIn,
+} from "react-icons/fi";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import "react-toastify/dist/ReactToastify.css";
 import baseUrl from "../../api/baseUrl";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = new URLSearchParams(location.search).get("redirect");
+  const loginPath = redirectTo
+    ? `/login?redirect=${encodeURIComponent(redirectTo)}`
+    : "/login";
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [currentStep, setCurrentStep] = useState(0);
   const [isUniversityStudent, setIsUniversityStudent] = useState("no");
@@ -62,28 +74,28 @@ const SignUp = () => {
     {
       title: "المعلومات الشخصية",
       icon: FiUser,
-      description: "أدخل اسمك الكامل"
+      description: "أدخل اسمك الكامل",
     },
     {
       title: "معلومات الاتصال",
       icon: FiPhone,
-      description: "أدخل أرقام الهواتف"
+      description: "أدخل أرقام الهواتف",
     },
     {
       title: "كلمة المرور",
       icon: FiLock,
-      description: "أنشئ كلمة مرور قوية"
+      description: "أنشئ كلمة مرور قوية",
     },
     {
       title: "الفئة الدراسية",
       icon: FiBookOpen,
-      description: "اختر فئتك الدراسية"
+      description: "اختر فئتك الدراسية",
     },
     {
       title: "الصف الدراسي",
       icon: FiBookOpen,
-      description: "اختر صفك الدراسي"
-    }
+      description: "اختر صفك الدراسي",
+    },
   ];
 
   useEffect(() => {
@@ -108,26 +120,26 @@ const SignUp = () => {
           { id: 21, name: "الصف الثالث الابتدائي" },
           { id: 11, name: "الصف الرابع الابتدائي" },
           { id: 12, name: "الصف الخامس الابتدائي" },
-          { id: 15, name: "الصف السادس الابتدائي" }
+          { id: 15, name: "الصف السادس الابتدائي" },
         ];
       case "إعدادي":
         return [
           { id: 1, name: "الصف الأول الإعدادي" },
           { id: 2, name: "الصف الثاني الإعدادي" },
-          { id: 3, name: "الصف الثالث الإعدادي" }
+          { id: 3, name: "الصف الثالث الإعدادي" },
         ];
       case "ثانوي":
         return [
           { id: 4, name: "الصف الأول الثانوي" },
           { id: 5, name: "الصف الثاني الثانوي" },
-          { id: 6, name: "الصف الثالث الثانوي" }
+          { id: 6, name: "الصف الثالث الثانوي" },
         ];
       case "جامعة":
         return [
           { id: 7, name: "الفرقة الأولى" },
           { id: 8, name: "الفرقة الثانية" },
           { id: 9, name: "الفرقة الثالثة" },
-          { id: 10, name: "الفرقة الرابعة" }
+          { id: 10, name: "الفرقة الرابعة" },
         ];
       default:
         return [];
@@ -176,35 +188,43 @@ const SignUp = () => {
 
   const handleLSignUp = async () => {
     // Final validation
-    if (!name || !phone || !parentPhone || !password || !passwordConfirm || !gradeId || !selectedCategory) {
+    if (
+      !name ||
+      !phone ||
+      !parentPhone ||
+      !password ||
+      !passwordConfirm ||
+      !gradeId ||
+      !selectedCategory
+    ) {
       toast.error("يرجى ملء جميع الحقول");
       return;
     }
-  
+
     if (password !== passwordConfirm) {
       toast.error("كلمتا السر غير متطابقتين");
       return;
     }
-  
+
     // Basic phone number validation
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const cleanParentPhone = parentPhone.replace(/[^0-9]/g, '');
-    
+    const cleanPhone = phone.replace(/[^0-9]/g, "");
+    const cleanParentPhone = parentPhone.replace(/[^0-9]/g, "");
+
     if (cleanPhone.length < 8) {
       toast.error("رقم هاتفك قصير جداً، يرجى إدخال رقم صحيح");
       return;
     }
-  
+
     if (cleanParentPhone.length < 8) {
       toast.error("رقم هاتف الوالد قصير جداً، يرجى إدخال رقم صحيح");
       return;
     }
-  
+
     if (cleanPhone === cleanParentPhone) {
       toast.error("رقم هاتفك ورقم هاتف الوالد يجب أن يكونا مختلفين");
       return;
     }
-  
+
     // إرسال الأرقام كما أدخلها المستخدم دون إضافة +20
     setLoading(true);
     try {
@@ -216,12 +236,12 @@ const SignUp = () => {
         grade_id: parseInt(gradeId),
         category: selectedCategory, // إضافة الفئة الدراسية
       });
-  
+
       const { token, user } = res.data;
-  
+
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-  
+
       toast.success("تم إنشاء الحساب بنجاح!");
       window.location = "/";
     } catch (err) {
@@ -229,7 +249,9 @@ const SignUp = () => {
       if (err.response?.data?.message === "Phone number already registered") {
         onOpen(); // فتح المودال
       } else {
-        toast.error(err.response?.data?.message || "حدث خطأ أثناء إنشاء الحساب");
+        toast.error(
+          err.response?.data?.message || "حدث خطأ أثناء إنشاء الحساب"
+        );
       }
     } finally {
       setLoading(false);
@@ -239,40 +261,47 @@ const SignUp = () => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-  return (
+        return (
           <VStack spacing={6} align="stretch">
             <Box textAlign="center" mb={6}>
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
                 <FiUser className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">أدخل اسمك الكامل</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                أدخل اسمك الكامل
+              </h2>
               <p className="text-gray-600">سنحتاج إلى معرفة اسمك للبدء</p>
-      </Box>
-            
+            </Box>
+
             <FormControl>
-              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
-              الاسم بالكامل
-            </FormLabel>
-            <Input
+              <FormLabel
+                fontWeight="semibold"
+                color="gray.700"
+                mb={3}
+                fontSize="md"
+              >
+                الاسم بالكامل
+              </FormLabel>
+              <Input
                 placeholder="مثال: أحمد محمد علي"
-              size="lg"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+                size="lg"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="text-gray-800 transition-all duration-300"
-              focusBorderColor="blue.500"
-              _placeholder={{ color: "gray.400" }}
+                focusBorderColor="blue.500"
+                _placeholder={{ color: "gray.400" }}
                 borderColor="gray.200"
                 borderRadius="xl"
                 px={6}
                 py={4}
                 _hover={{ borderColor: "gray.300" }}
-                _focus={{ 
-                  borderColor: "blue.500", 
+                _focus={{
+                  borderColor: "blue.500",
                   boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)"
+                  transform: "translateY(-1px)",
                 }}
-            />
-          </FormControl>
+              />
+            </FormControl>
           </VStack>
         );
 
@@ -283,38 +312,52 @@ const SignUp = () => {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-green-500 to-teal-600 rounded-full mb-4">
                 <FiPhone className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">معلومات الاتصال</h2>
-              <p className="text-gray-600">أدخل رقم هاتفك ورقم هاتف ولي الأمر</p>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                معلومات الاتصال
+              </h2>
+              <p className="text-gray-600">
+                أدخل رقم هاتفك ورقم هاتف ولي الأمر
+              </p>
             </Box>
-            
+
             <FormControl>
-              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
-              رقم الهاتف
-            </FormLabel>
-            <Input
-              type="tel"
+              <FormLabel
+                fontWeight="semibold"
+                color="gray.700"
+                mb={3}
+                fontSize="md"
+              >
+                رقم الهاتف
+              </FormLabel>
+              <Input
+                type="tel"
                 placeholder="01227145090"
-              size="lg"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+                size="lg"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="text-gray-800 transition-all duration-300"
-              focusBorderColor="blue.500"
-              _placeholder={{ color: "gray.400" }}
+                focusBorderColor="blue.500"
+                _placeholder={{ color: "gray.400" }}
                 borderColor="gray.200"
                 borderRadius="xl"
                 px={6}
                 py={4}
                 _hover={{ borderColor: "gray.300" }}
-                _focus={{ 
-                  borderColor: "blue.500", 
+                _focus={{
+                  borderColor: "blue.500",
                   boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)"
+                  transform: "translateY(-1px)",
                 }}
-            />
-          </FormControl>
+              />
+            </FormControl>
 
             <FormControl>
-              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
+              <FormLabel
+                fontWeight="semibold"
+                color="gray.700"
+                mb={3}
+                fontSize="md"
+              >
                 رقم هاتف الوالد
               </FormLabel>
               <Input
@@ -331,10 +374,10 @@ const SignUp = () => {
                 px={6}
                 py={4}
                 _hover={{ borderColor: "gray.300" }}
-                _focus={{ 
-                  borderColor: "blue.500", 
+                _focus={{
+                  borderColor: "blue.500",
                   boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)"
+                  transform: "translateY(-1px)",
                 }}
               />
             </FormControl>
@@ -348,71 +391,95 @@ const SignUp = () => {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-orange-500 to-red-600 rounded-full mb-4">
                 <FiLock className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">كلمة المرور</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                كلمة المرور
+              </h2>
               <p className="text-gray-600">أنشئ كلمة مرور قوية لحماية حسابك</p>
             </Box>
-            
+
             <FormControl>
-              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
+              <FormLabel
+                fontWeight="semibold"
+                color="gray.700"
+                mb={3}
+                fontSize="md"
+              >
                 كلمة المرور
-            </FormLabel>
-            <Input
-              type="password"
+              </FormLabel>
+              <Input
+                type="password"
                 placeholder="أدخل كلمة مرور قوية"
-              size="lg"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+                size="lg"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="text-gray-800 transition-all duration-300"
-              focusBorderColor="blue.500"
-              _placeholder={{ color: "gray.400" }}
+                focusBorderColor="blue.500"
+                _placeholder={{ color: "gray.400" }}
                 borderColor="gray.200"
                 borderRadius="xl"
                 px={6}
                 py={4}
                 _hover={{ borderColor: "gray.300" }}
-                _focus={{ 
-                  borderColor: "blue.500", 
+                _focus={{
+                  borderColor: "blue.500",
                   boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)"
+                  transform: "translateY(-1px)",
                 }}
               />
               {password.length > 0 && (
-                <Text fontSize="sm" color={password.length >= 6 ? "green.500" : "red.500"} mt={2}>
-                  {password.length >= 6 ? "✓ كلمة المرور قوية" : "كلمة المرور يجب أن تكون 6 أحرف على الأقل"}
+                <Text
+                  fontSize="sm"
+                  color={password.length >= 6 ? "green.500" : "red.500"}
+                  mt={2}
+                >
+                  {password.length >= 6
+                    ? "✓ كلمة المرور قوية"
+                    : "كلمة المرور يجب أن تكون 6 أحرف على الأقل"}
                 </Text>
               )}
-          </FormControl>
+            </FormControl>
 
             <FormControl>
-              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
+              <FormLabel
+                fontWeight="semibold"
+                color="gray.700"
+                mb={3}
+                fontSize="md"
+              >
                 تأكيد كلمة المرور
-            </FormLabel>
-            <Input
-              type="password"
+              </FormLabel>
+              <Input
+                type="password"
                 placeholder="أعد إدخال كلمة المرور"
-              size="lg"
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
+                size="lg"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
                 className="text-gray-800 transition-all duration-300"
-              focusBorderColor="blue.500"
-              _placeholder={{ color: "gray.400" }}
+                focusBorderColor="blue.500"
+                _placeholder={{ color: "gray.400" }}
                 borderColor="gray.200"
                 borderRadius="xl"
                 px={6}
                 py={4}
                 _hover={{ borderColor: "gray.300" }}
-                _focus={{ 
-                  borderColor: "blue.500", 
+                _focus={{
+                  borderColor: "blue.500",
                   boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)"
+                  transform: "translateY(-1px)",
                 }}
               />
               {passwordConfirm.length > 0 && (
-                <Text fontSize="sm" color={password === passwordConfirm ? "green.500" : "red.500"} mt={2}>
-                  {password === passwordConfirm ? "✓ كلمات المرور متطابقة" : "كلمات المرور غير متطابقة"}
+                <Text
+                  fontSize="sm"
+                  color={password === passwordConfirm ? "green.500" : "red.500"}
+                  mt={2}
+                >
+                  {password === passwordConfirm
+                    ? "✓ كلمات المرور متطابقة"
+                    : "كلمات المرور غير متطابقة"}
                 </Text>
               )}
-          </FormControl>
+            </FormControl>
           </VStack>
         );
 
@@ -423,10 +490,14 @@ const SignUp = () => {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mb-4">
                 <FiBookOpen className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">اختر فئتك الدراسية</h2>
-              <p className="text-gray-600">حدد المرحلة الدراسية التي تنتمي إليها</p>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                اختر فئتك الدراسية
+              </h2>
+              <p className="text-gray-600">
+                حدد المرحلة الدراسية التي تنتمي إليها
+              </p>
             </Box>
-            
+
             <div className="grid grid-cols-2 gap-4">
               {/* الفئة الابتدائية */}
               <div
@@ -441,16 +512,22 @@ const SignUp = () => {
                 }}
               >
                 <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
-                    selectedCategory === "ابتدائي"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100 text-gray-600"
-                  }`}>
+                  <div
+                    className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
+                      selectedCategory === "ابتدائي"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
                     <span className="text-2xl font-bold">١</span>
                   </div>
-                  <h3 className={`font-bold text-lg mb-2 ${
-                    selectedCategory === "ابتدائي" ? "text-blue-700" : "text-gray-700"
-                  }`}>
+                  <h3
+                    className={`font-bold text-lg mb-2 ${
+                      selectedCategory === "ابتدائي"
+                        ? "text-blue-700"
+                        : "text-gray-700"
+                    }`}
+                  >
                     ابتدائي
                   </h3>
                   <p className="text-sm text-gray-500">6 صفوف دراسية</p>
@@ -470,16 +547,22 @@ const SignUp = () => {
                 }}
               >
                 <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
-                    selectedCategory === "إعدادي"
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-100 text-gray-600"
-                  }`}>
+                  <div
+                    className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
+                      selectedCategory === "إعدادي"
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
                     <span className="text-2xl font-bold">٢</span>
                   </div>
-                  <h3 className={`font-bold text-lg mb-2 ${
-                    selectedCategory === "إعدادي" ? "text-green-700" : "text-gray-700"
-                  }`}>
+                  <h3
+                    className={`font-bold text-lg mb-2 ${
+                      selectedCategory === "إعدادي"
+                        ? "text-green-700"
+                        : "text-gray-700"
+                    }`}
+                  >
                     إعدادي
                   </h3>
                   <p className="text-sm text-gray-500">3 صفوف دراسية</p>
@@ -499,16 +582,22 @@ const SignUp = () => {
                 }}
               >
                 <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
-                    selectedCategory === "ثانوي"
-                      ? "bg-purple-500 text-white"
-                      : "bg-gray-100 text-gray-600"
-                  }`}>
+                  <div
+                    className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
+                      selectedCategory === "ثانوي"
+                        ? "bg-purple-500 text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
                     <span className="text-2xl font-bold">٣</span>
                   </div>
-                  <h3 className={`font-bold text-lg mb-2 ${
-                    selectedCategory === "ثانوي" ? "text-purple-700" : "text-gray-700"
-                  }`}>
+                  <h3
+                    className={`font-bold text-lg mb-2 ${
+                      selectedCategory === "ثانوي"
+                        ? "text-purple-700"
+                        : "text-gray-700"
+                    }`}
+                  >
                     ثانوي
                   </h3>
                   <p className="text-sm text-gray-500">3 صفوف دراسية</p>
@@ -528,16 +617,22 @@ const SignUp = () => {
                 }}
               >
                 <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
-                    selectedCategory === "جامعة"
-                      ? "bg-orange-500 text-white"
-                      : "bg-gray-100 text-gray-600"
-                  }`}>
+                  <div
+                    className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
+                      selectedCategory === "جامعة"
+                        ? "bg-orange-500 text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
                     <span className="text-2xl font-bold">٤</span>
                   </div>
-                  <h3 className={`font-bold text-lg mb-2 ${
-                    selectedCategory === "جامعة" ? "text-orange-700" : "text-gray-700"
-                  }`}>
+                  <h3
+                    className={`font-bold text-lg mb-2 ${
+                      selectedCategory === "جامعة"
+                        ? "text-orange-700"
+                        : "text-gray-700"
+                    }`}
+                  >
                     جامعة
                   </h3>
                   <p className="text-sm text-gray-500">4 فرق دراسية</p>
@@ -568,46 +663,61 @@ const SignUp = () => {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-full mb-4">
                 <FiBookOpen className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">اختر صفك الدراسي</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                اختر صفك الدراسي
+              </h2>
               <p className="text-gray-600">حدد الصف الدراسي المحدد</p>
             </Box>
 
             <FormControl>
-              <FormLabel fontWeight="semibold" color="gray.700" mb={3} fontSize="md">
-            الصف الدراسي
-          </FormLabel>
-          <Select
-            dir="ltr"
-                placeholder={selectedCategory ? "اختر الصف الدراسي" : "اختر الفئة الدراسية أولاً"}
+              <FormLabel
+                fontWeight="semibold"
+                color="gray.700"
+                mb={3}
+                fontSize="md"
+              >
+                الصف الدراسي
+              </FormLabel>
+              <Select
+                dir="ltr"
+                placeholder={
+                  selectedCategory
+                    ? "اختر الصف الدراسي"
+                    : "اختر الفئة الدراسية أولاً"
+                }
                 value={gradeId}
                 onChange={(e) => setGradeId(e.target.value)}
-            size="lg"
-            focusBorderColor="blue.500"
-            _placeholder={{ color: "gray.400" }}
+                size="lg"
+                focusBorderColor="blue.500"
+                _placeholder={{ color: "gray.400" }}
                 borderColor="gray.200"
                 borderRadius="xl"
                 py={4}
                 px={6}
                 className="text-gray-800 transition-all duration-300"
-            bg="white"
+                bg="white"
                 isDisabled={!selectedCategory}
-                _hover={{ borderColor: selectedCategory ? "gray.300" : "gray.200" }}
-                _focus={{ 
-                  borderColor: selectedCategory ? "blue.500" : "gray.200", 
+                _hover={{
+                  borderColor: selectedCategory ? "gray.300" : "gray.200",
+                }}
+                _focus={{
+                  borderColor: selectedCategory ? "blue.500" : "gray.200",
                   boxShadow: selectedCategory ? "0 0 0 1px #3B82F6" : "none",
-                  transform: selectedCategory ? "translateY(-1px)" : "none"
+                  transform: selectedCategory ? "translateY(-1px)" : "none",
                 }}
               >
                 {getFilteredGradesByCategory(selectedCategory).map((grade) => (
-              <option key={grade.id} value={grade.id}>{grade.name}</option>
-            ))}
-          </Select>
+                  <option key={grade.id} value={grade.id}>
+                    {grade.name}
+                  </option>
+                ))}
+              </Select>
               {!selectedCategory && (
                 <Text fontSize="sm" color="orange.500" mt={2}>
                   ⚠️ يجب اختيار الفئة الدراسية أولاً
                 </Text>
               )}
-        </FormControl>
+            </FormControl>
           </VStack>
         );
 
@@ -635,7 +745,10 @@ const SignUp = () => {
         flexDirection={{ base: "column", lg: "row" }}
         bg={cardBg}
         borderRadius="2xl"
-        boxShadow={useColorModeValue("0 25px 50px rgba(0,0,0,0.08)", "0 25px 50px rgba(0,0,0,0.3)")}
+        boxShadow={useColorModeValue(
+          "0 25px 50px rgba(0,0,0,0.08)",
+          "0 25px 50px rgba(0,0,0,0.3)"
+        )}
         borderWidth="1px"
         borderColor={cardBorder}
         overflow="hidden"
@@ -699,7 +812,7 @@ const SignUp = () => {
                 السابق
               </Button>
             )}
-            
+
             {currentStep < steps.length - 1 ? (
               <Button
                 onClick={nextStep}
@@ -709,8 +822,15 @@ const SignUp = () => {
                 isDisabled={!validateCurrentStep()}
                 bg="blue.500"
                 color="white"
-                _hover={{ bg: "blue.400", boxShadow: "0 8px 20px rgba(66, 153, 225, 0.35)" }}
-                _disabled={{ bg: "gray.300", cursor: "not-allowed", _hover: {} }}
+                _hover={{
+                  bg: "blue.400",
+                  boxShadow: "0 8px 20px rgba(66, 153, 225, 0.35)",
+                }}
+                _disabled={{
+                  bg: "gray.300",
+                  cursor: "not-allowed",
+                  _hover: {},
+                }}
                 transition="all 0.2s"
               >
                 التالي
@@ -724,9 +844,18 @@ const SignUp = () => {
                 isDisabled={!validateCurrentStep() || loading}
                 bg="orange.500"
                 color="white"
-                _hover={{ bg: "orange.400", boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)" }}
-                _disabled={{ bg: "gray.300", cursor: "not-allowed", _hover: {} }}
-                leftIcon={loading ? <Spinner size="sm" color="white" /> : undefined}
+                _hover={{
+                  bg: "orange.400",
+                  boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)",
+                }}
+                _disabled={{
+                  bg: "gray.300",
+                  cursor: "not-allowed",
+                  _hover: {},
+                }}
+                leftIcon={
+                  loading ? <Spinner size="sm" color="white" /> : undefined
+                }
                 transition="all 0.2s"
               >
                 إنشاء الحساب
@@ -734,22 +863,22 @@ const SignUp = () => {
             )}
           </HStack>
 
-        <Box mt={6} textAlign="center">
-          <Text color={subtextColor} fontSize="md">
-            هل لديك حساب بالفعل؟{" "}
-            <Box
-              as="span"
-              color="blue.500"
-              fontWeight="semibold"
-              cursor="pointer"
-              _hover={{ textDecoration: "underline" }}
-              onClick={() => navigate("/login")}
-            >
-              تسجيل الدخول
-            </Box>
-          </Text>
+          <Box mt={6} textAlign="center">
+            <Text color={subtextColor} fontSize="md">
+              هل لديك حساب بالفعل؟{" "}
+              <Box
+                as="span"
+                color="blue.500"
+                fontWeight="semibold"
+                cursor="pointer"
+                _hover={{ textDecoration: "underline" }}
+                onClick={() => navigate(loginPath)}
+              >
+                تسجيل الدخول
+              </Box>
+            </Text>
+          </Box>
         </Box>
-      </Box>
 
         <Box
           w="full"
@@ -768,13 +897,24 @@ const SignUp = () => {
               <img
                 src="/fc65e2d7-5777-4a66-bc27-7fea10bc89a7-removebg-preview.png"
                 alt="Signup Illustration"
-                style={{ maxWidth: "100%", height: "auto", maxHeight: "280px", margin: "0 auto" }}
+                style={{
+                  maxWidth: "100%",
+                  height: "auto",
+                  maxHeight: "280px",
+                  margin: "0 auto",
+                }}
               />
             </Box>
             <Text fontSize="2xl" fontWeight="bold" color="white" mb={3}>
               {steps[currentStep]?.title}
             </Text>
-            <Text color="blue.100" fontSize="lg" maxW="280px" mx="auto" lineHeight="1.6">
+            <Text
+              color="blue.100"
+              fontSize="lg"
+              maxW="280px"
+              mx="auto"
+              lineHeight="1.6"
+            >
               {steps[currentStep]?.description}
             </Text>
             <VStack mt={6} spacing={2} color="blue.100" fontSize="sm">
@@ -791,7 +931,12 @@ const SignUp = () => {
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
         <ModalContent mx={4} borderRadius="2xl" overflow="hidden">
-          <ModalHeader textAlign="center" bg="blue.50" _dark={{ bg: "blue.900" }} py={6}>
+          <ModalHeader
+            textAlign="center"
+            bg="blue.50"
+            _dark={{ bg: "blue.900" }}
+            py={6}
+          >
             <VStack spacing={3}>
               <Box
                 w="60px"
@@ -809,16 +954,17 @@ const SignUp = () => {
               </Text>
             </VStack>
           </ModalHeader>
-          
+
           <ModalBody py={8}>
             <VStack spacing={4} textAlign="center">
               <Text fontSize="lg" color="gray.600">
                 رقم الهاتف <strong>{phone}</strong> مسجل مسبقاً في منصتنا
               </Text>
               <Text fontSize="md" color="gray.500">
-                يبدو أنك قمت بإنشاء حساب من قبل. قم بتسجيل الدخول باستخدام رقم الهاتف وكلمة المرور
+                يبدو أنك قمت بإنشاء حساب من قبل. قم بتسجيل الدخول باستخدام رقم
+                الهاتف وكلمة المرور
               </Text>
-              
+
               <Box
                 bg="blue.50"
                 borderRadius="lg"
@@ -828,12 +974,13 @@ const SignUp = () => {
                 w="full"
               >
                 <Text fontSize="sm" color="blue.700" fontWeight="medium">
-                  💡 تذكر كلمة المرور الخاصة بك؟ اضغط على "تسجيل الدخول" للمتابعة
+                  💡 تذكر كلمة المرور الخاصة بك؟ اضغط على "تسجيل الدخول"
+                  للمتابعة
                 </Text>
               </Box>
             </VStack>
           </ModalBody>
-          
+
           <ModalFooter justifyContent="center" py={6}>
             <HStack spacing={4} w="full" maxW="300px">
               <Button
@@ -849,13 +996,16 @@ const SignUp = () => {
               <Button
                 bg="orange.500"
                 color="white"
-                _hover={{ bg: "orange.400", boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)" }}
+                _hover={{
+                  bg: "orange.400",
+                  boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)",
+                }}
                 flex={1}
                 borderRadius="xl"
                 leftIcon={<Icon as={FiLogIn} />}
                 onClick={() => {
                   onClose();
-                  navigate("/login");
+                  navigate(loginPath);
                 }}
                 boxShadow="0 8px 20px rgba(237, 137, 54, 0.3)"
               >

@@ -101,10 +101,10 @@ const LoginPage = () => {
       
         const params = new URLSearchParams(window.location.search);
       const redirectTarget = params.get("redirect");
-      const destination = redirectTarget && redirectTarget.startsWith("/") ? redirectTarget : "/";
+      const destination = redirectTarget && redirectTarget.startsWith("/") ? redirectTarget : "/home";
       setTimeout(() => {
-       window.location.reload()
-        navigate('/home');
+       window.location.reload();
+        navigate(destination);
       }, 1000);
       
       // Redirect after 2 seconds

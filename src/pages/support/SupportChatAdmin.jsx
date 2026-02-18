@@ -118,6 +118,16 @@ const SupportChatAdmin = () => {
   });
   const [deleteFaqId, setDeleteFaqId] = useState(null);
 
+  // تذاكر المدرسين (مشاكل المدرسين)
+  const [teacherTickets, setTeacherTickets] = useState([]);
+  const [teacherTicketsLoading, setTeacherTicketsLoading] = useState(false);
+  const [teacherTicketStatusFilter, setTeacherTicketStatusFilter] = useState('all');
+  const [teacherTicketsPagination, setTeacherTicketsPagination] = useState({ total: 0, limit: 50, offset: 0, has_more: false });
+  const ticketModal = useDisclosure();
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [ticketForm, setTicketForm] = useState({ status: '', admin_notes: '', message_to_teacher: '' });
+  const [ticketUpdateLoading, setTicketUpdateLoading] = useState(false);
+
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
@@ -301,11 +311,39 @@ const SupportChatAdmin = () => {
     }
   };
 
+  // تذاكر المدرسين (مشاكل المدرسين) — GET /api/support/teacher/tickets (limit, offset, status)
+  const fetchTeacherTickets = async () => {
+    try {
+      setTeacherTicketsLoading(true);
+      const { limit, offset } = teacherTicketsPagination;
+      const params = { limit, offset };
+      if (teacherTicketStatusFilter && teacherTicketStatusFilter !== 'all') {
+        params.status = teacherTicketStatusFilter;
+      }
+      const { data } = await baseUrl.get('/api/support/teacher/tickets', {
+        params,
+        headers: authHeader,
+      });
+      const newTickets = data.tickets || [];
+      setTeacherTickets((prev) => (offset === 0 ? newTickets : [...prev, ...newTickets]));
+      setTeacherTicketsPagination(data.pagination || { total: 0, limit: 50, offset: 0, has_more: false });
+    } catch (error) {
+      console.error('Error fetching teacher tickets:', error);
+      toast.error('فشل تحميل تذاكر المدرسين');
+    } finally {
+      setTeacherTicketsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchChats();
     fetchUnreadCount();
     fetchFaqs();
   }, [statusFilter, pagination.offset]);
+
+  useEffect(() => {
+    fetchTeacherTickets();
+  }, [teacherTicketStatusFilter, teacherTicketsPagination.offset]);
 
   // Assign admin to chat
   const handleAssignChat = async (chatId) => {
@@ -590,6 +628,57 @@ const SupportChatAdmin = () => {
     return labels[status] || status;
   };
 
+  const getTeacherTicketStatusLabel = (status) => {
+    const labels = { open: 'مفتوح', in_progress: 'قيد المعالجة', resolved: 'تم الحل', closed: 'مغلق' };
+    return labels[status] || status;
+  };
+
+  const getTeacherTicketStatusColor = (status) => {
+    const colors = { open: 'orange', in_progress: 'blue', resolved: 'green', closed: 'gray' };
+    return colors[status] || 'gray';
+  };
+
+  const openTicketModal = (ticket) => {
+    setSelectedTicket(ticket);
+    setTicketForm({
+      status: ticket.status || 'open',
+      admin_notes: ticket.admin_notes || '',
+      message_to_teacher: '',
+    });
+    ticketModal.onOpen();
+  };
+
+  // PATCH /api/support/teacher/tickets/:ticketId — status, admin_notes, message_to_teacher (اختياري)
+  const handleUpdateTicket = async () => {
+    if (!selectedTicket?.id) return;
+    try {
+      setTicketUpdateLoading(true);
+      const body = {
+        status: ticketForm.status,
+        ...(ticketForm.admin_notes?.trim() && { admin_notes: ticketForm.admin_notes.trim() }),
+        ...(ticketForm.message_to_teacher?.trim() && { message_to_teacher: ticketForm.message_to_teacher.trim() }),
+      };
+      const { data } = await baseUrl.patch(
+        `/api/support/teacher/tickets/${selectedTicket.id}`,
+        body,
+        { headers: authHeader }
+      );
+      if (data.message_sent_to_teacher) {
+        toast.success('تم تحديث التذكرة وإرسال الرسالة للمدرس');
+      } else {
+        toast.success('تم تحديث التذكرة');
+      }
+      ticketModal.onClose();
+      setSelectedTicket(null);
+      fetchTeacherTickets();
+    } catch (error) {
+      console.error('Error updating ticket:', error);
+      toast.error(error?.response?.data?.message || 'فشل تحديث التذكرة');
+    } finally {
+      setTicketUpdateLoading(false);
+    }
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     return dayjs(dateStr).format('YYYY-MM-DD HH:mm');
@@ -601,7 +690,15 @@ const SupportChatAdmin = () => {
   };
 
   return (
-    <Flex  className='mt-[150px]' h="calc(100vh - 80px)" bg={useColorModeValue('gray.50', 'gray.900')}>
+    <Box className='mt-[150px]' bg={useColorModeValue('gray.50', 'gray.900')}>
+      <Tabs variant="enclosed" colorScheme="blue" isLazy>
+        <TabList px={4} pt={2} bg={bgColor} borderBottom="1px" borderColor={borderColor}>
+          <Tab>محادثات الطلاب</Tab>
+          <Tab>تذاكر المدرسين</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel p={0}>
+            <Flex h="calc(100vh - 140px)" bg={useColorModeValue('gray.50', 'gray.900')}>
       {/* Sidebar - Chat List */}
       <Box
         w="400px"
@@ -1160,6 +1257,146 @@ const SupportChatAdmin = () => {
           )}
         </Box>
       </Box>
+            </Flex>
+          </TabPanel>
+
+          <TabPanel p={0}>
+            <Box p={4} bg={bgColor} minH="400px">
+              <HStack mb={4} justify="space-between" flexWrap="wrap" gap={2}>
+                <Text fontSize="xl" fontWeight="bold">تذاكر المدرسين (مشاكل المدرسين)</Text>
+                <Select
+                  w="180px"
+                  value={teacherTicketStatusFilter}
+                  onChange={(e) => {
+                    setTeacherTicketStatusFilter(e.target.value);
+                    setTeacherTicketsPagination(prev => ({ ...prev, offset: 0 }));
+                  }}
+                  bg={useColorModeValue('gray.50', 'gray.700')}
+                >
+                  <option value="all">جميع الحالات</option>
+                  <option value="open">مفتوح</option>
+                  <option value="in_progress">قيد المعالجة</option>
+                  <option value="resolved">تم الحل</option>
+                  <option value="closed">مغلق</option>
+                </Select>
+              </HStack>
+              {teacherTicketsLoading ? (
+                <Center py={12}><Spinner size="lg" /></Center>
+              ) : teacherTickets.length === 0 ? (
+                <Center py={12}><Text color="gray.500">لا توجد تذاكر</Text></Center>
+              ) : (
+                <>
+                  <TableContainer>
+                    <Table size="sm" variant="simple">
+                      <Thead>
+                        <Tr>
+                          <Th>المدرس</Th>
+                          <Th>البريد</Th>
+                          <Th>نص المشكلة</Th>
+                          <Th>الحالة</Th>
+                          <Th>ملاحظات الأدمن</Th>
+                          <Th>التاريخ</Th>
+                          <Th>إجراءات</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {teacherTickets.map((t) => (
+                          <Tr key={t.id}>
+                            <Td>
+                              <VStack align="start" spacing={0}>
+                                <Text fontWeight="bold" fontSize="sm">{t.teacher_name}</Text>
+                                <Text fontSize="xs" color="gray.500">#{t.id}</Text>
+                              </VStack>
+                            </Td>
+                            <Td fontSize="sm">{t.teacher_email}</Td>
+                            <Td maxW="200px"><Text noOfLines={2} fontSize="sm">{t.message_text || '—'}</Text></Td>
+                            <Td>
+                              <Badge colorScheme={getTeacherTicketStatusColor(t.status)}>
+                                {getTeacherTicketStatusLabel(t.status)}
+                              </Badge>
+                            </Td>
+                            <Td maxW="150px"><Text noOfLines={2} fontSize="xs" color="gray.600">{t.admin_notes || '—'}</Text></Td>
+                            <Td fontSize="xs" color="gray.500">{formatDate(t.created_at)}</Td>
+                            <Td>
+                              <Button
+                                size="sm"
+                                colorScheme="blue"
+                                variant="outline"
+                                onClick={() => openTicketModal(t)}
+                              >
+                                تحديث / إرسال رسالة
+                              </Button>
+                            </Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </TableContainer>
+                  {teacherTicketsPagination.has_more && (
+                    <Button mt={4} size="sm" w="full" onClick={() => setTeacherTicketsPagination(prev => ({ ...prev, offset: prev.offset + prev.limit }))}>
+                      تحميل المزيد
+                    </Button>
+                  )}
+                </>
+              )}
+            </Box>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+
+      {/* مودال تحديث تذكرة المدرس — PATCH /api/support/teacher/tickets/:ticketId */}
+      <Modal isOpen={ticketModal.isOpen} onClose={ticketModal.onClose} size="md">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            تحديث التذكرة — {selectedTicket?.teacher_name}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <FormControl>
+                <FormLabel>حالة المشكلة</FormLabel>
+                <Select
+                  value={ticketForm.status}
+                  onChange={(e) => setTicketForm({ ...ticketForm, status: e.target.value })}
+                  placeholder="اختر الحالة"
+                >
+                  <option value="open">مفتوح</option>
+                  <option value="in_progress">قيد المعالجة</option>
+                  <option value="resolved">تم الحل</option>
+                  <option value="closed">مغلق</option>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>ملاحظات الأدمن على التذكرة</FormLabel>
+                <Textarea
+                  value={ticketForm.admin_notes}
+                  onChange={(e) => setTicketForm({ ...ticketForm, admin_notes: e.target.value })}
+                  placeholder="ملاحظات داخلية (لا تُرسل للمدرس)"
+                  rows={2}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>رسالة للمدرس (تُرسل في الشات عند تعيين تم الحل / مغلق)</FormLabel>
+                <Textarea
+                  value={ticketForm.message_to_teacher}
+                  onChange={(e) => setTicketForm({ ...ticketForm, message_to_teacher: e.target.value })}
+                  placeholder="اختياري. إذا تركتها فارغة يُستخدم الافتراضي: تم حل مشكلتك. لو عندك أي استفسار آخر اكتب هنا."
+                  rows={3}
+                />
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={ticketModal.onClose}>
+              إلغاء
+            </Button>
+            <Button colorScheme="blue" onClick={handleUpdateTicket} isLoading={ticketUpdateLoading}>
+              حفظ وإرسال للمدرس
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {/* FAQ Modal */}
       <Modal isOpen={faqModal.isOpen} onClose={faqModal.onClose} size="xl">
@@ -1245,7 +1482,7 @@ const SupportChatAdmin = () => {
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
-    </Flex>
+    </Box>
   );
 };
 

@@ -40,50 +40,114 @@ const Exam = () => {
   const [gradesData, setGradesData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // للطالب: بدء الامتحان عبر POST /api/exams/:examId/start
+  const [examStarted, setExamStarted] = useState(false);
+  const [startLoading, setStartLoading] = useState(false);
+  const [attemptId, setAttemptId] = useState(null);
+  const [examMeta, setExamMeta] = useState(null); // { examTitle, durationMinutes, questionsCount, startedAt }
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState(null); // للعرض فقط
+
+  const token = localStorage.getItem("token");
+  const authHeaders = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
   useEffect(() => {
-    fetchQuestions();
+    if (isTeacher || isAdmin) {
+      fetchQuestions();
+      return;
+    }
+    // طالب أو لم يُحدد النوع بعد: لا نستدعي GET أسئلة (يُرجع 403 للطالب)
+    setLoading(false);
+    setError(null);
     // eslint-disable-next-line
-  }, [examId]);
+  }, [examId, isTeacher, isAdmin]);
+
+  // Timer للطالب عند بدء الامتحان
+  useEffect(() => {
+    if (!examMeta?.durationMinutes || !examMeta?.startedAt || !student) return;
+    const computeLeft = () => {
+      const start = new Date(examMeta.startedAt).getTime();
+      const end = start + examMeta.durationMinutes * 60 * 1000;
+      const left = Math.max(0, Math.floor((end - Date.now()) / 1000));
+      setTimeLeftSeconds(left);
+      return left;
+    };
+    computeLeft();
+    const t = setInterval(() => {
+      if (computeLeft() <= 0) clearInterval(t);
+    }, 1000);
+    return () => clearInterval(t);
+  }, [examMeta, student]);
 
   const fetchQuestions = async () => {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem("token");
       const res = await baseUrl.get(
         `/api/course/course-exam/${examId}/questions`,
-        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+        authHeaders
       );
 
       let fetchedQuestions = res.data.questions || [];
 
-      // Adapt new API structure
-      fetchedQuestions = fetchedQuestions.map(q => {
-        // If it looks like the new structure (has optionA or type)
-        // We'll normalize it to the component's expected structure
-        if (q.type === 'IMAGE' || q.optionA !== undefined) {
-          return {
-            id: q.id,
-            text: q.questionText, // Can be null
-            image: q.questionImage,
-            grade: q.grade || 1, // Default grade if missing
-            choices: [
-              { id: 1, text: q.optionA || "A", is_correct: false },
-              { id: 2, text: q.optionB || "B", is_correct: false },
-              { id: 3, text: q.optionC || "C", is_correct: false },
-              { id: 4, text: q.optionD || "D", is_correct: false }
-            ]
-          };
-        }
-        return q;
-      });
-
+      fetchedQuestions = normalizeQuestionsFromApi(fetchedQuestions);
       setQuestions(fetchedQuestions);
     } catch (err) {
       console.error(err);
       setError("حدث خطأ أثناء تحميل الأسئلة");
     } finally {
       setLoading(false);
+    }
+  };
+
+  function normalizeQuestionsFromApi(fetchedQuestions) {
+    return (fetchedQuestions || []).map(q => {
+      if (q.questionText !== undefined || q.optionA !== undefined || q.type) {
+        return {
+          id: q.id,
+          text: q.questionText ?? "",
+          image: q.questionImage ?? null,
+          grade: q.grade ?? 1,
+          choices: [
+            { id: 1, text: q.optionA ?? "A", is_correct: false },
+            { id: 2, text: q.optionB ?? "B", is_correct: false },
+            { id: 3, text: q.optionC ?? "C", is_correct: false },
+            { id: 4, text: q.optionD ?? "D", is_correct: false }
+          ]
+        };
+      }
+      return q;
+    });
+  }
+
+  // للطالب: بدء الامتحان POST /api/exams/:examId/start
+  const handleStartExam = async () => {
+    setStartLoading(true);
+    setError(null);
+    try {
+      const res = await baseUrl.post(
+        `/api/exams/${examId}/start`,
+        {},
+        authHeaders
+      );
+      const data = res.data || {};
+      setAttemptId(data.attemptId ?? null);
+      setExamMeta({
+        examTitle: data.examTitle ?? "",
+        durationMinutes: data.durationMinutes ?? 0,
+        questionsCount: data.questionsCount ?? 0,
+        startedAt: data.startedAt ?? new Date().toISOString()
+      });
+      const rawQuestions = data.questions ?? [];
+      setQuestions(normalizeQuestionsFromApi(rawQuestions));
+      setExamStarted(true);
+      toast({ title: "تم بدء الامتحان", status: "success" });
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || "حدث خطأ أثناء بدء الامتحان";
+      setError(msg);
+      toast({ title: msg, status: "error" });
+    } finally {
+      setStartLoading(false);
     }
   };
 
@@ -213,11 +277,54 @@ const Exam = () => {
     }
   };
 
+  // للطالب: شاشة بدء الامتحان (قبل استدعاء start)
+  const isStudentView = !isTeacher && !isAdmin && student;
+  if (isStudentView && !examStarted) {
+    return (
+      <Box maxW="2xl" mx="auto" py={10} px={4} className="mt-[80px]">
+        <VStack spacing={8}>
+          <Heading size="lg" color="blue.600" textAlign="center">امتحان الكورس</Heading>
+          {error && (
+            <Alert status="error" borderRadius="md" w="full">
+              <AlertIcon />
+              {error}
+            </Alert>
+          )}
+          <Box
+            p={8}
+            borderRadius="2xl"
+            boxShadow="2xl"
+            bgGradient="linear(to-br, blue.50, white)"
+            border="2px solid"
+            borderColor="blue.200"
+            textAlign="center"
+            w="full"
+          >
+            <VStack spacing={6}>
+              <Text fontSize="lg" color="gray.700">
+                اضغط على الزر أدناه لبدء الامتحان. بعد البدء سيبدأ احتساب الوقت.
+              </Text>
+              <Button
+                colorScheme="blue"
+                size="lg"
+                isLoading={startLoading}
+                onClick={handleStartExam}
+                leftIcon={<FaBookOpen />}
+              >
+                ابدأ الامتحان
+              </Button>
+            </VStack>
+          </Box>
+        </VStack>
+      </Box>
+    );
+  }
+
   if (loading) {
     return <BrandLoadingScreen />;
   }
 
-  if (error) {
+  if (error && !isStudentView) {
     return (
       <Center minH="60vh">
         <Alert status="error" borderRadius="md">
@@ -246,7 +353,23 @@ const Exam = () => {
           }
         `}
       </style>
-      <Heading mb={8} textAlign="center" color="blue.600">أسئلة الامتحان الشامل</Heading>
+      <Heading mb={2} textAlign="center" color="blue.600">
+        {isStudentView && examMeta?.examTitle ? examMeta.examTitle : "أسئلة الامتحان الشامل"}
+      </Heading>
+      {isStudentView && examMeta && (
+        <HStack justify="center" spacing={4} mb={6} flexWrap="wrap">
+          <Badge colorScheme="blue" fontSize="md" px={3} py={1}>
+            {examMeta.questionsCount} سؤال
+          </Badge>
+          {examMeta.durationMinutes > 0 && (
+            <Badge colorScheme={timeLeftSeconds !== null && timeLeftSeconds <= 0 ? "red" : "green"} fontSize="md" px={3} py={1}>
+              الوقت المتبقي: {timeLeftSeconds != null
+                ? `${Math.floor(timeLeftSeconds / 60)}:${String(timeLeftSeconds % 60).padStart(2, "0")}`
+                : `${examMeta.durationMinutes} دقيقة`}
+            </Badge>
+          )}
+        </HStack>
+      )}
       {/* زر عرض درجات الطلاب للمدرس */}
       {isTeacher && (
         <Button
