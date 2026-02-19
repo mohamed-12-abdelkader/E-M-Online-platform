@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box, VStack, Heading, Text, Spinner, Center, RadioGroup, Radio, Stack,
   Alert, AlertIcon, IconButton, HStack, useToast, Modal, ModalOverlay,
@@ -8,17 +8,19 @@ import { AiFillEdit, AiFillDelete, AiFillCheckCircle, AiOutlineCheckCircle, AiOu
 import { CircularProgress, CircularProgressLabel } from "@chakra-ui/react";
 import baseUrl from "../../api/baseUrl";
 import BrandLoadingScreen from "../../components/loading/BrandLoadingScreen";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import UserType from "../../Hooks/auth/userType";
 import {
   FaBookOpen, FaCheckCircle, FaChevronLeft, FaChevronRight,
   FaUser, FaTimesCircle, FaPhone, FaIdBadge, FaCalendarAlt
 } from 'react-icons/fa';
 import { BiSearch } from "react-icons/bi";
+import { MdHelpOutline, MdZoomIn, MdArrowBack } from "react-icons/md";
 
 
 const Exam = () => {
   const { examId } = useParams();
+  const navigate = useNavigate();
   const [userData, isAdmin, isTeacher, student] = UserType();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,7 @@ const Exam = () => {
   const [deleteModal, setDeleteModal] = useState({ open: false, qid: null });
   const [deleting, setDeleting] = useState(false);
   const [pendingCorrect, setPendingCorrect] = useState({});
-  const [studentAnswers, setStudentAnswers] = useState({}); // { [questionId]: choiceId }
+  const [studentAnswers, setStudentAnswers] = useState({}); // { [questionId]: 'A'|'B'|'C'|'D' } مثل التطبيق المرجعي
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitResult, setSubmitResult] = useState(null);
   const toast = useToast();
@@ -45,7 +47,11 @@ const Exam = () => {
   const [startLoading, setStartLoading] = useState(false);
   const [attemptId, setAttemptId] = useState(null);
   const [examMeta, setExamMeta] = useState(null); // { examTitle, durationMinutes, questionsCount, startedAt }
-  const [timeLeftSeconds, setTimeLeftSeconds] = useState(null); // للعرض فقط
+  const [remainingSeconds, setRemainingSeconds] = useState(null); // عد تنازلي من duration*60 (مثل التطبيق المرجعي)
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [imageModalSrc, setImageModalSrc] = useState(null);
+  const timerIntervalRef = useRef(null);
+  const timerExpiredRef = useRef(false);
 
   const token = localStorage.getItem("token");
   const authHeaders = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
@@ -61,22 +67,53 @@ const Exam = () => {
     // eslint-disable-next-line
   }, [examId, isTeacher, isAdmin]);
 
-  // Timer للطالب عند بدء الامتحان
+  // للطالب: بدء الامتحان تلقائياً عند الدخول (مثل التطبيق المرجعي)
+  const isStudentView = !isTeacher && !isAdmin && student;
   useEffect(() => {
-    if (!examMeta?.durationMinutes || !examMeta?.startedAt || !student) return;
-    const computeLeft = () => {
-      const start = new Date(examMeta.startedAt).getTime();
-      const end = start + examMeta.durationMinutes * 60 * 1000;
-      const left = Math.max(0, Math.floor((end - Date.now()) / 1000));
-      setTimeLeftSeconds(left);
-      return left;
-    };
-    computeLeft();
-    const t = setInterval(() => {
-      if (computeLeft() <= 0) clearInterval(t);
+    if (!isStudentView || !examId || examStarted || startLoading) return;
+    handleStartExam();
+    // eslint-disable-next-line
+  }, [examId, isStudentView]);
+
+  // مؤقت عد تنازلي (بالضبط كالتطبيق المرجعي): يُنقص كل ثانية، وعند الصفر تسليم تلقائي
+  useEffect(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    if (remainingSeconds === null || remainingSeconds <= 0 || submitResult) {
+      timerExpiredRef.current = false;
+      if (remainingSeconds !== null && remainingSeconds <= 0 && !submitResult && !submitLoading) {
+        timerExpiredRef.current = true;
+        toast({ title: "انتهى الوقت!", description: "يتم تسليم الامتحان تلقائياً.", status: "warning" });
+        handleSubmitExam(true);
+      }
+      return;
+    }
+    timerIntervalRef.current = setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev === null || prev <= 0) {
+          if (prev !== null && prev <= 0 && !timerExpiredRef.current && !submitLoading && !submitResult) {
+            timerExpiredRef.current = true;
+            if (timerIntervalRef.current) {
+              clearInterval(timerIntervalRef.current);
+              timerIntervalRef.current = null;
+            }
+            toast({ title: "انتهى الوقت!", description: "يتم تسليم الامتحان تلقائياً.", status: "warning" });
+            handleSubmitExam(true);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
-    return () => clearInterval(t);
-  }, [examMeta, student]);
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    };
+  }, [remainingSeconds, submitResult, submitLoading]);
 
   const fetchQuestions = async () => {
     try {
@@ -99,27 +136,36 @@ const Exam = () => {
     }
   };
 
+  /** تطبيع أسئلة من صيغة API بدء الامتحان: id, type, questionText, questionImage, optionA..D */
   function normalizeQuestionsFromApi(fetchedQuestions) {
-    return (fetchedQuestions || []).map(q => {
-      if (q.questionText !== undefined || q.optionA !== undefined || q.type) {
+    const list = Array.isArray(fetchedQuestions) ? fetchedQuestions : [];
+    return list.map((q) => {
+      const hasNewFormat =
+        q.type != null || q.questionText != null || q.optionA != null || q.optionB != null;
+      if (hasNewFormat) {
+        const options = [
+          [1, q.optionA],
+          [2, q.optionB],
+          [3, q.optionC],
+          [4, q.optionD]
+        ].map(([id, text]) => ({
+          id,
+          text: text != null && String(text).trim() !== "" ? String(text).trim() : "—",
+          is_correct: false
+        }));
         return {
           id: q.id,
-          text: q.questionText ?? "",
+          text: q.questionText != null ? String(q.questionText) : "",
           image: q.questionImage ?? null,
           grade: q.grade ?? 1,
-          choices: [
-            { id: 1, text: q.optionA ?? "A", is_correct: false },
-            { id: 2, text: q.optionB ?? "B", is_correct: false },
-            { id: 3, text: q.optionC ?? "C", is_correct: false },
-            { id: 4, text: q.optionD ?? "D", is_correct: false }
-          ]
+          choices: options
         };
       }
       return q;
     });
   }
 
-  // للطالب: بدء الامتحان POST /api/exams/:examId/start
+  // للطالب: بدء الامتحان POST /api/exams/:examId/start (كالتطبيق المرجعي: تعيين المؤقت وتهيئة الإجابات)
   const handleStartExam = async () => {
     setStartLoading(true);
     setError(null);
@@ -140,6 +186,14 @@ const Exam = () => {
       const rawQuestions = data.questions ?? [];
       setQuestions(normalizeQuestionsFromApi(rawQuestions));
       setExamStarted(true);
+      setCurrent(0);
+      setStudentAnswers({});
+      // مؤقت عد تنازلي من المدة بالدقائق (مثل التطبيق المرجعي)
+      if (data.durationMinutes != null && data.durationMinutes > 0) {
+        setRemainingSeconds(data.durationMinutes * 60);
+      } else {
+        setRemainingSeconds(null);
+      }
       toast({ title: "تم بدء الامتحان", status: "success" });
     } catch (err) {
       console.error(err);
@@ -249,75 +303,90 @@ const Exam = () => {
     }
   };
 
-  // للطالب: عند اختيار إجابة
-  const handleStudentChoice = (qid, cid) => {
-    setStudentAnswers((prev) => ({ ...prev, [qid]: cid }));
+  // للطالب: عند اختيار إجابة بحرف (A/B/C/D) - مثل التطبيق المرجعي
+  const handleStudentChoice = (questionId, selectedAnswer) => {
+    if (submitResult) return;
+    setStudentAnswers((prev) => ({ ...prev, [questionId]: selectedAnswer }));
   };
 
-  // للطالب: تسليم الامتحان
-  const handleSubmitExam = async () => {
+  // للطالب: الانتقال لسؤال (كالتطبيق المرجعي - لا تنقل بعد التسليم)
+  const goToQuestion = (index) => {
+    if (submitResult) return;
+    if (index < 0 || index >= questions.length) return;
+    setCurrent(index);
+  };
+
+  // للطالب: تسليم الامتحان — نفس الطريقة في التطبيق المرجعي (نفس الـ endpoint ونفس صيغة الإجابات)
+  const handleSubmitExam = useCallback(async (autoSubmit = false) => {
+    if (!examId || !attemptId) {
+      toast({ title: "خطأ", description: "لا توجد محاولة نشطة لتسليمها", status: "error" });
+      return;
+    }
+    if (submitLoading || submitResult) return;
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast({ title: "يجب تسجيل الدخول لتسليم الامتحان", status: "error" });
+      return;
+    }
+
     setSubmitLoading(true);
+    timerExpiredRef.current = autoSubmit;
+
     try {
-      const token = localStorage.getItem("token");
-      const answersArr = Object.entries(studentAnswers).map(([questionId, choiceId]) => ({
+      const answersArr = Object.entries(studentAnswers).map(([questionId, selectedAnswer]) => ({
         questionId: Number(questionId),
-        choiceId: Number(choiceId),
+        selectedAnswer,
       }));
+
       const res = await baseUrl.post(
-        `/api/course/course-exam/${examId}/submit`,
-        { answers: answersArr },
-        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+        `/api/exams/${examId}/submit`,
+        { attemptId, answers: answersArr },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSubmitResult(res.data);
-      toast({ title: "تم تسليم الامتحان!", status: "success" });
-    } catch {
-      toast({ title: "فشل تسليم الامتحان", status: "error" });
+
+      const result = res.data;
+      setSubmitResult(result);
+      setRemainingSeconds(null);
+
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+
+      if (!autoSubmit) {
+        toast({
+          title: "تم تسليم الامتحان!",
+          description: `الدرجة: ${result.totalGrade}/${result.maxGrade}`,
+          status: "success",
+        });
+      }
+    } catch (err) {
+      console.error("Error submitting exam:", err);
+      const errorMessage = err?.response?.data?.message || "حدث خطأ غير متوقع";
+      if (!autoSubmit) {
+        toast({ title: "فشل تسليم الامتحان", description: errorMessage, status: "error" });
+      }
     } finally {
       setSubmitLoading(false);
     }
-  };
+  }, [examId, attemptId, studentAnswers, submitLoading, submitResult]);
 
-  // للطالب: شاشة بدء الامتحان (قبل استدعاء start)
-  const isStudentView = !isTeacher && !isAdmin && student;
+  // للطالب: أثناء التحميل أو قبل بدء الامتحان نعرض التحميل أو الخطأ (بدء تلقائي)
   if (isStudentView && !examStarted) {
-    return (
-      <Box maxW="2xl" mx="auto" py={10} px={4} className="mt-[80px]">
-        <VStack spacing={8}>
-          <Heading size="lg" color="blue.600" textAlign="center">امتحان الكورس</Heading>
-          {error && (
+    if (error) {
+      return (
+        <Box maxW="2xl" mx="auto" py={10} px={4} className="mt-[80px]">
+          <VStack spacing={6}>
             <Alert status="error" borderRadius="md" w="full">
               <AlertIcon />
               {error}
             </Alert>
-          )}
-          <Box
-            p={8}
-            borderRadius="2xl"
-            boxShadow="2xl"
-            bgGradient="linear(to-br, blue.50, white)"
-            border="2px solid"
-            borderColor="blue.200"
-            textAlign="center"
-            w="full"
-          >
-            <VStack spacing={6}>
-              <Text fontSize="lg" color="gray.700">
-                اضغط على الزر أدناه لبدء الامتحان. بعد البدء سيبدأ احتساب الوقت.
-              </Text>
-              <Button
-                colorScheme="blue"
-                size="lg"
-                isLoading={startLoading}
-                onClick={handleStartExam}
-                leftIcon={<FaBookOpen />}
-              >
-                ابدأ الامتحان
-              </Button>
-            </VStack>
-          </Box>
-        </VStack>
-      </Box>
-    );
+            <Button leftIcon={<MdArrowBack />} onClick={() => navigate(-1)}>العودة</Button>
+          </VStack>
+        </Box>
+      );
+    }
+    return <BrandLoadingScreen />;
   }
 
   if (loading) {
@@ -334,6 +403,14 @@ const Exam = () => {
       </Center>
     );
   }
+
+  const formatRemainingTime = (value) => {
+    if (value == null) return "--:--";
+    const s = Math.max(0, value);
+    const m = Math.floor(s / 60).toString().padStart(2, "0");
+    const sec = (s % 60).toString().padStart(2, "0");
+    return `${m}:${sec}`;
+  };
 
   return (
     <Box maxW="2xl" mx="auto" py={10} px={4} className="mt-[80px]">
@@ -353,22 +430,42 @@ const Exam = () => {
           }
         `}
       </style>
-      <Heading mb={2} textAlign="center" color="blue.600">
-        {isStudentView && examMeta?.examTitle ? examMeta.examTitle : "أسئلة الامتحان الشامل"}
-      </Heading>
-      {isStudentView && examMeta && (
-        <HStack justify="center" spacing={4} mb={6} flexWrap="wrap">
-          <Badge colorScheme="blue" fontSize="md" px={3} py={1}>
-            {examMeta.questionsCount} سؤال
-          </Badge>
-          {examMeta.durationMinutes > 0 && (
-            <Badge colorScheme={timeLeftSeconds !== null && timeLeftSeconds <= 0 ? "red" : "green"} fontSize="md" px={3} py={1}>
-              الوقت المتبقي: {timeLeftSeconds != null
-                ? `${Math.floor(timeLeftSeconds / 60)}:${String(timeLeftSeconds % 60).padStart(2, "0")}`
-                : `${examMeta.durationMinutes} دقيقة`}
-            </Badge>
-          )}
+      {/* هيدر الطالب: زر رجوع + عنوان + مؤقت (مثل التطبيق المرجعي) */}
+      {isStudentView && (
+        <HStack
+          mb={4}
+          p={3}
+          borderRadius="xl"
+          borderWidth="1px"
+          borderColor="gray.200"
+          bg="white"
+          shadow="sm"
+          spacing={3}
+          align="center"
+        >
+          <IconButton
+            aria-label="العودة"
+            icon={<MdArrowBack />}
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+          />
+          <VStack align="stretch" flex={1} spacing={0}>
+            <Text fontWeight="bold" fontSize="lg" noOfLines={1}>
+              {examMeta?.examTitle || "الامتحان الشامل"}
+            </Text>
+            {remainingSeconds !== null && (
+              <Text fontSize="sm" fontWeight="600" color="blue.600">
+                {formatRemainingTime(remainingSeconds)}
+              </Text>
+            )}
+          </VStack>
         </HStack>
+      )}
+      {!isStudentView && (
+        <Heading mb={2} textAlign="center" color="blue.600">
+          أسئلة الامتحان الشامل
+        </Heading>
       )}
       {/* زر عرض درجات الطلاب للمدرس */}
       {isTeacher && (
@@ -548,293 +645,213 @@ const Exam = () => {
           {/* للطالب: عرض سؤال واحد مع pagination */}
           {!isTeacher && !isAdmin && student ? (
             <>
-              {/* عرض النتيجة إذا تم التسليم */}
+              {/* عرض النتيجة إذا تم التسليم (بنفس تصميم التطبيق المرجعي) */}
               {submitResult ? (
-                <>
-                  {/* بطاقة النتيجة الرئيسية */}
-                  <Box
-                    p={{ base: 6, sm: 8, md: 10 }}
-                    borderRadius="2xl"
-                    boxShadow="2xl"
-                    bgGradient="linear(135deg, green.50 0%, white 50%, blue.50 100%)"
-                    border="2px solid"
-                    borderColor="green.200"
-                    mb={{ base: 6, sm: 8, md: 10 }}
-                    textAlign="center"
-                    position="relative"
-                    overflow="hidden"
-                  >
-                    {/* خلفية مزخرفة */}
-                    <Box
-                      position="absolute"
-                      top="-50%"
-                      left="-50%"
-                      w="200%"
-                      h="200%"
-                      bgGradient="radial(circle, rgba(34, 197, 94, 0.1) 0%, transparent 70%)"
-                      animation="pulse 3s ease-in-out infinite"
-                    />
-
-                    <VStack spacing={6} position="relative" zIndex={1}>
-                      {/* أيقونة النجاح */}
-
-
-                      {/* العنوان الرئيسي */}
-                      <VStack spacing={3}>
-                        <Heading
-                          size={{ base: 'lg', sm: 'xl', md: '2xl' }}
-                          color="green.700"
-                          fontWeight="bold"
-                          textShadow="0 2px 4px rgba(0,0,0,0.1)"
-                        >
-                          نتيجتك النهائية
-                        </Heading>
-
-                        {/* شريط التقدم الدائري */}
-                        <Box position="relative" mb={4}>
-                          <CircularProgress
-                            value={Math.round((submitResult.totalGrade / submitResult.maxGrade) * 100)}
-                            color="green.400"
-                            size={{ base: '120px', sm: '140px', md: '160px' }}
-                            thickness="12px"
-                            trackColor="gray.200"
-                          >
-                            <CircularProgressLabel
-                              fontSize={{ base: 'xl', sm: '2xl', md: '3xl' }}
-                              fontWeight="bold"
-                              color="green.700"
-                            >
-                              {submitResult.totalGrade}
-                            </CircularProgressLabel>
-                          </CircularProgress>
-
-                          {/* النسبة المئوية */}
-                          <Text
-                            fontSize={{ base: 'lg', sm: 'xl', md: '2xl' }}
-                            fontWeight="bold"
-                            color="green.600"
-                            mt={2}
-                          >
-                            من {submitResult.maxGrade} ({Math.round((submitResult.totalGrade / submitResult.maxGrade) * 100)}%)
-                          </Text>
-                        </Box>
-
-                        {/* رسالة النتيجة */}
-
-                      </VStack>
+                <Box
+                  p={6}
+                  borderRadius="2xl"
+                  borderWidth="1px"
+                  borderColor="gray.200"
+                  bg="white"
+                  boxShadow="lg"
+                >
+                  <VStack spacing={6} align="stretch">
+                    <VStack spacing={3}>
+                      <FaCheckCircle size={48} color="#10B981" />
+                      <Heading size="lg" color="gray.800">تم تسليم الامتحان</Heading>
                     </VStack>
-                  </Box>
-
-                  {/* تفاصيل الأخطاء */}
-                  {submitResult.wrongQuestions && submitResult.wrongQuestions.length > 0 && (
-                    <Box
-                      p={{ base: 4, sm: 5, md: 6 }}
-                      borderRadius="xl"
-                      bg="white"
-                      boxShadow="lg"
-                      border="1px solid"
-                      borderColor="orange.200"
-                    >
-                      <VStack spacing={4} align="stretch">
-                        <HStack spacing={3} justify="center" mb={4}>
-                          <Box
-                            w="40px"
-                            h="40px"
-                            borderRadius="full"
-                            bg="orange.100"
-                            display="flex"
-                            alignItems="center"
-                            justifyContent="center"
-                          >
-                            <AiOutlineCloseCircle size={20} color="#F59E0B" />
-                          </Box>
-                          <Heading size="lg" color="orange.700">
-                            الأسئلة الخاطئة
-                          </Heading>
-                        </HStack>
-
-                        <VStack spacing={4} align="stretch">
-                          {submitResult.wrongQuestions.map((wq, idx) => (
+                    <VStack spacing={1}>
+                      <Text fontSize="4xl" fontWeight="bold" color="blue.600">
+                        {submitResult.totalGrade}
+                      </Text>
+                      <Text fontSize="lg" color="gray.600">من {submitResult.maxGrade}</Text>
+                    </VStack>
+                    <HStack spacing={4} justify="center" w="full">
+                      <Box flex={1} p={4} borderRadius="xl" bg="green.50" borderWidth="1px" borderColor="green.200" textAlign="center">
+                        <FaCheckCircle size={24} color="#10B981" style={{ margin: "0 auto 8px" }} />
+                        <Text fontSize="2xl" fontWeight="bold" color="gray.800">
+                          {submitResult.correctCount ?? (questions.length - (submitResult.wrongQuestions?.length ?? 0))}
+                        </Text>
+                        <Text fontSize="sm" color="gray.600">صحيح</Text>
+                      </Box>
+                      <Box flex={1} p={4} borderRadius="xl" bg="red.50" borderWidth="1px" borderColor="red.200" textAlign="center">
+                        <FaTimesCircle size={24} color="#DC2626" style={{ margin: "0 auto 8px" }} />
+                        <Text fontSize="2xl" fontWeight="bold" color="gray.800">
+                          {submitResult.wrongCount ?? (submitResult.wrongQuestions?.length ?? 0)}
+                        </Text>
+                        <Text fontSize="sm" color="gray.600">خاطئ</Text>
+                      </Box>
+                    </HStack>
+                    {submitResult.wrongQuestions && submitResult.wrongQuestions.length > 0 && (
+                      <VStack align="stretch" spacing={4}>
+                        <Text fontWeight="600" fontSize="lg" color="gray.800">
+                          الأسئلة الخاطئة ({submitResult.wrongQuestions.length})
+                        </Text>
+                        {submitResult.wrongQuestions.map((wq, idx) => {
+                          const getAnswerText = (answer) => {
+                            if (!answer) return "—";
+                            if (answer === "A") return wq.optionA ?? "—";
+                            if (answer === "B") return wq.optionB ?? "—";
+                            if (answer === "C") return wq.optionC ?? "—";
+                            if (answer === "D") return wq.optionD ?? "—";
+                            return "—";
+                          };
+                          const yourText = wq.yourAnswer != null ? getAnswerText(wq.yourAnswer) : (wq.yourChoice?.text || "لم تجب");
+                          const correctText = wq.correctAnswer != null ? getAnswerText(wq.correctAnswer) : (wq.correctChoice?.text || "—");
+                          return (
                             <Box
                               key={wq.questionId}
-                              p={{ base: 4, sm: 5, md: 6 }}
+                              p={4}
                               borderRadius="xl"
-                              boxShadow="md"
-                              bgGradient="linear(to-r, orange.50, white)"
-                              border="1px solid"
-                              borderColor="orange.200"
-                              position="relative"
+                              borderWidth="1px"
+                              borderColor="gray.200"
+                              bg="gray.50"
                             >
-                              {/* رقم السؤال */}
-                              <Box
-                                position="absolute"
-                                top="-10px"
-                                right="-10px"
-                                w="30px"
-                                h="30px"
-                                borderRadius="full"
-                                bg="orange.500"
-                                color="white"
-                                display="flex"
-                                alignItems="center"
-                                justifyContent="center"
-                                fontSize="sm"
-                                fontWeight="bold"
-                              >
-                                {idx + 1}
-                              </Box>
-
-                              <VStack spacing={4} align="stretch">
-                                {/* نص السؤال */}
-                                <Text
-                                  fontWeight="bold"
-                                  color="orange.800"
-                                  fontSize={{ base: 'md', sm: 'lg' }}
-                                  lineHeight="1.5"
-                                >
-                                  {wq.questionText}
-                                </Text>
-
-                                {/* الإجابات */}
-                                <VStack spacing={3} align="stretch">
-                                  {/* إجابة الطالب */}
-                                  <Box
-                                    p={3}
-                                    borderRadius="lg"
-                                    bg="red.50"
-                                    border="1px solid"
-                                    borderColor="red.200"
-                                  >
-                                    <HStack spacing={2} mb={1}>
-                                      <AiOutlineCloseCircle color="#DC2626" size={16} />
-                                      <Text fontWeight="bold" color="red.700" fontSize="sm">
-                                        إجابتك:
-                                      </Text>
-                                    </HStack>
-                                    <Text
-                                      color="red.800"
-                                      fontSize="md"
-                                      fontWeight="medium"
-                                      bg="red.100"
-                                      p={2}
-                                      borderRadius="md"
-                                    >
-                                      {wq.yourChoice?.text || "لم تجب"}
-                                    </Text>
-                                  </Box>
-
-                                  {/* الإجابة الصحيحة */}
-                                  <Box
-                                    p={3}
-                                    borderRadius="lg"
-                                    bg="green.50"
-                                    border="1px solid"
-                                    borderColor="green.200"
-                                  >
-                                    <HStack spacing={2} mb={1}>
-                                      <AiOutlineCheckCircle color="#16A34A" size={16} />
-                                      <Text fontWeight="bold" color="green.700" fontSize="sm">
-                                        الإجابة الصحيحة:
-                                      </Text>
-                                    </HStack>
-                                    <Text
-                                      color="green.800"
-                                      fontSize="md"
-                                      fontWeight="medium"
-                                      bg="green.100"
-                                      p={2}
-                                      borderRadius="md"
-                                    >
-                                      {wq.correctChoice?.text}
-                                    </Text>
-                                  </Box>
-                                </VStack>
+                              <Text fontWeight="600" color="gray.800" mb={2}>سؤال {idx + 1}</Text>
+                              {wq.questionText && (
+                                <Text fontSize="md" color="gray.700" mb={3}>{wq.questionText}</Text>
+                              )}
+                              {wq.questionImage && (
+                                <Box mb={3} cursor="pointer" onClick={() => { setImageModalSrc(wq.questionImage); setImageModalOpen(true); }}>
+                                  <Image src={wq.questionImage} alt="السؤال" maxH="200px" borderRadius="md" objectFit="contain" />
+                                </Box>
+                              )}
+                              <VStack align="stretch" spacing={2}>
+                                <HStack spacing={2}>
+                                  <AiOutlineCloseCircle color="#DC2626" size={16} />
+                                  <Text fontSize="sm" color="red.600">إجابتك: {wq.yourAnswer ? `${wq.yourAnswer} (${yourText})` : yourText}</Text>
+                                </HStack>
+                                <HStack spacing={2}>
+                                  <AiOutlineCheckCircle color="#16A34A" size={16} />
+                                  <Text fontSize="sm" color="green.600">الصحيحة: {wq.correctAnswer ? `${wq.correctAnswer} (${correctText})` : correctText}</Text>
+                                </HStack>
                               </VStack>
                             </Box>
-                          ))}
-                        </VStack>
+                          );
+                        })}
                       </VStack>
-                    </Box>
-                  )}
-                </>
+                    )}
+                    <Button colorScheme="blue" w="full" size="lg" leftIcon={<MdArrowBack />} onClick={() => navigate(-1)}>
+                      العودة للكورس
+                    </Button>
+                  </VStack>
+                </Box>
               ) : (
                 <>
-                  {/* السؤال الحالي */}
+                  {/* بطاقة التقدم (مثل التطبيق المرجعي) */}
+                  {questions.length > 0 && (
+                    <Box p={4} borderRadius="xl" borderWidth="1px" borderColor="gray.200" bg="white" mb={4}>
+                      <HStack justify="space-between" mb={3}>
+                        <Text fontSize="sm" color="gray.700">
+                          السؤال {current + 1} من {questions.length}
+                        </Text>
+                        <Text fontSize="sm" color="gray.500">
+                          تم الإجابة على {Object.keys(studentAnswers).length} من {questions.length}
+                        </Text>
+                      </HStack>
+                      <Box w="full" h="2" bg="gray.200" borderRadius="full" overflow="hidden">
+                        <Box
+                          h="full"
+                          bg="blue.500"
+                          borderRadius="full"
+                          w={`${questions.length ? (Object.keys(studentAnswers).length / questions.length) * 100 : 0}%`}
+                          transition="width 0.3s"
+                        />
+                      </Box>
+                    </Box>
+                  )}
+
+                  {/* بطاقة السؤال الحالي */}
                   {questions.length > 0 && (
                     <Box
                       key={questions[current].id}
-                      p={7}
-                      borderRadius="2xl"
-                      boxShadow="2xl"
-                      bgGradient="linear(to-br, blue.50, white)"
-                      border="2px solid #90cdf4"
-                      position="relative"
-                      mb={2}
+                      p={5}
+                      borderRadius="xl"
+                      borderWidth="1px"
+                      borderColor="gray.200"
+                      bg="white"
+                      boxShadow="md"
+                      mb={4}
                     >
-                      <HStack justify="space-between" mb={4} align="center">
-                        <HStack spacing={3} align="center">
-                          <Box bg="blue.400" color="white" w="38px" h="38px" display="flex" alignItems="center" justifyContent="center" borderRadius="full" fontWeight="bold" fontSize="xl" boxShadow="md">
-                            {current + 1}
-                          </Box>
-                          <FaBookOpen color="#3182ce" size={22} />
-                          <Text fontWeight="bold" fontSize="lg" color="blue.800">{questions[current].text}</Text>
-                        </HStack>
-                        <Badge colorScheme="purple" fontSize="md" px={3} py={1} borderRadius="md">
-                          درجة السؤال: {questions[current].grade || 0}
-                        </Badge>
+                      <HStack align="flex-start" spacing={3} mb={4}>
+                        <Box bg="blue.500" color="white" w="36px" h="36px" borderRadius="full" display="flex" alignItems="center" justifyContent="center" fontWeight="bold" fontSize="md">
+                          {current + 1}
+                        </Box>
+                        <VStack align="stretch" flex={1} spacing={1}>
+                          <HStack spacing={2}>
+                            <MdHelpOutline size={24} color="#3182CE" />
+                            <Text fontWeight="600" fontSize="lg" color="gray.800">
+                              {questions[current].text || `سؤال ${current + 1}`}
+                            </Text>
+                          </HStack>
+                        </VStack>
                       </HStack>
-                      <Divider mb={4} />
                       {questions[current].image && (
-                        <Box mb={4} display="flex" justifyContent="center">
+                        <Box
+                          mb={4}
+                          position="relative"
+                          borderRadius="xl"
+                          overflow="hidden"
+                          cursor="pointer"
+                          onClick={() => { setImageModalSrc(questions[current].image); setImageModalOpen(true); }}
+                        >
                           <Image
                             src={questions[current].image}
                             alt="صورة السؤال"
                             maxH="300px"
                             objectFit="contain"
                             borderRadius="md"
-                            boxShadow="md"
                           />
+                          <HStack
+                            position="absolute"
+                            bottom={3}
+                            right={3}
+                            bg="blackAlpha.600"
+                            color="white"
+                            px={3}
+                            py={1.5}
+                            borderRadius="md"
+                            spacing={2}
+                          >
+                            <MdZoomIn size={20} />
+                            <Text fontSize="sm">اضغط للتكبير</Text>
+                          </HStack>
                         </Box>
                       )}
                       {questions[current].choices && questions[current].choices.length > 0 ? (
-                        <RadioGroup
-                          value={studentAnswers[questions[current].id] ? String(studentAnswers[questions[current].id]) : ""}
-                          onChange={(value) => handleStudentChoice(questions[current].id, parseInt(value))}
-                        >
-                          <Stack direction="column" spacing={4}>
-                            {questions[current].choices.map((choice, cidx) => {
-                              const isSelected = studentAnswers[questions[current].id] === choice.id;
-                              return (
-                                <Tooltip key={choice.id} label="اختر هذه الإجابة" placement="left" hasArrow>
-                                  <Box
-                                    as="label"
-                                    p={3}
-                                    borderRadius="lg"
-                                    border={isSelected ? '2px solid #3182ce' : '1px solid #e2e8f0'}
-                                    boxShadow={isSelected ? 'md' : 'sm'}
-                                    bg={isSelected ? 'blue.50' : 'white'}
-                                    color={isSelected ? 'blue.800' : 'gray.800'}
-                                    display="flex"
-                                    alignItems="center"
-                                    cursor="pointer"
-                                    transition="all 0.2s"
-                                  >
-                                    <Radio
-                                      value={String(choice.id)}
-                                      colorScheme="blue"
-                                      mr={3}
-                                    />
-                                    <Text fontWeight="bold" fontSize="md">
-                                      {String.fromCharCode(65 + cidx)}. {choice.text}
-                                    </Text>
-                                  </Box>
-                                </Tooltip>
-                              );
-                            })}
-                          </Stack>
-                        </RadioGroup>
+                        <VStack align="stretch" spacing={3}>
+                          {["A", "B", "C", "D"].slice(0, questions[current].choices.length).map((letter, cidx) => {
+                            const choice = questions[current].choices[cidx];
+                            const isSelected = studentAnswers[questions[current].id] === letter;
+                            return (
+                              <Box
+                                key={choice.id}
+                                as="label"
+                                p={4}
+                                borderRadius="xl"
+                                borderWidth="2px"
+                                borderColor={isSelected ? "blue.500" : "gray.200"}
+                                bg={isSelected ? "blue.50" : "white"}
+                                cursor="pointer"
+                                display="flex"
+                                alignItems="center"
+                                gap={3}
+                              >
+                                <Radio
+                                  value={letter}
+                                  isChecked={isSelected}
+                                  onChange={() => handleStudentChoice(questions[current].id, letter)}
+                                  colorScheme="blue"
+                                />
+                                <Text fontWeight="500" fontSize="md" color={isSelected ? "blue.800" : "gray.700"}>
+                                  {letter}. {choice.text}
+                                </Text>
+                              </Box>
+                            );
+                          })}
+                        </VStack>
                       ) : (
-                        <Alert status="info" borderRadius="md" mt={2}>
+                        <Alert status="info" borderRadius="md">
                           <AlertIcon />
                           لا توجد اختيارات متاحة لهذا السؤال.
                         </Alert>
@@ -842,178 +859,46 @@ const Exam = () => {
                     </Box>
                   )}
 
-                  {/* شريط التقدم */}
-                  <Box
-                    p={{ base: 4, sm: 5, md: 6 }}
-                    borderRadius="lg"
-                    bg="white"
-                    border="1px solid"
-                    borderColor="gray.200"
-                    boxShadow="md"
-                    mt={{ base: 4, sm: 5, md: 6 }}
-                  >
-                    <VStack spacing={4}>
-                      {/* شريط التقدم العام */}
-                      <Box w="full">
-                        <HStack justify="space-between" mb={2}>
-                          <Text fontSize={{ base: 'sm', sm: 'md' }} fontWeight="bold" color="blue.700">
-                            التقدم العام
-                          </Text>
-                          <Text fontSize={{ base: 'sm', sm: 'md' }} fontWeight="bold" color="gray.600">
-                            {Object.keys(studentAnswers).length} من {questions.length}
-                          </Text>
-                        </HStack>
-                        <Box w="full" h="8px" bg="gray.200" borderRadius="full" overflow="hidden">
-                          <Box
-                            h="full"
-                            bgGradient="linear(to-r, blue.400, green.400)"
-                            borderRadius="full"
-                            transition="width 0.3s ease"
-                            w={`${(Object.keys(studentAnswers).length / questions.length) * 100}%`}
-                          />
-                        </Box>
-                      </Box>
-
-                      {/* إحصائيات مفصلة */}
-                      <HStack spacing={6} justify="center" flexWrap="wrap">
-                        <HStack spacing={2}>
-                          <Box w="4" h="4" bg="green.500" borderRadius="full" />
-                          <Text fontSize={{ base: 'xs', sm: 'sm' }} color="green.600" fontWeight="medium">
-                            مكتمل ({Object.keys(studentAnswers).length})
-                          </Text>
-                        </HStack>
-                        <HStack spacing={2}>
-                          <Box w="4" h="4" bg="gray.300" borderRadius="full" />
-                          <Text fontSize={{ base: 'xs', sm: 'sm' }} color="gray.600" fontWeight="medium">
-                            متبقي ({questions.length - Object.keys(studentAnswers).length})
-                          </Text>
-                        </HStack>
-                        <HStack spacing={2}>
-                          <Box w="4" h="4" bg="blue.500" borderRadius="full" />
-                          <Text fontSize={{ base: 'xs', sm: 'sm' }} color="blue.600" fontWeight="medium">
-                            الحالي ({current + 1})
-                          </Text>
-                        </HStack>
-                      </HStack>
-
-                      {/* أزرار التنقل السريع */}
-                      <Box>
-                        <Text fontSize={{ base: 'sm', sm: 'md' }} fontWeight="bold" color="gray.700" mb={3} textAlign="center">
-                          التنقل السريع
-                        </Text>
-                        <HStack spacing={2} flexWrap="wrap" justify="center">
-                          {questions.map((question, index) => {
-                            const isAnswered = studentAnswers[question.id];
-                            const isCurrent = current === index;
-                            return (
-                              <Button
-                                key={index}
-                                size={{ base: 'xs', sm: 'sm' }}
-                                variant={isCurrent ? "solid" : isAnswered ? "outline" : "ghost"}
-                                colorScheme={isCurrent ? "blue" : isAnswered ? "green" : "gray"}
-                                onClick={() => setCurrent(index)}
-                                minW={{ base: '32px', sm: '40px' }}
-                                h={{ base: '32px', sm: '40px' }}
-                                borderRadius="full"
-                                fontSize={{ base: 'xs', sm: 'sm' }}
-                                fontWeight="bold"
-                                position="relative"
-                              >
-                                {index + 1}
-                                {isAnswered && !isCurrent && (
-                                  <Box
-                                    position="absolute"
-                                    top="-2px"
-                                    right="-2px"
-                                    w="8px"
-                                    h="8px"
-                                    bg="green.500"
-                                    borderRadius="full"
-                                    border="2px solid white"
-                                  />
-                                )}
-                              </Button>
-                            );
-                          })}
-                        </HStack>
-                      </Box>
-
-                      {/* أزرار السابق والتالي */}
-                      <HStack spacing={4} justify="center">
-                        <Button
-                          colorScheme="blue"
-                          variant="outline"
-                          onClick={() => setCurrent((prev) => Math.max(0, prev - 1))}
-                          isDisabled={current === 0}
-                          size={{ base: 'sm', sm: 'md' }}
-                          px={{ base: 4, sm: 6 }}
-                          py={{ base: 2, sm: 3 }}
-                          minW={{ base: '80px', sm: '100px' }}
-                          leftIcon={<FaChevronRight boxSize={{ base: 3, sm: 4 }} />}
-                        >
-                          السابق
-                        </Button>
-                        <Button
-                          colorScheme="blue"
-                          onClick={() => setCurrent((prev) => Math.min(questions.length - 1, prev + 1))}
-                          isDisabled={current === questions.length - 1}
-                          size={{ base: 'sm', sm: 'md' }}
-                          px={{ base: 4, sm: 6 }}
-                          py={{ base: 2, sm: 3 }}
-                          minW={{ base: '80px', sm: '100px' }}
-                          rightIcon={<FaChevronLeft boxSize={{ base: 3, sm: 4 }} />}
-                        >
-                          التالي
-                        </Button>
-                      </HStack>
-                    </VStack>
-                  </Box>
-
-                  {/* زر تسليم الامتحان */}
+                  {/* أزرار التنقل والتسليم (السابق | تسليم | التالي) */}
                   {questions.length > 0 && (
-                    <Box
-                      mt={{ base: 6, sm: 7, md: 8 }}
-                      p={{ base: 4, sm: 5, md: 6 }}
-                      borderRadius="xl"
-                      boxShadow="lg"
-                      bg="blue.50"
-                      border="2px solid"
-                      borderColor="blue.200"
-                      textAlign="center"
-                    >
-                      <VStack spacing={{ base: 3, sm: 4 }}>
-                        <Text fontSize={{ base: 'md', sm: 'lg', md: 'xl' }} fontWeight="bold" color="blue.700" px={{ base: 2, sm: 4 }}>
-                          {Object.keys(studentAnswers).length === questions.length
-                            ? "تم الإجابة على جميع الأسئلة"
-                            : `أجب على ${questions.length - Object.keys(studentAnswers).length} سؤال متبقي`}
-                        </Text>
+                    <HStack spacing={3} w="full" flexWrap="wrap">
+                      <Button
+                        flex={1}
+                        minW="100px"
+                        variant="outline"
+                        borderColor="gray.300"
+                        leftIcon={<FaChevronRight />}
+                        onClick={() => goToQuestion(current - 1)}
+                        isDisabled={current === 0}
+                      >
+                        السابق
+                      </Button>
+                      {Object.keys(studentAnswers).length === questions.length ? (
                         <Button
+                          flex={1}
+                          minW="140px"
                           colorScheme="green"
-                          size={{ base: 'md', sm: 'lg', md: 'xl' }}
+                          leftIcon={<FaCheckCircle />}
                           isLoading={submitLoading}
                           onClick={handleSubmitExam}
-                          isDisabled={Object.keys(studentAnswers).length !== questions.length}
-                          borderRadius="full"
-                          px={{ base: 6, sm: 8, md: 10 }}
-                          py={{ base: 3, sm: 4, md: 5 }}
-                          fontSize={{ base: 'md', sm: 'lg', md: 'xl' }}
-                          fontWeight="bold"
-                          _hover={{
-                            transform: 'translateY(-2px)',
-                            boxShadow: 'xl',
-                            bg: 'green.600'
-                          }}
-                          transition="all 0.2s"
-                          leftIcon={<AiFillCheckCircle boxSize={{ base: 4, sm: 5, md: 6 }} />}
-                          minW={{ base: '200px', sm: '240px', md: '280px' }}
-                          h={{ base: '48px', sm: '56px', md: '64px' }}
                         >
-                          {Object.keys(studentAnswers).length === questions.length
-                            ? "تسليم الامتحان"
-                            : "أكمل الإجابات أولاً"}
+                          تسليم الامتحان
                         </Button>
-                      </VStack>
-                    </Box>
+                      ) : (
+                        <Box flex={1} minW="140px" />
+                      )}
+                      <Button
+                        flex={1}
+                        minW="100px"
+                        variant="outline"
+                        borderColor="gray.300"
+                        rightIcon={<FaChevronLeft />}
+                        onClick={() => goToQuestion(current + 1)}
+                        isDisabled={current === questions.length - 1}
+                      >
+                        {current === questions.length - 1 ? "آخر سؤال" : "التالي"}
+                      </Button>
+                    </HStack>
                   )}
                 </>
               )}
@@ -1178,6 +1063,37 @@ const Exam = () => {
               إلغاء
             </Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* مودال تكبير صورة السؤال */}
+      <Modal isOpen={imageModalOpen} onClose={() => setImageModalOpen(false)} size="full" isCentered>
+        <ModalOverlay bg="blackAlpha.800" />
+        <ModalContent bg="transparent" boxShadow="none" maxW="100vw">
+          <ModalBody display="flex" alignItems="center" justifyContent="center" p={4}>
+            <IconButton
+              aria-label="إغلاق"
+              icon={<AiOutlineCloseCircle size={28} />}
+              position="absolute"
+              top={4}
+              right={4}
+              zIndex={10}
+              colorScheme="whiteAlpha"
+              color="white"
+              onClick={() => setImageModalOpen(false)}
+            />
+            {imageModalSrc && (
+              <Image
+                src={imageModalSrc}
+                alt="تكبير"
+                maxH="90vh"
+                maxW="100%"
+                objectFit="contain"
+                borderRadius="md"
+                onClick={() => setImageModalOpen(false)}
+              />
+            )}
+          </ModalBody>
         </ModalContent>
       </Modal>
     </Box>
