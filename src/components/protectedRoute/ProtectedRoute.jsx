@@ -7,10 +7,11 @@ const ProtectedRoute = ({ auth, children }) => {
 
   useEffect(() => {
     let timer;
-    if (!auth && !redirected) {
+    // لا نوجّه إلا عندما تكون الصلاحية معروفة وغير مسموحة (false). لو لا تزال undefined = جاري التحميل
+    if (auth === false && !redirected) {
       timer = setTimeout(() => {
         setRedirected(true);
-      }, 100); // زمن التأخير بالميللي ثواني (هنا 2 ثانية)
+      }, 100);
     }
 
     return () => clearTimeout(timer);

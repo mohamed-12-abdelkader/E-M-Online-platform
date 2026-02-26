@@ -120,7 +120,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
           </Box>
         </Box>
 
-        <Container maxW="8xl" pt={{ base: 10, md: 16 }} pb={{ base: 16, md: 24 }} position="relative" zIndex={1}>
+        <Container maxW="8xl" pt={{ base: 10, md: 16 }} pb={{ base: 16, md: 24 }} position="relative" zIndex={1} px={{ base: 2, sm: 4, md: 6 }}>
           <Flex
             direction={{ base: "column", lg: "row" }}
             align="center"
@@ -190,7 +190,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                 transition={{ duration: 0.5, delay: 0.2 }}
                 w="full"
               >
-                <SimpleGrid columns={{ base: 2, sm: 4 }} spacing={4} w="full">
+                <SimpleGrid columns={{ base: 2, sm: 4 }} spacing={{ base: 2, sm: 4 }} w="full">
                   {[
                     { icon: FaClock, label: "12 ساعة", sub: "مدة الكورس" },
                     { icon: FaUsers, label: "500+", sub: "مشترك" },
@@ -201,15 +201,15 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                       key={i}
                       bg="whiteAlpha.200"
                       backdropFilter="blur(10px)"
-                      p={4}
-                      borderRadius="2xl"
+                      p={{ base: 2, sm: 3, md: 4 }}
+                      borderRadius={{ base: "xl", md: "2xl" }}
                       align="center"
                       border="1px solid whiteAlpha.300"
                       transition="transform 0.2s"
                       _hover={{ transform: "translateY(-5px)", bg: "whiteAlpha.300" }}
                     >
-                      <Icon as={stat.icon} color="white" boxSize={6} mb={2} />
-                      <Text color="white" fontWeight="bold" fontSize="lg">{stat.label}</Text>
+                      <Icon as={stat.icon} color="white" boxSize={{ base: 5, md: 6 }} mb={1} />
+                      <Text color="white" fontWeight="bold" fontSize={{ base: "sm", md: "lg" }}>{stat.label}</Text>
                       <Text color="blue.200" fontSize="xs">{stat.sub}</Text>
                     </VStack>
                   ))}
@@ -223,16 +223,16 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                 transition={{ duration: 0.5, delay: 0.3 }}
                 w="full"
               >
-                <Flex gap={4} wrap="wrap" justify={{ base: "center", lg: "flex-start" }}>
+                <Flex gap={{ base: 2, md: 4 }} wrap="wrap" justify={{ base: "center", lg: "flex-start" }}>
                   {isTeacher ? (
                     <Link to={`/CourseStatisticsPage/${course.id}`}>
                       <Button
-                        size="lg"
-                        h="14"
-                        px={10}
+                        size={buttonSize}
+                        h={{ base: "10", md: "14" }}
+                        px={{ base: 4, md: 10 }}
                         bg="white"
                         color="blue.600"
-                        fontSize="lg"
+                        fontSize={{ base: "sm", md: "lg" }}
                         fontWeight="bold"
                         borderRadius="2xl"
                         shadow="xl"
@@ -247,13 +247,13 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                   {(isTeacher || isAdmin) && (
                     <>
                       <Button
-                        size="lg"
-                        h="14"
-                        px={8}
+                        size={buttonSize}
+                        h={{ base: "10", md: "14" }}
+                        px={{ base: 4, md: 8 }}
                         variant="outline"
                         color="white"
                         borderColor="whiteAlpha.500"
-                        fontSize="lg"
+                        fontSize={{ base: "sm", md: "lg" }}
                         borderRadius="2xl"
                         _hover={{ bg: "whiteAlpha.100", borderColor: "white" }}
                         onClick={handleViewEnrollments}
@@ -262,12 +262,12 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                         المشتركين
                       </Button>
                       <Button
-                        size="lg"
-                        h="14"
-                        px={8}
+                        size={buttonSize}
+                        h={{ base: "10", md: "14" }}
+                        px={{ base: 4, md: 8 }}
                         bg="blue.700"
                         color="white"
-                        fontSize="lg"
+                        fontSize={{ base: "sm", md: "lg" }}
                         borderRadius="2xl"
                         _hover={{ bg: "blue.800" }}
                         onClick={onOpen}
@@ -345,27 +345,28 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
         </Container>
       </Box>
 
-      {/* Activate Student Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered size={{ base: "xs", md: "md" }}>
+      {/* Activate Student Modal - متجاوب */}
+      <Modal isOpen={isOpen} onClose={onClose} isCentered size={{ base: "full", md: "md" }} scrollBehavior="inside">
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(5px)" />
         <ModalContent
           bg="white"
-          borderRadius="2xl"
+          borderRadius={{ base: "none", md: "2xl" }}
           boxShadow="2xl"
-          mx={4}
+          mx={{ base: 0, md: 4 }}
+          maxH={{ base: "100vh", md: "90vh" }}
         >
-          <ModalHeader pt={6} borderBottomWidth="1px" borderColor="gray.100">
+          <ModalHeader pt={{ base: 4, md: 6 }} pb={{ base: 3, md: 4 }} borderBottomWidth="1px" borderColor="gray.100">
             <HStack spacing={3}>
               <Center w={10} h={10} bg="blue.100" borderRadius="full">
                 <Icon as={FaUserPlus} color="blue.500" boxSize={5} />
               </Center>
-              <Text fontWeight="bold" fontSize="xl" color="gray.800">تفعيل طالب للكورس</Text>
+              <Text fontWeight="bold" fontSize={{ base: "md", md: "xl" }} color="gray.800">تفعيل طالب للكورس</Text>
             </HStack>
           </ModalHeader>
           <ModalCloseButton left={4} right="auto" mt={2} />
-          <ModalBody py={8}>
-            <VStack spacing={6}>
-              <Text fontSize="md" color="gray.500" textAlign="center">
+          <ModalBody py={{ base: 4, md: 8 }}>
+            <VStack spacing={{ base: 4, md: 6 }}>
+              <Text fontSize={{ base: "sm", md: "md" }} color="gray.500" textAlign="center">
                 قم بإدخال رقم الطالب (ID) لتفعيله في هذا الكورس مباشرة.
               </Text>
               <FormControl isRequired>
@@ -375,7 +376,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                   value={studentId}
                   onChange={(e) => setStudentId(e.target.value)}
                   placeholder="مثال: 12345"
-                  size="lg"
+                  size={{ base: "md", md: "lg" }}
                   borderRadius="xl"
                   bg="gray.50"
                   border="2px solid"
@@ -389,14 +390,14 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
               </FormControl>
             </VStack>
           </ModalBody>
-          <ModalFooter pb={6}>
+          <ModalFooter pb={{ base: 4, md: 6 }} flexWrap="wrap" gap={2}>
             <Button
               variant="ghost"
-              mr={3}
+              mr={{ base: 0, md: 3 }}
               onClick={onClose}
               isDisabled={isLoading}
               borderRadius="xl"
-              size="lg"
+              size={{ base: "md", md: "lg" }}
               color="gray.500"
             >
               إلغاء
@@ -408,7 +409,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
               loadingText="جاري التفعيل..."
               leftIcon={<Icon as={FaUserPlus} />}
               borderRadius="xl"
-              size="lg"
+              size={{ base: "md", md: "lg" }}
               shadow="lg"
             >
               تفعيل الطالب

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box, VStack, Heading, Text, Spinner, Center, RadioGroup, Radio, Stack,
   Alert, AlertIcon, IconButton, HStack, useToast, Modal, ModalOverlay,
-  ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Button, Input, Divider, Badge, Tooltip, InputGroup, InputRightElement, Image
+  ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Button, Input, Divider, Badge, Tooltip, InputGroup, InputRightElement, Image, useColorModeValue, Flex
 } from "@chakra-ui/react";
 import { AiFillEdit, AiFillDelete, AiFillCheckCircle, AiOutlineCheckCircle, AiOutlineCloseCircle, AiFillStar } from "react-icons/ai";
 import { CircularProgress, CircularProgressLabel } from "@chakra-ui/react";
@@ -12,7 +12,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import UserType from "../../Hooks/auth/userType";
 import {
   FaBookOpen, FaCheckCircle, FaChevronLeft, FaChevronRight,
-  FaUser, FaTimesCircle, FaPhone, FaIdBadge, FaCalendarAlt
+  FaUser, FaTimesCircle, FaPhone, FaIdBadge, FaCalendarAlt, FaImage
 } from 'react-icons/fa';
 import { BiSearch } from "react-icons/bi";
 import { MdHelpOutline, MdZoomIn, MdArrowBack } from "react-icons/md";
@@ -50,6 +50,9 @@ const Exam = () => {
   const [remainingSeconds, setRemainingSeconds] = useState(null); // عد تنازلي من duration*60 (مثل التطبيق المرجعي)
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [imageModalSrc, setImageModalSrc] = useState(null);
+  const [imageUploadQuestionId, setImageUploadQuestionId] = useState(null);
+  const [imageUploadLoading, setImageUploadLoading] = useState(false);
+  const questionImageInputRef = useRef(null);
   const timerIntervalRef = useRef(null);
   const timerExpiredRef = useRef(false);
 
@@ -303,6 +306,58 @@ const Exam = () => {
     }
   };
 
+  // إضافة/تحديث صورة لسؤال — PATCH /api/course/course-exam/question/:questionId/image
+  const triggerQuestionImageInput = (q) => {
+    setImageUploadQuestionId(q.id);
+    questionImageInputRef.current?.click();
+  };
+
+  const handleQuestionImageUpload = async (e) => {
+    const file = e.target?.files?.[0];
+    const qid = imageUploadQuestionId;
+    e.target.value = "";
+    if (!file || !qid) {
+      setImageUploadQuestionId(null);
+      return;
+    }
+
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      toast({ title: "صيغة غير مدعومة", description: "المدعوم: jpeg, jpg, png, gif, webp", status: "warning" });
+      return;
+    }
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast({ title: "الملف كبير", description: "الحد الأقصى 10 ميجابايت", status: "warning" });
+      return;
+    }
+
+    setImageUploadLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("questionImage", file);
+      const res = await baseUrl.patch(
+        `/api/course/course-exam/question/${qid}/image`,
+        formData,
+        authHeaders
+      );
+      const newImage = res.data?.questionImage ?? res.data?.question?.question_image ?? res.data?.question?.questionImage;
+      if (newImage) {
+        setQuestions((prev) => prev.map((q) => (q.id === qid ? { ...q, image: newImage } : q)));
+      }
+      toast({ title: res.data?.message || "تمت إضافة صورة السؤال بنجاح", status: "success" });
+    } catch (err) {
+      toast({
+        title: "فشل رفع الصورة",
+        description: err.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
+      });
+    } finally {
+      setImageUploadLoading(false);
+      setImageUploadQuestionId(null);
+    }
+  };
+
   // للطالب: عند اختيار إجابة بحرف (A/B/C/D) - مثل التطبيق المرجعي
   const handleStudentChoice = (questionId, selectedAnswer) => {
     if (submitResult) return;
@@ -412,8 +467,19 @@ const Exam = () => {
     return `${m}:${sec}`;
   };
 
+  const teacherCardBg = useColorModeValue("white", "gray.800");
+  const teacherCardBorder = useColorModeValue("gray.200", "gray.600");
+  const teacherHeadingColor = useColorModeValue("blue.700", "blue.200");
+  const teacherAccent = useColorModeValue("blue.500", "blue.400");
+
   return (
-    <Box maxW="2xl" mx="auto" py={10} px={4} className="mt-[80px]">
+    <Box
+      maxW={isTeacher || isAdmin ? "4xl" : "2xl"}
+      mx="auto"
+      py={{ base: 6, md: 10 }}
+      px={{ base: 3, sm: 4, md: 6 }}
+      className="mt-[80px]"
+    >
       <style>
         {`
           @keyframes pulse {
@@ -462,46 +528,67 @@ const Exam = () => {
           </VStack>
         </HStack>
       )}
-      {!isStudentView && (
-        <Heading mb={2} textAlign="center" color="blue.600">
-          أسئلة الامتحان الشامل
-        </Heading>
-      )}
-      {/* زر عرض درجات الطلاب للمدرس */}
-      {isTeacher && (
-        <Button
-          colorScheme={showGrades ? "gray" : "blue"}
-          mb={6}
-          onClick={() => {
-            if (!showGrades && gradesData.length === 0) fetchGrades();
-            setShowGrades((prev) => !prev);
-          }}
+      {/* هيدر المدرس: عنوان + إحصائيات + زر التبديل */}
+      {!isStudentView && (isTeacher || isAdmin) && (
+        <Box
+          mb={{ base: 6, md: 8 }}
+          p={{ base: 4, md: 5 }}
+          borderRadius="2xl"
+          borderWidth="1px"
+          borderColor={teacherCardBorder}
+          bg={teacherCardBg}
+          shadow="sm"
         >
-          {showGrades ? "عرض الأسئلة" : "عرض درجات الطلاب"}
-        </Button>
+          <Flex
+            direction={{ base: "column", sm: "row" }}
+            align={{ base: "stretch", sm: "center" }}
+            justify="space-between"
+            gap={4}
+          >
+            <VStack align={{ base: "center", sm: "flex-start" }} spacing={1}>
+              <Heading size={{ base: "md", md: "lg" }} color={teacherHeadingColor} display="flex" alignItems="center" gap={2}>
+                <FaBookOpen />
+                أسئلة الامتحان الشامل
+              </Heading>
+              <Text fontSize="sm" color="gray.500">
+                {questions.length} سؤال
+              </Text>
+            </VStack>
+            {isTeacher && (
+              <Button
+                colorScheme={showGrades ? "gray" : "blue"}
+                size={{ base: "sm", md: "md" }}
+                leftIcon={<FaUser />}
+                onClick={() => {
+                  if (!showGrades && gradesData.length === 0) fetchGrades();
+                  setShowGrades((prev) => !prev);
+                }}
+                borderRadius="xl"
+                fontWeight="600"
+              >
+                {showGrades ? "عرض الأسئلة" : "عرض درجات الطلاب"}
+              </Button>
+            )}
+          </Flex>
+        </Box>
       )}
-      {/* عرض درجات الطلاب للمدرس */}
+      {/* عرض درجات الطلاب للمدرس — يتوافق مع الـ API: submission_id, obtained_grade, total_grade, attempt_number */}
       {showGrades && isTeacher ? (
-        <Box>
-          <Heading mb={6} textAlign="center" color="blue.700" fontSize={{ base: "2xl", md: "3xl" }}>
+        <Box w="full" maxW="4xl" mx="auto" px={{ base: 2, sm: 4 }}>
+          <Heading mb={{ base: 4, md: 6 }} textAlign="center" color="blue.600" fontSize={{ base: "xl", sm: "2xl", md: "3xl" }}>
             درجات الطلاب في الامتحان
           </Heading>
-          {/* مربع البحث */}
-          <Box maxW="400px" mx="auto" mb={8}>
-            <InputGroup>
+          <Box w="full" maxW={{ base: "100%", sm: "400px" }} mx="auto" mb={{ base: 4, md: 6 }}>
+            <InputGroup size="lg">
               <Input
-                placeholder="ابحث باسم الطالب أو رقم الطالب أو رقم التسليم..."
+                placeholder="ابحث بالاسم، رقم الطالب، رقم التسليم أو المحاولة..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                size="lg"
-                pr={10}
                 borderRadius="full"
-                boxShadow="sm"
                 bg="gray.50"
-                _focus={{ bg: 'white', borderColor: 'blue.400', boxShadow: 'md' }}
-                fontSize="md"
-                fontWeight="medium"
-                color="gray.800"
+                borderColor="gray.200"
+                _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)" }}
+                fontSize={{ base: "sm", md: "md" }}
               />
               <InputRightElement pointerEvents="none" height="100%">
                 <BiSearch color="gray.400" boxSize={5} />
@@ -510,7 +597,7 @@ const Exam = () => {
           </Box>
           {gradesLoading ? (
             <Center py={12}>
-              <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
+              <Spinner size="xl" color="blue.500" thickness="4px" />
             </Center>
           ) : gradesData.length === 0 ? (
             <Center py={12}>
@@ -519,125 +606,123 @@ const Exam = () => {
               </Text>
             </Center>
           ) : (
-            <VStack spacing={7} align="stretch">
-              {/* تصفية النتائج حسب البحث */}
-              {gradesData.filter(s => {
+            (() => {
+              const filtered = gradesData.filter(s => {
                 const term = searchTerm.trim().toLowerCase();
                 if (!term) return true;
                 return (
                   (s.name && s.name.toLowerCase().includes(term)) ||
-                  (s.student_id && String(s.student_id).includes(term)) ||
-                  (s.submission_id && String(s.submission_id).includes(term))
+                  (s.student_id != null && String(s.student_id).includes(term)) ||
+                  (s.submission_id != null && String(s.submission_id).includes(term)) ||
+                  (s.attempt_number != null && String(s.attempt_number).includes(term)) ||
+                  (s.email && s.email.toLowerCase().includes(term)) ||
+                  (s.phone && s.phone.includes(term))
                 );
-              }).length === 0 ? (
-                <Center py={8}>
-                  <Text color="gray.500" fontSize="lg">لا توجد نتائج مطابقة للبحث</Text>
-                </Center>
-              ) : (
-                gradesData.filter(s => {
-                  const term = searchTerm.trim().toLowerCase();
-                  if (!term) return true;
-                  return (
-                    (s.name && s.name.toLowerCase().includes(term)) ||
-                    (s.student_id && String(s.student_id).includes(term)) ||
-                    (s.submission_id && String(s.submission_id).includes(term))
-                  );
-                }).map((s, idx) => (
-                  <Box
-                    key={s.submission_id}
-                    p={{ base: 5, md: 7 }}
-                    borderRadius="2xl"
-                    boxShadow="0 4px 24px 0 rgba(0,0,0,0.07)"
-                    bgGradient={s.passed ? "linear(to-br, green.50, white)" : "linear(to-br, red.50, white)"}
-                    border="1.5px solid"
-                    borderColor={s.passed ? "green.200" : "red.200"}
-                    transition="all 0.3s"
-                    _hover={{ boxShadow: 'xl', borderColor: s.passed ? 'green.400' : 'red.400', transform: 'scale(1.015)' }}
-                  >
-                    <HStack spacing={{ base: 4, md: 8 }} align="center" flexWrap="wrap">
-                      {/* صورة رمزية دائرية */}
+              });
+              const percentage = (s) => (s.total_grade > 0 ? Math.round((s.obtained_grade / s.total_grade) * 100) : 0);
+              return (
+                <VStack spacing={{ base: 4, md: 5 }} align="stretch">
+                  {filtered.length === 0 ? (
+                    <Center py={8}>
+                      <Text color="gray.500" fontSize="md">لا توجد نتائج مطابقة للبحث</Text>
+                    </Center>
+                  ) : (
+                    filtered.map((s) => (
                       <Box
-                        bg={s.passed ? "green.500" : "red.500"}
-                        color="white"
-                        w="60px"
-                        h="60px"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        borderRadius="full"
-                        fontSize="2xl"
-                        fontWeight="bold"
+                        key={s.submission_id}
+                        p={{ base: 4, sm: 5, md: 6 }}
+                        borderRadius="2xl"
                         boxShadow="md"
-                        flexShrink={0}
+                        bg="white"
+                        borderWidth="2px"
+                        borderColor={s.passed ? "blue.200" : "orange.200"}
+                        bgGradient={s.passed ? "linear(to-br, blue.50, white)" : "linear(to-br, orange.50, white)"}
+                        transition="all 0.2s"
+                        _hover={{ boxShadow: "lg", borderColor: s.passed ? "blue.400" : "orange.400" }}
                       >
-                        {s.name && s.name.length > 0 ? s.name[0] : <FaUser />}
-                      </Box>
-                      {/* بيانات الطالب */}
-                      <VStack align="start" spacing={1} flex={2} minW="180px">
-                        <Text fontWeight="bold" fontSize={{ base: "lg", md: "xl" }} color="gray.800">
-                          {s.name}
-                        </Text>
-                        <HStack spacing={2} flexWrap="wrap">
-                          <Badge colorScheme="gray" fontSize="sm" px={3} py={1} borderRadius="md">
-                            <FaIdBadge style={{ marginLeft: 4, display: "inline" }} /> {s.student_id}
-                          </Badge>
-                          {s.phone && (
-                            <Badge colorScheme="purple" fontSize="sm" px={3} py={1} borderRadius="md">
-                              <FaPhone style={{ marginLeft: 4, display: "inline" }} /> {s.phone}
+                        <HStack
+                          spacing={{ base: 3, sm: 4, md: 6 }}
+                          align={{ base: "flex-start", sm: "center" }}
+                          flexWrap="wrap"
+                          justify="space-between"
+                        >
+                          <HStack spacing={{ base: 3, md: 4 }} align="center" flex={1} minW="0">
+                            <Box
+                              bg={s.passed ? "blue.500" : "orange.500"}
+                              color="white"
+                              w={{ base: "48px", sm: "56px", md: "60px" }}
+                              h={{ base: "48px", sm: "56px", md: "60px" }}
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="center"
+                              borderRadius="full"
+                              fontSize={{ base: "xl", md: "2xl" }}
+                              fontWeight="bold"
+                              flexShrink={0}
+                            >
+                              {s.name && s.name.trim().length > 0 ? s.name.trim()[0] : <FaUser />}
+                            </Box>
+                            <VStack align="stretch" spacing={1} flex={1} minW="0">
+                              <Text fontWeight="bold" fontSize={{ base: "md", sm: "lg", md: "xl" }} color="gray.800" noOfLines={1}>
+                                {s.name || "—"}
+                              </Text>
+                              <HStack spacing={2} flexWrap="wrap">
+                                <Badge colorScheme="gray" fontSize="xs" px={2} py={0.5} borderRadius="md">
+                                  <FaIdBadge style={{ marginLeft: 4, display: "inline" }} /> {s.student_id}
+                                </Badge>
+                                <Badge colorScheme="blue" fontSize="xs" px={2} py={0.5} borderRadius="md">
+                                  محاولة {s.attempt_number ?? "—"}
+                                </Badge>
+                                {s.phone && (
+                                  <Badge colorScheme="gray" variant="outline" fontSize="xs" px={2} py={0.5} borderRadius="md">
+                                    <FaPhone style={{ marginLeft: 4, display: "inline" }} /> {s.phone}
+                                  </Badge>
+                                )}
+                              </HStack>
+                              <Text fontSize="xs" color="gray.500">
+                                <FaCalendarAlt style={{ marginLeft: 4, display: "inline" }} />
+                                {s.submitted_at ? new Date(s.submitted_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" }) : "—"}
+                              </Text>
+                            </VStack>
+                          </HStack>
+                          <HStack spacing={{ base: 3, md: 5 }} align="center" flexShrink={0}>
+                            <Box textAlign="center">
+                              <CircularProgress
+                                value={Math.min(100, percentage(s))}
+                                size={{ base: "64px", sm: "72px", md: "80px" }}
+                                color={s.passed ? "blue.500" : "orange.500"}
+                                thickness="10px"
+                                trackColor="gray.100"
+                                capIsRound
+                              >
+                                <CircularProgressLabel fontWeight="bold" fontSize={{ base: "sm", md: "md" }} color="gray.800">
+                                  {s.obtained_grade != null ? s.obtained_grade : "—"} / {s.total_grade != null ? s.total_grade : "—"}
+                                </CircularProgressLabel>
+                              </CircularProgress>
+                              <Text fontSize="xs" color="gray.500" mt={1}>الدرجة</Text>
+                            </Box>
+                            <Badge
+                              bg={s.passed ? "blue.500" : "orange.500"}
+                              color="white"
+                              fontSize={{ base: "sm", md: "md" }}
+                              px={3}
+                              py={1.5}
+                              borderRadius="full"
+                              display="flex"
+                              alignItems="center"
+                              gap={2}
+                            >
+                              {s.passed ? <FaCheckCircle size={16} /> : <FaTimesCircle size={16} />}
+                              {s.passed ? "ناجح" : "راسب"}
                             </Badge>
-                          )}
+                          </HStack>
                         </HStack>
-                        <Badge colorScheme="blue" fontSize="sm" px={3} py={1} borderRadius="md">
-                          <FaCalendarAlt style={{ marginLeft: 4, display: "inline" }} /> {s.submitted_at ? new Date(s.submitted_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" }) : "لم يتم التسليم"}
-                        </Badge>
-                      </VStack>
-                      {/* دائرة الدرجة */}
-                      <Box textAlign="center" minW={{ base: "90px", md: "120px" }}>
-                        <CircularProgress
-                          value={Math.min(100, Math.round((s.total_grade / 100) * 100))}
-                          size={{ base: "70px", md: "100px" }}
-                          color={s.passed ? "green.400" : "red.400"}
-                          thickness="12px"
-                          capIsRound
-                        >
-                          <CircularProgressLabel
-                            fontWeight="bold"
-                            fontSize={{ base: "lg", md: "2xl" }}
-                            color={s.passed ? "green.700" : "red.700"}
-                          >
-                            {s.total_grade}
-                          </CircularProgressLabel>
-                        </CircularProgress>
-                        <Text fontSize="sm" color="gray.500" mt={2}>
-                          الدرجة
-                        </Text>
                       </Box>
-                      {/* حالة النجاح/الرسوب */}
-                      <Box minW={{ base: "90px", md: "110px" }} textAlign="center">
-                        <Badge
-                          colorScheme={s.passed ? "green" : "red"}
-                          fontSize={{ base: "md", md: "lg" }}
-                          px={4}
-                          py={2}
-                          borderRadius="full"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          gap={2}
-                        >
-                          {s.passed ? (
-                            <FaCheckCircle size={18} />
-                          ) : (
-                            <FaTimesCircle size={18} />
-                          )}
-                          <Text>{s.passed ? "ناجح" : "راسب"}</Text>
-                        </Badge>
-                      </Box>
-                    </HStack>
-                  </Box>
-                ))
-              )}
-            </VStack>
+                    ))
+                  )}
+                </VStack>
+              );
+            })()
           )}
         </Box>
       ) : (
@@ -905,139 +990,228 @@ const Exam = () => {
             </>
           ) : (
             // للمدرس: عرض جميع الأسئلة
-            <VStack spacing={8} align="stretch">
-              {questions.map((q, idx) => (
-                <Box
-                  key={q.id}
-                  p={7}
-                  borderRadius="2xl"
-                  boxShadow="2xl"
-                  bgGradient="linear(to-br, blue.50, white)"
-                  border="2px solid #90cdf4"
-                  position="relative"
-                  mb={2}
-                >
-                  <HStack justify="space-between" mb={4} align="center">
-                    <HStack spacing={3} align="center">
-                      <Box bg="blue.400" color="white" w="38px" h="38px" display="flex" alignItems="center" justifyContent="center" borderRadius="full" fontWeight="bold" fontSize="xl" boxShadow="md">
-                        {idx + 1}
-                      </Box>
-                      <FaBookOpen color="#3182ce" size={22} />
-                      <Text fontWeight="bold" fontSize="lg" color="blue.800">{q.text}</Text>
-                    </HStack>
-                    <HStack>
-                      <IconButton
-                        icon={<AiFillEdit />}
-                        colorScheme="yellow"
-                        variant="ghost"
-                        aria-label="تعديل"
-                        onClick={() => openEditModal(q)}
-                      />
-                      <IconButton
-                        icon={<AiFillDelete />}
-                        colorScheme="red"
-                        variant="ghost"
-                        aria-label="حذف"
-                        onClick={() => setDeleteModal({ open: true, qid: q.id })}
-                      />
-                    </HStack>
-                    <Badge colorScheme="purple" fontSize="md" px={3} py={1} borderRadius="md">
-                      درجة السؤال: {q.grade || 0}
-                    </Badge>
-                  </HStack>
-                  <Divider mb={4} />
-                  {q.image && (
-                    <Box mb={4} display="flex" justifyContent="center">
-                      <Image
-                        src={q.image}
-                        alt="صورة السؤال"
-                        maxH="300px"
-                        objectFit="contain"
-                        borderRadius="md"
-                        boxShadow="md"
-                      />
+            <>
+              <Input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                ref={questionImageInputRef}
+                onChange={handleQuestionImageUpload}
+                hidden
+                id="question-image-upload"
+              />
+              {questions.length === 0 ? (
+                <Center py={16} px={4}>
+                  <VStack spacing={4}>
+                    <Box p={4} borderRadius="full" bg="blue.50" color="blue.500">
+                      <FaBookOpen size={48} />
                     </Box>
-                  )}
-                  {q.choices && q.choices.length > 0 ? (
-                    <RadioGroup>
-                      <Stack direction="column" spacing={4}>
-                        {q.choices.map((choice, cidx) => (
-                          <Tooltip key={choice.id} label={choice.is_correct ? "الإجابة الصحيحة" : "تعيين كإجابة صحيحة"} placement="left" hasArrow>
-                            <Box
-                              as="label"
-                              p={3}
-                              borderRadius="lg"
-                              border={choice.is_correct ? '2px solid #38A169' : '1px solid #e2e8f0'}
-                              boxShadow={choice.is_correct ? 'md' : 'sm'}
-                              bg={choice.is_correct ? 'green.50' : 'white'}
-                              color={choice.is_correct ? 'green.800' : 'gray.800'}
-                              display="flex"
-                              alignItems="center"
-                              transition="all 0.2s"
-                              cursor="pointer"
-                              onClick={() => handleSetCorrect(q.id, choice.id)}
-                            >
-                              <Radio
-                                value={String(choice.id)}
-                                colorScheme="green"
-                                isChecked={choice.is_correct}
-                                isReadOnly
-                                mr={3}
-                              />
-                              <Text fontWeight="bold" fontSize="md">
-                                {String.fromCharCode(65 + cidx)}. {choice.text}
-                              </Text>
-                              {choice.is_correct && <FaCheckCircle color="#38A169" style={{ marginRight: 8 }} />}
-                            </Box>
+                    <Text fontSize="lg" fontWeight="600" color="gray.600">
+                      لا توجد أسئلة بعد
+                    </Text>
+                    <Text fontSize="sm" color="gray.500" textAlign="center">
+                      أضف أسئلة من صفحة تفاصيل الكورس (تبويب الامتحانات)
+                    </Text>
+                  </VStack>
+                </Center>
+              ) : (
+                <VStack spacing={6} align="stretch">
+                  {questions.map((q, idx) => (
+                    <Box
+                      key={q.id}
+                      p={{ base: 4, md: 6 }}
+                      borderRadius="2xl"
+                      shadow="md"
+                      bg={teacherCardBg}
+                      borderWidth="1px"
+                      borderColor={teacherCardBorder}
+                      position="relative"
+                      overflow="hidden"
+                      _hover={{ shadow: "lg", borderColor: teacherAccent }}
+                      transition="all 0.2s"
+                    >
+                      <Box h="1" w="full" bg={teacherAccent} position="absolute" top={0} left={0} right={0} />
+                      <Flex
+                        direction={{ base: "column", sm: "row" }}
+                        justify="space-between"
+                        align={{ base: "stretch", sm: "center" }}
+                        gap={3}
+                        mb={4}
+                        pt={2}
+                      >
+                        <HStack spacing={3} align="center" flex={1} minW={0}>
+                          <Box
+                            bg={teacherAccent}
+                            color="white"
+                            w={{ base: "36px", md: "40px" }}
+                            h={{ base: "36px", md: "40px" }}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            borderRadius="full"
+                            fontWeight="bold"
+                            fontSize="lg"
+                            flexShrink={0}
+                          >
+                            {idx + 1}
+                          </Box>
+                          <Text fontWeight="600" fontSize={{ base: "md", md: "lg" }} color={teacherHeadingColor} noOfLines={2}>
+                            {q.text || `سؤال ${idx + 1}`}
+                          </Text>
+                        </HStack>
+                        <HStack spacing={1} flexShrink={0}>
+                          <Badge colorScheme="purple" fontSize="sm" px={3} py={1.5} borderRadius="lg">
+                            درجة {q.grade ?? 0}
+                          </Badge>
+                          <Tooltip label="إضافة أو تحديث صورة السؤال" placement="top" hasArrow>
+                            <IconButton
+                              icon={<FaImage />}
+                              colorScheme="blue"
+                              variant="ghost"
+                              size="sm"
+                              aria-label="صورة السؤال"
+                              onClick={() => triggerQuestionImageInput(q)}
+                              isLoading={imageUploadLoading && imageUploadQuestionId === q.id}
+                            />
                           </Tooltip>
-                        ))}
-                      </Stack>
-                    </RadioGroup>
-                  ) : (
-                    <Alert status="info" borderRadius="md" mt={2}>
-                      <AlertIcon />
-                      لا توجد اختيارات متاحة لهذا السؤال.
-                    </Alert>
-                  )}
-                </Box>
-              ))}
-            </VStack>
+                          <IconButton
+                            icon={<AiFillEdit />}
+                            colorScheme="yellow"
+                            variant="ghost"
+                            size="sm"
+                            aria-label="تعديل"
+                            onClick={() => openEditModal(q)}
+                          />
+                          <IconButton
+                            icon={<AiFillDelete />}
+                            colorScheme="red"
+                            variant="ghost"
+                            size="sm"
+                            aria-label="حذف"
+                            onClick={() => setDeleteModal({ open: true, qid: q.id })}
+                          />
+                        </HStack>
+                      </Flex>
+                      {q.image && (
+                        <Box
+                          mb={4}
+                          borderRadius="xl"
+                          overflow="hidden"
+                          borderWidth="1px"
+                          borderColor={teacherCardBorder}
+                          bg="gray.50"
+                          p={2}
+                          cursor="pointer"
+                          onClick={() => { setImageModalSrc(q.image); setImageModalOpen(true); }}
+                          _hover={{ borderColor: teacherAccent }}
+                          transition="border-color 0.2s"
+                        >
+                          <Image
+                            src={q.image}
+                            alt="صورة السؤال"
+                            maxH="280px"
+                            objectFit="contain"
+                            borderRadius="md"
+                            mx="auto"
+                          />
+                          <HStack justify="center" mt={2} spacing={2} color="gray.500" fontSize="xs">
+                            <MdZoomIn size={14} />
+                            <Text>اضغط للتكبير</Text>
+                          </HStack>
+                        </Box>
+                      )}
+                      {q.choices && q.choices.length > 0 ? (
+                        <RadioGroup>
+                          <Stack direction="column" spacing={3}>
+                            {q.choices.map((choice, cidx) => (
+                              <Tooltip key={choice.id} label={choice.is_correct ? "الإجابة الصحيحة" : "انقر لتعيين كإجابة صحيحة"} placement="left" hasArrow>
+                                <Box
+                                  as="label"
+                                  p={{ base: 3, md: 4 }}
+                                  borderRadius="xl"
+                                  borderWidth="2px"
+                                  borderColor={choice.is_correct ? "green.400" : teacherCardBorder}
+                                  bg={choice.is_correct ? "green.50" : teacherCardBg}
+                                  color={choice.is_correct ? "green.800" : "gray.700"}
+                                  display="flex"
+                                  alignItems="center"
+                                  transition="all 0.2s"
+                                  cursor="pointer"
+                                  onClick={() => handleSetCorrect(q.id, choice.id)}
+                                  _hover={{ borderColor: choice.is_correct ? "green.500" : teacherAccent }}
+                                >
+                                  <Radio
+                                    value={String(choice.id)}
+                                    colorScheme="green"
+                                    isChecked={choice.is_correct}
+                                    isReadOnly
+                                    mr={3}
+                                  />
+                                  <Text fontWeight="500" fontSize="md" flex={1}>
+                                    {String.fromCharCode(65 + cidx)}. {choice.text}
+                                  </Text>
+                                  {choice.is_correct && <FaCheckCircle color="var(--chakra-colors-green-500)" size={20} style={{ marginRight: 8 }} />}
+                                </Box>
+                              </Tooltip>
+                            ))}
+                          </Stack>
+                        </RadioGroup>
+                      ) : (
+                        <Alert status="info" borderRadius="xl" mt={2}>
+                          <AlertIcon />
+                          لا توجد اختيارات متاحة لهذا السؤال.
+                        </Alert>
+                      )}
+                    </Box>
+                  ))}
+                </VStack>
+              )}
+            </>
           )}
         </>
       )}
 
       {/* Edit Modal */}
-      <Modal isOpen={editModal.open} onClose={() => setEditModal({ open: false, question: null })}>
+      <Modal isOpen={editModal.open} onClose={() => setEditModal({ open: false, question: null })} size="lg" isCentered>
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>تعديل السؤال</ModalHeader>
+        <ModalContent borderRadius="2xl" mx={4}>
+          <ModalHeader color={teacherHeadingColor} borderBottomWidth="1px" pb={4}>تعديل السؤال</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <Text mb={2}>نص السؤال:</Text>
-            <Input
-              value={editForm.text}
-              onChange={(e) => setEditForm((prev) => ({ ...prev, text: e.target.value }))}
-              mb={4}
-            />
-            <Text mb={2}>الاختيارات:</Text>
-            <VStack spacing={2}>
-              {editForm.choices.map((choice, idx) => (
+          <ModalBody py={6}>
+            <VStack spacing={4} align="stretch">
+              <Box>
+                <Text mb={2} fontWeight="600" fontSize="sm" color="gray.600">نص السؤال</Text>
                 <Input
-                  key={choice.id}
-                  value={choice.text}
-                  onChange={(e) => setEditForm((prev) => {
-                    const choices = [...prev.choices];
-                    choices[idx].text = e.target.value;
-                    return { ...prev, choices };
-                  })}
-                  placeholder={`اختيار ${String.fromCharCode(65 + idx)}`}
+                  value={editForm.text}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, text: e.target.value }))}
+                  placeholder="نص السؤال..."
+                  borderRadius="lg"
+                  size="md"
                 />
-              ))}
+              </Box>
+              <Box>
+                <Text mb={2} fontWeight="600" fontSize="sm" color="gray.600">الاختيارات</Text>
+                <VStack spacing={3}>
+                  {editForm.choices.map((choice, idx) => (
+                    <Input
+                      key={choice.id}
+                      value={choice.text}
+                      onChange={(e) => setEditForm((prev) => {
+                        const choices = [...prev.choices];
+                        choices[idx].text = e.target.value;
+                        return { ...prev, choices };
+                      })}
+                      placeholder={`اختيار ${String.fromCharCode(65 + idx)}`}
+                      borderRadius="lg"
+                      size="md"
+                    />
+                  ))}
+                </VStack>
+              </Box>
             </VStack>
           </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleEditSave}>
-              حفظ
+          <ModalFooter borderTopWidth="1px" pt={4} gap={2}>
+            <Button colorScheme="blue" onClick={handleEditSave} borderRadius="lg">
+              حفظ التعديل
             </Button>
             <Button variant="ghost" onClick={() => setEditModal({ open: false, question: null })}>
               إلغاء
@@ -1049,14 +1223,16 @@ const Exam = () => {
       {/* Delete Modal */}
       <Modal isOpen={deleteModal.open} onClose={() => setDeleteModal({ open: false, qid: null })} isCentered>
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>تأكيد الحذف</ModalHeader>
+        <ModalContent borderRadius="2xl" mx={4}>
+          <ModalHeader color="red.600" borderBottomWidth="1px" pb={4}>تأكيد الحذف</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <Text>هل أنت متأكد أنك تريد حذف هذا السؤال؟ لا يمكن التراجع عن هذه العملية.</Text>
+          <ModalBody py={6}>
+            <Text color="gray.600">
+              هل أنت متأكد أنك تريد حذف هذا السؤال؟ لا يمكن التراجع عن هذه العملية.
+            </Text>
           </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={handleDelete} isLoading={deleting}>
+          <ModalFooter borderTopWidth="1px" pt={4} gap={2}>
+            <Button colorScheme="red" onClick={handleDelete} isLoading={deleting} borderRadius="lg">
               تأكيد الحذف
             </Button>
             <Button variant="ghost" onClick={() => setDeleteModal({ open: false, qid: null })}>

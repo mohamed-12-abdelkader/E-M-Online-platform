@@ -129,6 +129,7 @@ import ScrollToTop from "../../components/scollToTop/ScrollToTop";
 import BrandLoadingScreen from "../../components/loading/BrandLoadingScreen";
 import CourseStreams from "../../components/stream/courseStreams";
 import StudentStreamsList from "../../components/stream/studentStreamsList";
+import nextEduLogo from "../../img/next logo.png";
 
 // Modal Components
 const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
@@ -163,24 +164,31 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
       isOpen={isOpen}
       onClose={loading ? undefined : onClose}
       closeOnOverlayClick={!loading}
-      size="lg"
+      size={{ base: "full", md: "lg" }}
+      scrollBehavior="inside"
     >
       <ModalOverlay />
-      <ModalContent borderRadius="2xl" boxShadow="2xl">
+      <ModalContent
+        borderRadius={{ base: "none", md: "2xl" }}
+        boxShadow="2xl"
+        mx={{ base: 0, md: 4 }}
+        maxH={{ base: "100vh", md: "90vh" }}
+      >
         <ModalHeader
           display="flex"
           alignItems="center"
           fontWeight="bold"
-          fontSize="xl"
+          fontSize={{ base: "lg", md: "xl" }}
           color="blue.600"
+          p={{ base: 3, md: 6 }}
         >
           <Icon as={FaChalkboardTeacher} className="ml-2" />
           {type === "add" ? "إضافة محاضرة جديدة" : "تعديل المحاضرة"}
         </ModalHeader>
         <ModalCloseButton isDisabled={loading} />
         <form onSubmit={handleSubmit}>
-          <ModalBody>
-            <VStack spacing={5} align="stretch">
+          <ModalBody p={{ base: 3, md: 6 }}>
+            <VStack spacing={{ base: 4, md: 5 }} align="stretch">
               {/* عنوان المحاضرة */}
               <FormControl isRequired>
                 <FormLabel display="flex" alignItems="center" gap={2}>
@@ -193,6 +201,7 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
                   }
                   placeholder="أدخل عنوان المحاضرة"
                   borderRadius="lg"
+                  size={{ base: "sm", md: "md" }}
                 />
               </FormControl>
 
@@ -207,8 +216,9 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   placeholder="أدخل وصف المحاضرة"
-                  rows={3}
+                  rows={{ base: 2, md: 3 }}
                   borderRadius="lg"
+                  size={{ base: "sm", md: "md" }}
                 />
               </FormControl>
 
@@ -233,14 +243,15 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
             </VStack>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter p={{ base: 3, md: 6 }} flexWrap="wrap" gap={2}>
             <Button
               variant="outline"
               colorScheme="red"
-              mr={3}
+              mr={{ base: 0, md: 3 }}
               onClick={onClose}
               leftIcon={<FaTimes />}
               borderRadius="xl"
+              size={{ base: "sm", md: "md" }}
             >
               إلغاء
             </Button>
@@ -251,6 +262,7 @@ const LectureModal = ({ isOpen, onClose, type, data, onSubmit, loading }) => {
               isLoading={loading}
               leftIcon={<FaCheck />}
               borderRadius="xl"
+              size={{ base: "sm", md: "md" }}
             >
               {type === "add" ? "إضافة" : "تعديل"}
             </Button>
@@ -301,25 +313,32 @@ const VideoModal = ({
       isOpen={isOpen}
       onClose={loading ? undefined : onClose}
       closeOnOverlayClick={!loading}
-      size="lg"
+      size={{ base: "full", md: "lg" }}
+      scrollBehavior="inside"
     >
       <ModalOverlay />
-      <ModalContent borderRadius="2xl" boxShadow="2xl">
+      <ModalContent
+        borderRadius={{ base: "none", md: "2xl" }}
+        boxShadow="2xl"
+        mx={{ base: 0, md: 4 }}
+        maxH={{ base: "100vh", md: "90vh" }}
+      >
         <ModalHeader
           display="flex"
           alignItems="center"
           gap={2}
           fontWeight="bold"
-          fontSize="xl"
+          fontSize={{ base: "lg", md: "xl" }}
           color="blue.600"
+          p={{ base: 3, md: 6 }}
         >
           <Icon as={FaFilm} />
           {type === "add" ? "إضافة فيديو جديد" : "تعديل الفيديو"}
         </ModalHeader>
         <ModalCloseButton isDisabled={loading} />
         <form onSubmit={handleSubmit}>
-          <ModalBody>
-            <VStack spacing={5} align="stretch">
+          <ModalBody p={{ base: 3, md: 6 }}>
+            <VStack spacing={{ base: 4, md: 5 }} align="stretch">
               {/* رابط الفيديو */}
 
               {/* عنوان الفيديو */}
@@ -373,15 +392,16 @@ const VideoModal = ({
             </VStack>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter p={{ base: 3, md: 6 }} flexWrap="wrap" gap={2}>
             <Button
               variant="outline"
               colorScheme="red"
-              mr={3}
+              mr={{ base: 0, md: 3 }}
               onClick={onClose}
               isDisabled={loading}
               leftIcon={<FaTimes />}
               borderRadius="xl"
+              size={{ base: "sm", md: "md" }}
             >
               إلغاء
             </Button>
@@ -395,6 +415,7 @@ const VideoModal = ({
               leftIcon={!loading && <FaCheck />}
               borderRadius="xl"
               className="mx-2"
+              size={{ base: "sm", md: "md" }}
             >
               {type === "add" ? "إضافة" : "تعديل"}
             </Button>
@@ -443,15 +464,21 @@ const FileModal = ({
       isOpen={isOpen}
       onClose={loading ? undefined : onClose}
       closeOnOverlayClick={!loading}
+      size={{ base: "full", md: "md" }}
+      scrollBehavior="inside"
     >
       <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>
+      <ModalContent
+        borderRadius={{ base: "none", md: "xl" }}
+        mx={{ base: 0, md: 4 }}
+        maxH={{ base: "100vh", md: "90vh" }}
+      >
+        <ModalHeader p={{ base: 3, md: 4 }} fontSize={{ base: "md", md: "lg" }}>
           {type === "add" ? "إضافة ملف جديد" : "تعديل الملف"}
         </ModalHeader>
         <ModalCloseButton isDisabled={loading} />
         <form onSubmit={handleSubmit}>
-          <ModalBody>
+          <ModalBody p={{ base: 3, md: 4 }}>
             <VStack spacing={4}>
               <FormControl isRequired>
                 <FormLabel>رابط الملف</FormLabel>
@@ -462,6 +489,7 @@ const FileModal = ({
                   }
                   placeholder="أدخل رابط الملف"
                   isDisabled={loading}
+                  size={{ base: "sm", md: "md" }}
                 />
               </FormControl>
               <FormControl isRequired>
@@ -473,16 +501,18 @@ const FileModal = ({
                   }
                   placeholder="أدخل اسم الملف"
                   isDisabled={loading}
+                  size={{ base: "sm", md: "md" }}
                 />
               </FormControl>
             </VStack>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter p={{ base: 3, md: 4 }} flexWrap="wrap" gap={2}>
             <Button
               variant="ghost"
-              mr={3}
+              mr={{ base: 0, md: 3 }}
               onClick={onClose}
               isDisabled={loading}
+              size={{ base: "sm", md: "md" }}
             >
               إلغاء
             </Button>
@@ -493,6 +523,7 @@ const FileModal = ({
               loadingText={
                 type === "add" ? "جاري الإضافة..." : "جاري التعديل..."
               }
+              size={{ base: "sm", md: "md" }}
             >
               {type === "add" ? "إضافة" : "تعديل"}
             </Button>
@@ -597,7 +628,7 @@ const CourseDetailsPage = () => {
   const [codeModalOpen, setCodeModalOpen] = useState(false);
   const [codeCount, setCodeCount] = useState(1);
   const [codeExpiresAt, setCodeExpiresAt] = useState(
-    dayjs().add(30, "day").format("YYYY-MM-DDTHH:mm")
+    dayjs().add(30, "day").format("YYYY-MM-DDTHH:mm"),
   );
   const [codeLoading, setCodeLoading] = useState(false);
 
@@ -633,7 +664,7 @@ const CourseDetailsPage = () => {
       setFilteredCodes(activationCodes);
     } else {
       const filtered = activationCodes.filter((code) =>
-        code.code.toLowerCase().includes(searchCode.toLowerCase())
+        code.code.toLowerCase().includes(searchCode.toLowerCase()),
       );
       setFilteredCodes(filtered);
     }
@@ -724,19 +755,19 @@ const CourseDetailsPage = () => {
               setCourseExamsError(null); // لا نعرض خطأ للطلاب
             } else {
               setCourseExamsError(
-                errorMessage || "غير مصرح لك بالوصول إلى هذه الامتحانات"
+                errorMessage || "غير مصرح لك بالوصول إلى هذه الامتحانات",
               );
               setCourseExams([]);
             }
           } else {
             setCourseExamsError(
-              errorMessage || "حدث خطأ في تحميل الامتحانات الشاملة"
+              errorMessage || "حدث خطأ في تحميل الامتحانات الشاملة",
             );
             setCourseExams([]);
           }
         } else {
           setCourseExamsError(
-            error.message || "حدث خطأ في تحميل الامتحانات الشاملة"
+            error.message || "حدث خطأ في تحميل الامتحانات الشاملة",
           );
           setCourseExams([]);
         }
@@ -813,19 +844,19 @@ const CourseDetailsPage = () => {
             setCourseExamsError(null); // لا نعرض خطأ للطلاب
           } else {
             setCourseExamsError(
-              errorMessage || "غير مصرح لك بالوصول إلى هذه الامتحانات"
+              errorMessage || "غير مصرح لك بالوصول إلى هذه الامتحانات",
             );
             setCourseExams([]);
           }
         } else {
           setCourseExamsError(
-            errorMessage || "حدث خطأ في تحميل الامتحانات الشاملة"
+            errorMessage || "حدث خطأ في تحميل الامتحانات الشاملة",
           );
           setCourseExams([]);
         }
       } else {
         setCourseExamsError(
-          error.message || "حدث خطأ في تحميل الامتحانات الشاملة"
+          error.message || "حدث خطأ في تحميل الامتحانات الشاملة",
         );
         setCourseExams([]);
       }
@@ -843,7 +874,7 @@ const CourseDetailsPage = () => {
         `api/course/my-activation-codes?course_id=${course.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       setActivationCodes(res.data.activation_codes || []);
     } catch (error) {
@@ -861,7 +892,7 @@ const CourseDetailsPage = () => {
         `/api/course/lecture/${lectureId}/exam`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       return response.data;
     } catch (error) {
@@ -987,7 +1018,7 @@ const CourseDetailsPage = () => {
         data,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       toast({
         title: "تم تعديل المحاضرة بنجاح",
@@ -1047,7 +1078,7 @@ const CourseDetailsPage = () => {
         data,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       toast({
         title: "تم إضافة الفيديو بنجاح",
@@ -1085,7 +1116,7 @@ const CourseDetailsPage = () => {
         data,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       toast({
         title: "تم تعديل الفيديو بنجاح",
@@ -1150,7 +1181,7 @@ const CourseDetailsPage = () => {
         data,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       toast({
         title: "تم إضافة الملف بنجاح",
@@ -1183,7 +1214,7 @@ const CourseDetailsPage = () => {
         data,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       toast({
         title: "تم تعديل الملف بنجاح",
@@ -1418,7 +1449,7 @@ const CourseDetailsPage = () => {
           },
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
       } else {
         // Handle image questions
@@ -2124,7 +2155,7 @@ const CourseDetailsPage = () => {
         "examId:",
         examId,
         "examTitle:",
-        examTitle
+        examTitle,
       );
       setFormData({ bulk_text: "", images: [] });
       setImagePreviews([]);
@@ -2149,7 +2180,7 @@ const CourseDetailsPage = () => {
       // Validate file types
       const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
       const invalidFiles = files.filter(
-        (file) => !validTypes.includes(file.type)
+        (file) => !validTypes.includes(file.type),
       );
 
       if (invalidFiles.length > 0) {
@@ -2165,7 +2196,7 @@ const CourseDetailsPage = () => {
 
       // Validate file sizes (max 5MB each)
       const oversizedFiles = files.filter(
-        (file) => file.size > 5 * 1024 * 1024
+        (file) => file.size > 5 * 1024 * 1024,
       );
       if (oversizedFiles.length > 0) {
         toast({
@@ -2212,7 +2243,7 @@ const CourseDetailsPage = () => {
       "examId:",
       examId,
       "examTitle:",
-      examTitle
+      examTitle,
     );
     return (
       <Modal
@@ -2480,7 +2511,7 @@ D) has made`}
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       toast({
         title: "تم إنشاء الأكواد بنجاح!",
@@ -2550,8 +2581,13 @@ D) has made`}
       const codesPerPage = 12; // 3 columns × 4 rows
       const pageWidth = 297; // mm
       const pageHeight = 210; // mm
-      const logoUrl = `${window.location.origin}/next%20logo.png`;
+      const logoUrl = nextEduLogo.startsWith("http")
+        ? nextEduLogo
+        : `${window.location.origin}${nextEduLogo}`;
       const courseName = courseData?.course?.title || "الكورس";
+      const teacherName = user?.name || "المدرس";
+      const contactPhone1 = "011111272393 &";
+      const contactPhone2 = "01288781012";
       const pdf = new jsPDF("l", "mm", "a4");
       for (let i = 0; i < codesToExport.length; i += codesPerPage) {
         const tempDiv = document.createElement("div");
@@ -2561,60 +2597,49 @@ D) has made`}
         tempDiv.style.background = "#fff";
         document.body.appendChild(tempDiv);
         tempDiv.innerHTML = `
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 3mm; width: 100%; height: 100%; align-content: start;">
+           <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 3mm; width: 100%; height: 100%; align-content: start;">
             ${codesToExport
               .slice(i, i + codesPerPage)
               .map(
                 (code, index) => `
-                  <div  style="padding: 0; width: 100%; height: 100%; border-radius: 12px; box-shadow: 0 2px 12px rgba(49,130,206,0.18); position: relative; overflow: hidden; background: #f8fafc; display: flex; flex-direction: column; justify-content: space-between; min-height: 40mm; direction: rtl; border: 1px solid rgba(49,130,206,0.25);">
-                    <!-- Background watermark: NextEdu logo -->
+                  <div style="padding: 0; width: 100%; height: 100%; border-radius: 12px; box-shadow: 0 2px 12px rgba(49,130,206,0.18); position: relative; overflow: hidden; background: #f8fafc; display: flex; flex-direction: column; min-height: 40mm; direction: rtl; border: 1px solid rgba(49,130,206,0.25);">
                     <div style="position: absolute; inset: 0; background-image: url('${logoUrl}'); background-size: 50% auto; background-repeat: no-repeat; background-position: center; opacity: 0.22; pointer-events: none;"></div>
-                    <!-- الهيدر: اسم المدرس + الصف -->
-                    <div style="position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px; background: #3182ce; padding: 8px 8px; min-height: 32px;">
-                      <h2 style="font-size: 14px; font-weight: 800; color: #fff; margin: 0; text-align: right; flex: 1; min-width: 0; line-height: 1.3; word-break: break-word;">${
-                        user.name || "عمرو علي"
-                      }</h2>
-                      <span style="font-size: 10px; color: #fff; font-weight: 700; background: rgba(0,0,0,0.15); padding: 4px 8px; border-radius: 8px; white-space: nowrap;">${
-                        code.grade_name || "الصف الثاني الثانوي"
-                      }</span>
+                    <div style="position: relative; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 6px; background: #3182ce; padding: 8px 10px; min-height: 36px;">
+                      <h2 style="font-size: 13px; font-weight: 800; color: #fff; margin: 0; text-align: right; flex: 1; min-width: 0; line-height: 1.3; word-break: break-word;">${user.name || "عمرو علي"}</h2>
+                      <p style="font-size: 10px; font-weight: 700; color: #fff; margin: 0; text-align: center; flex-shrink: 0; padding: 0 6px;">${courseName}</p>
+                      <span style="font-size: 10px; color: #fff; font-weight: 700; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 8px; white-space: nowrap;">${code.grade_name || "الصف الثاني الثانوي"}</span>
                     </div>
-                    <!-- اسم الكورس -->
-                    <div style="position: relative; padding: 3px 8px; background: #ebf8ff; border-bottom: 1px solid rgba(49,130,206,0.2);">
-                      <p style="font-size: 10px; font-weight: 700; color: #2b6cb0; margin: 0; text-align: right;">${courseName}</p>
-                    </div>
-                    <!-- المحتوى: كود التفعيل + QR -->
-                    <div style="position: relative; display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; flex: 1; gap: 8px;">
-                      <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 9px; color: #2b6cb0; font-weight: 700;">كود التفعيل</div>
-                        <div style="margin-top: 12px; margin-bottom: 12px;">
-                          <div style="display: inline-block; font-size: 16px; color: #1a365d; font-weight: 800; letter-spacing: 1.5px; font-family: monospace; padding: 4px 10px; background: #fff; border-left: 4px solid #3182ce; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">${
-                            code.code
-                          }</div>
-                        </div>
+                    <div style="position: relative; flex: 1 1 0; min-height: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 8px 10px; gap: 8px;">
+                      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                        <div style="font-size: 10px; color: #2b6cb0; font-weight: 700; margin-bottom: 6px;">كود التفعيل</div>
+                        <div style="display: inline-block; font-size: 18px; color: #1a365d; font-weight: 800; letter-spacing: 2px; font-family: monospace; padding: 8px 14px; background: #fff; border: 2px solid #3182ce; border-radius: 8px; box-shadow: 0 2px 6px rgba(49,130,206,0.2);">${
+                          code.code
+                        }</div>
                       </div>
-                      <div style="flex-shrink: 0;">
+                      <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin: 6px 0;">
                         ${
                           code.qr_code
-                            ? `<img src="${code.qr_code}" alt="QR" style="width: 72px; height: 72px; border: 2px solid #3182ce; border-radius: 10px; background: #fff; padding: 3px; display: block;" />`
-                            : '<div style="width: 72px; height: 72px; border: 2px dashed #3182ce; border-radius: 10px; background: #ebf8ff; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #3182ce; font-weight: bold;">QR</div>'
+                            ? `<img src="${code.qr_code}" alt="QR" style="width: 100px; height: 100px; border: 2px solid #3182ce; border-radius: 10px; background: #fff; padding: 2px; display: block; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;" />`
+                            : '<div style="width: 100px; height: 100px; border: 2px dashed #3182ce; border-radius: 10px; background: #ebf8ff; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #3182ce; font-weight: bold;">QR</div>'
                         }
                       </div>
                     </div>
-                    <!-- الفوتر: أرقام التواصل - أزرق فقط + أكبر -->
-                    <div style="position: relative; padding: 8px 8px; background: #3182ce;">
-                      <p style="font-size: 10px; font-weight: 700; color: #fff; text-align: center; margin: 0; line-height: 1.4;">01111272393 | 01288781012 | 01210726096</p>
+                    <div style="position: relative; flex: 0 0 auto; min-height: 30px; padding: 10px 8px; background: #3182ce; display: flex; align-items: center; justify-content: center;">
+                      <p style="font-size: 14px; font-weight: 800; color: #ffffff; text-align: center; margin: 0; line-height: 1.4; letter-spacing: 0.8px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">01111272393 | 01288781012</p>
                     </div>
-                  </div>`
+                  </div>`,
               )
               .join("")}
           </div>
         `;
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 350));
         try {
           const pxPerMm = 3.78;
           const canvas = await html2canvas(tempDiv, {
             scale: 1.5,
             useCORS: true,
+            allowTaint: true,
+            logging: false,
             width: pageWidth * pxPerMm,
             height: pageHeight * pxPerMm,
           });
@@ -2624,7 +2649,7 @@ D) has made`}
             0,
             0,
             pageWidth,
-            pageHeight
+            pageHeight,
           );
         } catch (err) {
           console.error("PDF Export Error (canvas):", err);
@@ -2875,12 +2900,7 @@ D) has made`}
 
   const { course, lectures } = courseData;
   return (
-    <Box
-      minH={{ base: "100vh", md: "100vh" }}
-      bg={pageBg}
-      dir="rtl"
-      className="mt-[=5 0px]"
-    >
+    <Box minH="100vh" bg={pageBg} dir="rtl" overflowX="hidden">
       {/* Hero Section - Full Width Image with Overlay */}
       <CourseHeroSection
         course={course}
@@ -2903,7 +2923,7 @@ D) has made`}
         <Flex
           justify={{ base: "center", md: "flex-end" }}
           align="center"
-          px={{ base: 4, sm: 6, md: 10 }}
+          px={{ base: 2, sm: 6, md: 10 }}
           mt={{ base: 2, md: 4 }}
           mb={{ base: 0, md: -8 }}
           gap={{ base: 2, md: 3 }}
@@ -2942,14 +2962,25 @@ D) has made`}
         isOpen={codeModalOpen}
         onClose={() => setCodeModalOpen(false)}
         isCentered
+        size={{ base: "full", md: "md" }}
+        scrollBehavior="inside"
       >
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>إنشاء أكواد تفعيل للكورس</ModalHeader>
+        <ModalContent
+          mx={{ base: 0, md: 4 }}
+          borderRadius={{ base: "none", md: "xl" }}
+          maxH={{ base: "100vh", md: "90vh" }}
+        >
+          <ModalHeader
+            p={{ base: 3, md: 4 }}
+            fontSize={{ base: "md", md: "lg" }}
+          >
+            إنشاء أكواد تفعيل للكورس
+          </ModalHeader>
           <ModalCloseButton />
           <form onSubmit={handleCreateCodes}>
-            <ModalBody>
-              <VStack spacing={5} align="stretch">
+            <ModalBody p={{ base: 3, md: 4 }}>
+              <VStack spacing={{ base: 4, md: 5 }} align="stretch">
                 <FormControl isRequired>
                   <FormLabel>عدد الأكواد</FormLabel>
                   <Input
@@ -2957,6 +2988,7 @@ D) has made`}
                     min={1}
                     value={codeCount}
                     onChange={(e) => setCodeCount(e.target.value)}
+                    size={{ base: "sm", md: "md" }}
                   />
                 </FormControl>
                 <FormControl isRequired>
@@ -2965,15 +2997,17 @@ D) has made`}
                     type="datetime-local"
                     value={codeExpiresAt}
                     onChange={(e) => setCodeExpiresAt(e.target.value)}
+                    size={{ base: "sm", md: "md" }}
                   />
                 </FormControl>
               </VStack>
             </ModalBody>
-            <ModalFooter>
+            <ModalFooter p={{ base: 3, md: 4 }} flexWrap="wrap" gap={2}>
               <Button
                 variant="ghost"
                 onClick={() => setCodeModalOpen(false)}
-                mr={3}
+                mr={{ base: 0, md: 3 }}
+                size={{ base: "sm", md: "md" }}
               >
                 إلغاء
               </Button>
@@ -2981,6 +3015,7 @@ D) has made`}
                 colorScheme="purple"
                 type="submit"
                 isLoading={codeLoading}
+                size={{ base: "sm", md: "md" }}
               >
                 إنشاء
               </Button>
@@ -2996,21 +3031,48 @@ D) has made`}
           setShowCodesModal(false);
           setSearchCode("");
         }}
-        size="6xl"
+        size={{ base: "full", md: "4xl", lg: "6xl" }}
         isCentered
+        scrollBehavior="inside"
       >
         <ModalOverlay />
-        <ModalContent borderRadius="2xl" overflow="hidden">
+        <ModalContent
+          borderRadius={{ base: "none", md: "2xl" }}
+          overflow="hidden"
+          mx={{ base: 0, md: 4 }}
+          maxH={{ base: "100vh", md: "90vh" }}
+        >
           <Box h="1" w="full" bg="blue.500" />
-          <ModalHeader bg="blue.50" _dark={{ bg: "whiteAlpha.100" }} borderBottomWidth="1px" borderColor="blue.100" _dark={{ borderColor: "whiteAlpha.200" }}>
+          <ModalHeader
+            bg="blue.50"
+            _dark={{ bg: "whiteAlpha.100", borderColor: "whiteAlpha.200" }}
+            borderBottomWidth="1px"
+            borderColor="blue.100"
+            p={{ base: 3, md: 4 }}
+            fontSize={{ base: "sm", md: "lg" }}
+          >
             أكواد تفعيل الكورس
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
+          <ModalBody p={{ base: 3, md: 4 }} overflowX="auto">
             {/* حقل البحث */}
             {activationCodes.length > 0 && (
-              <Box mb={4} p={4} borderWidth={1} borderRadius="xl" bg="blue.50" _dark={{ bg: "whiteAlpha.50" }} borderColor="blue.100">
-                <Text fontWeight="bold" mb={3} color="blue.700" _dark={{ color: "blue.200" }}>
+              <Box
+                mb={4}
+                p={{ base: 3, md: 4 }}
+                borderWidth={1}
+                borderRadius="xl"
+                bg="blue.50"
+                _dark={{ bg: "whiteAlpha.50" }}
+                borderColor="blue.100"
+              >
+                <Text
+                  fontWeight="bold"
+                  mb={3}
+                  color="blue.700"
+                  _dark={{ color: "blue.200" }}
+                  fontSize={{ base: "sm", md: "md" }}
+                >
                   البحث في الأكواد:
                 </Text>
                 <InputGroup>
@@ -3050,8 +3112,21 @@ D) has made`}
             )}
 
             {activationCodes.length > 0 && (
-              <Box mb={4} p={4} borderWidth={1} borderRadius="xl" bg="blue.50" _dark={{ bg: "whiteAlpha.50" }} borderColor="blue.100" _dark={{ borderColor: "whiteAlpha.200" }}>
-                <Text fontWeight="bold" mb={3} color="blue.700" _dark={{ color: "blue.200" }}>
+              <Box
+                mb={4}
+                p={4}
+                borderWidth={1}
+                borderRadius="xl"
+                bg="blue.50"
+                _dark={{ bg: "whiteAlpha.50", borderColor: "whiteAlpha.200" }}
+                borderColor="blue.100"
+              >
+                <Text
+                  fontWeight="bold"
+                  mb={3}
+                  color="blue.700"
+                  _dark={{ color: "blue.200" }}
+                >
                   تحديد نطاق التصدير:
                 </Text>
                 <Flex gap={4} alignItems="center" flexWrap="wrap">
@@ -3109,7 +3184,11 @@ D) has made`}
                   >
                     تحديد الكل
                   </Button>
-                  <Text fontSize="sm" color="blue.600" _dark={{ color: "blue.300" }}>
+                  <Text
+                    fontSize="sm"
+                    color="blue.600"
+                    _dark={{ color: "blue.300" }}
+                  >
                     (إجمالي {activationCodes.length} كود)
                   </Text>
                 </Flex>
@@ -3159,18 +3238,20 @@ D) has made`}
               </Box>
             ) : (
               <>
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                <SimpleGrid
+                  columns={{ base: 1, md: 2, lg: 3 }}
+                  spacing={{ base: 3, md: 6 }}
+                >
                   {filteredCodes.map((code) => (
                     <Box
                       key={code.id}
                       bg="white"
-                      _dark={{ bg: "gray.800" }}
+                      _dark={{ bg: "gray.800", borderColor: "whiteAlpha.200" }}
                       borderRadius="2xl"
                       p={5}
                       boxShadow="lg"
                       border="1px solid"
                       borderColor="blue.100"
-                      _dark={{ borderColor: "whiteAlpha.200" }}
                       _hover={{
                         transform: "translateY(-2px)",
                         boxShadow: "xl",
@@ -3181,11 +3262,30 @@ D) has made`}
                       position="relative"
                       overflow="hidden"
                     >
-                      <Box h="1" w="full" bg="blue.500" position="absolute" top={0} left={0} right={0} />
-                      <Flex direction={{ base: "column", sm: "row" }} align="center" justify="space-between" gap={4}>
+                      <Box
+                        h="1"
+                        w="full"
+                        bg="blue.500"
+                        position="absolute"
+                        top={0}
+                        left={0}
+                        right={0}
+                      />
+                      <Flex
+                        direction={{ base: "column", sm: "row" }}
+                        align="center"
+                        justify="space-between"
+                        gap={4}
+                      >
                         {/* كود التفعيل - عرض صغير وشكل واضح */}
                         <Box flex="1" minW={0} textAlign="center">
-                          <Text fontSize="xs" color="blue.600" _dark={{ color: "blue.300" }} fontWeight="bold" mb={1}>
+                          <Text
+                            fontSize="xs"
+                            color="blue.600"
+                            _dark={{ color: "blue.300" }}
+                            fontWeight="bold"
+                            mb={1}
+                          >
                             كود التفعيل
                           </Text>
                           <Text
@@ -3193,7 +3293,7 @@ D) has made`}
                             fontSize="md"
                             fontWeight="800"
                             color="blue.800"
-                            _dark={{ color: "blue.100" }}
+                            _dark={{ color: "blue.100", bg: "whiteAlpha.100" }}
                             letterSpacing="2px"
                             display="inline-block"
                             w="fit-content"
@@ -3201,7 +3301,6 @@ D) has made`}
                             px={3}
                             py={2}
                             bg="blue.50"
-                            _dark={{ bg: "whiteAlpha.100" }}
                             borderRadius="lg"
                             borderLeft="4px solid"
                             borderColor="blue.500"
@@ -3220,9 +3319,8 @@ D) has made`}
                             borderRadius="xl"
                             border="2px solid"
                             borderColor="blue.200"
-                            _dark={{ borderColor: "blue.600" }}
+                            _dark={{ borderColor: "blue.600", bg: "gray.700" }}
                             bg="white"
-                            _dark={{ bg: "gray.700" }}
                             p={1}
                           />
                         ) : (
@@ -3249,15 +3347,33 @@ D) has made`}
                       {/* الحالة فقط */}
                       <Box textAlign="center" mt={4}>
                         {code.is_expired ? (
-                          <Badge colorScheme="red" fontSize="sm" px={3} py={1} borderRadius="full">
+                          <Badge
+                            colorScheme="red"
+                            fontSize="sm"
+                            px={3}
+                            py={1}
+                            borderRadius="full"
+                          >
                             منتهي الصلاحية
                           </Badge>
                         ) : code.is_fully_used ? (
-                          <Badge colorScheme="orange" fontSize="sm" px={3} py={1} borderRadius="full">
+                          <Badge
+                            colorScheme="orange"
+                            fontSize="sm"
+                            px={3}
+                            py={1}
+                            borderRadius="full"
+                          >
                             مستخدم بالكامل
                           </Badge>
                         ) : (
-                          <Badge colorScheme="green" fontSize="sm" px={3} py={1} borderRadius="full">
+                          <Badge
+                            colorScheme="green"
+                            fontSize="sm"
+                            px={3}
+                            py={1}
+                            borderRadius="full"
+                          >
                             فعال
                           </Badge>
                         )}
@@ -3314,30 +3430,155 @@ D) has made`}
                             direction: "rtl",
                           }}
                         >
-                          <div style={{ background: "#3182ce", padding: "6px 8px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "4px" }}>
-                            <h2 style={{ fontSize: "13px", fontWeight: "800", color: "#fff", margin: "0", textAlign: "right", flex: "1", minWidth: "0" }}>{user.name || "عمرو علي"}</h2>
-                            <span style={{ fontSize: "9px", color: "#fff", fontWeight: "700", background: "rgba(0,0,0,0.15)", padding: "3px 6px", borderRadius: "8px" }}>{code.grade_name || "الصف الثاني الثانوي"}</span>
+                          <div
+                            style={{
+                              background: "#3182ce",
+                              padding: "6px 8px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              flexWrap: "wrap",
+                              gap: "4px",
+                            }}
+                          >
+                            <h2
+                              style={{
+                                fontSize: "13px",
+                                fontWeight: "800",
+                                color: "#fff",
+                                margin: "0",
+                                textAlign: "right",
+                                flex: "1",
+                                minWidth: "0",
+                              }}
+                            >
+                              {user.name || "عمرو علي"}
+                            </h2>
+                            <span
+                              style={{
+                                fontSize: "9px",
+                                color: "#fff",
+                                fontWeight: "700",
+                                background: "rgba(0,0,0,0.15)",
+                                padding: "3px 6px",
+                                borderRadius: "8px",
+                              }}
+                            >
+                              {code.grade_name || "الصف الثاني الثانوي"}
+                            </span>
                           </div>
-                          <div style={{ padding: "3px 8px", background: "#bee3f8", borderBottom: "1px solid rgba(49,130,206,0.25)" }}>
-                            <p style={{ fontSize: "10px", fontWeight: "800", color: "#1a365d", margin: "0", textAlign: "right" }}>{course?.title || "الكورس"}</p>
+                          <div
+                            style={{
+                              padding: "3px 8px",
+                              background: "#bee3f8",
+                              borderBottom: "1px solid rgba(49,130,206,0.25)",
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: "10px",
+                                fontWeight: "800",
+                                color: "#1a365d",
+                                margin: "0",
+                                textAlign: "right",
+                              }}
+                            >
+                              {course?.title || "الكورس"}
+                            </p>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 8px", flex: "1", gap: "8px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "6px 8px",
+                              flex: "1",
+                              gap: "8px",
+                            }}
+                          >
                             <div style={{ flex: "1", textAlign: "center" }}>
-                              <div style={{ fontSize: "8px", color: "#2b6cb0", fontWeight: "700" }}>كود التفعيل</div>
+                              <div
+                                style={{
+                                  fontSize: "8px",
+                                  color: "#2b6cb0",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                كود التفعيل
+                              </div>
                               <div style={{ marginTop: "8px" }}>
-                                <span style={{ display: "inline-block", fontSize: "14px", color: "#1a365d", fontWeight: "800", letterSpacing: "1px", fontFamily: "monospace", padding: "4px 10px", background: "#fff", borderLeft: "4px solid #3182ce", borderRadius: "6px", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>{code.code}</span>
+                                <span
+                                  style={{
+                                    display: "inline-block",
+                                    fontSize: "14px",
+                                    color: "#1a365d",
+                                    fontWeight: "800",
+                                    letterSpacing: "1px",
+                                    fontFamily: "monospace",
+                                    padding: "4px 10px",
+                                    background: "#fff",
+                                    borderLeft: "4px solid #3182ce",
+                                    borderRadius: "6px",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                                  }}
+                                >
+                                  {code.code}
+                                </span>
                               </div>
                             </div>
                             <div style={{ flexShrink: "0" }}>
                               {code.qr_code ? (
-                                <img src={code.qr_code} alt="QR" style={{ width: "60px", height: "60px", border: "2px solid #3182ce", borderRadius: "10px", background: "#fff", padding: "2px", display: "block" }} />
+                                <img
+                                  src={code.qr_code}
+                                  alt="QR"
+                                  style={{
+                                    width: "60px",
+                                    height: "60px",
+                                    border: "2px solid #3182ce",
+                                    borderRadius: "10px",
+                                    background: "#fff",
+                                    padding: "2px",
+                                    display: "block",
+                                  }}
+                                />
                               ) : (
-                                <div style={{ width: "60px", height: "60px", border: "2px dashed #3182ce", borderRadius: "10px", background: "#ebf8ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", color: "#3182ce", fontWeight: "bold" }}>QR</div>
+                                <div
+                                  style={{
+                                    width: "60px",
+                                    height: "60px",
+                                    border: "2px dashed #3182ce",
+                                    borderRadius: "10px",
+                                    background: "#ebf8ff",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "8px",
+                                    color: "#3182ce",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  QR
+                                </div>
                               )}
                             </div>
                           </div>
-                          <div style={{ padding: "6px 8px", background: "#3182ce" }}>
-                            <p style={{ fontSize: "8px", fontWeight: "700", color: "#fff", textAlign: "center", margin: "0" }}>01111272393 | 01288781012 | 01210726096</p>
+                          <div
+                            style={{
+                              padding: "6px 8px",
+                              background: "#3182ce",
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: "8px",
+                                fontWeight: "700",
+                                color: "#fff",
+                                textAlign: "center",
+                                margin: "0",
+                              }}
+                            >
+                              01111272393 | 01288781012 | 01210726096
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -3346,7 +3587,12 @@ D) has made`}
               </>
             )}
           </ModalBody>
-          <ModalFooter borderTopWidth="1px" borderColor="blue.100" _dark={{ borderColor: "whiteAlpha.200" }}>
+          <ModalFooter
+            borderTopWidth="1px"
+            borderColor="blue.100"
+            _dark={{ borderColor: "whiteAlpha.200" }}
+            p={{ base: 3, md: 4 }}
+          >
             <Button
               onClick={() => {
                 setShowCodesModal(false);
@@ -3356,6 +3602,7 @@ D) has made`}
               color="white"
               _hover={{ bg: "blue.600" }}
               borderRadius="xl"
+              size={{ base: "sm", md: "md" }}
             >
               إغلاق
             </Button>
@@ -3364,41 +3611,36 @@ D) has made`}
       </Modal>
 
       <VStack
-        spacing={{ base: 4, sm: 6, md: 12, lg: 16 }}
+        spacing={4}
         align="stretch"
         maxW="container.xl"
         mx="auto"
-        py={{ base: 4, sm: 6, md: 16 }}
+        px={{ base: 0, sm: 3, md: 4 }}
+        py={{ base: 4, sm: 6, md: 8 }}
         className="lecture_container"
-        gap={{ base: 4, sm: 6, md: 8 }}
+        w="full"
       >
         <MotionBox
           initial="hidden"
           animate="visible"
           variants={itemVariants}
           bg={sectionBg}
-          borderRadius={{ base: "xl", md: "2xl" }}
-          shadow={{ base: "lg", md: "xl" }}
+          borderRadius="2xl"
+          shadow="sm"
           borderWidth="1px"
           borderColor={borderColor}
           w="100%"
           minW={0}
           overflowX="hidden"
         >
-          <Box
-            h="1"
-            w="100%"
-            bgGradient="linear(to-r, blue.500, orange.500)"
-            flexShrink={0}
-          />
-          <Box px={{ base: 3, sm: 4, md: 6 }} pt={4}>
+          <Box px={{ base: 2, sm: 4, md: 6 }} py={4}>
             <Tabs
               index={tabIndex}
               onChange={setTabIndex}
               variant="unstyled"
               size={{ base: "sm", md: "md" }}
             >
-              <Box mb={6} borderBottomWidth="2px" borderColor={borderColor}>
+              <Box mb={4} borderBottomWidth="1px" borderColor={borderColor}>
                 <TabList gap={0} flexWrap="wrap" bg="transparent">
                   <Tab
                     fontWeight="bold"
@@ -3408,7 +3650,7 @@ D) has made`}
                     borderBottomColor="transparent"
                     mb="-2px"
                     py={3}
-                    px={4}
+                    px={{ base: 2, sm: 4 }}
                     _selected={{
                       color: "blue.500",
                       borderBottomColor: "blue.500",
@@ -3426,7 +3668,7 @@ D) has made`}
                     borderBottomColor="transparent"
                     mb="-2px"
                     py={3}
-                    px={4}
+                    px={{ base: 2, sm: 4 }}
                     _selected={{
                       color: "blue.500",
                       borderBottomColor: "blue.500",
@@ -3444,7 +3686,7 @@ D) has made`}
                     borderBottomColor="transparent"
                     mb="-2px"
                     py={3}
-                    px={4}
+                    px={{ base: 2, sm: 4 }}
                     _selected={{
                       color: "blue.500",
                       borderBottomColor: "blue.500",
@@ -3462,7 +3704,7 @@ D) has made`}
                     borderBottomColor="transparent"
                     mb="-2px"
                     py={3}
-                    px={4}
+                    px={{ base: 2, sm: 4 }}
                     _selected={{
                       color: "orange.500",
                       borderBottomColor: "orange.500",
@@ -3477,13 +3719,13 @@ D) has made`}
 
               <TabPanels p={0}>
                 {/* Tab Panel للمحاضرات — يعرض المحاضرات فقط */}
-                <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
+                <TabPanel px={{ base: 2, sm: 4, md: 6, lg: 8 }} py={4}>
                   <Box
                     bg={sectionBg}
-                    borderRadius="2xl"
+                    borderRadius="xl"
                     borderWidth="1px"
                     borderColor={borderColor}
-                    p={{ base: 4, md: 6 }}
+                    p={4}
                     minH="280px"
                   >
                     <LecturesTab
@@ -3519,13 +3761,13 @@ D) has made`}
                 </TabPanel>
 
                 {/* Tab Panel للجلسات المباشرة — يعرض الجلسات المباشرة فقط */}
-                <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
+                <TabPanel px={{ base: 2, sm: 4, md: 6, lg: 8 }} py={4}>
                   <Box
                     bg={sectionBg}
-                    borderRadius="2xl"
+                    borderRadius="xl"
                     borderWidth="1px"
                     borderColor={borderColor}
-                    p={{ base: 4, md: 6 }}
+                    p={4}
                     minH="280px"
                   >
                     {isAdmin || isTeacher ? (
@@ -3537,13 +3779,13 @@ D) has made`}
                 </TabPanel>
 
                 {/* Tab Panel للدعم العلمي — يعرض الدعم العلمي فقط */}
-                <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
+                <TabPanel px={{ base: 2, sm: 4, md: 6, lg: 8 }} py={4}>
                   <Box
                     bg={sectionBg}
-                    borderRadius="2xl"
+                    borderRadius="xl"
                     borderWidth="1px"
                     borderColor={borderColor}
-                    p={{ base: 4, md: 6 }}
+                    p={4}
                     minH="280px"
                   >
                     {isAdmin || isTeacher ? (
@@ -3555,13 +3797,13 @@ D) has made`}
                 </TabPanel>
 
                 {/* Tab Panel للامتحانات — يعرض الامتحانات فقط */}
-                <TabPanel px={{ base: 3, sm: 4, md: 6, lg: 8 }} py={6}>
+                <TabPanel px={{ base: 2, sm: 4, md: 6, lg: 8 }} py={4}>
                   <Box
                     bg={sectionBg}
-                    borderRadius="2xl"
+                    borderRadius="xl"
                     borderWidth="1px"
                     borderColor={borderColor}
-                    p={{ base: 4, md: 6 }}
+                    p={4}
                     minH="280px"
                   >
                     <CourseExamsTab
@@ -3770,7 +4012,7 @@ D) has made`}
             examId,
             data,
             questionType,
-            bulkQuestionsModal.examType
+            bulkQuestionsModal.examType,
           )
         }
         loading={bulkQuestionsLoading}

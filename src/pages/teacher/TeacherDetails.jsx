@@ -39,6 +39,7 @@ const TeacherDetails = () => {
   const [activateModal, setActivateModal] = useState({ isOpen: false, courseId: null });
   const [activationCode, setActivationCode] = useState("");
   const [activateLoading, setActivateLoading] = useState(false);
+  const [activatingCourseId, setActivatingCourseId] = useState(null);
   const toast = useToast();
 
   const bgColor = useColorModeValue("gray.50", "gray.900");
@@ -97,32 +98,63 @@ const TeacherDetails = () => {
          course.title?.toLowerCase().includes(searchTerm.toLowerCase()))
       )
     : courses;
-  // دالة تفعيل الكورس
+  const markCourseEnrolled = (courseId) => {
+    setData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        courses: prev.courses.map((c) =>
+          c.id === courseId ? { ...c, is_enrolled: true } : c
+        ),
+      };
+    });
+  };
+
+  // تفعيل الكورس المجاني — نفس الطريقة في التطبيق المرجعي
+  const handleActivateFreeCourse = async (courseId) => {
+    try {
+      setActivatingCourseId(courseId);
+      await baseUrl.post(
+        "/api/course/activate-free",
+        { course_id: courseId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      markCourseEnrolled(courseId);
+      toast({ title: "تم تفعيل الكورس المجاني بنجاح!", status: "success", duration: 3000, isClosable: true });
+    } catch (err) {
+      toast({
+        title: "فشل تفعيل الكورس المجاني",
+        description: err.response?.data?.message || "حاول مجدداً.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setActivatingCourseId(null);
+    }
+  };
+
+  // تفعيل الكورس بكود (مدفوع)
   const handleActivateCourse = async () => {
     setActivateLoading(true);
     try {
-      await baseUrl.post("/api/course/activate", {
-        code: activationCode,
-        course_id: activateModal.courseId,
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      
-      // تحديث حالة الكورس في البيانات المحلية
-      setData(prevData => ({
-        ...prevData,
-        courses: prevData.courses.map(course => 
-          course.id === activateModal.courseId 
-            ? { ...course, is_enrolled: true }
-            : course
-        )
-      }));
-      
+      await baseUrl.post(
+        "/api/course/activate",
+        { code: activationCode.trim(), course_id: activateModal.courseId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      markCourseEnrolled(activateModal.courseId);
       toast({ title: "تم تفعيل الكورس بنجاح!", status: "success", duration: 3000, isClosable: true });
       setActivateModal({ isOpen: false, courseId: null });
       setActivationCode("");
-    } catch (error) {
-      toast({ title: "خطأ في تفعيل الكورس", description: error.response?.data?.message || "حدث خطأ غير متوقع", status: "error", duration: 3000, isClosable: true });
+    } catch (err) {
+      toast({
+        title: "خطأ في تفعيل الكورس",
+        description: err.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setActivateLoading(false);
     }
@@ -250,9 +282,13 @@ const TeacherDetails = () => {
                       <Icon as={FaFileVideo} color="blue.500" boxSize={4} />
                       <Text fontSize="xs" color={subtextColor}>كورس أونلاين</Text>
                     </HStack>
-                    <Text fontSize="lg" color="orange.500" fontWeight="bold">
-                      {course.price} ج.م
-                    </Text>
+                    {course.price != null && Number(course.price) !== 0 ? (
+                      <Text fontSize="lg" color="orange.500" fontWeight="bold">
+                        {course.price} ج.م
+                      </Text>
+                    ) : (
+                      <Badge colorScheme="green" borderRadius="md" px={2} py={1}>مجاني</Badge>
+                    )}
                   </Flex>
                 </VStack>
 
@@ -272,6 +308,22 @@ const TeacherDetails = () => {
                         دخول الكورس
                       </Button>
                     </Link>
+                  ) : course.price == null || Number(course.price) === 0 ? (
+                    <Button
+                      w="full"
+                      bg="green.500"
+                      color="white"
+                      borderRadius="xl"
+                      fontWeight="bold"
+                      h="48px"
+                      isLoading={activateLoading && activatingCourseId === course.id}
+                      loadingText="جاري التفعيل..."
+                      onClick={() => handleActivateFreeCourse(course.id)}
+                      _hover={{ bg: "green.400", transform: "translateY(-2px)", boxShadow: "md" }}
+                      transition="all 0.2s"
+                    >
+                      تفعيل مجاني
+                    </Button>
                   ) : (
                     <Button
                       w="full"
@@ -284,7 +336,7 @@ const TeacherDetails = () => {
                       _hover={{ bg: "orange.400", transform: "translateY(-2px)", boxShadow: "md" }}
                       transition="all 0.2s"
                     >
-                      تفعيل الكورس
+                      شراء الكورس
                     </Button>
                   )}
                 </Box>

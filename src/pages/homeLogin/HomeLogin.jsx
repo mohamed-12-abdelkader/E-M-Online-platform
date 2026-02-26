@@ -1,8 +1,18 @@
 import React, { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import {
-  Box, Flex, useColorModeValue, Text, Button, Avatar, VStack, HStack,
-  Divider, Badge, Icon, Tooltip
+  Box,
+  Flex,
+  useColorModeValue,
+  Text,
+  Button,
+  Avatar,
+  VStack,
+  HStack,
+  Divider,
+  Badge,
+  Icon,
+  Tooltip,
 } from "@chakra-ui/react";
 import Links from "../../components/links/Links";
 import { FaAndroid } from "react-icons/fa";
@@ -66,7 +76,12 @@ const HomeLogin = () => {
           className="sidebar-container mt-[80px]"
         >
           {/* شريط علوي أزرق — نفس هيرو الصفحة الرئيسية */}
-          <Box h="4" w="100%" bgGradient="linear(to-r, blue.400, blue.500)" flexShrink={0} />
+          <Box
+            h="4"
+            w="100%"
+            bgGradient="linear(to-r, blue.400, blue.500)"
+            flexShrink={0}
+          />
 
           {/* البروفايل — نفس أسلوب كارت الترحيب (خلفية الكارت، حدود أزرق، Badge أزرق) */}
           <Flex
@@ -87,7 +102,13 @@ const HomeLogin = () => {
               borderColor="blue.500"
               boxShadow="0 6px 20px rgba(66, 153, 225, 0.25)"
             />
-            <Text fontWeight="bold" fontSize="lg" color={headingColor} noOfLines={1} textAlign="center">
+            <Text
+              fontWeight="bold"
+              fontSize="lg"
+              color={headingColor}
+              noOfLines={1}
+              textAlign="center"
+            >
               {user?.name || `${user?.fname} ${user?.lname}`}
             </Text>
             {student && (
@@ -108,11 +129,16 @@ const HomeLogin = () => {
 
           {/* الروابط */}
           <Box flex={1} py={3} px={3}>
-            <Links isSidebarOpen={true} setIsSidebarOpen={() => { }} />
+            <Links isSidebarOpen={true} setIsSidebarOpen={() => {}} />
           </Box>
 
           {/* تحميل التطبيق — CTA برتقالي مثل الصفحة الرئيسية */}
-          <Box p={4} borderTopWidth="1px" borderTopStyle="solid" borderColor={sidebarBorder}>
+          <Box
+            p={4}
+            borderTopWidth="1px"
+            borderTopStyle="solid"
+            borderColor={sidebarBorder}
+          >
             <Button
               as="a"
               href="https://www.mediafire.com/file/f3afz741f5hohts/E-M+Online.apk/file"
@@ -149,7 +175,6 @@ const HomeLogin = () => {
         color={useColorModeValue("gray.800", "white")}
         transition="margin-right 0.3s"
         minH="calc(100vh - 80px)"
-        p={6}
       >
         <Outlet />
       </Box>

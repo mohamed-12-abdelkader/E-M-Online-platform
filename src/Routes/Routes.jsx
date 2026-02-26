@@ -411,7 +411,6 @@ const AppRouter = () => {
           <Route path="teacher-students/:studentId" element={<StudentReport />} />
           <Route path="support-teacher" element={<SupportChatTeacher />} />
         </Route>
-
         {/* Student Specific Routes */}
         <Route element={<ProtectedRoute auth={student} />}>
           <Route path="studentStats" element={<StudentStats />} />

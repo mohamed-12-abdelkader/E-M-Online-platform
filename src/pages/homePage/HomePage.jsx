@@ -85,7 +85,7 @@ const HomePage = () => {
     () => ({
       Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
     }),
-    []
+    [],
   );
   const toast = useToast();
 
@@ -113,7 +113,7 @@ const HomePage = () => {
       const response = await baseUrl.post(
         "api/course/scan-qr-activate",
         { qr_data: qrData },
-        { headers: authHeader }
+        { headers: authHeader },
       );
       if (response.data.success) {
         setActivationResult({
@@ -173,7 +173,7 @@ const HomePage = () => {
                 activateCourseWithQR(decodedText);
               });
           },
-          () => {}
+          () => {},
         );
         setQrScanner(html5Qrcode);
       } catch (err) {
@@ -268,7 +268,7 @@ const HomePage = () => {
       const res = await baseUrl.post(
         `/api/game/accept/${latestInvitation.id}`,
         {},
-        { headers: authHeader }
+        { headers: authHeader },
       );
       if (res?.data?.success) {
         toast({ title: "تم قبول الدعوة!", status: "success" });
@@ -294,7 +294,7 @@ const HomePage = () => {
       const res = await baseUrl.post(
         `/api/game/reject/${latestInvitation.id}`,
         {},
-        { headers: authHeader }
+        { headers: authHeader },
       );
       if (res?.data?.success) {
         toast({ title: "تم رفض الدعوة", status: "info" });
@@ -323,12 +323,12 @@ const HomePage = () => {
     const tokenOnly =
       (localStorage.getItem("Authorization") || "").replace(
         /^Bearer\s+/i,
-        ""
+        "",
       ) || localStorage.getItem("token");
     let socketEndpoint;
     try {
       socketEndpoint = new URL(
-        baseUrl.defaults.baseURL || window.location.origin
+        baseUrl.defaults.baseURL || window.location.origin,
       ).origin;
     } catch {
       socketEndpoint = window.location.origin;
@@ -417,13 +417,13 @@ const HomePage = () => {
   const subtextColor = useColorModeValue("gray.600", "gray.400");
   const heroShadow = useColorModeValue(
     "0 20px 40px rgba(66, 153, 225, 0.25)",
-    "0 20px 40px rgba(0,0,0,0.3)"
+    "0 20px 40px rgba(0,0,0,0.3)",
   );
   const blurBlue = useColorModeValue(0.06, 0.08);
   const blurOrange = useColorModeValue(0.05, 0.07);
   const linkCardShadow = useColorModeValue(
     "0 16px 40px rgba(66, 153, 225, 0.12)",
-    "0 16px 40px rgba(0,0,0,0.35)"
+    "0 16px 40px rgba(0,0,0,0.35)",
   );
   const modalBg = useColorModeValue("white", "gray.800");
   const modalBorder = useColorModeValue("gray.200", "gray.700");
@@ -431,7 +431,7 @@ const HomePage = () => {
   const modalTextMuted = useColorModeValue("gray.600", "gray.400");
   const inviteHeaderBg = useColorModeValue(
     "linear(to-br, blue.500, blue.600)",
-    "linear(to-br, blue.600, blue.700)"
+    "linear(to-br, blue.600, blue.700)",
   );
   const successIconColor = useColorModeValue("green.500", "green.400");
   const successTextColor = useColorModeValue("green.600", "green.300");
@@ -452,7 +452,6 @@ const HomePage = () => {
       <Box
         position="absolute"
         top="-20%"
-        right="-10%"
         w="400px"
         h="400px"
         bg="blue.400"

@@ -33,13 +33,21 @@ import {
 } from "react-icons/fa";
 import baseUrl from "../../../api/baseUrl";
 
+/** Base path for Scientific Chatbot API (teachers) — see API doc. */
+const API_PREFIX = "/api/scientific-chatbot";
+
 /**
- * تبويب إدارة الشات الدعم العلمي للمدرس
- * يتوافق مع Scientific Chatbot API - Teacher:
- * - GET  /api/scientific-chatbot/courses/:courseId/files   — قائمة الملفات
- * - POST /api/scientific-chatbot/courses/:courseId/files   — رفع ملف (.txt, .md, .pdf حتى 10MB)
- * - DELETE /api/scientific-chatbot/files/:fileId           — حذف ملف
- * - POST /api/scientific-chatbot/courses/:courseId/reset-embeddings — إعادة توليد الـ embeddings
+ * تبويب إدارة الشات الدعم العلمي للمدرس.
+ * يتوافق مع Scientific Chatbot API — Teachers:
+ *
+ * | الإجراء     | Method | Path |
+ * |-------------|--------|------|
+ * | رفع ملف     | POST   | /courses/:courseId/files |
+ * | قائمة الملفات | GET    | /courses/:courseId/files |
+ * | حذف ملف     | DELETE | /files/:fileId |
+ * | إعادة الـ embeddings | POST | /courses/:courseId/reset-embeddings |
+ *
+ * Auth: Bearer token (teacher أو admin). الملفات: .txt, .md, .pdf حتى 10MB.
  */
 const ScientificChatTab = ({ courseId, token }) => {
   const [files, setFiles] = useState([]);
@@ -69,11 +77,12 @@ const ScientificChatTab = ({ courseId, token }) => {
       setLoading(true);
       setError(null);
       const response = await baseUrl.get(
-        `/api/scientific-chatbot/courses/${courseId}/files`,
+        `${API_PREFIX}/courses/${courseId}/files`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setFiles(response.data?.files ?? []);
     } catch (err) {
+      // API returns { error: "..." } on 400, 403, 404, 500
       const msg =
         err?.response?.data?.error || err?.message || "فشل تحميل الملفات";
       setError(msg);
@@ -128,12 +137,12 @@ const ScientificChatTab = ({ courseId, token }) => {
     try {
       setUploading(true);
       const response = await baseUrl.post(
-        `/api/scientific-chatbot/courses/${courseId}/files`,
+        `${API_PREFIX}/courses/${courseId}/files`,
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            // لا نضع Content-Type حتى يضيف المتصفح boundary تلقائياً
+            // لا نضع Content-Type حتى يضيف المتصفح boundary تلقائياً (multipart/form-data)
           },
         }
       );
@@ -141,7 +150,7 @@ const ScientificChatTab = ({ courseId, token }) => {
       toast({
         title: "تم رفع الملف",
         description: resFile
-          ? `تمت معالجة "${resFile.file_name || resFile.fileName}" وإضافته للمساعد العلمي.`
+          ? `تمت معالجة "${resFile.file_name ?? resFile.fileName}" وإضافته للمساعد العلمي.`
           : "تمت معالجة الملف وإضافته للمساعد العلمي.",
         status: "success",
         isClosable: true,
@@ -166,7 +175,7 @@ const ScientificChatTab = ({ courseId, token }) => {
     try {
       setResetting(true);
       await baseUrl.post(
-        `/api/scientific-chatbot/courses/${courseId}/reset-embeddings`,
+        `${API_PREFIX}/courses/${courseId}/reset-embeddings`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -193,11 +202,17 @@ const ScientificChatTab = ({ courseId, token }) => {
     }
   };
 
+  /** حقول الملف حسب الـ API (snake_case) مع fallback لـ camelCase */
+  const fileDisplayName = (file) =>
+    file?.file_name ?? file?.fileName ?? "بدون اسم";
+  const fileSize = (file) => file?.file_size ?? file?.fileSize;
+  const fileUploadedAt = (file) => file?.uploaded_at ?? file?.uploadedAt;
+
   const openDeleteDialog = (file) => {
     setDeleteDialog({
       isOpen: true,
       fileId: file.id,
-      fileName: file.file_name || file.fileName || "الملف",
+      fileName: fileDisplayName(file),
     });
   };
 
@@ -209,7 +224,7 @@ const ScientificChatTab = ({ courseId, token }) => {
     }
     try {
       setDeletingId(fileId);
-      await baseUrl.delete(`/api/scientific-chatbot/files/${fileId}`, {
+      await baseUrl.delete(`${API_PREFIX}/files/${fileId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast({
@@ -258,7 +273,7 @@ const ScientificChatTab = ({ courseId, token }) => {
   return (
     <VStack spacing={{ base: 4, md: 6 }} align="stretch">
       <HStack justify="space-between" align="center" flexWrap="wrap" gap={3}>
-        <Heading size="md" color={headingColor} display="flex" alignItems="center" gap={2}>
+        <Heading size={{ base: "sm", md: "md" }} color={headingColor} display="flex" alignItems="center" gap={2}>
           <Icon as={FaRobot} />
           إدارة الشات الدعم العلمي
         </Heading>
@@ -343,7 +358,7 @@ const ScientificChatTab = ({ courseId, token }) => {
           </Button>
         </Box>
       ) : (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={{ base: 3, md: 4 }}>
           {files.map((file) => (
             <Box
               key={file.id}
@@ -367,14 +382,14 @@ const ScientificChatTab = ({ courseId, token }) => {
                 />
               </HStack>
               <Text fontWeight="bold" noOfLines={2} fontSize="sm" mb={2}>
-                {file.file_name || file.fileName || "بدون اسم"}
+                {fileDisplayName(file)}
               </Text>
               <HStack fontSize="xs" color={subTextColor} spacing={3}>
-                <span>{formatSize(file.file_size ?? file.fileSize)}</span>
+                <span>{formatSize(fileSize(file))}</span>
                 <span>•</span>
-                <span>{formatDate(file.uploaded_at ?? file.uploadedAt)}</span>
+                <span>{formatDate(fileUploadedAt(file))}</span>
               </HStack>
-              {file.file_type === "application/pdf" && (
+              {(file.file_type ?? file.fileType) === "application/pdf" && (
                 <Badge mt={2} colorScheme="red" fontSize="xs">
                   PDF
                 </Badge>
@@ -393,7 +408,7 @@ const ScientificChatTab = ({ courseId, token }) => {
         }
       >
         <AlertDialogOverlay>
-          <AlertDialogContent>
+          <AlertDialogContent mx={{ base: 3, md: 0 }}>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
               تأكيد حذف الملف
             </AlertDialogHeader>

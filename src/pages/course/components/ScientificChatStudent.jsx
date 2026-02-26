@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Box,
   VStack,
@@ -153,27 +153,48 @@ const ScientificChatStudent = ({ courseId, token }) => {
     }
   };
 
+  const loadMoreHistory = useCallback(async () => {
+    if (!courseId || !token || historyLoadingMore || !hasMoreHistory || history.length === 0) return;
+    const lastId = history[history.length - 1]?.id;
+    if (!lastId) return;
+    setHistoryLoadingMore(true);
+    try {
+      const response = await baseUrl.get(
+        `/api/scientific-chatbot/courses/${courseId}/history`,
+        { params: { limit: HISTORY_PAGE_SIZE, beforeId: lastId }, headers: { Authorization: `Bearer ${token}` } }
+      );
+      const list = response.data?.history ?? [];
+      const newList = Array.isArray(list) ? list : [];
+      setHasMoreHistory(newList.length >= HISTORY_PAGE_SIZE);
+      setHistory((prev) => [...prev, ...newList]);
+    } catch {
+      setHasMoreHistory(false);
+    } finally {
+      setHistoryLoadingMore(false);
+    }
+  }, [courseId, token, historyLoadingMore, hasMoreHistory, history]);
+
   return (
-    <VStack spacing={4} align="stretch" h="100%">
+    <VStack spacing={{ base: 3, md: 4 }} align="stretch" h="100%">
       <HStack justify="space-between" align="center">
-        <Heading size="md" color={headingColor} display="flex" alignItems="center" gap={2}>
+        <Heading size={{ base: "sm", md: "md" }} color={headingColor} display="flex" alignItems="center" gap={2}>
           <Icon as={FaRobot} />
           المساعد العلمي
         </Heading>
       </HStack>
-      <Text fontSize="sm" color={subTextColor}>
+      <Text fontSize={{ base: "xs", md: "sm" }} color={subTextColor}>
         اسأل أي سؤال عن محتوى الكورس وسيجيبك المساعد بناءً على المواد المرفوعة.
       </Text>
       <Divider borderColor={borderColor} />
 
       <Box
         flex={1}
-        minH="320px"
-        maxH="500px"
+        minH={{ base: "240px", md: "320px" }}
+        maxH={{ base: "50vh", md: "500px" }}
         overflowY="auto"
         bg={sectionBg}
         borderRadius="xl"
-        p={4}
+        p={{ base: 3, md: 4 }}
         borderWidth="1px"
         borderColor={borderColor}
       >
@@ -295,7 +316,7 @@ const ScientificChatStudent = ({ courseId, token }) => {
                 size="sm"
                 variant="ghost"
                 colorScheme="blue"
-                onClick={loadMoreHistory}
+                onClick={() => loadMoreHistory()}
                 isLoading={historyLoadingMore}
                 loadingText="جاري تحميل المزيد..."
               >
@@ -308,30 +329,37 @@ const ScientificChatStudent = ({ courseId, token }) => {
       </Box>
 
       <form onSubmit={handleAsk} style={{ width: "100%" }}>
-        <HStack align="flex-end" gap={2} w="100%">
+        <Flex
+          direction={{ base: "column", sm: "row" }}
+          align={{ base: "stretch", sm: "flex-end" }}
+          gap={2}
+          w="100%"
+        >
           <Textarea
             placeholder="اكتب سؤالك عن محتوى الكورس..."
             value={questionInput}
             onChange={(e) => setQuestionInput(e.target.value)}
-            minH="44px"
+            minH={{ base: "40px", md: "44px" }}
             maxH="120px"
             resize="vertical"
             borderRadius="xl"
             borderColor={borderColor}
             _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)" }}
             isDisabled={sending}
+            size={{ base: "sm", md: "md" }}
           />
           <IconButton
             aria-label="إرسال"
             icon={<Icon as={FaPaperPlane} />}
             colorScheme="blue"
-            size="lg"
+            size={{ base: "md", md: "lg" }}
             borderRadius="full"
             onClick={handleAsk}
             isLoading={sending}
             type="submit"
+            flexShrink={0}
           />
-        </HStack>
+        </Flex>
       </form>
     </VStack>
   );

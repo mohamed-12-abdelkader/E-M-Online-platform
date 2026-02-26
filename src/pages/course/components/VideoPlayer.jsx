@@ -233,35 +233,38 @@ const VideoPlayer = ({
         bg={bgColor}
         border="1px solid"
         borderColor={borderColor}
-        borderRadius="xl"
+        borderRadius={{ base: "lg", md: "xl" }}
         boxShadow="xl"
         overflow="hidden"
         position="relative"
-        mb={6}
+        mb={{ base: 4, md: 6 }}
         mx="auto"
         maxW="container.xl"
         w="full"
+        px={{ base: 2, md: 0 }}
       >
-        {/* Header */}
+        {/* Header - متجاوب */}
         <Flex
           justify="space-between"
           align="center"
-          p={4}
-          bg={useColorModeValue('gray.50', 'gray.700')}
+          p={{ base: 2, md: 4 }}
+          bg={useColorModeValue("gray.50", "gray.700")}
           borderBottom="1px solid"
           borderColor={borderColor}
+          direction={{ base: "column", sm: "row" }}
+          gap={{ base: 2, sm: 0 }}
         >
-          <HStack spacing={3}>
-            <Badge colorScheme="blue" variant="subtle">
-              {videoType === 'youtube' ? 'YouTube' : videoType === 'bunny' ? 'Bunny' : 'Video'}
+          <HStack spacing={2} minW={0} flex={1}>
+            <Badge colorScheme="blue" variant="subtle" fontSize={{ base: "xs", md: "sm" }}>
+              {videoType === "youtube" ? "YouTube" : videoType === "bunny" ? "Bunny" : "Video"}
             </Badge>
-            <Text fontWeight="bold" color={textColor} fontSize="lg">
-              {videoTitle || 'عرض الفيديو'}
+            <Text fontWeight="bold" color={textColor} fontSize={{ base: "sm", md: "lg" }} noOfLines={1}>
+              {videoTitle || "عرض الفيديو"}
             </Text>
           </HStack>
           
-                     <HStack spacing={2}>
-             {isTeacher && (
+          <HStack spacing={2} flexShrink={0}>
+            {isTeacher && (
                <Button
                  size="sm"
                  variant="ghost"

@@ -52,6 +52,7 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  Collapse,
 } from "@chakra-ui/react";
 import {
   FaUser,
@@ -76,6 +77,8 @@ import {
   FaSearch,
   FaFilter,
   FaHeadset,
+  FaChevronDown,
+  FaChevronLeft,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -97,29 +100,44 @@ const MotionCenter = motion(Center);
 const StatsCard = ({ icon, label, value, color }) => (
   <VStack
     className="modern-card"
-    p={5}
-    spacing={2}
+    p={{ base: 3, sm: 4, md: 5 }}
+    spacing={{ base: 1, md: 2 }}
     align="center"
     justify="center"
     role="group"
+    flex={1}
+    minW={{ base: "0", sm: "80px" }}
   >
     <Flex
-      w={12}
-      h={12}
+      w={{ base: 9, sm: 10, md: 12 }}
+      h={{ base: 9, sm: 10, md: 12 }}
       align="center"
       justify="center"
       borderRadius="full"
       bg={`${color}.50`}
       color={`${color}.500`}
       transition="all 0.3s"
-      _groupHover={{ bg: `${color}.500`, color: "white", transform: "scale(1.1) rotate(5deg)" }}
+      _groupHover={{
+        bg: `${color}.500`,
+        color: "white",
+        transform: "scale(1.1) rotate(5deg)",
+      }}
     >
-      <Icon as={icon} boxSize={5} />
+      <Icon as={icon} boxSize={{ base: 4, sm: 4, md: 5 }} />
     </Flex>
-    <Text fontSize="3xl" fontWeight="800" color="gray.800">
+    <Text
+      fontSize={{ base: "xl", sm: "2xl", md: "3xl" }}
+      fontWeight="800"
+      color="gray.800"
+    >
       {value}
     </Text>
-    <Text fontSize="sm" fontWeight="medium" color="gray.500">
+    <Text
+      fontSize={{ base: "xs", sm: "sm" }}
+      fontWeight="medium"
+      color="gray.500"
+      whiteSpace="nowrap"
+    >
       {label}
     </Text>
   </VStack>
@@ -140,15 +158,25 @@ const TeacherDashboardHome = () => {
 
   // Modal states
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
-  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const {
+    isOpen: isEditOpen,
+    onOpen: onEditOpen,
+    onClose: onEditClose,
+  } = useDisclosure();
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
+  const { isOpen: isQuickLinksOpen, onToggle: onQuickLinksToggle } =
+    useDisclosure({ defaultIsOpen: false });
 
   // Form states
   const [formData, setFormData] = useState({
     title: "",
     price: 0,
     description: "",
-    grade_id: ""
+    grade_id: "",
   });
   const [courseAvatar, setCourseAvatar] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
@@ -158,7 +186,7 @@ const TeacherDashboardHome = () => {
     price: 0,
     description: "",
     grade_id: "",
-    avatar: null
+    avatar: null,
   });
   const [editAvatarPreview, setEditAvatarPreview] = useState(null);
   const [courseToDelete, setCourseToDelete] = useState(null);
@@ -227,9 +255,9 @@ const TeacherDashboardHome = () => {
       opacity: 1,
       transition: {
         staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
+        delayChildren: 0.2,
+      },
+    },
   };
 
   const itemVariants = {
@@ -238,8 +266,8 @@ const TeacherDashboardHome = () => {
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { type: "spring", stiffness: 100, damping: 12 }
-    }
+      transition: { type: "spring", stiffness: 100, damping: 12 },
+    },
   };
 
   const cardVariants = {
@@ -248,12 +276,12 @@ const TeacherDashboardHome = () => {
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { duration: 0.5, ease: "easeOut" }
+      transition: { duration: 0.5, ease: "easeOut" },
     },
     hover: {
       y: -8,
-      transition: { duration: 0.3 }
-    }
+      transition: { duration: 0.3 },
+    },
   };
 
   // Fetch courses
@@ -264,18 +292,18 @@ const TeacherDashboardHome = () => {
 
       // Check if token exists
       if (!token) {
-        throw new Error('No token found');
+        throw new Error("No token found");
       }
 
-      console.log('Fetching courses with token:', token); // Debug log
-      const response = await baseUrl.get('api/course/my-courses', {
-        headers: { Authorization: `Bearer ${token}` }
+      console.log("Fetching courses with token:", token); // Debug log
+      const response = await baseUrl.get("api/course/my-courses", {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('API Response:', response.data); // Debug log
+      console.log("API Response:", response.data); // Debug log
       setCourses(response.data.courses || []);
     } catch (error) {
-      console.error('Error fetching courses:', error);
-      setError('حدث خطأ في تحميل الكورسات');
+      console.error("Error fetching courses:", error);
+      setError("حدث خطأ في تحميل الكورسات");
       setCourses([]); // Set empty array on error
     } finally {
       setLoading(false);
@@ -285,12 +313,12 @@ const TeacherDashboardHome = () => {
   // Fetch grades
   const fetchGrades = async () => {
     try {
-      const response = await baseUrl.get('api/teacher/grades', {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await baseUrl.get("api/teacher/grades", {
+        headers: { Authorization: `Bearer ${token}` },
       });
       setGrades(response.data.grades || []);
     } catch (error) {
-      console.error('Error fetching grades:', error);
+      console.error("Error fetching grades:", error);
     }
   };
 
@@ -313,12 +341,15 @@ const TeacherDashboardHome = () => {
   const fetchSubjects = async () => {
     try {
       setSubjectsLoading(true);
-      const response = await baseUrl.get('/api/teacher/package-subjects/groups', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await baseUrl.get(
+        "/api/teacher/package-subjects/groups",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setSubjects(response.data.subjects || []);
     } catch (error) {
-      console.error('Error fetching subjects:', error);
+      console.error("Error fetching subjects:", error);
       setSubjects([]);
     } finally {
       setSubjectsLoading(false);
@@ -327,7 +358,7 @@ const TeacherDashboardHome = () => {
 
   // Handle form input changes
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   // Handle avatar file selection
@@ -335,7 +366,7 @@ const TeacherDashboardHome = () => {
     const file = event.target.files[0];
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         toast({
           title: "خطأ في نوع الملف",
           description: "يرجى اختيار ملف صورة صحيح",
@@ -377,14 +408,14 @@ const TeacherDashboardHome = () => {
 
   // Handle edit form changes
   const handleEditChange = (field, value) => {
-    setEditData(prev => ({ ...prev, [field]: value }));
+    setEditData((prev) => ({ ...prev, [field]: value }));
   };
 
   // Handle edit avatar change
   const handleEditAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setEditData(prev => ({ ...prev, avatar: file }));
+      setEditData((prev) => ({ ...prev, avatar: file }));
       const reader = new FileReader();
       reader.onload = (e) => setEditAvatarPreview(e.target.result);
       reader.readAsDataURL(file);
@@ -393,14 +424,18 @@ const TeacherDashboardHome = () => {
 
   // Create course
   const handleCreateCourse = async () => {
-    if (!formData.title || !formData.price || !formData.description || !formData.grade_id) {
+    if (
+      !formData.title ||
+      !formData.price ||
+      !formData.description ||
+      !formData.grade_id
+    ) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى ملء جميع الحقول المطلوبة",
         status: "error",
         duration: 3000,
         isClosable: true,
-
       });
       return;
     }
@@ -410,21 +445,21 @@ const TeacherDashboardHome = () => {
 
       // Create FormData object
       const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('price', parseInt(formData.price));
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('grade_id', parseInt(formData.grade_id));
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("price", parseInt(formData.price));
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("grade_id", parseInt(formData.grade_id));
 
       // Add avatar if selected
       if (courseAvatar) {
-        formDataToSend.append('avatar', courseAvatar);
+        formDataToSend.append("avatar", courseAvatar);
       }
 
-      await baseUrl.post('api/course', formDataToSend, {
+      await baseUrl.post("api/course", formDataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       toast({
@@ -441,10 +476,11 @@ const TeacherDashboardHome = () => {
       onClose();
       fetchCourses();
     } catch (error) {
-      console.error('Error creating course:', error);
+      console.error("Error creating course:", error);
       toast({
         title: "خطأ في إنشاء الكورس",
-        description: error.response?.data?.message || "حدث خطأ أثناء إنشاء الكورس",
+        description:
+          error.response?.data?.message || "حدث خطأ أثناء إنشاء الكورس",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -462,7 +498,7 @@ const TeacherDashboardHome = () => {
       price: parseFloat(course.price),
       description: course.description,
       grade_id: course.grade_id.toString(),
-      avatar: null
+      avatar: null,
     });
     // عرض الصورة الحالية للكورس إذا كانت موجودة
     setEditAvatarPreview(course.avatar || course.image || null);
@@ -471,7 +507,12 @@ const TeacherDashboardHome = () => {
 
   // Update course
   const handleUpdateCourse = async () => {
-    if (!editData.title || !editData.price || !editData.description || !editData.grade_id) {
+    if (
+      !editData.title ||
+      !editData.price ||
+      !editData.description ||
+      !editData.grade_id
+    ) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى ملء جميع الحقول المطلوبة",
@@ -486,23 +527,23 @@ const TeacherDashboardHome = () => {
       setEditLoading(true);
 
       const formData = new FormData();
-      formData.append('title', editData.title);
-      formData.append('price', editData.price);
-      formData.append('description', editData.description);
-      formData.append('grade_id', editData.grade_id);
+      formData.append("title", editData.title);
+      formData.append("price", editData.price);
+      formData.append("description", editData.description);
+      formData.append("grade_id", editData.grade_id);
 
       if (editData.avatar) {
-        formData.append('avatar', editData.avatar);
+        formData.append("avatar", editData.avatar);
       } else if (!editAvatarPreview) {
         // إرسال إشارة لإزالة الصورة الحالية
-        formData.append('remove_avatar', 'true');
+        formData.append("remove_avatar", "true");
       }
 
       await baseUrl.put(`api/course/${editData.id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       toast({
@@ -513,15 +554,23 @@ const TeacherDashboardHome = () => {
         isClosable: true,
       });
 
-      setEditData({ id: null, title: "", price: 0, description: "", grade_id: "", avatar: null });
+      setEditData({
+        id: null,
+        title: "",
+        price: 0,
+        description: "",
+        grade_id: "",
+        avatar: null,
+      });
       setEditAvatarPreview(null);
       onEditClose();
       fetchCourses();
     } catch (error) {
-      console.error('Error updating course:', error);
+      console.error("Error updating course:", error);
       toast({
         title: "خطأ في تحديث الكورس",
-        description: error.response?.data?.message || "حدث خطأ أثناء تحديث الكورس",
+        description:
+          error.response?.data?.message || "حدث خطأ أثناء تحديث الكورس",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -544,7 +593,7 @@ const TeacherDashboardHome = () => {
     try {
       setDeleteLoading(true);
       await baseUrl.delete(`api/course/${courseToDelete.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       toast({
@@ -558,10 +607,11 @@ const TeacherDashboardHome = () => {
       onDeleteClose();
       fetchCourses();
     } catch (error) {
-      console.error('Error deleting course:', error);
+      console.error("Error deleting course:", error);
       toast({
         title: "خطأ في حذف الكورس",
-        description: error.response?.data?.message || "حدث خطأ أثناء حذف الكورس",
+        description:
+          error.response?.data?.message || "حدث خطأ أثناء حذف الكورس",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -573,175 +623,348 @@ const TeacherDashboardHome = () => {
 
   // Filter courses by grade
   const filteredCourses = selectedGrade
-    ? courses.filter(course => course.grade_id === parseInt(selectedGrade))
+    ? courses.filter((course) => course.grade_id === parseInt(selectedGrade))
     : courses;
 
   useEffect(() => {
-    console.log('Component mounted, fetching data...');
-    console.log('User:', user);
-    console.log('Token:', token);
+    console.log("Component mounted, fetching data...");
+    console.log("User:", user);
+    console.log("Token:", token);
     fetchCourses();
     fetchGrades();
     fetchSubjects();
   }, []);
 
   return (
-    <Box className="home-page" bg="white" minH="100vh" p={{ base: 2, sm: 4, md: 6, lg: 8 }} dir="rtl">
-      <Container
-        maxW="8xl"
-        mx="auto"
-        px={{ base: 2, md: 4 }}
-      >
+    <Box
+      className="home-page"
+      minH="100vh"
+      p={{ base: 3, sm: 4, md: 6, lg: 8 }}
+      dir="rtl"
+      overflowX="hidden"
+    >
+      <Container maxW="8xl" mx="auto" px={{ base: 2, sm: 3, md: 4 }} w="full">
         <MotionVStack
-          spacing={{ base: 8, md: 10 }}
+          spacing={{ base: 5, sm: 6, md: 8, lg: 10 }}
           initial="hidden"
           animate="visible"
           variants={containerVariants}
         >
-          {/* Modern Welcome Banner */}
+          {/* Modern Welcome Banner - متجاوب */}
           <MotionBox
             w="full"
             bgGradient="linear(to-l, blue.600, orange.500)"
-            borderRadius="3xl"
-            p={{ base: 6, md: 10 }}
+            borderRadius={{ base: "2xl", md: "3xl" }}
+            p={{ base: 4, sm: 5, md: 8, lg: 10 }}
             position="relative"
             overflow="hidden"
             variants={itemVariants}
             boxShadow="0 10px 40px -10px rgba(66, 153, 225, 0.5)"
           >
-            {/* Background patterns */}
-            <Box position="absolute" right="-10%" top="-50%" w="400px" h="400px" border="50px solid rgba(255,255,255,0.05)" borderRadius="full" />
-            <Box position="absolute" left="-10%" bottom="-50%" w="300px" h="300px" bg="white" opacity="0.05" borderRadius="full" />
+            <Box
+              position="absolute"
+              right="-10%"
+              top="-50%"
+              w={{ base: "200px", md: "400px" }}
+              h={{ base: "200px", md: "400px" }}
+              border="50px solid rgba(255,255,255,0.05)"
+              borderRadius="full"
+            />
+            <Box
+              position="absolute"
+              left="-10%"
+              bottom="-50%"
+              w={{ base: "150px", md: "300px" }}
+              h={{ base: "150px", md: "300px" }}
+              bg="white"
+              opacity="0.05"
+              borderRadius="full"
+            />
 
             <Flex
               direction={{ base: "column", md: "row" }}
               align="center"
               justify="space-between"
-              gap={8}
+              gap={{ base: 5, sm: 6, md: 8 }}
             >
-              <HStack spacing={6}>
+              <HStack
+                spacing={{ base: 3, sm: 4, md: 6 }}
+                w={{ base: "full", md: "auto" }}
+                justify={{ base: "center", md: "flex-start" }}
+              >
                 <Image
                   src={user.avatar}
                   alt={user.name}
-                  w={{ base: "80px", md: "100px" }}
-                  h={{ base: "80px", md: "100px" }}
+                  w={{ base: "64px", sm: "72px", md: "100px" }}
+                  h={{ base: "64px", sm: "72px", md: "100px" }}
                   borderRadius="full"
-                  border="4px solid white"
+                  border="3px solid white"
                   boxShadow="lg"
+                  flexShrink={0}
                 />
-                <VStack align="start" spacing={1} color="white">
-                  <Text fontSize="lg" opacity={0.9}>أهلاً بعودتك 👋</Text>
-                  <Heading size="xl" fontWeight="black">{user.name}</Heading>
+                <VStack
+                  align="start"
+                  spacing={0}
+                  color="white"
+                  flex={1}
+                  minW={0}
+                >
+                  <Text fontSize={{ base: "sm", md: "lg" }} opacity={0.9}>
+                    أهلاً بعودتك 👋
+                  </Text>
+                  <Heading
+                    size={{ base: "md", sm: "lg", md: "xl" }}
+                    fontWeight="black"
+                    noOfLines={1}
+                  >
+                    {user.name}
+                  </Heading>
                   <Badge
                     bg="whiteAlpha.300"
                     color="white"
-                    px={3} py={1}
+                    px={{ base: 2, md: 3 }}
+                    py={1}
                     borderRadius="full"
                     backdropFilter="blur(10px)"
-                    fontSize="sm"
+                    fontSize={{ base: "xs", md: "sm" }}
                   >
                     {user.role}
                   </Badge>
                 </VStack>
               </HStack>
 
-              <HStack spacing={4} w={{ base: "full", md: "auto" }}>
-                <StatsCard icon={FaBookOpen} label="كورسات" value={courses.length} color="blue" />
-                <StatsCard icon={FaUsers} label="طلاب" value="250+" color="orange" />
-                <StatsCard icon={FaStar} label="تقييم" value="4.9" color="orange" />
-              </HStack>
+              <Flex
+                w="full"
+                direction="row"
+                justify="space-between"
+                gap={{ base: 2, sm: 3, md: 4 }}
+                maxW={{ base: "100%", md: "auto" }}
+              >
+                <StatsCard
+                  icon={FaBookOpen}
+                  label="كورسات"
+                  value={courses.length}
+                  color="blue"
+                />
+                <StatsCard
+                  icon={FaUsers}
+                  label="طلاب"
+                  value="250+"
+                  color="orange"
+                />
+                <StatsCard
+                  icon={FaStar}
+                  label="تقييم"
+                  value="4.9"
+                  color="orange"
+                />
+              </Flex>
             </Flex>
           </MotionBox>
 
-          {/* Quick Links with new clean design */}
+          {/* Quick Links - متجاوب + Collapse على الموبايل */}
           <MotionBox w="full" variants={itemVariants}>
-            <Heading
-              size="lg"
-              className="brand-section-title"
-              mb={8}
+            <Flex
+              align="center"
+              justify="space-between"
+              mb={{ base: 3, sm: 4, md: 6 }}
+              onClick={onQuickLinksToggle}
+              cursor={{ base: "pointer", sm: "default" }}
+              py={{ base: 2, sm: 0 }}
+              px={{ base: 2, sm: 0 }}
+              borderRadius="xl"
+              _hover={{ base: { bg: "gray.50" }, sm: {} }}
+              display={{ base: "flex", sm: "block" }}
+              role={{ base: "button", sm: "presentation" }}
+              aria-expanded={{ base: isQuickLinksOpen, sm: undefined }}
+              aria-label={{
+                base: isQuickLinksOpen
+                  ? "إغلاق الوصول السريع"
+                  : "فتح الوصول السريع",
+                sm: undefined,
+              }}
             >
-              الوصول السريع
-            </Heading>
+              <Heading
+                size={{ base: "md", sm: "lg" }}
+                className="brand-section-title"
+                mb={{ base: 0, sm: 4, md: 6 }}
+              >
+                الوصول السريع
+              </Heading>
+              <Box display={{ base: "flex", sm: "none" }} flexShrink={0}>
+                <Icon
+                  as={isQuickLinksOpen ? FaChevronDown : FaChevronLeft}
+                  boxSize={5}
+                  color="gray.600"
+                  transition="transform 0.2s"
+                  transform={
+                    isQuickLinksOpen ? "rotate(0deg)" : "rotate(-90deg)"
+                  }
+                />
+              </Box>
+            </Flex>
 
-            <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6}>
-              {quickLinks.map((link) => (
-                <Link key={link.id} to={link.link} style={{ textDecoration: 'none' }}>
-                  <MotionBox
-                    className="modern-card"
-                    p={6}
-                    cursor="pointer"
-                    whileHover={{ y: -5 }}
-                    role="group"
-                  >
-                    <HStack spacing={4}>
-                      <Flex
-                        w={14}
-                        h={14}
-                        align="center"
-                        justify="center"
-                        borderRadius="2xl"
-                        bg={`${link.color}.50`}
-                        color={`${link.color}.500`}
-                        transition="all 0.3s"
-                        _groupHover={{
-                          bgGradient: `linear(to-br, ${link.color}.400, ${link.color}.600)`,
-                          color: "white",
-                          transform: "rotate(10deg)"
-                        }}
+            <Box display={{ base: "block", sm: "none" }}>
+              <Collapse in={isQuickLinksOpen} animateOpacity>
+                <SimpleGrid columns={1} spacing={3} mt={2}>
+                  {quickLinks.map((link) => (
+                    <Link
+                      key={link.id}
+                      to={link.link}
+                      style={{ textDecoration: "none" }}
+                      onClick={onQuickLinksToggle}
+                    >
+                      <MotionBox
+                        className="modern-card"
+                        p={4}
+                        cursor="pointer"
+                        whileHover={{ y: -2 }}
+                        role="group"
+                        minH="56px"
                       >
-                        <Icon as={link.icon} boxSize={6} />
-                      </Flex>
-                      <VStack align="start" spacing={0}>
-                        <Text fontWeight="bold" fontSize="lg" color="gray.800">
-                          {link.title}
-                        </Text>
+                        <HStack spacing={3}>
+                          <Flex
+                            w={12}
+                            h={12}
+                            align="center"
+                            justify="center"
+                            borderRadius="2xl"
+                            bg={`${link.color}.50`}
+                            color={`${link.color}.500`}
+                            _groupHover={{
+                              bgGradient: `linear(to-br, ${link.color}.400, ${link.color}.600)`,
+                              color: "white",
+                              transform: "rotate(10deg)",
+                            }}
+                            flexShrink={0}
+                          >
+                            <Icon as={link.icon} boxSize={5} />
+                          </Flex>
+                          <Text
+                            fontWeight="bold"
+                            fontSize="sm"
+                            color="gray.800"
+                            noOfLines={1}
+                          >
+                            {link.title}
+                          </Text>
+                        </HStack>
+                      </MotionBox>
+                    </Link>
+                  ))}
+                </SimpleGrid>
+              </Collapse>
+            </Box>
 
-                      </VStack>
-                    </HStack>
-                  </MotionBox>
-                </Link>
-              ))}
-            </SimpleGrid>
+            <Box display={{ base: "none", sm: "block" }}>
+              <SimpleGrid columns={{ sm: 2, lg: 4 }} spacing={{ sm: 4, md: 6 }}>
+                {quickLinks.map((link) => (
+                  <Link
+                    key={link.id}
+                    to={link.link}
+                    style={{ textDecoration: "none" }}
+                  >
+                    <MotionBox
+                      className="modern-card"
+                      p={{ sm: 5, md: 6 }}
+                      cursor="pointer"
+                      whileHover={{ y: -5 }}
+                      role="group"
+                      minH="64px"
+                    >
+                      <HStack spacing={4}>
+                        <Flex
+                          w={14}
+                          h={14}
+                          align="center"
+                          justify="center"
+                          borderRadius="2xl"
+                          bg={`${link.color}.50`}
+                          color={`${link.color}.500`}
+                          transition="all 0.3s"
+                          _groupHover={{
+                            bgGradient: `linear(to-br, ${link.color}.400, ${link.color}.600)`,
+                            color: "white",
+                            transform: "rotate(10deg)",
+                          }}
+                          flexShrink={0}
+                        >
+                          <Icon as={link.icon} boxSize={6} />
+                        </Flex>
+                        <VStack align="start" spacing={0} flex={1} minW={0}>
+                          <Text
+                            fontWeight="bold"
+                            fontSize={{ sm: "md", md: "lg" }}
+                            color="gray.800"
+                            noOfLines={1}
+                          >
+                            {link.title}
+                          </Text>
+                        </VStack>
+                      </HStack>
+                    </MotionBox>
+                  </Link>
+                ))}
+              </SimpleGrid>
+            </Box>
           </MotionBox>
 
-          {/* Subjects Section */}
+          {/* Subjects Section - متجاوب */}
           {(subjectsLoading || subjects.length > 0) && (
             <MotionBox w="full" variants={itemVariants}>
               <Heading
-                size="lg"
+                size={{ base: "md", sm: "lg" }}
                 className="brand-section-title"
-                mb={8}
+                mb={{ base: 4, md: 6 }}
               >
                 المواد الدراسية
               </Heading>
 
               {subjectsLoading ? (
-                <MotionCenter py={12} className="modern-card" borderRadius="xl">
+                <MotionCenter
+                  py={{ base: 8, md: 12 }}
+                  className="modern-card"
+                  borderRadius="xl"
+                >
                   <VStack spacing={4}>
-                    <Spinner size="xl" color="orange.500" thickness="4px" />
-                    <Text color="gray.500">جاري تحميل المواد...</Text>
+                    <Spinner
+                      size={{ base: "lg", md: "xl" }}
+                      color="orange.500"
+                      thickness="4px"
+                    />
+                    <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
+                      جاري تحميل المواد...
+                    </Text>
                   </VStack>
                 </MotionCenter>
               ) : subjects.length === 0 ? (
-                <MotionCenter py={10} className="modern-card" borderRadius="xl">
+                <MotionCenter
+                  py={{ base: 8, md: 10 }}
+                  className="modern-card"
+                  borderRadius="xl"
+                >
                   <VStack spacing={3}>
-                    <Icon as={FaBookOpen} boxSize={12} color="gray.300" />
-                    <Text color="gray.500" fontSize="md">
+                    <Icon
+                      as={FaBookOpen}
+                      boxSize={{ base: 10, md: 12 }}
+                      color="gray.300"
+                    />
+                    <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
                       لا توجد مواد دراسية حالياً
                     </Text>
                   </VStack>
                 </MotionCenter>
               ) : (
                 <SimpleGrid
-                  columns={{ base: 1, md: 2, lg: 3 }}
-                  spacing={6}
+                  columns={{ base: 1, sm: 2, lg: 3 }}
+                  spacing={{ base: 4, md: 6 }}
                   w="full"
                 >
                   {subjects.map((subject) => (
                     <MotionBox
                       key={subject.id}
                       className="modern-card"
-                      borderRadius="2xl"
+                      borderRadius={{ base: "xl", md: "2xl" }}
                       overflow="hidden"
                       variants={cardVariants}
                       whileHover="hover"
@@ -753,10 +976,16 @@ const TeacherDashboardHome = () => {
                       w="full"
                       role="group"
                     >
-                      {/* Image section with cleaner overlay */}
-                      <Box position="relative" h="200px" overflow="hidden">
+                      <Box
+                        position="relative"
+                        h={{ base: "160px", sm: "180px", md: "200px" }}
+                        overflow="hidden"
+                      >
                         <Image
-                          src={subject.image || "https://placehold.co/600x400/e2e8f0/475569?text=Subject"}
+                          src={
+                            subject.image ||
+                            "https://placehold.co/600x400/e2e8f0/475569?text=Subject"
+                          }
                           alt={subject.name}
                           w="full"
                           h="full"
@@ -793,20 +1022,40 @@ const TeacherDashboardHome = () => {
                         </Flex>
                       </Box>
 
-                      <Box p={5}>
-                        <VStack align="start" spacing={3}>
-                          <Grid templateColumns="1fr auto" gap={2} w="full" alignItems="center">
-                            <Heading size="md" color="gray.800" noOfLines={1}>
+                      <Box p={{ base: 4, md: 5 }}>
+                        <VStack align="start" spacing={{ base: 2, md: 3 }}>
+                          <Grid
+                            templateColumns="1fr auto"
+                            gap={2}
+                            w="full"
+                            alignItems="center"
+                          >
+                            <Heading
+                              size={{ base: "sm", md: "md" }}
+                              color="gray.800"
+                              noOfLines={1}
+                            >
                               {subject.name}
                             </Heading>
                             <Box color="blue.500">
-                              <Icon as={FaBookOpen} />
+                              <Icon
+                                as={FaBookOpen}
+                                boxSize={{ base: 4, md: 5 }}
+                              />
                             </Box>
                           </Grid>
 
-                          <HStack fontSize="sm" color="gray.500" spacing={4}>
+                          <HStack
+                            fontSize={{ base: "xs", md: "sm" }}
+                            color="gray.500"
+                            spacing={4}
+                          >
                             <HStack>
-                              <Icon as={FaUsers} color="orange.400" />
+                              <Icon
+                                as={FaUsers}
+                                color="orange.400"
+                                boxSize={3}
+                              />
                               <Text>{subject.groups_count || 0} مجموعات</Text>
                             </HStack>
                           </HStack>
@@ -822,9 +1071,9 @@ const TeacherDashboardHome = () => {
                             _hover={{
                               bg: "blue.50",
                               borderColor: "blue.500",
-                              color: "blue.700"
+                              color: "blue.700",
                             }}
-                            size="md"
+                            size={{ base: "sm", md: "md" }}
                             borderRadius="xl"
                           >
                             إدارة المادة
@@ -838,31 +1087,45 @@ const TeacherDashboardHome = () => {
             </MotionBox>
           )}
 
-          {/* Courses Section */}
+          {/* Courses Section - متجاوب */}
           <MotionBox w="full" variants={itemVariants}>
-            <Flex mb={8} align="center" justify="space-between" wrap="wrap" gap={4}>
+            <Flex
+              mb={{ base: 4, md: 6 }}
+              direction={{ base: "column", sm: "row" }}
+              align={{ base: "stretch", sm: "center" }}
+              justify="space-between"
+              gap={4}
+            >
               <Heading
-                size="lg"
+                size={{ base: "md", sm: "lg" }}
                 className="brand-section-title"
               >
                 كورساتي
               </Heading>
 
-              <HStack spacing={3}>
+              <Flex
+                direction={{ base: "column", sm: "row" }}
+                gap={3}
+                w={{ base: "full", sm: "auto" }}
+              >
                 <Select
                   placeholder="تصفية حسب الصف"
                   value={selectedGrade}
                   onChange={(e) => setSelectedGrade(e.target.value)}
-                  w={{ base: "full", md: "200px" }}
+                  w={{ base: "full", sm: "180px", md: "200px" }}
                   bg="white"
                   borderRadius="xl"
                   border="1px solid"
                   borderColor="gray.200"
-                  _focus={{ borderColor: "blue.500", ring: 2, ringColor: "blue.100" }}
-                  size="md"
+                  _focus={{
+                    borderColor: "blue.500",
+                    ring: 2,
+                    ringColor: "blue.100",
+                  }}
+                  size={{ base: "sm", md: "md" }}
                   icon={<Icon as={FaFilter} color="blue.500" />}
                 >
-                  {grades.map(grade => (
+                  {grades.map((grade) => (
                     <option key={grade.id} value={grade.id}>
                       {grade.name}
                     </option>
@@ -873,50 +1136,92 @@ const TeacherDashboardHome = () => {
                   onClick={onOpen}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  size="md"
+                  size={{ base: "sm", md: "md" }}
                   borderRadius="xl"
-                  px={6}
+                  px={{ base: 4, md: 6 }}
                   bg="blue.600"
                   color="white"
-                  _hover={{
-                    bg: "blue.700",
-                    shadow: "lg"
-                  }}
+                  _hover={{ bg: "blue.700", shadow: "lg" }}
+                  w={{ base: "full", sm: "auto" }}
                 >
                   إضافة كورس
                 </MotionButton>
-              </HStack>
+              </Flex>
             </Flex>
 
             <AnimatePresence mode="wait">
               {loading ? (
-                <MotionCenter py={12} className="modern-card" borderRadius="xl">
+                <MotionCenter
+                  py={{ base: 8, md: 12 }}
+                  className="modern-card"
+                  borderRadius="xl"
+                >
                   <VStack spacing={4}>
-                    <Spinner size="xl" color="blue.500" thickness="4px" />
-                    <Text color="gray.500">جاري تحميل الكورسات...</Text>
+                    <Spinner
+                      size={{ base: "lg", md: "xl" }}
+                      color="blue.500"
+                      thickness="4px"
+                    />
+                    <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
+                      جاري تحميل الكورسات...
+                    </Text>
                   </VStack>
                 </MotionCenter>
               ) : error ? (
-                <MotionCenter py={12} className="modern-card" borderRadius="xl">
+                <MotionCenter
+                  py={{ base: 8, md: 12 }}
+                  className="modern-card"
+                  borderRadius="xl"
+                >
                   <VStack spacing={4}>
-                    <Icon as={FaBookOpen} boxSize={16} color="red.400" />
-                    <Text color="red.500" fontSize="lg">{error}</Text>
-                    <Button colorScheme="blue" onClick={fetchCourses} borderRadius="xl">
+                    <Icon
+                      as={FaBookOpen}
+                      boxSize={{ base: 12, md: 16 }}
+                      color="red.400"
+                    />
+                    <Text
+                      color="red.500"
+                      fontSize={{ base: "md", md: "lg" }}
+                      textAlign="center"
+                    >
+                      {error}
+                    </Text>
+                    <Button
+                      colorScheme="blue"
+                      onClick={fetchCourses}
+                      borderRadius="xl"
+                      size={{ base: "sm", md: "md" }}
+                    >
                       إعادة المحاولة
                     </Button>
                   </VStack>
                 </MotionCenter>
               ) : filteredCourses.length === 0 ? (
-                <MotionCenter py={12} className="modern-card" borderRadius="xl">
+                <MotionCenter
+                  py={{ base: 8, md: 12 }}
+                  className="modern-card"
+                  borderRadius="xl"
+                >
                   <VStack spacing={4}>
-                    <Icon as={FaBookOpen} boxSize={16} color="gray.300" />
-                    <Text color="gray.500" fontSize="lg">لا توجد كورسات متاحة</Text>
+                    <Icon
+                      as={FaBookOpen}
+                      boxSize={{ base: 12, md: 16 }}
+                      color="gray.300"
+                    />
+                    <Text
+                      color="gray.500"
+                      fontSize={{ base: "md", md: "lg" }}
+                      textAlign="center"
+                    >
+                      لا توجد كورسات متاحة
+                    </Text>
                     <Button
                       colorScheme="blue"
                       variant="outline"
                       onClick={onOpen}
                       borderRadius="xl"
                       leftIcon={<FaPlus />}
+                      size={{ base: "sm", md: "md" }}
                     >
                       إضافة أول كورس
                     </Button>
@@ -924,15 +1229,15 @@ const TeacherDashboardHome = () => {
                 </MotionCenter>
               ) : (
                 <SimpleGrid
-                  columns={{ base: 1, md: 2, lg: 3 }}
-                  spacing={6}
+                  columns={{ base: 1, sm: 2, lg: 3 }}
+                  spacing={{ base: 4, md: 6 }}
                   w="full"
                 >
                   {filteredCourses.map((course) => (
                     <MotionBox
                       key={course.id}
                       className="modern-card"
-                      borderRadius="2xl"
+                      borderRadius={{ base: "xl", md: "2xl" }}
                       overflow="hidden"
                       variants={cardVariants}
                       whileHover="hover"
@@ -941,10 +1246,16 @@ const TeacherDashboardHome = () => {
                       w="full"
                       role="group"
                     >
-                      {/* Image section */}
-                      <Box position="relative" h="200px" overflow="hidden">
+                      <Box
+                        position="relative"
+                        h={{ base: "160px", sm: "180px", md: "200px" }}
+                        overflow="hidden"
+                      >
                         <Image
-                          src={course.avatar || "https://placehold.co/600x400/e2e8f0/475569?text=Course"}
+                          src={
+                            course.avatar ||
+                            "https://placehold.co/600x400/e2e8f0/475569?text=Course"
+                          }
                           alt={course.title}
                           w="full"
                           h="full"
@@ -960,78 +1271,114 @@ const TeacherDashboardHome = () => {
 
                         <Flex
                           position="absolute"
-                          top={3}
-                          right={3}
-                          left={3}
+                          top={{ base: 2, md: 3 }}
+                          right={{ base: 2, md: 3 }}
+                          left={{ base: 2, md: 3 }}
                           justify="space-between"
                           align="center"
                         >
                           <Badge
                             bg="blue.500"
                             color="white"
-                            px={3}
+                            px={{ base: 2, md: 3 }}
                             py={1}
                             borderRadius="lg"
                             fontSize="xs"
                             fontWeight="bold"
                             boxShadow="lg"
                           >
-                            {course.price > 0 ? `${course.price} ج.م` : 'مجاني'}
+                            {course.price > 0 ? `${course.price} ج.م` : "مجاني"}
                           </Badge>
 
                           <HStack spacing={1}>
                             <IconButton
                               aria-label="Edit"
-                              icon={<Icon as={FaEdit} />}
-                              size="sm"
+                              icon={<Icon as={FaEdit} boxSize={3} />}
+                              size={{ base: "xs", sm: "sm" }}
                               bg="whiteAlpha.900"
                               color="blue.600"
                               borderRadius="full"
                               _hover={{ bg: "white", color: "blue.700" }}
-                              onClick={(e) => { e.stopPropagation(); handleEditCourse(course); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditCourse(course);
+                              }}
                             />
                             <IconButton
                               aria-label="Delete"
-                              icon={<Icon as={FaTrash} />}
-                              size="sm"
+                              icon={<Icon as={FaTrash} boxSize={3} />}
+                              size={{ base: "xs", sm: "sm" }}
                               bg="whiteAlpha.900"
                               color="red.500"
                               borderRadius="full"
                               _hover={{ bg: "white", color: "red.600" }}
-                              onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCourse(course);
+                              }}
                             />
                           </HStack>
                         </Flex>
                       </Box>
 
-                      <Box p={5}>
-                        <VStack align="start" spacing={3}>
-                          <Heading size="md" color="gray.800" noOfLines={1} lineHeight={1.4}>
+                      <Box p={{ base: 4, md: 5 }}>
+                        <VStack align="start" spacing={{ base: 2, md: 3 }}>
+                          <Heading
+                            size={{ base: "sm", md: "md" }}
+                            color="gray.800"
+                            noOfLines={1}
+                            lineHeight={1.4}
+                          >
                             {course.title}
                           </Heading>
-                          <Text fontSize="sm" color="gray.500" noOfLines={2} h="40px">
+                          <Text
+                            fontSize={{ base: "xs", md: "sm" }}
+                            color="gray.500"
+                            noOfLines={2}
+                            minH={{ base: "36px", md: "40px" }}
+                          >
                             {course.description}
                           </Text>
 
-                          <HStack fontSize="xs" color="gray.400" spacing={4} w="full" pt={2} borderTop="1px solid" borderColor="gray.100">
+                          <HStack
+                            fontSize="xs"
+                            color="gray.400"
+                            spacing={4}
+                            w="full"
+                            pt={2}
+                            borderTop="1px solid"
+                            borderColor="gray.100"
+                          >
                             <HStack>
-                              <Icon as={FaCalendarAlt} color="blue.400" />
-                              <Text>{new Date(course.created_at).toLocaleDateString('ar-EG')}</Text>
+                              <Icon
+                                as={FaCalendarAlt}
+                                color="blue.400"
+                                boxSize={3}
+                              />
+                              <Text>
+                                {new Date(course.created_at).toLocaleDateString(
+                                  "ar-EG",
+                                )}
+                              </Text>
                             </HStack>
                           </HStack>
 
-                          <Link to={`/CourseDetailsPage/${course.id}`} style={{ width: '100%' }}>
+                          <Link
+                            to={`/CourseDetailsPage/${course.id}`}
+                            style={{ width: "100%" }}
+                          >
                             <Button
                               w="full"
                               bg="gray.900"
                               color="white"
+                              size={{ base: "sm", md: "md" }}
                               _hover={{
                                 bg: "gray.700",
                                 shadow: "lg",
-                                transform: "translateY(-1px)"
+                                transform: "translateY(-1px)",
                               }}
                               borderRadius="xl"
-                              rightIcon={<Icon as={FaBookOpen} />}
+                              rightIcon={<Icon as={FaBookOpen} boxSize={4} />}
                             >
                               إدارة الكورس
                             </Button>
@@ -1070,7 +1417,11 @@ const TeacherDashboardHome = () => {
             p={{ base: 3, sm: 4, md: 5, lg: 6 }}
           >
             <HStack spacing={{ base: 2, sm: 3 }}>
-              <Icon as={FaPlus} color="blue.500" boxSize={{ base: 4, sm: 5, md: 6 }} />
+              <Icon
+                as={FaPlus}
+                color="blue.500"
+                boxSize={{ base: 4, sm: 5, md: 6 }}
+              />
               <Text
                 fontWeight="bold"
                 fontSize={{ base: "sm", sm: "md", md: "lg", lg: "xl" }}
@@ -1096,7 +1447,7 @@ const TeacherDashboardHome = () => {
                 <Input
                   placeholder="مثال: كورس فيزياء أولى ثانوي"
                   value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  onChange={(e) => handleInputChange("title", e.target.value)}
                   borderRadius="xl"
                   border="2px solid"
                   borderColor="gray.200"
@@ -1116,7 +1467,9 @@ const TeacherDashboardHome = () => {
                 <Textarea
                   placeholder="اكتب وصفاً مفصلاً للكورس..."
                   value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
                   borderRadius="xl"
                   rows={{ base: 3, md: 4 }}
                   border="2px solid"
@@ -1126,8 +1479,16 @@ const TeacherDashboardHome = () => {
                 />
               </FormControl>
 
-              <VStack spacing={4} direction={{ base: "column", sm: "row" }}>
-                <FormControl isRequired flex={1}>
+              <Flex
+                direction={{ base: "column", sm: "row" }}
+                gap={4}
+                wrap="wrap"
+              >
+                <FormControl
+                  isRequired
+                  flex={1}
+                  minW={{ base: "100%", sm: "140px" }}
+                >
                   <FormLabel
                     fontWeight="bold"
                     color={headingColor}
@@ -1137,7 +1498,7 @@ const TeacherDashboardHome = () => {
                   </FormLabel>
                   <NumberInput
                     value={formData.price}
-                    onChange={(value) => handleInputChange('price', value)}
+                    onChange={(value) => handleInputChange("price", value)}
                     min={0}
                     max={10000}
                     size={{ base: "sm", md: "md" }}
@@ -1166,21 +1527,23 @@ const TeacherDashboardHome = () => {
                   <Select
                     placeholder="اختر المرحلة"
                     value={formData.grade_id}
-                    onChange={(e) => handleInputChange('grade_id', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("grade_id", e.target.value)
+                    }
                     borderRadius="xl"
                     border="2px solid"
                     borderColor="gray.200"
                     _focus={{ borderColor: "green.500" }}
                     size={{ base: "sm", md: "md" }}
                   >
-                    {grades.map(grade => (
+                    {grades.map((grade) => (
                       <option key={grade.id} value={grade.id}>
                         {grade.name}
                       </option>
                     ))}
                   </Select>
                 </FormControl>
-              </VStack>
+              </Flex>
 
               {/* Avatar Upload Section */}
               <FormControl>
@@ -1226,12 +1589,16 @@ const TeacherDashboardHome = () => {
                       cursor="pointer"
                       _hover={{
                         borderColor: "green.400",
-                        bg: "green.50"
+                        bg: "green.50",
                       }}
                       transition="all 0.2s"
                     >
                       <VStack spacing={4}>
-                        <Icon as={FaFileAlt} boxSize={{ base: 6, md: 8 }} color="gray.400" />
+                        <Icon
+                          as={FaFileAlt}
+                          boxSize={{ base: 6, md: 8 }}
+                          color="gray.400"
+                        />
                         <VStack spacing={2}>
                           <Text
                             fontWeight="medium"
@@ -1273,13 +1640,18 @@ const TeacherDashboardHome = () => {
                 borderColor="green.200"
               >
                 <HStack spacing={3}>
-                  <Icon as={FaFileAlt} color="green.500" boxSize={{ base: 4, md: 5 }} />
+                  <Icon
+                    as={FaFileAlt}
+                    color="green.500"
+                    boxSize={{ base: 4, md: 5 }}
+                  />
                   <Text
                     fontSize={{ base: "xs", md: "sm" }}
                     color="green.700"
                     fontWeight="medium"
                   >
-                    يمكنك إضافة صورة للكورس لتحسين مظهره وجذب الطلاب. الصورة اختيارية.
+                    يمكنك إضافة صورة للكورس لتحسين مظهره وجذب الطلاب. الصورة
+                    اختيارية.
                   </Text>
                 </HStack>
               </Box>
@@ -1380,7 +1752,7 @@ const TeacherDashboardHome = () => {
                         top={-2}
                         right={-2}
                         onClick={() => {
-                          setEditData(prev => ({ ...prev, avatar: null }));
+                          setEditData((prev) => ({ ...prev, avatar: null }));
                           setEditAvatarPreview(null);
                         }}
                         aria-label="إزالة الصورة"
@@ -1396,7 +1768,7 @@ const TeacherDashboardHome = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setEditData(prev => ({ ...prev, avatar: null }));
+                        setEditData((prev) => ({ ...prev, avatar: null }));
                         setEditAvatarPreview(null);
                       }}
                     >
@@ -1426,7 +1798,7 @@ const TeacherDashboardHome = () => {
                       borderColor="blue.300"
                       _hover={{
                         borderColor: "blue.500",
-                        bg: "blue.50"
+                        bg: "blue.50",
                       }}
                     >
                       {editAvatarPreview ? "تغيير الصورة" : "اختر صورة للكورس"}
@@ -1438,7 +1810,12 @@ const TeacherDashboardHome = () => {
                   </Text>
 
                   {!editAvatarPreview && (
-                    <Text fontSize="sm" color="blue.600" textAlign="center" fontWeight="medium">
+                    <Text
+                      fontSize="sm"
+                      color="blue.600"
+                      textAlign="center"
+                      fontWeight="medium"
+                    >
                       💡 يمكنك إضافة صورة للكورس أو تغيير الصورة الحالية
                     </Text>
                   )}
@@ -1456,7 +1833,7 @@ const TeacherDashboardHome = () => {
                 <Input
                   placeholder="مثال: كورس فيزياء أولى ثانوي"
                   value={editData.title}
-                  onChange={(e) => handleEditChange('title', e.target.value)}
+                  onChange={(e) => handleEditChange("title", e.target.value)}
                   borderRadius="xl"
                   border="2px solid"
                   borderColor="gray.200"
@@ -1476,7 +1853,9 @@ const TeacherDashboardHome = () => {
                 <Textarea
                   placeholder="اكتب وصفاً مفصلاً للكورس..."
                   value={editData.description}
-                  onChange={(e) => handleEditChange('description', e.target.value)}
+                  onChange={(e) =>
+                    handleEditChange("description", e.target.value)
+                  }
                   borderRadius="xl"
                   rows={{ base: 3, md: 4 }}
                   border="2px solid"
@@ -1486,8 +1865,16 @@ const TeacherDashboardHome = () => {
                 />
               </FormControl>
 
-              <VStack spacing={4} direction={{ base: "column", sm: "row" }}>
-                <FormControl isRequired flex={1}>
+              <Flex
+                direction={{ base: "column", sm: "row" }}
+                gap={4}
+                wrap="wrap"
+              >
+                <FormControl
+                  isRequired
+                  flex={1}
+                  minW={{ base: "100%", sm: "140px" }}
+                >
                   <FormLabel
                     fontWeight="bold"
                     color={headingColor}
@@ -1497,7 +1884,7 @@ const TeacherDashboardHome = () => {
                   </FormLabel>
                   <NumberInput
                     value={editData.price}
-                    onChange={(value) => handleEditChange('price', value)}
+                    onChange={(value) => handleEditChange("price", value)}
                     min={0}
                     max={10000}
                     size={{ base: "sm", md: "md" }}
@@ -1526,21 +1913,23 @@ const TeacherDashboardHome = () => {
                   <Select
                     placeholder="اختر المرحلة"
                     value={editData.grade_id}
-                    onChange={(e) => handleEditChange('grade_id', e.target.value)}
+                    onChange={(e) =>
+                      handleEditChange("grade_id", e.target.value)
+                    }
                     borderRadius="xl"
                     border="2px solid"
                     borderColor="gray.200"
                     _focus={{ borderColor: "blue.500" }}
                     size={{ base: "sm", md: "md" }}
                   >
-                    {grades.map(grade => (
+                    {grades.map((grade) => (
                       <option key={grade.id} value={grade.id}>
                         {grade.name}
                       </option>
                     ))}
                   </Select>
                 </FormControl>
-              </VStack>
+              </Flex>
             </VStack>
           </ModalBody>
           <ModalFooter
@@ -1602,8 +1991,8 @@ const TeacherDashboardHome = () => {
                 fontSize={{ base: "sm", md: "md" }}
                 lineHeight={{ base: 1.5, md: 1.6 }}
               >
-                هل أنت متأكد من حذف الكورس "{courseToDelete?.title}"؟
-                هذا الإجراء لا يمكن التراجع عنه.
+                هل أنت متأكد من حذف الكورس "{courseToDelete?.title}"؟ هذا
+                الإجراء لا يمكن التراجع عنه.
               </Text>
             </AlertDialogBody>
             <AlertDialogFooter

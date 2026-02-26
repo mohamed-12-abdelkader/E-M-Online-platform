@@ -163,9 +163,8 @@ const CourseExamsTab = ({
   const [imageQuestionItems, setImageQuestionItems] = useState([]);
   const [imageQuestionsLoading, setImageQuestionsLoading] = useState(false);
   const [bulkTextInput, setBulkTextInput] = useState("");
+  const [bulkCorrectAnswers, setBulkCorrectAnswers] = useState("");
   const [bulkTextLoading, setBulkTextLoading] = useState(false);
-  const [bulkJsonInput, setBulkJsonInput] = useState("");
-  const [bulkJsonLoading, setBulkJsonLoading] = useState(false);
   const clearImageQuestionPreviews = (items) => {
     if (typeof URL === "undefined") return;
     items.forEach((item) => item.preview && URL.revokeObjectURL(item.preview));
@@ -690,12 +689,11 @@ const CourseExamsTab = ({
     clearImageQuestionPreviews(imageQuestionItems);
     setImageQuestionItems([]);
     setBulkTextInput("");
-    setBulkJsonInput("");
+    setBulkCorrectAnswers("");
     setQuestionManagerModal({ isOpen: false, exam: null, tabIndex: 0 });
     setSingleImageLoading(false);
     setImageQuestionsLoading(false);
     setBulkTextLoading(false);
-    setBulkJsonLoading(false);
   };
 
   const handleOpenQuestionManagerModal = (exam, tabIndex = 0) => {
@@ -859,121 +857,40 @@ const CourseExamsTab = ({
 
   const handleSubmitBulkTextQuestions = async () => {
     if (!questionManagerModal.exam) return;
-    if (!bulkTextInput.trim()) {
-      toast({ title: "يرجى إدخال نص السؤال", status: "warning" });
+    const text = bulkTextInput.trim();
+    if (!text) {
+      toast({ title: "يرجى إدخال نص الأسئلة", status: "warning" });
       return;
     }
 
-    // محاولة تحليل النص لاستخراج السؤال والاختيارات
-    const lines = bulkTextInput.trim().split('\n').filter(line => line.trim());
-    if (lines.length < 5) {
-      toast({
-        title: "صيغة غير صحيحة",
-        description: "يجب أن يحتوي السؤال على: نص السؤال + 4 اختيارات (A, B, C, D)",
-        status: "warning"
-      });
-      return;
+    const payload = { text };
+    if (bulkCorrectAnswers.trim()) {
+      const answers = bulkCorrectAnswers
+        .split(/[\s,،]+/)
+        .map((a) => a.trim().toUpperCase())
+        .filter((a) => ["A", "B", "C", "D"].includes(a));
+      if (answers.length > 0) payload.correctAnswers = answers;
     }
 
-    // استخراج السؤال (السطر الأول)
-    const questionText = lines[0].trim();
-
-    // استخراج الاختيارات
-    const options = { A: "", B: "", C: "", D: "" };
-    let correctAnswer = null;
-
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      const match = line.match(/^([ABCD])[\)\.]\s*(.+)$/i);
-      if (match) {
-        const letter = match[1].toUpperCase();
-        const text = match[2].trim();
-        options[letter] = text;
-      }
-    }
-
-    // التحقق من وجود جميع الاختيارات
-    if (!options.A || !options.B || !options.C || !options.D) {
-      toast({
-        title: "صيغة غير صحيحة",
-        description: "يجب أن يحتوي السؤال على جميع الاختيارات: A, B, C, D",
-        status: "warning"
-      });
-      return;
-    }
-
-    // في حالة bulk text، سنستخدم السؤال الأول فقط
-    // يمكن تحسين هذا لاحقاً لدعم عدة أسئلة
     setBulkTextLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("type", "TEXT");
-      formData.append("questionText", questionText);
-      formData.append("optionA", options.A);
-      formData.append("optionB", options.B);
-      formData.append("optionC", options.C);
-      formData.append("optionD", options.D);
-
-      // في حالة عدم تحديد الإجابة الصحيحة، نستخدم A كافتراضي
-      // يمكن تحسين هذا لاحقاً
-      formData.append("correctAnswer", correctAnswer || "A");
-
-      await baseUrl.post(
-        `/api/exams/${questionManagerModal.exam.id}/questions`,
-        formData,
+      const res = await baseUrl.post(
+        `/api/exams/${questionManagerModal.exam.id}/questions/bulk`,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            // لا نضيف Content-Type للسماح للمتصفح بتعيينه تلقائياً مع boundary
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
-      toast({ title: "تم إضافة السؤال النصي بنجاح", status: "success" });
-      setBulkTextInput("");
-      if (refreshExams) refreshExams();
-    } catch (error) {
+      const count = res.data?.count ?? 0;
       toast({
-        title: "تعذر إضافة السؤال النصي",
-        description: error.response?.data?.message || "حدث خطأ غير متوقع",
-        status: "error",
+        title: res.data?.message || `تمت إضافة ${count} سؤال`,
+        status: "success",
       });
-    } finally {
-      setBulkTextLoading(false);
-    }
-  };
-
-  const handleSubmitBulkJsonQuestions = async () => {
-    if (!questionManagerModal.exam) return;
-    if (!bulkJsonInput.trim()) {
-      toast({ title: "يرجى إدخال JSON صالح", status: "warning" });
-      return;
-    }
-    let payload;
-    try {
-      const parsed = JSON.parse(bulkJsonInput);
-      if (Array.isArray(parsed)) {
-        payload = { questions: parsed };
-      } else if (parsed && typeof parsed === "object") {
-        payload = parsed;
-      } else {
-        throw new Error("صيغة JSON يجب أن تكون كائناً أو مصفوفة");
-      }
-      if (!payload.questions && !payload.bulk_text) {
-        throw new Error("يجب أن يحتوي JSON على الحقل questions أو bulk_text");
-      }
-    } catch (err) {
-      toast({ title: "JSON غير صالح", description: err.message, status: "error" });
-      return;
-    }
-    setBulkJsonLoading(true);
-    try {
-      await baseUrl.post(
-        `/api/course/course-exam/${questionManagerModal.exam.id}/bulk-questions`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast({ title: "تم إضافة الأسئلة بنجاح", status: "success" });
-      setBulkJsonInput("");
+      setBulkTextInput("");
+      setBulkCorrectAnswers("");
       if (refreshExams) refreshExams();
     } catch (error) {
       toast({
@@ -982,7 +899,7 @@ const CourseExamsTab = ({
         status: "error",
       });
     } finally {
-      setBulkJsonLoading(false);
+      setBulkTextLoading(false);
     }
   };
 
@@ -1610,7 +1527,7 @@ const CourseExamsTab = ({
                     إدارة أسئلة الامتحان {questionManagerModal.exam ? `- ${questionManagerModal.exam.title}` : ""}
                   </Heading>
                   <Text fontSize="sm" color="whiteAlpha.800">
-                    اختر الطريقة المناسبة لإضافة الأسئلة (صورة، صور متعددة، نص، أو JSON)
+                    اختر الطريقة المناسبة لإضافة الأسئلة (صورة، صور متعددة، أو مجموعة نصية)
                   </Text>
                 </VStack>
               </HStack>
@@ -1629,8 +1546,7 @@ const CourseExamsTab = ({
               <TabList overflowX="auto">
                 <Tab>سؤال بصورة واحدة</Tab>
                 <Tab>صور متعددة</Tab>
-                <Tab>أسئلة نصية</Tab>
-                <Tab>JSON مخصص</Tab>
+                <Tab>مجموعة أسئلة (نص)</Tab>
               </TabList>
               <TabPanels mt={4}>
                 <TabPanel px={0}>
@@ -1833,30 +1749,33 @@ const CourseExamsTab = ({
                       p={{ base: 3, md: 4 }}
                       bg={modalSectionBg}
                     >
-                      <Text fontSize="sm" color="gray.500" mb={3}>
-                        أدخل السؤال بالصيغة التالية (سؤال واحد في كل مرة):
-                        <br />
-                        <strong>نص السؤال</strong>
-                        <br />
-                        A) الخيار الأول
-                        <br />
-                        B) الخيار الثاني
-                        <br />
-                        C) الخيار الثالث
-                        <br />
-                        D) الخيار الرابع
-                        <br />
-                        <br />
-                        <Text as="span" fontSize="xs" color="orange.500">
-                          ملاحظة: سيتم استخدام A كإجابة صحيحة افتراضية. يمكنك تعديلها لاحقاً.
-                        </Text>
+                      <Text fontSize="sm" color="gray.600" mb={3}>
+                        الصيغة: كل سؤال يتكوّن من سطر أو أكثر لنص السؤال، ثم أربعة أسطر بالترتيب:
+                        <strong> a. </strong> ثم <strong> b. </strong> ثم <strong> c. </strong> ثم <strong> d. </strong>
+                        يمكن وضع سطر فاضي بين الأسئلة.
                       </Text>
-                      <Textarea
-                        rows={8}
-                        placeholder="You were __________ to escape unharmed.\nA) unfortunately\nB) fortunately\nC) fortunate\nD) unfortunate"
-                        value={bulkTextInput}
-                        onChange={(e) => setBulkTextInput(e.target.value)}
-                      />
+                      <FormControl>
+                        <FormLabel>نص الأسئلة (مطلوب)</FormLabel>
+                        <Textarea
+                          rows={12}
+                          placeholder={`أي مما يلي لا يعتبر من الجزيئات العضوية الصغيرة؟\na. الأحماض النووية\nb. الأحماض الأمينية\nc. الأحماض الدهنية\nd. لا توجد إجابة صحيحة\n\nأي المركبات الآتية يحتوي على أقل عدد من جزيئات الجلوكوز؟\na. السليلوز\nb. السكروز\nc. النشا\nd. الكيتين`}
+                          value={bulkTextInput}
+                          onChange={(e) => setBulkTextInput(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormControl mt={3}>
+                        <FormLabel fontSize="sm">
+                          الإجابات الصحيحة بالترتيب (اختياري) — مثل: C,D,D,D,C,A,D
+                        </FormLabel>
+                        <Input
+                          placeholder="C, D, D, D, C, A, D"
+                          value={bulkCorrectAnswers}
+                          onChange={(e) => setBulkCorrectAnswers(e.target.value)}
+                        />
+                        <Text fontSize="xs" color="gray.500" mt={1}>
+                          إن لم تُدخل، تُعامل كل الأسئلة إجابتها الصحيحة A.
+                        </Text>
+                      </FormControl>
                     </Box>
                     <Button
                       colorScheme="green"
@@ -1864,36 +1783,7 @@ const CourseExamsTab = ({
                       onClick={handleSubmitBulkTextQuestions}
                       isLoading={bulkTextLoading}
                     >
-                      إضافة الأسئلة النصية
-                    </Button>
-                  </VStack>
-                </TabPanel>
-                <TabPanel px={0}>
-                  <VStack spacing={4} align="stretch">
-                    <Box
-                      borderWidth="1px"
-                      borderColor={modalSectionBorder}
-                      borderRadius="lg"
-                      p={{ base: 3, md: 4 }}
-                      bg={modalSectionBg}
-                    >
-                      <Text fontSize="sm" color="gray.500" mb={3}>
-                        الصيغة المدعومة يجب أن تحتوي على الحقل questions أو bulk_text.
-                      </Text>
-                      <Textarea
-                        rows={8}
-                        placeholder='{"questions": [{"text": "...", "choices": [...] }]}'
-                        value={bulkJsonInput}
-                        onChange={(e) => setBulkJsonInput(e.target.value)}
-                      />
-                    </Box>
-                    <Button
-                      colorScheme="orange"
-                      alignSelf="flex-end"
-                      onClick={handleSubmitBulkJsonQuestions}
-                      isLoading={bulkJsonLoading}
-                    >
-                      رفع JSON
+                      إضافة مجموعة الأسئلة
                     </Button>
                   </VStack>
                 </TabPanel>

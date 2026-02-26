@@ -34,6 +34,7 @@ import {
   useColorModeValue,
   Container,
   Flex,
+  Textarea,
 } from "@chakra-ui/react";
 // استبدال أيقونات chakra-ui بأيقونات react-icons
 import {
@@ -45,6 +46,7 @@ import {
   AiFillStar,
   AiFillPicture,
 } from "react-icons/ai";
+import { FaBookOpen } from "react-icons/fa";
 import { CircularProgress, CircularProgressLabel } from "@chakra-ui/react";
 import baseUrl from "../../api/baseUrl";
 import BrandLoadingScreen from "../../components/loading/BrandLoadingScreen";
@@ -101,12 +103,19 @@ const ComprehensiveExam = () => {
   const [selectedQuestionImage, setSelectedQuestionImage] = useState(null);
   const [questionImagePreview, setQuestionImagePreview] = useState("");
   const [uploadingQuestionImage, setUploadingQuestionImage] = useState(false);
+  // State لإضافة مجموعة أسئلة كنص (Bulk) — امتحان المحاضرة
+  const [bulkTextModalOpen, setBulkTextModalOpen] = useState(false);
+  const [bulkTextInput, setBulkTextInput] = useState("");
+  const [bulkCorrectAnswers, setBulkCorrectAnswers] = useState("");
+  const [bulkTextLoading, setBulkTextLoading] = useState(false);
   // State لتقارير الامتحان
   const [examReport, setExamReport] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [attemptSummary, setAttemptSummary] = useState(null);
+  const [imageZoomOpen, setImageZoomOpen] = useState(false);
+  const [imageZoomSrc, setImageZoomSrc] = useState(null);
 
   // ألوان البراند (أزرق / برتقالي) + دعم الوضع الداكن
   const pageBg = useColorModeValue("gray.50", "gray.900");
@@ -310,10 +319,18 @@ const ComprehensiveExam = () => {
       }
 
       const data = res.data;
-      setExamData(data.exam);
+      const exam = data.exam;
+      const attempt = data.attempt;
+      setExamData(exam);
       setExamStatus(data.status);
-      setCurrentAttempt(data.attempt || null);
-      setRemainingSeconds(data.attempt?.remainingSeconds || null);
+      const derivedSeconds = exam?.duration != null ? exam.duration * 60 : null;
+      const remaining =
+        attempt?.remainingSeconds ??
+        (attempt && derivedSeconds ? derivedSeconds : null);
+      setCurrentAttempt(
+        attempt ? { ...attempt, remainingSeconds: remaining ?? attempt.remainingSeconds } : null
+      );
+      setRemainingSeconds(remaining ?? null);
       setAttemptHistory(data.attemptHistory || []);
       setFeedback(data.feedback || null);
       setAttemptSummary(data.attemptSummary || null);
@@ -369,11 +386,11 @@ const ComprehensiveExam = () => {
           await fetchQuestionsForTeacher();
         }
       } else {
-        // للطلاب
+        // للطلاب: نعرض الأسئلة فقط عند وجود محاولة نشطة (حتى يظهر زر "بدء الامتحان" والمؤقت)
         let questionsFound = false;
 
-        // التحقق من وجود الأسئلة في الاستجابة (يدعم الأسئلة العادية وقطعة القراءة)
         if (
+          data.attempt &&
           data.questions &&
           Array.isArray(data.questions) &&
           data.questions.length > 0
@@ -384,9 +401,7 @@ const ComprehensiveExam = () => {
         }
 
         if (!questionsFound) {
-          // للطلاب: الأسئلة تأتي مع المحاولة أو من feedback
           if (data.status === "ready" && data.attempt) {
-            // إذا كانت هناك محاولة نشطة، الأسئلة يجب أن تأتي من endpoint منفصل
             await fetchQuestionsForStudent();
           } else if (data.feedback && data.feedback.wrongQuestions) {
             // إذا كان هناك feedback، نستخدم الأسئلة من هناك
@@ -495,7 +510,7 @@ const ComprehensiveExam = () => {
     }
   };
 
-  // بدء محاولة جديدة
+  // بدء محاولة جديدة — تهيئة المؤقت من remainingSeconds أو من exam.duration / timeLimitMinutes
   const startAttempt = async () => {
     setStartingAttempt(true);
     try {
@@ -507,18 +522,30 @@ const ComprehensiveExam = () => {
       );
 
       const attemptData = res.data;
-      setCurrentAttempt(attemptData);
-      setRemainingSeconds(attemptData.remainingSeconds);
+      const durationMinutes =
+        attemptData.timeLimitMinutes ??
+        attemptData.duration ??
+        examData?.timeLimitMinutes ??
+        examData?.duration;
+      const initialSeconds =
+        attemptData.remainingSeconds ??
+        (durationMinutes ? durationMinutes * 60 : null);
+
+      setCurrentAttempt({
+        ...attemptData,
+        remainingSeconds: initialSeconds ?? attemptData.remainingSeconds,
+      });
+      setRemainingSeconds(initialSeconds ?? attemptData.remainingSeconds ?? null);
       setExamStatus("ready");
 
-      // جلب الأسئلة بعد بدء المحاولة
       await fetchQuestionsForStudent();
 
       toast({
         title: "تم بدء المحاولة بنجاح",
-        description: attemptData.timeLimitMinutes
-          ? `المدة: ${attemptData.timeLimitMinutes} دقيقة`
-          : "بدون مدة محددة",
+        description:
+          durationMinutes != null
+            ? `المدة: ${durationMinutes} دقيقة`
+            : "بدون مدة محددة",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -1080,6 +1107,52 @@ const ComprehensiveExam = () => {
     }
   };
 
+  // إضافة مجموعة أسئلة كنص — POST /api/exams/lecture/:examId/questions/bulk
+  const submitBulkTextQuestions = async () => {
+    const text = bulkTextInput.trim();
+    if (!text) {
+      toast({ title: "يرجى إدخال نص الأسئلة", status: "warning", isClosable: true });
+      return;
+    }
+    const payload = { text };
+    if (bulkCorrectAnswers.trim()) {
+      const answers = bulkCorrectAnswers
+        .split(/[\s,،]+/)
+        .map((a) => a.trim().toUpperCase())
+        .filter((a) => ["A", "B", "C", "D"].includes(a));
+      if (answers.length > 0) payload.correctAnswers = answers;
+    }
+    setBulkTextLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await baseUrl.post(
+        `/api/exams/lecture/${id}/questions/bulk`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+      );
+      const count = res.data?.count ?? 0;
+      toast({
+        title: res.data?.message || `تمت إضافة ${count} سؤال`,
+        status: "success",
+        isClosable: true,
+      });
+      setBulkTextInput("");
+      setBulkCorrectAnswers("");
+      setBulkTextModalOpen(false);
+      if (isTeacher || isAdmin) await fetchQuestionsForTeacher();
+      else await fetchExamData();
+    } catch (err) {
+      toast({
+        title: "تعذر إضافة الأسئلة",
+        description: err.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
+        isClosable: true,
+      });
+    } finally {
+      setBulkTextLoading(false);
+    }
+  };
+
   // فتح مودال إضافة صورة لسؤال محدد
   const openAddQuestionImageModal = (questionId) => {
     setAddQuestionImageModal({ open: true, questionId });
@@ -1439,11 +1512,16 @@ const ComprehensiveExam = () => {
                   <Text color={subtextColor}>
                     اضغط على الزر أدناه لبدء الامتحان.
                   </Text>
-                  {examData?.timeLimitEnabled && examData?.timeLimitMinutes && (
+                  {(examData?.timeLimitEnabled && examData?.timeLimitMinutes) ||
+                  (examData?.duration != null && examData?.duration > 0) ? (
                     <Text fontSize="sm" color={subtextColor}>
-                      المدة: {examData.timeLimitMinutes} دقيقة
+                      المدة:{" "}
+                      {examData?.timeLimitEnabled && examData?.timeLimitMinutes
+                        ? examData.timeLimitMinutes
+                        : examData?.duration}{" "}
+                      دقيقة
                     </Text>
-                  )}
+                  ) : null}
                 </VStack>
               </Alert>
               <Button
@@ -1685,6 +1763,22 @@ const ComprehensiveExam = () => {
                 >
                   إضافة أسئلة كصور
                 </Button>
+                <Button
+                  variant="outline"
+                  borderColor="green.500"
+                  color="green.600"
+                  onClick={() => setBulkTextModalOpen(true)}
+                  size={{ base: "sm", sm: "md", md: "lg" }}
+                  px={{ base: 5, sm: 6, md: 8 }}
+                  h={{ base: "40px", sm: "44px", md: "48px" }}
+                  borderRadius="xl"
+                  leftIcon={<Icon as={FaBookOpen} boxSize={4} />}
+                  _hover={{ bg: "green.50", borderColor: "green.400" }}
+                  transition="all 0.2s"
+                  fontWeight="bold"
+                >
+                  إضافة أسئلة كنص
+                </Button>
               </HStack>
             )}
             <VStack spacing={{ base: 6, sm: 7, md: 8 }} align="stretch">
@@ -1907,7 +2001,7 @@ const ComprehensiveExam = () => {
                                   </Text>
                                 )}
 
-                                {/* صورة السؤال */}
+                                {/* صورة السؤال — اضغط للتكبير */}
                                 {wq.questionImage && (
                                   <Box
                                     w="full"
@@ -1926,12 +2020,17 @@ const ComprehensiveExam = () => {
                                       bg="white"
                                       p={2}
                                       position="relative"
+                                      cursor="pointer"
                                       _hover={{
                                         transform: "scale(1.02)",
                                         boxShadow: "2xl",
                                         borderColor: "orange.400",
                                       }}
                                       transition="all 0.3s ease"
+                                      onClick={() => {
+                                        setImageZoomSrc(wq.questionImage);
+                                        setImageZoomOpen(true);
+                                      }}
                                     >
                                       <Image
                                         src={wq.questionImage}
@@ -1981,6 +2080,20 @@ const ComprehensiveExam = () => {
                                           </Box>
                                         }
                                       />
+                                      <HStack
+                                        position="absolute"
+                                        bottom={3}
+                                        right={3}
+                                        bg="blackAlpha.600"
+                                        color="white"
+                                        px={3}
+                                        py={1.5}
+                                        borderRadius="md"
+                                        spacing={2}
+                                        pointerEvents="none"
+                                      >
+                                        <Text fontSize="sm">اضغط للتكبير</Text>
+                                      </HStack>
                                     </Box>
                                   </Box>
                                 )}
@@ -2186,7 +2299,7 @@ const ComprehensiveExam = () => {
                                       {idx + 1}. سؤال {idx + 1}
                                     </Text>
                                   )}
-                                  {/* عرض صورة السؤال إذا كانت موجودة */}
+                                  {/* عرض صورة السؤال — اضغط للتكبير */}
                                   {displayImage && (
                                     <Box
                                       mt={4}
@@ -2205,12 +2318,17 @@ const ComprehensiveExam = () => {
                                         bg="white"
                                         p={2}
                                         position="relative"
+                                        cursor="pointer"
                                         _hover={{
                                           transform: "scale(1.02)",
                                           boxShadow: "2xl",
                                           borderColor: "blue.300",
                                         }}
                                         transition="all 0.3s ease"
+                                        onClick={() => {
+                                          setImageZoomSrc(displayImage);
+                                          setImageZoomOpen(true);
+                                        }}
                                       >
                                         <Image
                                           src={displayImage}
@@ -2266,7 +2384,20 @@ const ComprehensiveExam = () => {
                                             </Box>
                                           }
                                         />
-                                        {/* مؤشر أن هذه صورة السؤال */}
+                                        <HStack
+                                          position="absolute"
+                                          bottom={3}
+                                          right={3}
+                                          bg="blackAlpha.600"
+                                          color="white"
+                                          px={3}
+                                          py={1.5}
+                                          borderRadius="md"
+                                          spacing={2}
+                                          pointerEvents="none"
+                                        >
+                                          <Text fontSize="sm">اضغط للتكبير</Text>
+                                        </HStack>
                                       </Box>
                                     </Box>
                                   )}
@@ -2726,7 +2857,7 @@ const ComprehensiveExam = () => {
                                   </Text>
                                 </Box>
 
-                                {/* صورة السؤال */}
+                                {/* صورة السؤال — اضغط للتكبير */}
                                 {questionImage && (
                                   <Box
                                     w="full"
@@ -2743,6 +2874,14 @@ const ComprehensiveExam = () => {
                                       borderColor={cardBorder}
                                       bg={pageBg}
                                       p={2}
+                                      cursor="pointer"
+                                      position="relative"
+                                      _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
+                                      transition="all 0.2s"
+                                      onClick={() => {
+                                        setImageZoomSrc(questionImage);
+                                        setImageZoomOpen(true);
+                                      }}
                                     >
                                       <Image
                                         src={questionImage}
@@ -2789,6 +2928,20 @@ const ComprehensiveExam = () => {
                                           </Box>
                                         }
                                       />
+                                      <HStack
+                                        position="absolute"
+                                        bottom={3}
+                                        right={3}
+                                        bg="blackAlpha.600"
+                                        color="white"
+                                        px={3}
+                                        py={1.5}
+                                        borderRadius="md"
+                                        spacing={2}
+                                        pointerEvents="none"
+                                      >
+                                        <Text fontSize="sm">اضغط للتكبير</Text>
+                                      </HStack>
                                     </Box>
                                   </Box>
                                 )}
@@ -3479,6 +3632,93 @@ const ComprehensiveExam = () => {
               </ModalContent>
             </Modal>
 
+            {/* إضافة مجموعة أسئلة كنص (Bulk) — امتحان المحاضرة */}
+            <Modal
+              isOpen={bulkTextModalOpen}
+              onClose={() => {
+                setBulkTextModalOpen(false);
+                setBulkTextInput("");
+                setBulkCorrectAnswers("");
+              }}
+              size="xl"
+              isCentered
+            >
+              <ModalOverlay />
+              <ModalContent mx={{ base: 2, sm: 4 }} maxH="90vh">
+                <ModalHeader fontSize={{ base: "md", sm: "lg" }}>
+                  إضافة مجموعة أسئلة (نص)
+                </ModalHeader>
+                <ModalCloseButton />
+                <ModalBody overflowY="auto">
+                  <VStack spacing={5} align="stretch">
+                    <Box
+                      p={4}
+                      bg="green.50"
+                      borderRadius="lg"
+                      border="1px solid"
+                      borderColor="green.200"
+                    >
+                      <VStack spacing={2} align="start">
+                        <Text fontWeight="bold" color="green.700" fontSize="sm">
+                          شكل النص:
+                        </Text>
+                        <Text fontSize="sm" color="green.700">
+                          كل سؤال: سطر أو أكثر لنص السؤال، ثم أربعة أسطر بالترتيب <strong>a.</strong> ثم <strong>b.</strong> ثم <strong>c.</strong> ثم <strong>d.</strong>
+                          يمكن وضع سطر فاضي بين الأسئلة.
+                        </Text>
+                      </VStack>
+                    </Box>
+                    <FormControl>
+                      <FormLabel fontWeight="600">نص الأسئلة (مطلوب)</FormLabel>
+                      <Textarea
+                        rows={12}
+                        placeholder={`أي مما يلي لا يعتبر من الجزيئات العضوية الصغيرة؟\na. الأحماض النووية\nb. الأحماض الأمينية\nc. الأحماض الدهنية\nd. لا توجد إجابة صحيحة\n\nأي المركبات الآتية يحتوي على أقل عدد من جزيئات الجلوكوز؟\na. السليلوز\nb. السكروز\nc. النشا\nd. الكيتين`}
+                        value={bulkTextInput}
+                        onChange={(e) => setBulkTextInput(e.target.value)}
+                        borderRadius="lg"
+                        fontSize="sm"
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontWeight="600" fontSize="sm">
+                        الإجابات الصحيحة بالترتيب (اختياري) — مثل: C,D,D,D,C,A,D
+                      </FormLabel>
+                      <Input
+                        placeholder="C, D, D, D, C, A, D"
+                        value={bulkCorrectAnswers}
+                        onChange={(e) => setBulkCorrectAnswers(e.target.value)}
+                        borderRadius="lg"
+                      />
+                      <Text fontSize="xs" color="gray.500" mt={2}>
+                        إن لم تُدخل، تُعامل كل الأسئلة إجابتها الصحيحة A.
+                      </Text>
+                    </FormControl>
+                  </VStack>
+                </ModalBody>
+                <ModalFooter>
+                  <Button
+                    colorScheme="green"
+                    onClick={submitBulkTextQuestions}
+                    isLoading={bulkTextLoading}
+                    leftIcon={<Icon as={FaBookOpen} boxSize={4} />}
+                    size={{ base: "sm", sm: "md" }}
+                  >
+                    إضافة مجموعة الأسئلة
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setBulkTextModalOpen(false);
+                      setBulkTextInput("");
+                      setBulkCorrectAnswers("");
+                    }}
+                  >
+                    إلغاء
+                  </Button>
+                </ModalFooter>
+              </ModalContent>
+            </Modal>
+
             {/* Add Question Image Modal */}
             <Modal
               isOpen={addQuestionImageModal.open}
@@ -3615,6 +3855,44 @@ const ComprehensiveExam = () => {
                     إلغاء
                   </Button>
                 </ModalFooter>
+              </ModalContent>
+            </Modal>
+
+            {/* مودال تكبير صورة السؤال */}
+            <Modal
+              isOpen={imageZoomOpen}
+              onClose={() => { setImageZoomOpen(false); setImageZoomSrc(null); }}
+              size="full"
+              isCentered
+            >
+              <ModalOverlay bg="blackAlpha.800" />
+              <ModalContent bg="transparent" boxShadow="none" maxW="100vw">
+                <ModalBody display="flex" alignItems="center" justifyContent="center" p={4}>
+                  <IconButton
+                    aria-label="إغلاق"
+                    icon={<AiOutlineCloseCircle size={28} />}
+                    position="absolute"
+                    top={4}
+                    right={4}
+                    zIndex={10}
+                    colorScheme="whiteAlpha"
+                    color="white"
+                    size="lg"
+                    onClick={() => { setImageZoomOpen(false); setImageZoomSrc(null); }}
+                  />
+                  {imageZoomSrc && (
+                    <Image
+                      src={imageZoomSrc}
+                      alt="تكبير صورة السؤال"
+                      maxH="90vh"
+                      maxW="100%"
+                      objectFit="contain"
+                      borderRadius="md"
+                      onClick={() => { setImageZoomOpen(false); setImageZoomSrc(null); }}
+                      cursor="pointer"
+                    />
+                  )}
+                </ModalBody>
               </ModalContent>
             </Modal>
 
