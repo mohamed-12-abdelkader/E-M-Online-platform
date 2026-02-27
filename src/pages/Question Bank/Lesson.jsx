@@ -66,6 +66,57 @@ import baseUrl from "../../api/baseUrl";
 
 const MotionBox = motion(Box);
 
+// دالة لضغط الصور قبل الرفع لتجنب خطأ 413 (Payload Too Large)
+const compressImage = (file, maxWidth = 1024, quality = 0.7) => {
+  return new Promise((resolve) => {
+    if (!file.type.match(/image.*/)) {
+      resolve(file);
+      return;
+    }
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        // تصغير الأبعاد إذا كانت كبيرة جداً
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const mimeType = file.type === "image/png" ? "image/png" : "image/jpeg";
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file); // في حال فشل الضغط نرجع الملف الأصلي
+              return;
+            }
+            const newFile = new window.File([blob], file.name, {
+              type: mimeType,
+              lastModified: Date.now(),
+            });
+            resolve(newFile);
+          },
+          mimeType,
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+    };
+    reader.onerror = () => resolve(file);
+  });
+};
+
 const Lesson = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -950,156 +1001,156 @@ const Lesson = () => {
           </TabList>
           <TabPanels>
             <TabPanel px={0} pt={4}>
-        {/* Questions Grid */}
-        {questions.length > 0 ? (
-          <Box>
-            <HStack mb={6} justify="space-between" align="center">
-              <Text color={textSecondary} fontSize="sm" fontFamily={fontCairo}>عرض {questions.length} سؤال</Text>
-            </HStack>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-              <AnimatePresence>
-                {questions.map((question, index) => (
-                  <MotionBox
-                    key={question.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.3) }}
-                    position="relative"
-                  >
-                    <Card
-                      bg={selectedQuestions.includes(question.id) ? selectedCardBg : cardBg}
-                      borderRadius="2xl"
-                      overflow="hidden"
-                      boxShadow={selectedQuestions.includes(question.id) ? "md" : cardShadow}
-                      borderWidth="2px"
-                      borderColor={selectedQuestions.includes(question.id) ? "blue.400" : cardBorder}
-                      _hover={{ boxShadow: cardShadowHover, transform: "translateY(-4px)" }}
-                      transition="all 0.25s ease"
-                      h="100%"
-                      display="flex"
-                      flexDirection="column"
-                      cursor={isTeacher ? "pointer" : "default"}
-                      onClick={() => isTeacher && handleToggleSelectId(question.id)}
-                    >
-                      <CardHeader pb={2} pt={5} px={5}>
-                        <Flex justify="space-between" align="flex-start" wrap="wrap" gap={3}>
-                          <HStack spacing={3} flex={1} minW={0}>
-                            {isTeacher && (
-                              <Checkbox
-                                isChecked={selectedQuestions.includes(question.id)}
-                                onChange={() => handleToggleSelectId(question.id)}
-                                size="md"
-                                colorScheme="blue"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            )}
-                            <Flex w="10" h="10" borderRadius="full" bgGradient="linear(to-br, blue.400, blue.600)" color="white" align="center" justify="center" fontWeight="bold" fontSize="lg" fontFamily={fontCairo} flexShrink={0}>
-                              {index + 1}
-                            </Flex>
-                            <VStack align="flex-start" spacing={0}>
-                              <HStack spacing={2} flexWrap="wrap">
-                                <Badge colorScheme={question.difficulty_level === "hard" ? "red" : question.difficulty_level === "easy" ? "green" : "blue"} variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo}>
-                                  {question.difficulty_level === "hard" ? "صعب" : question.difficulty_level === "easy" ? "سهل" : "متوسط"}
-                                </Badge>
-                                {(question.points != null || question.points === 0) && (
-                                  <Badge colorScheme="yellow" variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo}>
-                                    {Number(question.points) || 1} نقطة
-                                  </Badge>
-                                )}
-                              </HStack>
-                            </VStack>
-                          </HStack>
-                          <HStack spacing={1} onClick={(e) => e.stopPropagation()}>
-                            <Tooltip label="تعديل" hasArrow>
-                              <IconButton icon={<FaEdit />} size="sm" variant="ghost" colorScheme="blue" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setEditingQuestion(question); const opts = question.options ? question.options.map(o => typeof o === "string" ? o : (o.text_content || o.image_url)) : []; setEditFormData({ text: question.question_text || question.text || "", options: opts.length === 4 ? opts : ["", "", "", ""] }); onEditOpen(); }} />
-                            </Tooltip>
-                            <Tooltip label="صورة" hasArrow>
-                              <IconButton icon={<FaImage />} size="sm" variant="ghost" colorScheme="purple" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setCurrentQuestion(question); setImagePreview(question.media?.media_url || question.image); onImageOpen(); }} />
-                            </Tooltip>
-                            <Tooltip label="حذف" hasArrow>
-                              <IconButton icon={<FaTrash />} size="sm" variant="ghost" colorScheme="red" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setDeletingQuestion(question); onDeleteOpen(); }} />
-                            </Tooltip>
-                          </HStack>
-                        </Flex>
-                      </CardHeader>
-
-                      <CardBody flex={1} pt={0} px={5} pb={5}>
-                        <Text fontSize="md" fontWeight="600" color={textPrimary} mb={4} lineHeight="1.7" fontFamily={fontCairo}>
-                          {question.question_text || question.text}
-                        </Text>
-
-                        {question.media?.media_url && (
-                          <Box mb={4} borderRadius="xl" overflow="hidden" borderWidth="1px" borderColor={borderColor}>
-                            <Image src={question.media.media_url} w="100%" maxH="180px" objectFit="cover" alt="Question" />
-                          </Box>
-                        )}
-
-                        <Box onClick={(e) => e.stopPropagation()}>
-                          <Text fontSize="xs" color={textSecondary} mb={2} fontFamily={fontCairo}>اضغط على الخيار لتعيينه إجابةً صحيحة</Text>
-                          <VStack align="stretch" spacing={2}>
-                            {question.options && question.options.map((opt, i) => {
-                              const isCorrect = question.correct_answer_index === i;
-                              const content = typeof opt === "string" ? opt : (opt.text_content || opt.image_url);
-                              const isImg = typeof opt !== "string" && opt.option_type === "image";
-                              const isUpdating = correctAnswerUpdatingId === question.id;
-                              const canSelect = !isCorrect && !isUpdating;
-                              return (
-                                <Tooltip key={i} label={canSelect ? "تحديد كإجابة صحيحة" : (isCorrect ? "الإجابة الصحيحة الحالية" : "")} hasArrow>
-                                  <HStack
-                                    p={3}
-                                    bg={isCorrect ? optionCorrectBg : optionBg}
-                                    borderRadius="xl"
-                                    borderWidth="1px"
-                                    borderColor={isCorrect ? optionCorrectBorder : "transparent"}
-                                    justify="space-between"
-                                    cursor={canSelect ? "pointer" : "default"}
-                                    _hover={canSelect ? { bg: optionHoverBg, borderColor: "blue.200" } : { opacity: 0.95 }}
-                                    transition="all 0.2s"
-                                    onClick={() => canSelect && handleUpdateCorrectAnswer(question.id, i)}
-                                  >
-                                    <HStack spacing={3} minW={0} flex={1}>
-                                      <Box w="28px" h="28px" flexShrink={0} borderRadius="full" bg={isCorrect ? "green.500" : optionLetterBg} color="white" fontSize="xs" fontWeight="bold" display="flex" alignItems="center" justifyContent="center" fontFamily={fontCairo}>
-                                        {String.fromCharCode(65 + i)}
-                                      </Box>
-                                      {isImg ? (
-                                        <Image src={content} maxH="36px" borderRadius="md" />
-                                      ) : (
-                                        <Text fontSize="sm" color={isCorrect ? optionCorrectText : textSecondary} noOfLines={2} fontFamily={fontCairo}>{content}</Text>
+              {/* Questions Grid */}
+              {questions.length > 0 ? (
+                <Box>
+                  <HStack mb={6} justify="space-between" align="center">
+                    <Text color={textSecondary} fontSize="sm" fontFamily={fontCairo}>عرض {questions.length} سؤال</Text>
+                  </HStack>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                    <AnimatePresence>
+                      {questions.map((question, index) => (
+                        <MotionBox
+                          key={question.id}
+                          initial={{ opacity: 0, y: 16 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.3) }}
+                          position="relative"
+                        >
+                          <Card
+                            bg={selectedQuestions.includes(question.id) ? selectedCardBg : cardBg}
+                            borderRadius="2xl"
+                            overflow="hidden"
+                            boxShadow={selectedQuestions.includes(question.id) ? "md" : cardShadow}
+                            borderWidth="2px"
+                            borderColor={selectedQuestions.includes(question.id) ? "blue.400" : cardBorder}
+                            _hover={{ boxShadow: cardShadowHover, transform: "translateY(-4px)" }}
+                            transition="all 0.25s ease"
+                            h="100%"
+                            display="flex"
+                            flexDirection="column"
+                            cursor={isTeacher ? "pointer" : "default"}
+                            onClick={() => isTeacher && handleToggleSelectId(question.id)}
+                          >
+                            <CardHeader pb={2} pt={5} px={5}>
+                              <Flex justify="space-between" align="flex-start" wrap="wrap" gap={3}>
+                                <HStack spacing={3} flex={1} minW={0}>
+                                  {isTeacher && (
+                                    <Checkbox
+                                      isChecked={selectedQuestions.includes(question.id)}
+                                      onChange={() => handleToggleSelectId(question.id)}
+                                      size="md"
+                                      colorScheme="blue"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  )}
+                                  <Flex w="10" h="10" borderRadius="full" bgGradient="linear(to-br, blue.400, blue.600)" color="white" align="center" justify="center" fontWeight="bold" fontSize="lg" fontFamily={fontCairo} flexShrink={0}>
+                                    {index + 1}
+                                  </Flex>
+                                  <VStack align="flex-start" spacing={0}>
+                                    <HStack spacing={2} flexWrap="wrap">
+                                      <Badge colorScheme={question.difficulty_level === "hard" ? "red" : question.difficulty_level === "easy" ? "green" : "blue"} variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo}>
+                                        {question.difficulty_level === "hard" ? "صعب" : question.difficulty_level === "easy" ? "سهل" : "متوسط"}
+                                      </Badge>
+                                      {(question.points != null || question.points === 0) && (
+                                        <Badge colorScheme="yellow" variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo}>
+                                          {Number(question.points) || 1} نقطة
+                                        </Badge>
                                       )}
                                     </HStack>
-                                    {isCorrect && !isUpdating && <Icon as={FaCheck} color="green.500" boxSize={4} flexShrink={0} />}
-                                    {isCorrect && isUpdating && <Spinner size="sm" flexShrink={0} />}
+                                  </VStack>
+                                </HStack>
+                                <HStack spacing={1} onClick={(e) => e.stopPropagation()}>
+                                  <Tooltip label="تعديل" hasArrow>
+                                    <IconButton icon={<FaEdit />} size="sm" variant="ghost" colorScheme="blue" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setEditingQuestion(question); const opts = question.options ? question.options.map(o => typeof o === "string" ? o : (o.text_content || o.image_url)) : []; setEditFormData({ text: question.question_text || question.text || "", options: opts.length === 4 ? opts : ["", "", "", ""] }); onEditOpen(); }} />
+                                  </Tooltip>
+                                  <Tooltip label="صورة" hasArrow>
+                                    <IconButton icon={<FaImage />} size="sm" variant="ghost" colorScheme="purple" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setCurrentQuestion(question); setImagePreview(question.media?.media_url || question.image); onImageOpen(); }} />
+                                  </Tooltip>
+                                  <Tooltip label="حذف" hasArrow>
+                                    <IconButton icon={<FaTrash />} size="sm" variant="ghost" colorScheme="red" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setDeletingQuestion(question); onDeleteOpen(); }} />
+                                  </Tooltip>
+                                </HStack>
+                              </Flex>
+                            </CardHeader>
+
+                            <CardBody flex={1} pt={0} px={5} pb={5}>
+                              <Text fontSize="md" fontWeight="600" color={textPrimary} mb={4} lineHeight="1.7" fontFamily={fontCairo}>
+                                {question.question_text || question.text}
+                              </Text>
+
+                              {question.media?.media_url && (
+                                <Box mb={4} borderRadius="xl" overflow="hidden" borderWidth="1px" borderColor={borderColor}>
+                                  <Image src={question.media.media_url} w="100%" maxH="180px" objectFit="cover" alt="Question" />
+                                </Box>
+                              )}
+
+                              <Box onClick={(e) => e.stopPropagation()}>
+                                <Text fontSize="xs" color={textSecondary} mb={2} fontFamily={fontCairo}>اضغط على الخيار لتعيينه إجابةً صحيحة</Text>
+                                <VStack align="stretch" spacing={2}>
+                                  {question.options && question.options.map((opt, i) => {
+                                    const isCorrect = question.correct_answer_index === i;
+                                    const content = typeof opt === "string" ? opt : (opt.text_content || opt.image_url);
+                                    const isImg = typeof opt !== "string" && opt.option_type === "image";
+                                    const isUpdating = correctAnswerUpdatingId === question.id;
+                                    const canSelect = !isCorrect && !isUpdating;
+                                    return (
+                                      <Tooltip key={i} label={canSelect ? "تحديد كإجابة صحيحة" : (isCorrect ? "الإجابة الصحيحة الحالية" : "")} hasArrow>
+                                        <HStack
+                                          p={3}
+                                          bg={isCorrect ? optionCorrectBg : optionBg}
+                                          borderRadius="xl"
+                                          borderWidth="1px"
+                                          borderColor={isCorrect ? optionCorrectBorder : "transparent"}
+                                          justify="space-between"
+                                          cursor={canSelect ? "pointer" : "default"}
+                                          _hover={canSelect ? { bg: optionHoverBg, borderColor: "blue.200" } : { opacity: 0.95 }}
+                                          transition="all 0.2s"
+                                          onClick={() => canSelect && handleUpdateCorrectAnswer(question.id, i)}
+                                        >
+                                          <HStack spacing={3} minW={0} flex={1}>
+                                            <Box w="28px" h="28px" flexShrink={0} borderRadius="full" bg={isCorrect ? "green.500" : optionLetterBg} color="white" fontSize="xs" fontWeight="bold" display="flex" alignItems="center" justifyContent="center" fontFamily={fontCairo}>
+                                              {String.fromCharCode(65 + i)}
+                                            </Box>
+                                            {isImg ? (
+                                              <Image src={content} maxH="36px" borderRadius="md" />
+                                            ) : (
+                                              <Text fontSize="sm" color={isCorrect ? optionCorrectText : textSecondary} noOfLines={2} fontFamily={fontCairo}>{content}</Text>
+                                            )}
+                                          </HStack>
+                                          {isCorrect && !isUpdating && <Icon as={FaCheck} color="green.500" boxSize={4} flexShrink={0} />}
+                                          {isCorrect && isUpdating && <Spinner size="sm" flexShrink={0} />}
+                                        </HStack>
+                                      </Tooltip>
+                                    );
+                                  })}
+                                </VStack>
+                                {correctAnswerUpdatingId === question.id && (
+                                  <HStack mt={2} spacing={2} fontSize="xs" color={textSecondary} fontFamily={fontCairo}>
+                                    <Spinner size="xs" />
+                                    <Text>جاري تحديث الإجابة الصحيحة...</Text>
                                   </HStack>
-                                </Tooltip>
-                              );
-                            })}
-                          </VStack>
-                          {correctAnswerUpdatingId === question.id && (
-                            <HStack mt={2} spacing={2} fontSize="xs" color={textSecondary} fontFamily={fontCairo}>
-                              <Spinner size="xs" />
-                              <Text>جاري تحديث الإجابة الصحيحة...</Text>
-                            </HStack>
-                          )}
-                        </Box>
-                      </CardBody>
-                    </Card>
-                  </MotionBox>
-                ))}
-              </AnimatePresence>
-            </SimpleGrid>
-          </Box>
-        ) : (
-          <Flex direction="column" align="center" justify="center" minH="420px" bg={cardBg} borderRadius="2xl" borderWidth="2px" borderStyle="dashed" borderColor={cardBorder} textAlign="center" p={10} boxShadow={cardShadow}>
-            <Box w="20" h="20" borderRadius="full" bg={emptyIconBg} display="flex" alignItems="center" justifyContent="center" mb={5}>
-              <Icon as={FaDatabase} boxSize={10} color="blue.500" />
-            </Box>
-            <Heading size="md" color={textPrimary} mb={2} fontFamily={fontCairo}>لا توجد أسئلة بعد</Heading>
-            <Text color={textSecondary} mb={6} fontFamily={fontCairo}>ابدأ بإضافة أسئلة لهذا الدرس</Text>
-            <Button colorScheme="blue" onClick={onOpen} leftIcon={<Icon as={FaPlus} />} fontFamily={fontCairo} fontWeight="bold" size="lg">
-              إضافة أول سؤال
-            </Button>
-          </Flex>
-        )}
+                                )}
+                              </Box>
+                            </CardBody>
+                          </Card>
+                        </MotionBox>
+                      ))}
+                    </AnimatePresence>
+                  </SimpleGrid>
+                </Box>
+              ) : (
+                <Flex direction="column" align="center" justify="center" minH="420px" bg={cardBg} borderRadius="2xl" borderWidth="2px" borderStyle="dashed" borderColor={cardBorder} textAlign="center" p={10} boxShadow={cardShadow}>
+                  <Box w="20" h="20" borderRadius="full" bg={emptyIconBg} display="flex" alignItems="center" justifyContent="center" mb={5}>
+                    <Icon as={FaDatabase} boxSize={10} color="blue.500" />
+                  </Box>
+                  <Heading size="md" color={textPrimary} mb={2} fontFamily={fontCairo}>لا توجد أسئلة بعد</Heading>
+                  <Text color={textSecondary} mb={6} fontFamily={fontCairo}>ابدأ بإضافة أسئلة لهذا الدرس</Text>
+                  <Button colorScheme="blue" onClick={onOpen} leftIcon={<Icon as={FaPlus} />} fontFamily={fontCairo} fontWeight="bold" size="lg">
+                    إضافة أول سؤال
+                  </Button>
+                </Flex>
+              )}
             </TabPanel>
             <TabPanel px={0} pt={4}>
               {passagesLoading ? (
@@ -1237,103 +1288,103 @@ const Lesson = () => {
 
       {/* --- ADD TO EXAM MODAL (مدرس) — امتحان محاضرة | امتحان شامل، أسئلة أو قطع --- */}
       {isTeacher && (
-      <Modal isOpen={isExamOpen} onClose={() => { onExamClose(); setExamModalMode("questions"); }} size="lg" isCentered>
-        <ModalOverlay backdropFilter="blur(6px)" bg="blackAlpha.600" />
-        <ModalContent borderRadius="2xl" boxShadow={headerShadow} borderWidth="1px" borderColor={cardBorder}>
-          <ModalHeader bg="blue.500" color="white" borderRadius="2xl 2xl 0 0" py={5} fontFamily={fontCairo}>
-            <HStack spacing={3}>
-              <Box p={2} bg="whiteAlpha.200" borderRadius="xl"><Icon as={FaClipboardList} boxSize={5} /></Box>
-              <Text fontWeight="bold" fontSize="xl">
-                {examModalMode === "passages" ? "إضافة القطع للامتحان" : "إضافة الأسئلة للامتحان"}
-              </Text>
-            </HStack>
-          </ModalHeader>
-          <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
-          <ModalBody py={4}>
-            <Tabs index={examModalTab === "lecture" ? 0 : 1} onChange={(i) => setExamModalTab(i === 0 ? "lecture" : "comprehensive")} variant="soft-rounded" colorScheme="blue" mb={4}>
-              <TabList bg="gray.100" p={1} borderRadius="xl">
-                <Tab fontSize="sm" fontWeight="600">امتحان محاضرة</Tab>
-                {examModalMode !== "passages" && <Tab fontSize="sm" fontWeight="600">امتحان شامل</Tab>}
-              </TabList>
-            </Tabs>
-            {examLoading ? (
-              <Flex justify="center" p={8}><Spinner color="blue.500" /></Flex>
-            ) : examModalTab === "lecture" ? (
-              exams.length === 0 ? (
-                <Text textAlign="center" color="gray.500" py={8}>لا توجد امتحانات محاضرة متاحة.</Text>
+        <Modal isOpen={isExamOpen} onClose={() => { onExamClose(); setExamModalMode("questions"); }} size="lg" isCentered>
+          <ModalOverlay backdropFilter="blur(6px)" bg="blackAlpha.600" />
+          <ModalContent borderRadius="2xl" boxShadow={headerShadow} borderWidth="1px" borderColor={cardBorder}>
+            <ModalHeader bg="blue.500" color="white" borderRadius="2xl 2xl 0 0" py={5} fontFamily={fontCairo}>
+              <HStack spacing={3}>
+                <Box p={2} bg="whiteAlpha.200" borderRadius="xl"><Icon as={FaClipboardList} boxSize={5} /></Box>
+                <Text fontWeight="bold" fontSize="xl">
+                  {examModalMode === "passages" ? "إضافة القطع للامتحان" : "إضافة الأسئلة للامتحان"}
+                </Text>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
+            <ModalBody py={4}>
+              <Tabs index={examModalTab === "lecture" ? 0 : 1} onChange={(i) => setExamModalTab(i === 0 ? "lecture" : "comprehensive")} variant="soft-rounded" colorScheme="blue" mb={4}>
+                <TabList bg="gray.100" p={1} borderRadius="xl">
+                  <Tab fontSize="sm" fontWeight="600">امتحان محاضرة</Tab>
+                  {examModalMode !== "passages" && <Tab fontSize="sm" fontWeight="600">امتحان شامل</Tab>}
+                </TabList>
+              </Tabs>
+              {examLoading ? (
+                <Flex justify="center" p={8}><Spinner color="blue.500" /></Flex>
+              ) : examModalTab === "lecture" ? (
+                exams.length === 0 ? (
+                  <Text textAlign="center" color="gray.500" py={8}>لا توجد امتحانات محاضرة متاحة.</Text>
+                ) : (
+                  <RadioGroup value={selectedExamId} onChange={setSelectedExamId}>
+                    <VStack align="stretch" spacing={3} maxH="360px" overflowY="auto" pr={1}>
+                      {exams.map((exam) => (
+                        <Box
+                          key={exam.id}
+                          p={4}
+                          bg={selectedExamId === String(exam.id) ? "blue.50" : "gray.50"}
+                          borderRadius="xl"
+                          borderWidth="2px"
+                          borderColor={selectedExamId === String(exam.id) ? "blue.500" : "transparent"}
+                          cursor="pointer"
+                          onClick={() => setSelectedExamId(String(exam.id))}
+                          _hover={{ bg: "blue.50" }}
+                        >
+                          <Radio value={String(exam.id)} mb={2}>
+                            <Text fontWeight="bold" fontSize="md">{exam.title}</Text>
+                          </Radio>
+                          <HStack fontSize="sm" color="gray.500" spacing={4} pl={6}>
+                            {exam.courseTitle && <Text>{exam.courseTitle}</Text>}
+                            {exam.lectureTitle && (<><Text>•</Text><Text>{exam.lectureTitle}</Text></>)}
+                          </HStack>
+                        </Box>
+                      ))}
+                    </VStack>
+                  </RadioGroup>
+                )
               ) : (
-                <RadioGroup value={selectedExamId} onChange={setSelectedExamId}>
-                  <VStack align="stretch" spacing={3} maxH="360px" overflowY="auto" pr={1}>
-                    {exams.map((exam) => (
-                      <Box
-                        key={exam.id}
-                        p={4}
-                        bg={selectedExamId === String(exam.id) ? "blue.50" : "gray.50"}
-                        borderRadius="xl"
-                        borderWidth="2px"
-                        borderColor={selectedExamId === String(exam.id) ? "blue.500" : "transparent"}
-                        cursor="pointer"
-                        onClick={() => setSelectedExamId(String(exam.id))}
-                        _hover={{ bg: "blue.50" }}
-                      >
-                        <Radio value={String(exam.id)} mb={2}>
-                          <Text fontWeight="bold" fontSize="md">{exam.title}</Text>
-                        </Radio>
-                        <HStack fontSize="sm" color="gray.500" spacing={4} pl={6}>
-                          {exam.courseTitle && <Text>{exam.courseTitle}</Text>}
-                          {exam.lectureTitle && (<><Text>•</Text><Text>{exam.lectureTitle}</Text></>)}
-                        </HStack>
-                      </Box>
-                    ))}
-                  </VStack>
-                </RadioGroup>
-              )
-            ) : (
-              comprehensiveExams.length === 0 ? (
-                <Text textAlign="center" color="gray.500" py={8}>لا توجد امتحانات شاملة متاحة.</Text>
+                comprehensiveExams.length === 0 ? (
+                  <Text textAlign="center" color="gray.500" py={8}>لا توجد امتحانات شاملة متاحة.</Text>
+                ) : (
+                  <RadioGroup value={selectedExamId} onChange={setSelectedExamId}>
+                    <VStack align="stretch" spacing={3} maxH="360px" overflowY="auto" pr={1}>
+                      {comprehensiveExams.map((exam) => (
+                        <Box
+                          key={exam.id}
+                          p={4}
+                          bg={selectedExamId === String(exam.id) ? "blue.50" : "gray.50"}
+                          borderRadius="xl"
+                          borderWidth="2px"
+                          borderColor={selectedExamId === String(exam.id) ? "blue.500" : "transparent"}
+                          cursor="pointer"
+                          onClick={() => setSelectedExamId(String(exam.id))}
+                          _hover={{ bg: "blue.50" }}
+                        >
+                          <Radio value={String(exam.id)} mb={2}>
+                            <Text fontWeight="bold" fontSize="md">{exam.title}</Text>
+                          </Radio>
+                          <HStack fontSize="sm" color="gray.500" spacing={4} pl={6}>
+                            <Text>{exam.course_title || exam.courseTitle || ""}</Text>
+                            {exam.duration_minutes != null && <Text>• {exam.duration_minutes} د</Text>}
+                          </HStack>
+                        </Box>
+                      ))}
+                    </VStack>
+                  </RadioGroup>
+                )
+              )}
+            </ModalBody>
+            <ModalFooter borderTopWidth="1px" borderColor={borderColor} py={4}>
+              <Button variant="ghost" mr={3} onClick={() => { onExamClose(); setExamModalMode("questions"); }} fontFamily={fontCairo}>إلغاء</Button>
+              {examModalMode === "passages" ? (
+                <Button colorScheme="blue" onClick={handleAddPassagesToExam} isLoading={addToExamLoading} isDisabled={!selectedExamId} fontFamily={fontCairo} fontWeight="bold">
+                  إضافة {selectedPassageIds.length} قطعة
+                </Button>
               ) : (
-                <RadioGroup value={selectedExamId} onChange={setSelectedExamId}>
-                  <VStack align="stretch" spacing={3} maxH="360px" overflowY="auto" pr={1}>
-                    {comprehensiveExams.map((exam) => (
-                      <Box
-                        key={exam.id}
-                        p={4}
-                        bg={selectedExamId === String(exam.id) ? "blue.50" : "gray.50"}
-                        borderRadius="xl"
-                        borderWidth="2px"
-                        borderColor={selectedExamId === String(exam.id) ? "blue.500" : "transparent"}
-                        cursor="pointer"
-                        onClick={() => setSelectedExamId(String(exam.id))}
-                        _hover={{ bg: "blue.50" }}
-                      >
-                        <Radio value={String(exam.id)} mb={2}>
-                          <Text fontWeight="bold" fontSize="md">{exam.title}</Text>
-                        </Radio>
-                        <HStack fontSize="sm" color="gray.500" spacing={4} pl={6}>
-                          <Text>{exam.course_title || exam.courseTitle || ""}</Text>
-                          {exam.duration_minutes != null && <Text>• {exam.duration_minutes} د</Text>}
-                        </HStack>
-                      </Box>
-                    ))}
-                  </VStack>
-                </RadioGroup>
-              )
-            )}
-          </ModalBody>
-          <ModalFooter borderTopWidth="1px" borderColor={borderColor} py={4}>
-            <Button variant="ghost" mr={3} onClick={() => { onExamClose(); setExamModalMode("questions"); }} fontFamily={fontCairo}>إلغاء</Button>
-            {examModalMode === "passages" ? (
-              <Button colorScheme="blue" onClick={handleAddPassagesToExam} isLoading={addToExamLoading} isDisabled={!selectedExamId} fontFamily={fontCairo} fontWeight="bold">
-                إضافة {selectedPassageIds.length} قطعة
-              </Button>
-            ) : (
-              <Button colorScheme="blue" onClick={handleAddQuestionsToExam} isLoading={addToExamLoading} isDisabled={!selectedExamId} fontFamily={fontCairo} fontWeight="bold">
-                إضافة {selectedQuestions.length} سؤال
-              </Button>
-            )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+                <Button colorScheme="blue" onClick={handleAddQuestionsToExam} isLoading={addToExamLoading} isDisabled={!selectedExamId} fontFamily={fontCairo} fontWeight="bold">
+                  إضافة {selectedQuestions.length} سؤال
+                </Button>
+              )}
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       )}
 
       {/* --- OTHER MODALS --- */}
@@ -1509,16 +1560,38 @@ const Lesson = () => {
                           type="file"
                           accept="image/*"
                           multiple
-                          onChange={(e) => {
-                            const files = Array.from(e.target.files || []);
-                            const limited = files.slice(0, 20);
-                            imageOnlyBulkPreviewUrlsRef.current.forEach(URL.revokeObjectURL);
-                            const urls = limited.map((f) => URL.createObjectURL(f));
-                            imageOnlyBulkPreviewUrlsRef.current = urls;
-                            setImageOnlyBulkPreviewUrls(urls);
-                            setImageOnlyBulkFiles(limited);
-                            setImageOnlyBulkResult(null);
-                            e.target.value = "";
+                          onChange={async (e) => {
+                            try {
+                              const inputTarget = e.target;
+                              let files = Array.from(inputTarget.files || []);
+
+                              // المتصفحات ومرافق النظام لا تحفظ الترتيب الفعلي لـ "نقرات الماوس" عند اختيار الملفات
+                              // لذلك أفضل طريقة لضمان الترتيب الصحيح (مثلاً: صورة 1، صورة 2 ... صورة 10)
+                              // هو إعادة ترتيبهم حسب الأسماء بشكل رقمي وأبجدي.
+                              files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+                              const limited = files.slice(0, 20);
+
+                              setImageOnlyBulkLoading(true); // نظهر التحميل أثناء معالجة الصور
+
+                              // ضغط الصور لحل مشكلة 413 Payload Too Large
+                              const compressedFiles = await Promise.all(
+                                limited.map(file => compressImage(file, 1024, 0.7))
+                              );
+
+                              imageOnlyBulkPreviewUrlsRef.current.forEach(URL.revokeObjectURL);
+                              const urls = compressedFiles.map((f) => URL.createObjectURL(f));
+                              imageOnlyBulkPreviewUrlsRef.current = urls;
+                              setImageOnlyBulkPreviewUrls(urls);
+                              setImageOnlyBulkFiles(compressedFiles);
+                              setImageOnlyBulkResult(null);
+
+                              inputTarget.value = "";
+                            } catch (error) {
+                              console.error("Error processing images:", error);
+                            } finally {
+                              setImageOnlyBulkLoading(false);
+                            }
                           }}
                           border="none"
                           p={0}
@@ -1535,23 +1608,30 @@ const Lesson = () => {
                     </FormControl>
                     {imageOnlyBulkFiles.length > 0 && (
                       <Box>
-                        <FormLabel fontFamily={fontCairo} fontSize="sm" mb={2}>معاينة الصور — يمكنك إلغاء أي صورة</FormLabel>
-                        <SimpleGrid columns={{ base: 2, sm: 3, md: 4 }} spacing={3}>
+                        <FormLabel fontFamily={fontCairo} fontSize="sm" mb={3}>معاينة الصور — يمكنك مراجعة الصور وترتيبها قبل الرفع</FormLabel>
+                        <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
                           {imageOnlyBulkFiles.map((file, index) => (
-                            <Box key={index} position="relative" borderRadius="lg" overflow="hidden" borderWidth="1px" borderColor={borderColor} bg={bulkPreviewBg}>
-                              <Image src={imageOnlyBulkPreviewUrls[index]} alt={file.name} objectFit="cover" h="24" w="full" />
+                            <Box key={index} position="relative" borderRadius="xl" overflow="hidden" borderWidth="2px" borderColor={borderColor} bg={bulkPreviewBg} boxShadow="sm" transition="all 0.2s" _hover={{ boxShadow: "md", transform: "translateY(-2px)" }}>
+                              <Badge position="absolute" top={2} right={2} colorScheme="blue" fontSize="md" px={3} py={1} borderRadius="lg" zIndex={2} boxShadow="sm">سؤال {index + 1}</Badge>
                               <IconButton
                                 aria-label="إلغاء الصورة"
                                 icon={<Icon as={FaTimes} />}
-                                size="xs"
+                                size="sm"
                                 colorScheme="red"
                                 position="absolute"
-                                top={1}
-                                right={1}
+                                top={2}
+                                left={2}
                                 borderRadius="full"
                                 onClick={() => removeBulkImageAtIndex(index)}
+                                zIndex={2}
+                                boxShadow="sm"
                               />
-                              <Text fontSize="xs" noOfLines={1} px={2} py={1} fontFamily={fontCairo}>{file.name}</Text>
+                              <Box position="relative" h="180px" w="full" bg="white">
+                                <Image src={imageOnlyBulkPreviewUrls[index]} alt={file.name} objectFit="contain" w="full" h="full" p={2} />
+                              </Box>
+                              <Box p={2} bg={useColorModeValue("gray.50", "whiteAlpha.100")} borderTopWidth="1px" borderColor={borderColor}>
+                                <Text fontSize="xs" noOfLines={1} fontFamily={fontCairo} color={textSecondary} textAlign="center" fontWeight="500">{file.name}</Text>
+                              </Box>
                             </Box>
                           ))}
                         </SimpleGrid>

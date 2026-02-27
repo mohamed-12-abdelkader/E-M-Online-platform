@@ -2599,9 +2599,9 @@ D) has made`}
         tempDiv.innerHTML = `
            <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 3mm; width: 100%; height: 100%; align-content: start;">
             ${codesToExport
-              .slice(i, i + codesPerPage)
-              .map(
-                (code, index) => `
+            .slice(i, i + codesPerPage)
+            .map(
+              (code, index) => `
                   <div style="padding: 0; width: 100%; height: 100%; border-radius: 12px; box-shadow: 0 2px 12px rgba(49,130,206,0.18); position: relative; overflow: hidden; background: #f8fafc; display: flex; flex-direction: column; min-height: 40mm; direction: rtl; border: 1px solid rgba(49,130,206,0.25);">
                     <div style="position: absolute; inset: 0; background-image: url('${logoUrl}'); background-size: 50% auto; background-repeat: no-repeat; background-position: center; opacity: 0.22; pointer-events: none;"></div>
                     <div style="position: relative; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 6px; background: #3182ce; padding: 8px 10px; min-height: 36px;">
@@ -2612,24 +2612,22 @@ D) has made`}
                     <div style="position: relative; flex: 1 1 0; min-height: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 8px 10px; gap: 8px;">
                       <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
                         <div style="font-size: 10px; color: #2b6cb0; font-weight: 700; margin-bottom: 6px;">كود التفعيل</div>
-                        <div style="display: inline-block; font-size: 18px; color: #1a365d; font-weight: 800; letter-spacing: 2px; font-family: monospace; padding: 8px 14px; background: #fff; border: 2px solid #3182ce; border-radius: 8px; box-shadow: 0 2px 6px rgba(49,130,206,0.2);">${
-                          code.code
-                        }</div>
+                        <div style="display: inline-block; font-size: 18px; color: #1a365d; font-weight: 800; letter-spacing: 2px; font-family: monospace; padding: 8px 14px; background: #fff; border: 2px solid #3182ce; border-radius: 8px; box-shadow: 0 2px 6px rgba(49,130,206,0.2);">${code.code
+                }</div>
                       </div>
                       <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin: 6px 0;">
-                        ${
-                          code.qr_code
-                            ? `<img src="${code.qr_code}" alt="QR" style="width: 100px; height: 100px; border: 2px solid #3182ce; border-radius: 10px; background: #fff; padding: 2px; display: block; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;" />`
-                            : '<div style="width: 100px; height: 100px; border: 2px dashed #3182ce; border-radius: 10px; background: #ebf8ff; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #3182ce; font-weight: bold;">QR</div>'
-                        }
+                        ${code.qr_code
+                  ? `<img src="${code.qr_code}" alt="QR" style="width: 100px; height: 100px; border: 2px solid #3182ce; border-radius: 10px; background: #fff; padding: 2px; display: block; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;" />`
+                  : '<div style="width: 100px; height: 100px; border: 2px dashed #3182ce; border-radius: 10px; background: #ebf8ff; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #3182ce; font-weight: bold;">QR</div>'
+                }
                       </div>
                     </div>
                     <div style="position: relative; flex: 0 0 auto; min-height: 30px; padding: 10px 8px; background: #3182ce; display: flex; align-items: center; justify-content: center;">
                       <p style="font-size: 14px; font-weight: 800; color: #ffffff; text-align: center; margin: 0; line-height: 1.4; letter-spacing: 0.8px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">01111272393 | 01288781012</p>
                     </div>
                   </div>`,
-              )
-              .join("")}
+            )
+            .join("")}
           </div>
         `;
         await new Promise((resolve) => setTimeout(resolve, 350));
@@ -3640,78 +3638,127 @@ D) has made`}
               variant="unstyled"
               size={{ base: "sm", md: "md" }}
             >
-              <Box mb={4} borderBottomWidth="1px" borderColor={borderColor}>
-                <TabList gap={0} flexWrap="wrap" bg="transparent">
+              <Box mb={6} overflow="hidden">
+                <TabList
+                  bg={useColorModeValue("gray.50", "whiteAlpha.100")}
+                  p={2}
+                  borderRadius="2xl"
+                  display="inline-flex"
+                  flexWrap={{ base: "wrap", md: "nowrap" }}
+                  gap={2}
+                  w={{ base: "full", md: "auto" }}
+                  boxShadow="sm"
+                  borderWidth="1px"
+                  borderColor={useColorModeValue("gray.100", "whiteAlpha.50")}
+                  position="relative"
+                  zIndex={1}
+                >
                   <Tab
                     fontWeight="bold"
-                    fontSize={{ base: "sm", md: "md" }}
-                    color={subTextColor}
-                    borderBottomWidth="3px"
-                    borderBottomColor="transparent"
-                    mb="-2px"
-                    py={3}
-                    px={{ base: 2, sm: 4 }}
+                    fontSize={{ base: "13px", sm: "15px" }}
+                    color={useColorModeValue("gray.600", "gray.400")}
+                    borderRadius="xl"
+                    py={{ base: 2.5, md: 3 }}
+                    px={{ base: 4, md: 6 }}
+                    flex={{ base: "1 1 calc(50% - 8px)", md: "initial" }}
+                    justifyContent="center"
                     _selected={{
-                      color: "blue.500",
-                      borderBottomColor: "blue.500",
+                      color: "white",
+                      bg: "blue.500",
+                      boxShadow: "0 4px 12px rgba(49, 130, 206, 0.3)",
+                      transform: "translateY(-1px)"
                     }}
-                    _hover={{ color: headingColor }}
-                    transition="all 0.2s"
+                    _hover={{
+                      color: useColorModeValue("blue.600", "blue.300"),
+                      bg: useColorModeValue("blue.50", "whiteAlpha.100")
+                    }}
+                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
                   >
+                    <Icon as={FaPlayCircle} fontSize="lg" />
                     المحاضرات
                   </Tab>
                   <Tab
                     fontWeight="bold"
-                    fontSize={{ base: "sm", md: "md" }}
-                    color={subTextColor}
-                    borderBottomWidth="3px"
-                    borderBottomColor="transparent"
-                    mb="-2px"
-                    py={3}
-                    px={{ base: 2, sm: 4 }}
+                    fontSize={{ base: "13px", sm: "15px" }}
+                    color={useColorModeValue("gray.600", "gray.400")}
+                    borderRadius="xl"
+                    py={{ base: 2.5, md: 3 }}
+                    px={{ base: 4, md: 6 }}
+                    flex={{ base: "1 1 calc(50% - 8px)", md: "initial" }}
+                    justifyContent="center"
                     _selected={{
-                      color: "blue.500",
-                      borderBottomColor: "blue.500",
+                      color: "white",
+                      bg: "green.500",
+                      boxShadow: "0 4px 12px rgba(56, 161, 105, 0.3)",
+                      transform: "translateY(-1px)"
                     }}
-                    _hover={{ color: headingColor }}
-                    transition="all 0.2s"
+                    _hover={{
+                      color: useColorModeValue("green.600", "green.300"),
+                      bg: useColorModeValue("green.50", "whiteAlpha.100")
+                    }}
+                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
                   >
+                    <Icon as={FaVideo} fontSize="lg" />
                     الجلسات المباشرة
                   </Tab>
                   <Tab
                     fontWeight="bold"
-                    fontSize={{ base: "sm", md: "md" }}
-                    color={subTextColor}
-                    borderBottomWidth="3px"
-                    borderBottomColor="transparent"
-                    mb="-2px"
-                    py={3}
-                    px={{ base: 2, sm: 4 }}
+                    fontSize={{ base: "13px", sm: "15px" }}
+                    color={useColorModeValue("gray.600", "gray.400")}
+                    borderRadius="xl"
+                    py={{ base: 2.5, md: 3 }}
+                    px={{ base: 4, md: 6 }}
+                    flex={{ base: "1 1 calc(50% - 8px)", md: "initial" }}
+                    justifyContent="center"
                     _selected={{
-                      color: "blue.500",
-                      borderBottomColor: "blue.500",
+                      color: "white",
+                      bg: "purple.500",
+                      boxShadow: "0 4px 12px rgba(128, 90, 213, 0.3)",
+                      transform: "translateY(-1px)"
                     }}
-                    _hover={{ color: headingColor }}
-                    transition="all 0.2s"
+                    _hover={{
+                      color: useColorModeValue("purple.600", "purple.300"),
+                      bg: useColorModeValue("purple.50", "whiteAlpha.100")
+                    }}
+                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
                   >
+                    <Icon as={FaUsers} fontSize="lg" />
                     الدعم العلمي
                   </Tab>
                   <Tab
                     fontWeight="bold"
-                    fontSize={{ base: "sm", md: "md" }}
-                    color={subTextColor}
-                    borderBottomWidth="3px"
-                    borderBottomColor="transparent"
-                    mb="-2px"
-                    py={3}
-                    px={{ base: 2, sm: 4 }}
+                    fontSize={{ base: "13px", sm: "15px" }}
+                    color={useColorModeValue("gray.600", "gray.400")}
+                    borderRadius="xl"
+                    py={{ base: 2.5, md: 3 }}
+                    px={{ base: 4, md: 6 }}
+                    flex={{ base: "1 1 calc(50% - 8px)", md: "initial" }}
+                    justifyContent="center"
                     _selected={{
-                      color: "orange.500",
-                      borderBottomColor: "orange.500",
+                      color: "white",
+                      bg: "orange.400",
+                      boxShadow: "0 4px 12px rgba(237, 137, 54, 0.3)",
+                      transform: "translateY(-1px)"
                     }}
-                    _hover={{ color: headingColor }}
-                    transition="all 0.2s"
+                    _hover={{
+                      color: useColorModeValue("orange.500", "orange.300"),
+                      bg: useColorModeValue("orange.50", "whiteAlpha.100")
+                    }}
+                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
                   >
+                    <Icon as={FaEdit} fontSize="lg" />
                     الامتحانات
                   </Tab>
                 </TabList>
@@ -3719,14 +3766,15 @@ D) has made`}
 
               <TabPanels p={0}>
                 {/* Tab Panel للمحاضرات — يعرض المحاضرات فقط */}
-                <TabPanel px={{ base: 2, sm: 4, md: 6, lg: 8 }} py={4}>
+                <TabPanel px={{ base: 0, sm: 2, md: 4 }} py={4}>
                   <Box
                     bg={sectionBg}
                     borderRadius="xl"
                     borderWidth="1px"
                     borderColor={borderColor}
-                    p={4}
+                    p={{ base: 3, md: 4 }}
                     minH="280px"
+                    boxShadow="sm"
                   >
                     <LecturesTab
                       lectures={lectures}
