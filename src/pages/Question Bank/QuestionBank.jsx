@@ -33,7 +33,9 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
-  Avatar
+  Avatar,
+  Grid,
+  GridItem
 } from '@chakra-ui/react';
 import {
   FiBook,
@@ -126,6 +128,19 @@ const QuestionBank = () => {
   const [lessonSubmitLoading, setLessonSubmitLoading] = useState(false);
   const [lessonEditLoading, setLessonEditLoading] = useState(false);
   const [lessonDeleteLoading, setLessonDeleteLoading] = useState(false);
+
+  const [activeSubjectId, setActiveSubjectId] = useState(null);
+  const [activeChapterId, setActiveChapterId] = useState(null);
+
+  useEffect(() => {
+    if (subjects.length > 0 && !activeSubjectId) {
+      const firstSubject = subjects[0];
+      setActiveSubjectId(firstSubject.id);
+      if (firstSubject.chapters?.length > 0) {
+        setActiveChapterId(firstSubject.chapters[0].id);
+      }
+    }
+  }, [subjects, activeSubjectId]);
 
   // ألوان بسيطة تتناسب مع البراند
   const bgColor = useColorModeValue("gray.50", "gray.900");
@@ -897,6 +912,9 @@ const QuestionBank = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
+  const activeSubject = filteredSubjects.find(s => s.id === activeSubjectId) || filteredSubjects[0];
+  const activeChapter = activeSubject?.chapters?.find(c => c.id === activeChapterId) || activeSubject?.chapters?.[0];
+
   if (loading) {
     return (
       <Flex minH="100vh" bg={bgColor} justify="center" align="center">
@@ -935,7 +953,7 @@ const QuestionBank = () => {
   }
 
   return (
-    <Box minH="100vh" bg={bgColor}>
+    <Box minH="100vh" bg={bgColor} w="full" overflowX="hidden">
 
       {/* Header */}
       <Box bgGradient="linear(to-r, blue.500, orange.500)" py={8} mb={6}>
@@ -1139,250 +1157,200 @@ const QuestionBank = () => {
               )}
             </MotionBox>
           ) : (
-            <VStack spacing={4} align="stretch">
-              {filteredSubjects.map((subject) => (
-                <Accordion key={subject.id} allowToggle bg={cardBackground} borderRadius="xl" borderWidth="1px" borderColor={cardBorder} overflow="hidden" shadow={cardShadow}>
-                  <AccordionItem border="none">
-                    {({ isExpanded }) => (
-                      <>
-                        <AccordionButton
-                          py={4}
-                          px={{ base: 4, md: 6 }}
-                          _hover={{ bg: accordionHoverBg }}
-                          transition="all 0.2s"
-                          borderLeftWidth="3px"
-                          borderLeftColor={isExpanded ? "blue.500" : "transparent"}
-                        >
-                          <Flex flex={1} align="center" gap={4} w="full">
-                            {/* صورة المادة */}
-                            <Avatar
-                              src={subject.image_url || undefined}
-                              name={subject.name}
-                              size="md"
-                              borderRadius="lg"
-                              bg="blue.500"
-                              color="white"
-                            />
-
-                            {/* معلومات المادة */}
-                            <VStack align="flex-start" spacing={1} flex={1} minW={0}>
-                              <HStack justify="space-between" w="full">
-                                <Heading size="sm" color={textPrimary} fontWeight="700">
-                                  {subject.name}
-                                </Heading>
-                                <Badge
-                                  colorScheme={subject.is_active ? "green" : "gray"}
-                                  borderRadius="full"
-                                  px={2}
-                                  fontSize="xs"
-                                >
-                                  {subject.is_active ? "نشط" : "غير نشط"}
-                                </Badge>
-                              </HStack>
-
-                              {subject.description && (
-                                <Text fontSize="xs" color={textSecondary} noOfLines={1}>
-                                  {subject.description}
-                                </Text>
-                              )}
-
-                              <HStack spacing={2} fontSize="xs" color={textSecondary}>
-                                <Icon as={FiFolder} />
-                                <Text>{subject.chapters?.length || 0} فصل</Text>
-                                <Text>•</Text>
-                                <Icon as={FiFileText} />
-                                <Text>{(subject.chapters || []).reduce((acc, ch) => acc + (ch.lessons?.length || 0), 0)} درس</Text>
-                              </HStack>
-                            </VStack>
-
-                            {/* أزرار التحكم */}
-                            <HStack spacing={2} onClick={(e) => e.stopPropagation()}>
-                              <IconButton
-                                aria-label="تعديل"
-                                icon={<FiEdit />}
-                                size="sm"
-                                colorScheme="orange"
-                                onClick={() => handleEditClick(subject)}
-                              />
-                              <IconButton
-                                aria-label="حذف"
-                                icon={<FiTrash />}
-                                size="sm"
-                                colorScheme="red"
-                                onClick={() => handleDeleteClick(subject)}
-                              />
-                              <Link to={`/supject/${subject.id}`}>
-                                <Button
-                                  size="sm"
-                                  rightIcon={<FiArrowRight />}
-                                  colorScheme="blue"
-                                >
-                                  عرض الأسئلة
-                                </Button>
-                              </Link>
+            <Grid templateColumns={{ base: "1fr", lg: "350px 1fr" }} gap={{ base: 5, lg: 8 }} alignItems="start">
+              {/* القائمة الجانبية للمواد */}
+              <Box bg={cardBackground} p={{ base: 4, lg: 4 }} borderRadius="2xl" shadow={cardShadow} borderWidth="1px" borderColor={cardBorder} h={{ base: "auto", lg: "calc(100vh - 120px)" }} maxH={{ base: "400px", lg: "none" }} display="flex" flexDir="column" overflow="hidden" maxW="full">
+                <Flex justify="space-between" align="center" px={2} mb={4} flexShrink={0}>
+                  <Text fontWeight="800" color={textPrimary} fontSize="lg" fontFamily="'Cairo', 'Tajawal', sans-serif">
+                    المواد الدراسية
+                  </Text>
+                  <Badge bg={iconBg} color={textPrimary} px={3} py={1} borderRadius="full" fontWeight="bold">
+                    {filteredSubjects.length}
+                  </Badge>
+                </Flex>
+                <VStack align="stretch" spacing={3} flex={1} overflowY="auto" pr={{ lg: 2 }} sx={{ '&::-webkit-scrollbar': { width: '4px' }, '&::-webkit-scrollbar-thumb': { bg: 'gray.300', borderRadius: 'full' } }}>
+                  {filteredSubjects.map(subject => {
+                    const isActive = activeSubject?.id === subject.id;
+                    return (
+                      <Box
+                        key={subject.id}
+                        p={4}
+                        bg={isActive ? useColorModeValue("blue.50", "blue.900/30") : "transparent"}
+                        borderWidth="1px"
+                        borderColor={isActive ? useColorModeValue("blue.200", "blue.700") : "transparent"}
+                        borderRadius="xl"
+                        cursor="pointer"
+                        position="relative"
+                        onClick={() => { setActiveSubjectId(subject.id); setActiveChapterId(subject.chapters?.[0]?.id || null); }}
+                        transition="all 0.2s"
+                        _hover={{
+                          bg: isActive ? useColorModeValue("blue.50", "blue.900/30") : useColorModeValue("gray.50", "gray.700/50"),
+                          transform: isActive ? "none" : "translateX(-4px)"
+                        }}
+                      >
+                        {isActive && (
+                          <Box position="absolute" right="-1px" top="20%" bottom="20%" width="4px" bg="blue.500" borderRadius="full" />
+                        )}
+                        <Flex gap={4} align="center">
+                          <Avatar src={subject.image_url || undefined} name={subject.name} size="md" bg="blue.500" color="white" shadow="sm" />
+                          <Box flex={1}>
+                            <Text fontWeight="bold" fontSize="md" color={isActive ? "blue.600" : textPrimary} noOfLines={1} mb={0.5} fontFamily="'Cairo', 'Tajawal', sans-serif">
+                              {subject.name}
+                            </Text>
+                            <HStack spacing={2} fontSize="xs" color={textSecondary}>
+                              <Flex align="center" gap={1}><Icon as={FiFolder} /> <Text>{subject.chapters?.length || 0}</Text></Flex>
+                              <Text>•</Text>
+                              <Flex align="center" gap={1}><Icon as={FiFileText} /> <Text>{(subject.chapters || []).reduce((acc, ch) => acc + (ch.lessons?.length || 0), 0)}</Text></Flex>
                             </HStack>
+                          </Box>
+                          <HStack spacing={1}>
+                            <IconButton aria-label="تعديل" icon={<FiEdit />} size="sm" variant="ghost" colorScheme="orange" onClick={(e) => { e.stopPropagation(); handleEditClick(subject); }} />
+                            <IconButton aria-label="حذف" icon={<FiTrash />} size="sm" variant="ghost" colorScheme="red" onClick={(e) => { e.stopPropagation(); handleDeleteClick(subject); }} />
+                          </HStack>
+                        </Flex>
+                      </Box>
+                    );
+                  })}
+                </VStack>
+              </Box>
 
-                            <AccordionIcon color={textSecondary} fontSize="xl" />
-                          </Flex>
-                        </AccordionButton>
-                        <AccordionPanel pb={4} pt={2} bg={accordionHoverBg} px={{ base: 4, md: 6 }}>
-                          <Flex justify="flex-end" mb={3}>
-                            <Button
-                              size="sm"
-                              leftIcon={<FiPlus />}
-                              colorScheme="blue"
-                              onClick={() => openAddChapter(subject)}
-                            >
-                              إضافة فصل جديد
-                            </Button>
+              {/* منطقة محتوى المادة (الفصول والدروس) */}
+              {activeSubject && (
+                <Box bg={cardBackground} p={{ base: 5, md: 8 }} borderRadius="2xl" borderWidth="1px" borderColor={cardBorder} shadow="sm" h={{ base: "auto", lg: "calc(100vh - 120px)" }} minH={{ base: "500px", lg: "auto" }} display="flex" flexDir="column" maxW="full" overflow="hidden">
+                  {/* Header: Subject Details */}
+                  <Flex direction={{ base: "column", sm: "row" }} justify="space-between" align={{ base: "flex-start", sm: "center" }} mb={8} pb={6} borderBottomWidth="1px" borderColor={cardBorder} gap={4} flexShrink={0} maxW="full">
+                    <HStack spacing={5}>
+                      <Avatar src={activeSubject.image_url || undefined} name={activeSubject.name} size="xl" bg="blue.500" shadow="md" />
+                      <VStack align="start" spacing={1}>
+                        <Heading size="lg" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif">{activeSubject.name}</Heading>
+                        <Text fontSize="sm" color={textSecondary} maxW="2xl" lineHeight="1.6">{activeSubject.description || "لا يوجد وصف لهذه المادة حتى الآن."}</Text>
+                      </VStack>
+                    </HStack>
+                    <Link to={`/supject/${activeSubject.id}`}>
+                      <Button colorScheme="blue" variant="solid" rightIcon={<FiArrowRight />} size="md" borderRadius="xl" shadow="sm">
+                        عرض المادة والتفاصيل
+                      </Button>
+                    </Link>
+                  </Flex>
+
+                  <Flex justify="space-between" align="center" mb={6} flexShrink={0}>
+                    <Heading size="md" color={textPrimary} fontFamily="'Cairo', 'Tajawal', sans-serif">محتوى المادة الدراسي</Heading>
+                    <Button size="sm" leftIcon={<FiPlus />} colorScheme="blue" variant="outline" borderRadius="lg" onClick={() => openAddChapter(activeSubject)}>
+                      إضافة فصل جديد
+                    </Button>
+                  </Flex>
+
+                  {activeSubject.chapters && activeSubject.chapters.length > 0 ? (
+                    <Box flex={1} display="flex" flexDir="column" overflow="hidden">
+                      {/* Wrapper for Chapters */}
+                      <Box mb={6} position="relative" flexShrink={0} maxW="full">
+                        <Flex gap={3} wrap="wrap" pb={2}>
+                          {activeSubject.chapters.map(chapter => {
+                            const isChActive = activeChapter?.id === chapter.id;
+                            return (
+                              <Button
+                                key={chapter.id}
+                                variant={isChActive ? "solid" : "ghost"}
+                                colorScheme={isChActive ? "blue" : "gray"}
+                                bg={isChActive ? "blue.500" : useColorModeValue("gray.50", "gray.700")}
+                                color={isChActive ? "white" : textSecondary}
+                                onClick={() => setActiveChapterId(chapter.id)}
+                                flexShrink={0}
+                                borderRadius="xl"
+                                px={6}
+                                py={5}
+                                size="md"
+                                fontWeight="bold"
+                                fontFamily="'Cairo', 'Tajawal', sans-serif"
+                                shadow={isChActive ? "md" : "none"}
+                                _hover={{
+                                  bg: isChActive ? "blue.600" : useColorModeValue("gray.200", "gray.600"),
+                                  transform: "translateY(-2px)"
+                                }}
+                                transition="all 0.2s"
+                              >
+                                {chapter.name}
+                              </Button>
+                            );
+                          })}
+                        </Flex>
+                      </Box>
+
+                      {/* Active Chapter Details & Lessons */}
+                      {activeChapter && (
+                        <Box p={{ base: 5, md: 7 }} bg={useColorModeValue("gray.50", "gray.800/50")} borderRadius="2xl" borderWidth="1px" borderColor={cardBorder} flex={1} overflowY="auto" sx={{ '&::-webkit-scrollbar': { width: '6px' }, '&::-webkit-scrollbar-thumb': { bg: 'gray.300', borderRadius: 'full' } }}>
+                          <Flex direction={{ base: "column", sm: "row" }} justify="space-between" align={{ base: "flex-start", sm: "center" }} mb={6} gap={4}>
+                            <Box>
+                              <Text fontWeight="800" color={textPrimary} fontSize="xl" fontFamily="'Cairo', 'Tajawal', sans-serif" mb={1}>{activeChapter.name}</Text>
+                              {activeChapter.description && <Text fontSize="sm" color={textSecondary}>{activeChapter.description}</Text>}
+                            </Box>
+                            <HStack spacing={2}>
+                              <IconButton aria-label="تعديل" icon={<FiEdit />} size="sm" colorScheme="orange" variant="outline" bg={cardBackground} onClick={() => handleChapterEditClick(activeChapter)} />
+                              <IconButton aria-label="حذف" icon={<FiTrash />} size="sm" colorScheme="red" variant="outline" bg={cardBackground} onClick={() => handleChapterDeleteClick(activeChapter)} />
+                              <Button size="sm" colorScheme="blue" leftIcon={<FiPlus />} onClick={() => openAddLesson(activeChapter)} shadow="sm">إضافة درس</Button>
+                            </HStack>
                           </Flex>
 
-                          {subject.chapters && subject.chapters.length > 0 ? (
-                            <VStack spacing={3} align="stretch">
-                              {subject.chapters.map((chapter) => (
-                                <Accordion key={chapter.id} allowToggle>
-                                  <AccordionItem
-                                    border="none"
+                          {/* Lessons Grid */}
+                          {activeChapter.lessons && activeChapter.lessons.length > 0 ? (
+                            <Grid templateColumns={{ base: "1fr", xl: "repeat(2, 1fr)" }} gap={5}>
+                              {activeChapter.lessons.map(lesson => (
+                                <GridItem key={lesson.id}>
+                                  <Flex
+                                    p={5}
                                     bg={cardBackground}
-                                    borderRadius="lg"
+                                    borderRadius="xl"
+                                    borderWidth="1px"
+                                    borderColor={cardBorder}
+                                    align="center"
+                                    gap={4}
                                     shadow="sm"
-                                    overflow="hidden"
+                                    position="relative"
+                                    _hover={{ shadow: "md", borderColor: "blue.400", transform: "translateY(-3px)" }}
+                                    transition="all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)"
                                   >
-                                    <AccordionButton
-                                      py={3}
-                                      px={4}
-                                      _hover={{ bg: accordionHoverBg }}
-                                    >
-                                      <Flex flex={1} align="center" gap={3} w="full">
-                                        <Box p={2} bg={iconBg} borderRadius="md" color="blue.500">
-                                          <Icon as={FiFolder} boxSize={4} />
-                                        </Box>
-
-                                        <VStack align="flex-start" spacing={0} flex={1} minW={0}>
-                                          <Text fontWeight="600" fontSize="sm" color={textPrimary}>
-                                            {chapter.name}
-                                          </Text>
-                                          {chapter.description && (
-                                            <Text fontSize="xs" color={textSecondary} noOfLines={1}>
-                                              {chapter.description}
-                                            </Text>
-                                          )}
-                                          <Text fontSize="xs" color={textSecondary}>
-                                            {chapter.lessons?.length || 0} درس
-                                          </Text>
-                                        </VStack>
-
-                                        <HStack spacing={1} onClick={(e) => e.stopPropagation()}>
-                                          <IconButton
-                                            aria-label="تعديل الفصل"
-                                            icon={<FiEdit />}
-                                            size="sm"
-                                            colorScheme="orange"
-                                            onClick={() => handleChapterEditClick(chapter)}
-                                          />
-                                          <IconButton
-                                            aria-label="حذف الفصل"
-                                            icon={<FiTrash />}
-                                            size="sm"
-                                            colorScheme="red"
-                                            onClick={() => handleChapterDeleteClick(chapter)}
-                                          />
-                                          <Link to={`/chapter/${chapter.id}`}>
-                                            <Button
-                                              size="sm"
-                                              rightIcon={<FiArrowRight />}
-                                              colorScheme="blue"
-                                            >
-                                              عرض
-                                            </Button>
-                                          </Link>
-                                        </HStack>
-
-                                        <AccordionIcon />
-                                      </Flex>
-                                    </AccordionButton>
-
-                                    <AccordionPanel pb={3} px={4}>
-                                      <Flex justify="flex-end" mb={2}>
-                                        <Button
-                                          size="xs"
-                                          leftIcon={<FiPlus />}
-                                          colorScheme="blue"
-                                          onClick={() => openAddLesson(chapter)}
-                                        >
-                                          إضافة درس
-                                        </Button>
-                                      </Flex>
-
-                                      {chapter.lessons && chapter.lessons.length > 0 ? (
-                                        <VStack spacing={2} align="stretch">
-                                          {chapter.lessons.map((lesson) => (
-                                            <Flex
-                                              key={lesson.id}
-                                              p={3}
-                                              bg={lessonCardBg}
-                                              borderRadius="md"
-                                              align="center"
-                                              gap={3}
-                                              _hover={{ bg: lessonCardHoverBg }}
-                                              transition="all 0.2s"
-                                            >
-                                              <Icon as={FiFileText} color="blue.500" boxSize={4} />
-                                              <Text fontSize="sm" fontWeight="500" color={textPrimary} flex={1} noOfLines={1}>
-                                                {lesson.name}
-                                              </Text>
-
-                                              <HStack spacing={1} onClick={(e) => e.stopPropagation()}>
-                                                <IconButton
-                                                  aria-label="تعديل الدرس"
-                                                  icon={<FiEdit />}
-                                                  size="xs"
-                                                  colorScheme="orange"
-                                                  onClick={() => handleLessonEditClick(lesson)}
-                                                />
-                                                <IconButton
-                                                  aria-label="حذف الدرس"
-                                                  icon={<FiTrash />}
-                                                  size="xs"
-                                                  colorScheme="red"
-                                                  onClick={() => handleLessonDeleteClick(lesson)}
-                                                />
-                                                <Link to={`/lesson/${lesson.id}`}>
-                                                  <Button
-                                                    size="xs"
-                                                    rightIcon={<FiArrowRight />}
-                                                    colorScheme="blue"
-                                                  >
-                                                    عرض
-                                                  </Button>
-                                                </Link>
-                                              </HStack>
-                                            </Flex>
-                                          ))}
-                                        </VStack>
-                                      ) : (
-                                        <Text fontSize="sm" color={textSecondary} textAlign="center" py={4}>
-                                          لا توجد دروس في هذا الفصل
-                                        </Text>
-                                      )}
-                                    </AccordionPanel>
-                                  </AccordionItem>
-                                </Accordion>
+                                    <Box p={3} bg={useColorModeValue("orange.50", "orange.900/30")} color="orange.500" borderRadius="xl" borderWidth="1px" borderColor={useColorModeValue("orange.100", "orange.800")}>
+                                      <Icon as={FiFileText} boxSize={5} />
+                                    </Box>
+                                    <Box flex={1} overflow="hidden">
+                                      <Text fontWeight="bold" fontSize="md" color={textPrimary} noOfLines={1} mb={0.5} fontFamily="'Cairo', 'Tajawal', sans-serif">{lesson.name}</Text>
+                                      {lesson.description && <Text fontSize="xs" color={textSecondary} noOfLines={1}>{lesson.description}</Text>}
+                                    </Box>
+                                    <HStack spacing={1}>
+                                      <IconButton aria-label="تعديل" icon={<FiEdit />} size="sm" variant="ghost" colorScheme="orange" onClick={() => handleLessonEditClick(lesson)} />
+                                      <IconButton aria-label="حذف" icon={<FiTrash />} size="sm" variant="ghost" colorScheme="red" onClick={() => handleLessonDeleteClick(lesson)} />
+                                      <Link to={`/lesson/${lesson.id}`}>
+                                        <IconButton aria-label="تفاصيل" icon={<FiArrowRight />} size="sm" variant="ghost" bg={useColorModeValue("blue.50", "blue.900/30")} color="blue.500" _hover={{ bg: "blue.500", color: "white" }} />
+                                      </Link>
+                                    </HStack>
+                                  </Flex>
+                                </GridItem>
                               ))}
-                            </VStack>
+                            </Grid>
                           ) : (
-                            <Flex direction="column" align="center" justify="center" py={8} color={textSecondary}>
-                              <Icon as={FiFolder} boxSize={8} mb={2} opacity={0.4} />
-                              <Text fontSize="sm" fontFamily="'Cairo', 'Tajawal', sans-serif">لا توجد فصول في هذه المادة بعد</Text>
+                            <Flex direction="column" align="center" justify="center" p={10} bg={cardBackground} borderRadius="xl" borderStyle="dashed" borderWidth="2px" borderColor={cardBorder}>
+                              <Box p={4} bg={useColorModeValue("gray.50", "gray.700")} borderRadius="full" mb={4}>
+                                <Icon as={FiFileText} boxSize={8} color="gray.400" />
+                              </Box>
+                              <Text color="gray.500" fontSize="md" fontWeight="bold" fontFamily="'Cairo', 'Tajawal', sans-serif">لا توجد دروس في هذا الفصل بعد</Text>
+                              <Text color="gray.400" fontSize="sm" mt={2}>قم بإضافة أول درس للبدء في تعبئة المحتوى.</Text>
                             </Flex>
                           )}
-                        </AccordionPanel>
-                      </>
-                    )}
-                  </AccordionItem>
-                </Accordion>
-              ))}
-            </VStack>
+                        </Box>
+                      )}
+                    </Box>
+                  ) : (
+                    <Flex direction="column" align="center" justify="center" py={16} bg={useColorModeValue("gray.50", "gray.700/30")} borderRadius="xl" borderStyle="dashed" borderWidth="2px" borderColor={cardBorder}>
+                      <Box p={4} bg={useColorModeValue("gray.100", "gray.700")} borderRadius="full" mb={4}>
+                        <Icon as={FiFolder} boxSize={10} color="gray.400" />
+                      </Box>
+                      <Text color="gray.500" fontWeight="bold" fontSize="lg" fontFamily="'Cairo', 'Tajawal', sans-serif">لم يتم العثور على أي فصول</Text>
+                      <Text color="gray.400" fontSize="sm" mt={2}>ابدأ بإضافة فصول لتقسيم محتوى المادة بشكل مناسب.</Text>
+                    </Flex>
+                  )}
+                </Box>
+              )}
+            </Grid>
           )}
         </MotionBox>
       </MotionBox>

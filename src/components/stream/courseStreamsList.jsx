@@ -140,9 +140,9 @@ const CourseStreamsList = ({ courseId }) => {
 
   if (isError) {
     return (
-      <Box textAlign="center" py={10} bg="red.50" borderRadius="xl" border="1px dashed" borderColor="red.200">
-        <Icon as={FaTimesCircle} color="red.500" boxSize={10} mb={3} />
-        <Text color="red.600" fontWeight="bold">حدث خطأ أثناء تحميل البيانات</Text>
+      <Box textAlign="center" py={10} bg={useColorModeValue("red.50", "red.900")} borderRadius="xl" border="1px dashed" borderColor={useColorModeValue("red.200", "red.700")}>
+        <Icon as={FaTimesCircle} color={useColorModeValue("red.500", "red.300")} boxSize={10} mb={3} />
+        <Text color={useColorModeValue("red.600", "red.200")} fontWeight="bold">حدث خطأ أثناء تحميل البيانات</Text>
       </Box>
     );
   }
@@ -198,8 +198,8 @@ const CourseStreamsList = ({ courseId }) => {
                   w={{ base: 12, md: 14 }}
                   h={{ base: 12, md: 14 }}
                   borderRadius="2xl"
-                  bg={stream.status === 'started' ? "red.50" : "blue.50"}
-                  color={stream.status === 'started' ? "red.500" : "blue.500"}
+                  bg={stream.status === 'started' ? useColorModeValue("red.50", "red.900") : useColorModeValue("blue.50", "blue.900")}
+                  color={stream.status === 'started' ? useColorModeValue("red.500", "red.300") : useColorModeValue("blue.500", "blue.300")}
                   flexShrink={0}
                 >
                   <Icon as={FaVideo} boxSize={{ base: 5, md: 6 }} />
@@ -228,7 +228,7 @@ const CourseStreamsList = ({ courseId }) => {
                       <Text>{new Date(stream.created_at || Date.now()).toLocaleDateString('ar-EG')}</Text>
                     </HStack>
                     <Text color="gray.300">•</Text>
-                    <Text fontFamily="monospace" fontSize="xs" bg="gray.100" px={2} py={0.5} borderRadius="md">{stream.id}</Text>
+                    <Text fontFamily="monospace" fontSize="xs" bg={useColorModeValue("gray.100", "gray.700")} px={2} py={0.5} borderRadius="md">{stream.id}</Text>
                   </HStack>
                 </VStack>
               </HStack>
@@ -331,16 +331,16 @@ const CourseStreamsList = ({ courseId }) => {
           align="center"
           justify="center"
           py={16}
-          bg="white"
+          bg={cardBg}
           borderRadius="2xl"
           border="2px dashed"
-          borderColor="gray.200"
+          borderColor={borderColor}
         >
-          <Box p={4} bg="gray.50" borderRadius="full" mb={4}>
-            <Icon as={FaVideo} color="gray.400" boxSize={10} />
+          <Box p={4} bg={useColorModeValue("gray.50", "gray.700")} borderRadius="full" mb={4}>
+            <Icon as={FaVideo} color={subTextColor} boxSize={10} />
           </Box>
-          <Text color="gray.500" fontSize="lg" fontWeight="bold">لا توجد جلسات مباشرة حالياً</Text>
-          <Text color="gray.400" fontSize="sm">عند بدء بث مباشر جديد سيظهر هنا</Text>
+          <Text color={useColorModeValue("gray.500", "gray.400")} fontSize="lg" fontWeight="bold">لا توجد جلسات مباشرة حالياً</Text>
+          <Text color={useColorModeValue("gray.400", "gray.500")} fontSize="sm">عند بدء بث مباشر جديد سيظهر هنا</Text>
         </Flex>
       )}
 

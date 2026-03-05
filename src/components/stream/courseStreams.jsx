@@ -7,7 +7,6 @@ import {
   Text,
   useColorModeValue,
   useDisclosure,
-  TabPanel,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import baseUrl from "../../api/baseUrl";
@@ -46,7 +45,7 @@ function CourseStreams({ courseId, isAdmin, isTeacher, isStudent }) {
   const hasActiveStream = stream && stream.status !== "ended";
 
   return (
-    <TabPanel>
+    <Box>
       {isLoading ? (
         <Flex justify="center" py={6}>
           <Spinner size="lg" />
@@ -64,9 +63,8 @@ function CourseStreams({ courseId, isAdmin, isTeacher, isStudent }) {
           {hasActiveStream ? (
             <Button
               as="a"
-              href={`${STREAM_REDIRECT_URL}/${
-                stream.id
-              }?t=${localStorage.getItem("token")}`}
+              href={`${STREAM_REDIRECT_URL}/${stream.id
+                }?t=${localStorage.getItem("token")}`}
               target="_blank"
               rel="noopener noreferrer"
               colorScheme="blue"
@@ -81,7 +79,7 @@ function CourseStreams({ courseId, isAdmin, isTeacher, isStudent }) {
         </Flex>
       )}
 
-      <CourseStreamsList courseId={courseId}/>
+      <CourseStreamsList courseId={courseId} />
 
       <CreateStreamModal
         courseId={courseId}
@@ -92,7 +90,7 @@ function CourseStreams({ courseId, isAdmin, isTeacher, isStudent }) {
           refetch();
         }}
       />
-    </TabPanel>
+    </Box>
   );
 }
 

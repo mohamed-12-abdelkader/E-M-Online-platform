@@ -272,8 +272,8 @@ const MyTeacher = ({ embedded = false, onLoadingChange }) => {
         <Box px={embedded ? 0 : 4}>
           <Skeleton height="64px" borderRadius="xl" mb={8} maxW="560px" display={embedded ? "none" : "block"} />
           <Skeleton height={embedded ? "80px" : "64px"} borderRadius="xl" mb={6} />
-          <SimpleGrid columns={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing={6}>
-            {[1, 2, 3, 4].map((i) => (
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={{ base: 3, md: 4 }}>
+            {[1, 2, 3].map((i) => (
               <Skeleton key={i} height="340px" borderRadius="2xl" />
             ))}
           </SimpleGrid>
@@ -331,123 +331,123 @@ const MyTeacher = ({ embedded = false, onLoadingChange }) => {
       borderColor={searchBoxBorder}
       mb={6}
     >
-          <Flex
-            direction={{ base: "column", sm: "row" }}
-            gap={3}
-            align={{ base: "stretch", sm: "center" }}
-          >
-            <InputGroup size="lg" flex="1">
-              <InputLeftElement height="52px" pointerEvents="none">
-                <Icon as={BiSearch} color="gray.400" boxSize={5} />
-              </InputLeftElement>
-              <Input
-                type="text"
-                placeholder="ابحث باسم المحاضر..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                onKeyDown={(e) => e.key === "Enter" && handleSearchClick()}
-                borderRadius="xl"
-                height="52px"
-                pl="48px"
-                pr={searchQuery.trim() ? "44px" : "4"}
-                bg={inputBg}
-                borderWidth="2px"
-                borderColor={searchBoxBorder}
-                _focus={{
-                  borderColor: "blue.500",
-                  boxShadow: "0 0 0 3px rgba(66, 153, 225, 0.2)",
+      <Flex
+        direction={{ base: "column", sm: "row" }}
+        gap={3}
+        align={{ base: "stretch", sm: "center" }}
+      >
+        <InputGroup size="lg" flex="1">
+          <InputLeftElement height="52px" pointerEvents="none">
+            <Icon as={BiSearch} color="gray.400" boxSize={5} />
+          </InputLeftElement>
+          <Input
+            type="text"
+            placeholder="ابحث باسم المحاضر..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onKeyDown={(e) => e.key === "Enter" && handleSearchClick()}
+            borderRadius="xl"
+            height="52px"
+            pl="48px"
+            pr={searchQuery.trim() ? "44px" : "4"}
+            bg={inputBg}
+            borderWidth="2px"
+            borderColor={searchBoxBorder}
+            _focus={{
+              borderColor: "blue.500",
+              boxShadow: "0 0 0 3px rgba(66, 153, 225, 0.2)",
+            }}
+          />
+          {searchQuery.trim() && (
+            <InputRightElement height="52px">
+              <Button
+                size="sm"
+                variant="ghost"
+                colorScheme="gray"
+                borderRadius="full"
+                p={0}
+                minW="8"
+                h="8"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSearchClicked(false);
                 }}
-              />
-              {searchQuery.trim() && (
-                <InputRightElement height="52px">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    colorScheme="gray"
-                    borderRadius="full"
-                    p={0}
-                    minW="8"
-                    h="8"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSearchClicked(false);
-                    }}
-                    aria-label="مسح البحث"
-                  >
-                    <Icon as={IoClose} boxSize={5} />
-                  </Button>
-                </InputRightElement>
-              )}
-            </InputGroup>
-            <Button
-              onClick={handleSearchClick}
-              bg="orange.500"
-              color="white"
-              px={8}
-              h="52px"
-              borderRadius="xl"
-              leftIcon={<Icon as={BiSearch} />}
-              _hover={{ bg: "orange.400" }}
-              _active={{ transform: "scale(0.98)" }}
-              fontWeight="bold"
-              fontSize="md"
-              transition="all 0.2s"
-            >
-              بحث
-            </Button>
-          </Flex>
-          <Text fontSize="xs" color={subtextColor} mt={2}>
-            مثال: أحمد محمد
-          </Text>
-        </Box>
+                aria-label="مسح البحث"
+              >
+                <Icon as={IoClose} boxSize={5} />
+              </Button>
+            </InputRightElement>
+          )}
+        </InputGroup>
+        <Button
+          onClick={handleSearchClick}
+          bg="orange.500"
+          color="white"
+          px={8}
+          h="52px"
+          borderRadius="xl"
+          leftIcon={<Icon as={BiSearch} />}
+          _hover={{ bg: "orange.400" }}
+          _active={{ transform: "scale(0.98)" }}
+          fontWeight="bold"
+          fontSize="md"
+          transition="all 0.2s"
+        >
+          بحث
+        </Button>
+      </Flex>
+      <Text fontSize="xs" color={subtextColor} mt={2}>
+        مثال: أحمد محمد
+      </Text>
+    </Box>
   );
 
   const sectionTitleRow = (
-        <Flex
-          justify="space-between"
-          align="center"
-          mt={6}
-          mb={6}
-          flexWrap="wrap"
-          gap={3}
+    <Flex
+      justify="space-between"
+      align="center"
+      mt={6}
+      mb={6}
+      flexWrap="wrap"
+      gap={3}
+    >
+      <HStack spacing={3} flexWrap="wrap">
+        <Heading size="md" color={headingColor} fontWeight="bold">
+          {isSearchMode
+            ? hasResults
+              ? "نتائج البحث"
+              : "نتائج البحث"
+            : "محاضروك المفضلون"}
+        </Heading>
+        {hasResults && (
+          <Box
+            px="3"
+            py="1"
+            borderRadius="full"
+            bg={pillBg}
+            color={pillColor}
+            fontSize="sm"
+            fontWeight="bold"
+          >
+            {displayList.length} محاضر
+          </Box>
+        )}
+      </HStack>
+      {isSearchMode && (
+        <Button
+          variant="outline"
+          size="sm"
+          colorScheme="blue"
+          borderRadius="xl"
+          onClick={() => {
+            setSearchClicked(false);
+            setSearchQuery("");
+          }}
         >
-          <HStack spacing={3} flexWrap="wrap">
-            <Heading size="md" color={headingColor} fontWeight="bold">
-              {isSearchMode
-                ? hasResults
-                  ? "نتائج البحث"
-                  : "نتائج البحث"
-                : "محاضروك المفضلون"}
-            </Heading>
-            {hasResults && (
-              <Box
-                px="3"
-                py="1"
-                borderRadius="full"
-                bg={pillBg}
-                color={pillColor}
-                fontSize="sm"
-                fontWeight="bold"
-              >
-                {displayList.length} محاضر
-              </Box>
-            )}
-          </HStack>
-          {isSearchMode && (
-            <Button
-              variant="outline"
-              size="sm"
-              colorScheme="blue"
-              borderRadius="xl"
-              onClick={() => {
-                setSearchClicked(false);
-                setSearchQuery("");
-              }}
-            >
-              عرض محاضري
-            </Button>
-          )}
-        </Flex>
+          عرض محاضري
+        </Button>
+      )}
+    </Flex>
   );
 
   const contentBlock = (
@@ -461,8 +461,8 @@ const MyTeacher = ({ embedded = false, onLoadingChange }) => {
           transition={{ duration: 0.25 }}
         >
           <SimpleGrid
-            columns={{ base: 1, sm: 2, lg: 3, xl: 4 }}
-            spacing={6}
+            columns={{ base: 1, md: 2, lg: 3 }}
+            spacing={{ base: 3, md: 4 }}
           >
             {displayList.map((teacher, index) =>
               renderTeacherCard(teacher, index)

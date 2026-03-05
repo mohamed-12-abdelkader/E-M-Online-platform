@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import baseUrl from '../../api/baseUrl';
 import {
   Box,
@@ -62,9 +63,11 @@ import {
   FaFileAlt,
   FaUser,
   FaCalendar,
+  FaExternalLinkAlt,
 } from 'react-icons/fa';
 
 const GeneralCourses = () => {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -634,6 +637,16 @@ const GeneralCourses = () => {
                       </HStack>
                     )}
                   </VStack>
+                  <Button
+                    mt={4}
+                    w="full"
+                    size="sm"
+                    colorScheme="blue"
+                    leftIcon={<Icon as={FaExternalLinkAlt} />}
+                    onClick={() => navigate(`/general-course/${course.id}`)}
+                  >
+                    عرض الكورس
+                  </Button>
                 </CardBody>
               </Card>
             ))}

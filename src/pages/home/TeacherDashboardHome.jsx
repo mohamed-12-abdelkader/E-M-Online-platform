@@ -99,7 +99,12 @@ const MotionCenter = motion(Center);
 
 const StatsCard = ({ icon, label, value, color }) => (
   <VStack
-    className="modern-card"
+    bg={useColorModeValue("white", "whiteAlpha.200")}
+    backdropFilter="blur(10px)"
+    border="1px solid"
+    borderColor={useColorModeValue("gray.100", "whiteAlpha.100")}
+    borderRadius="2xl"
+    boxShadow="sm"
     p={{ base: 3, sm: 4, md: 5 }}
     spacing={{ base: 1, md: 2 }}
     align="center"
@@ -107,13 +112,19 @@ const StatsCard = ({ icon, label, value, color }) => (
     role="group"
     flex={1}
     minW={{ base: "0", sm: "80px" }}
+    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+    _hover={{
+      transform: "translateY(-4px)",
+      boxShadow: "lg",
+      borderColor: `${color}.200`
+    }}
   >
     <Flex
       w={{ base: 9, sm: 10, md: 12 }}
       h={{ base: 9, sm: 10, md: 12 }}
       align="center"
       justify="center"
-      borderRadius="full"
+      borderRadius="xl"
       bg={`${color}.50`}
       color={`${color}.500`}
       transition="all 0.3s"
@@ -127,15 +138,16 @@ const StatsCard = ({ icon, label, value, color }) => (
     </Flex>
     <Text
       fontSize={{ base: "xl", sm: "2xl", md: "3xl" }}
-      fontWeight="800"
-      color="gray.800"
+      fontWeight="900"
+      color={useColorModeValue("gray.800", "white")}
+      lineHeight="1"
     >
       {value}
     </Text>
     <Text
       fontSize={{ base: "xs", sm: "sm" }}
-      fontWeight="medium"
-      color="gray.500"
+      fontWeight="bold"
+      color={useColorModeValue("gray.500", "gray.400")}
       whiteSpace="nowrap"
     >
       {label}
@@ -650,83 +662,111 @@ const TeacherDashboardHome = () => {
           animate="visible"
           variants={containerVariants}
         >
-          {/* Modern Welcome Banner - متجاوب */}
+          {/* Modern Welcome Banner */}
           <MotionBox
             w="full"
-            bgGradient="linear(to-l, blue.600, orange.500)"
+            bgGradient={useColorModeValue(
+              "linear(to-r, blue.600, blue.400)",
+              "linear(to-r, blue.900, blue.700)"
+            )}
             borderRadius={{ base: "2xl", md: "3xl" }}
-            p={{ base: 4, sm: 5, md: 8, lg: 10 }}
+            p={{ base: 5, sm: 6, md: 8, lg: 10 }}
             position="relative"
             overflow="hidden"
             variants={itemVariants}
-            boxShadow="0 10px 40px -10px rgba(66, 153, 225, 0.5)"
+            boxShadow={useColorModeValue(
+              "0 20px 40px -15px rgba(49, 130, 206, 0.5)",
+              "0 20px 40px -15px rgba(0, 0, 0, 0.5)"
+            )}
           >
+            {/* Decorative Elements */}
             <Box
               position="absolute"
               right="-10%"
               top="-50%"
-              w={{ base: "200px", md: "400px" }}
-              h={{ base: "200px", md: "400px" }}
-              border="50px solid rgba(255,255,255,0.05)"
+              w={{ base: "250px", md: "500px" }}
+              h={{ base: "250px", md: "500px" }}
+              bg="whiteAlpha.100"
               borderRadius="full"
+              filter="blur(40px)"
             />
             <Box
               position="absolute"
               left="-10%"
               bottom="-50%"
-              w={{ base: "150px", md: "300px" }}
-              h={{ base: "150px", md: "300px" }}
-              bg="white"
-              opacity="0.05"
+              w={{ base: "200px", md: "400px" }}
+              h={{ base: "200px", md: "400px" }}
+              bg="whiteAlpha.100"
               borderRadius="full"
+              filter="blur(40px)"
             />
 
             <Flex
               direction={{ base: "column", md: "row" }}
-              align="center"
+              align={{ base: "flex-start", md: "center" }}
               justify="space-between"
-              gap={{ base: 5, sm: 6, md: 8 }}
+              gap={{ base: 6, sm: 8, md: 10 }}
+              position="relative"
+              zIndex={1}
             >
               <HStack
-                spacing={{ base: 3, sm: 4, md: 6 }}
+                spacing={{ base: 4, sm: 5, md: 6 }}
                 w={{ base: "full", md: "auto" }}
-                justify={{ base: "center", md: "flex-start" }}
+                align="center"
               >
-                <Image
-                  src={user.avatar}
-                  alt={user.name}
-                  w={{ base: "64px", sm: "72px", md: "100px" }}
-                  h={{ base: "64px", sm: "72px", md: "100px" }}
-                  borderRadius="full"
-                  border="3px solid white"
-                  boxShadow="lg"
-                  flexShrink={0}
-                />
+                <Box position="relative">
+                  <Image
+                    src={user.avatar || "https://placehold.co/100x100?text=User"}
+                    alt={user.name}
+                    w={{ base: "70px", sm: "80px", md: "110px" }}
+                    h={{ base: "70px", sm: "80px", md: "110px" }}
+                    borderRadius="full"
+                    border="4px solid"
+                    borderColor="whiteAlpha.800"
+                    boxShadow="xl"
+                    objectFit="cover"
+                  />
+                  <Flex
+                    position="absolute"
+                    bottom={0}
+                    right={0}
+                    bg="green.400"
+                    w={{ base: 4, md: 5 }}
+                    h={{ base: 4, md: 5 }}
+                    borderRadius="full"
+                    border="3px solid"
+                    borderColor="blue.500"
+                    boxShadow="sm"
+                  />
+                </Box>
                 <VStack
                   align="start"
-                  spacing={0}
+                  spacing={1}
                   color="white"
                   flex={1}
                   minW={0}
                 >
-                  <Text fontSize={{ base: "sm", md: "lg" }} opacity={0.9}>
-                    أهلاً بعودتك 👋
+                  <Text fontSize={{ base: "sm", md: "md" }} opacity={0.9} fontWeight="medium" letterSpacing="wide">
+                    أهلاً بك مجدداً في منصتك 👋
                   </Text>
                   <Heading
-                    size={{ base: "md", sm: "lg", md: "xl" }}
+                    size={{ base: "lg", md: "xl" }}
                     fontWeight="black"
                     noOfLines={1}
+                    letterSpacing="tight"
                   >
-                    {user.name}
+                    {user.name || `${user.fname} ${user.lname}`}
                   </Heading>
                   <Badge
-                    bg="whiteAlpha.300"
-                    color="white"
-                    px={{ base: 2, md: 3 }}
-                    py={1}
+                    bg="white"
+                    color="blue.600"
+                    px={{ base: 3, md: 4 }}
+                    py={{ base: 1, md: 1.5 }}
+                    mt={1}
                     borderRadius="full"
-                    backdropFilter="blur(10px)"
                     fontSize={{ base: "xs", md: "sm" }}
+                    fontWeight="bold"
+                    boxShadow="sm"
                   >
                     {user.role}
                   </Badge>
@@ -734,29 +774,27 @@ const TeacherDashboardHome = () => {
               </HStack>
 
               <Flex
-                w="full"
+                w={{ base: "full", md: "auto" }}
                 direction="row"
-                justify="space-between"
-                gap={{ base: 2, sm: 3, md: 4 }}
-                maxW={{ base: "100%", md: "auto" }}
+                gap={{ base: 3, sm: 4 }}
+                bg="whiteAlpha.100"
+                p={{ base: 3, md: 4 }}
+                borderRadius="2xl"
+                backdropFilter="blur(10px)"
+                border="1px solid"
+                borderColor="whiteAlpha.200"
               >
                 <StatsCard
                   icon={FaBookOpen}
-                  label="كورسات"
+                  label="كورساتك"
                   value={courses.length}
                   color="blue"
                 />
                 <StatsCard
-                  icon={FaUsers}
-                  label="طلاب"
-                  value="250+"
-                  color="orange"
-                />
-                <StatsCard
                   icon={FaStar}
-                  label="تقييم"
+                  label="التقييم العام"
                   value="4.9"
-                  color="orange"
+                  color="purple"
                 />
               </Flex>
             </Flex>
@@ -774,14 +812,14 @@ const TeacherDashboardHome = () => {
               px={{ base: 2, sm: 0 }}
               borderRadius="xl"
               _hover={{ base: { bg: "gray.50" }, sm: {} }}
-              display={{ base: "flex", sm: "block" }}
+              display={{ base: "flex", lg: "none" }}
               role={{ base: "button", sm: "presentation" }}
-              aria-expanded={{ base: isQuickLinksOpen, sm: undefined }}
+              aria-expanded={{ base: isQuickLinksOpen, lg: undefined }}
               aria-label={{
                 base: isQuickLinksOpen
                   ? "إغلاق الوصول السريع"
                   : "فتح الوصول السريع",
-                sm: undefined,
+                lg: undefined,
               }}
             >
               <Heading
@@ -791,7 +829,7 @@ const TeacherDashboardHome = () => {
               >
                 الوصول السريع
               </Heading>
-              <Box display={{ base: "flex", sm: "none" }} flexShrink={0}>
+              <Box display={{ base: "flex", lg: "none" }} flexShrink={0}>
                 <Icon
                   as={isQuickLinksOpen ? FaChevronDown : FaChevronLeft}
                   boxSize={5}
@@ -804,9 +842,9 @@ const TeacherDashboardHome = () => {
               </Box>
             </Flex>
 
-            <Box display={{ base: "block", sm: "none" }}>
+            <Box display={{ base: "block", lg: "none" }}>
               <Collapse in={isQuickLinksOpen} animateOpacity>
-                <SimpleGrid columns={1} spacing={3} mt={2}>
+                <SimpleGrid columns={{ base: 1, sm: 2, md: 2 }} spacing={3} mt={2}>
                   {quickLinks.map((link) => (
                     <Link
                       key={link.id}
@@ -856,7 +894,7 @@ const TeacherDashboardHome = () => {
               </Collapse>
             </Box>
 
-            <Box display={{ base: "none", sm: "block" }}>
+            <Box display={{ base: "none", lg: "block" }}>
               <SimpleGrid columns={{ sm: 2, lg: 4 }} spacing={{ sm: 4, md: 6 }}>
                 {quickLinks.map((link) => (
                   <Link

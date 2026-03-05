@@ -81,7 +81,7 @@ export default function Nav() {
     onOpen: onNotificationOpen,
     onClose: onNotificationClose,
   } = useDisclosure();
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  const isMobile = useBreakpointValue({ base: true, lg: false });
 
   const { scrollYProgress } = useScroll();
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
@@ -491,7 +491,7 @@ export default function Nav() {
                                   p={4}
                                   borderBottom={
                                     index <
-                                    notifications.notifications.length - 1
+                                      notifications.notifications.length - 1
                                       ? "1px solid"
                                       : "none"
                                   }
@@ -514,13 +514,13 @@ export default function Nav() {
                                   bg={
                                     !notification.is_read
                                       ? useColorModeValue(
-                                          `${getNotificationColor(
-                                            notification
-                                          )}.50`,
-                                          `${getNotificationColor(
-                                            notification
-                                          )}.900`
-                                        )
+                                        `${getNotificationColor(
+                                          notification
+                                        )}.50`,
+                                        `${getNotificationColor(
+                                          notification
+                                        )}.900`
+                                      )
                                       : "transparent"
                                   }
                                   borderRadius="lg"
@@ -534,8 +534,8 @@ export default function Nav() {
                                   borderLeftColor={
                                     !notification.is_read
                                       ? `${getNotificationColor(
-                                          notification
-                                        )}.500`
+                                        notification
+                                      )}.500`
                                       : "transparent"
                                   }
                                   onClick={() => {
@@ -674,39 +674,39 @@ export default function Nav() {
                                             fontWeight="medium"
                                           >
                                             {notification.type ===
-                                            "lecture_added"
+                                              "lecture_added"
                                               ? "محاضرة"
                                               : notification.type ===
                                                 "video_added"
-                                              ? "فيديو"
-                                              : notification.type ===
-                                                "file_added"
-                                              ? "ملف"
-                                              : notification.type ===
-                                                "exam_added"
-                                              ? "امتحان"
-                                              : notification.type ===
-                                                "course_added"
-                                              ? "كورس"
-                                              : notification.type ===
-                                                "chat_message"
-                                              ? "دردشة"
-                                              : notification.type ===
-                                                "social_comment"
-                                              ? "تعليق"
-                                              : notification.type ===
-                                                "social_reply"
-                                              ? "رد"
-                                              : notification.type ===
-                                                "social_reaction"
-                                              ? "تفاعل"
-                                              : notification.type ===
-                                                "social_post"
-                                              ? "منشور"
-                                              : notification.type ===
-                                                "announcement"
-                                              ? "إعلان"
-                                              : "إشعار"}
+                                                ? "فيديو"
+                                                : notification.type ===
+                                                  "file_added"
+                                                  ? "ملف"
+                                                  : notification.type ===
+                                                    "exam_added"
+                                                    ? "امتحان"
+                                                    : notification.type ===
+                                                      "course_added"
+                                                      ? "كورس"
+                                                      : notification.type ===
+                                                        "chat_message"
+                                                        ? "دردشة"
+                                                        : notification.type ===
+                                                          "social_comment"
+                                                          ? "تعليق"
+                                                          : notification.type ===
+                                                            "social_reply"
+                                                            ? "رد"
+                                                            : notification.type ===
+                                                              "social_reaction"
+                                                              ? "تفاعل"
+                                                              : notification.type ===
+                                                                "social_post"
+                                                                ? "منشور"
+                                                                : notification.type ===
+                                                                  "announcement"
+                                                                  ? "إعلان"
+                                                                  : "إشعار"}
                                           </Badge>
                                         </HStack>
 

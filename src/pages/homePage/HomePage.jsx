@@ -173,7 +173,7 @@ const HomePage = () => {
                 activateCourseWithQR(decodedText);
               });
           },
-          () => {},
+          () => { },
         );
         setQrScanner(html5Qrcode);
       } catch (err) {
@@ -594,31 +594,32 @@ const HomePage = () => {
         </MotionBox>
 
         {/* 2. شبكة الروابط الرئيسية */}
-        <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6} mb={10}>
+        <SimpleGrid columns={{ base: 2, md: 2, lg: 4 }} spacing={{ base: 4, md: 6 }} mb={10}>
           {mainLinks.map((link, idx) => (
             <Link key={idx} to={link.href}>
-              <MotionCard
-                whileHover={{ y: -6 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: idx * 0.08 }}
+              <Box
+                as="article"
+
                 borderRadius="2xl"
-                borderWidth="1px"
-                borderColor={cardBorder}
-                boxShadow="md"
-                bg={cardBg}
-                h="full"
                 overflow="hidden"
+                borderWidth="1px"
+
+                boxShadow="md"
+                h="100%"
+                display="flex"
+                flexDirection="column"
+                transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                 _hover={{
+                  transform: "translateY(-8px) scale(1.02)",
+
                   borderColor: "blue.400",
-                  boxShadow: linkCardShadow,
                 }}
               >
                 <Box h="4px" bg={link.iconBg} />
-                <VStack p={6} align="center" spacing={4}>
+                <VStack p={{ base: 4, md: 5 }} align="center" spacing={3}>
                   <Flex
-                    w="14"
-                    h="14"
+                    w={{ base: "10", md: "14" }}
+                    h={{ base: "10", md: "14" }}
                     borderRadius="xl"
                     align="center"
                     justify="center"
@@ -626,18 +627,18 @@ const HomePage = () => {
                     color="white"
                     boxShadow="md"
                   >
-                    <Icon as={link.icon} boxSize={6} />
+                    <Icon as={link.icon} boxSize={{ base: 4, md: 6 }} />
                   </Flex>
                   <VStack spacing={1}>
-                    <Heading size="md" color={headingColor}>
+                    <Heading size="sm" color={headingColor} textAlign="center">
                       {link.name}
                     </Heading>
-                    <Text fontSize="sm" color={subtextColor} textAlign="center">
+                    <Text fontSize="xs" color={subtextColor} textAlign="center" display={{ base: "none", md: "block" }}>
                       {link.desc}
                     </Text>
                   </VStack>
                 </VStack>
-              </MotionCard>
+              </Box>
             </Link>
           ))}
         </SimpleGrid>

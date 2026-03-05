@@ -248,153 +248,161 @@ const MyCourses = ({ embedded = false, onLoadingChange }) => {
         </Button>
       </Flex>
 
-        {/* Content Grid */}
-        {error ? (
-          <Center py={10} flexDirection="column" bg={cardBg} borderRadius="2xl" borderWidth="1px" borderStyle="dashed" borderColor="red.300">
-            <Icon as={FaBookOpen} boxSize={10} color="red.400" mb={3} />
-            <Text color="red.500" fontWeight="bold">{error}</Text>
-            <Button mt={4} size="sm" onClick={fetchCourses} bg="blue.500" color="white" _hover={{ bg: "blue.600" }} borderRadius="xl">إعادة المحاولة</Button>
-          </Center>
-        ) : courses.length > 0 ? (
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-            <AnimatePresence>
-              {courses.map((item, index) => {
-                const isPackage = item.type === 'package';
-                const linkTo = isPackage ? `/package/${item.id}` : `/CourseDetailsPage/${item.id}`;
+      {/* Content Grid */}
+      {error ? (
+        <Center py={10} flexDirection="column" bg={cardBg} borderRadius="2xl" borderWidth="1px" borderStyle="dashed" borderColor="red.300">
+          <Icon as={FaBookOpen} boxSize={10} color="red.400" mb={3} />
+          <Text color="red.500" fontWeight="bold">{error}</Text>
+          <Button mt={4} size="sm" onClick={fetchCourses} bg="blue.500" color="white" _hover={{ bg: "blue.600" }} borderRadius="xl">إعادة المحاولة</Button>
+        </Center>
+      ) : courses.length > 0 ? (
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={{ base: "10px", md: "10px", lg: 6 }}>
+          <AnimatePresence>
+            {courses.map((item, index) => {
+              const isPackage = item.type === 'package';
+              const linkTo = isPackage ? `/package/${item.id}` : `/CourseDetailsPage/${item.id}`;
 
-                return (
-                  <MotionBox
-                    key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Link to={linkTo}>
-                      <Card
-                        bg={cardBg}
-                        borderRadius="2xl"
-                        overflow="hidden"
-                        boxShadow="md"
-                        borderWidth="1px"
-                        borderColor={cardBorder}
-                        _hover={{
-                          transform: "translateY(-6px)",
-                          boxShadow: cardHoverShadow,
-                          borderColor: "blue.400",
-                        }}
-                        transition="all 0.3s ease"
-                        h="100%"
-                      >
-                        <Box position="relative">
-                          <AspectRatio ratio={16 / 9}>
-                            <Image
-                              src={item.avatar || (isPackage ? 'https://via.placeholder.com/400x225/ED8936/FFFFFF?text=Package' : 'https://via.placeholder.com/400x225/3182CE/FFFFFF?text=Course')}
-                              objectFit="cover"
-                            />
-                          </AspectRatio>
-                          <Box
-                            position="absolute" top={0} left={0} w="full" h="full"
-                            bgGradient="linear(to-t, blackAlpha.800, transparent)"
+              return (
+                <MotionBox
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  h="100%"
+                  w="100%"
+                >
+                  <Link to={linkTo} style={{ display: "block", height: "100%", width: "100%" }}>
+                    <Box
+                      as="article"
+
+                      borderRadius="2xl"
+                      overflow="hidden"
+                      borderWidth="1px"
+
+                      boxShadow="md"
+                      h="100%"
+                      display="flex"
+                      flexDirection="column"
+                      transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                      _hover={{
+                        transform: "translateY(-8px) scale(1.02)",
+
+                        borderColor: "blue.400",
+                      }}
+                    >
+                      <Box position="relative" h="168px" overflow="hidden">
+                        <Box w="100%" h="100%">
+                          <Image
+                            src={item.avatar || (isPackage ? 'https://via.placeholder.com/400x225/ED8936/FFFFFF?text=Package' : 'https://via.placeholder.com/400x225/3182CE/FFFFFF?text=Course')}
+                            objectFit="cover"
+                            w="100%"
+                            h="100%"
                           />
-                          <Badge
-                            position="absolute" top={3} left={3}
+                        </Box>
+                        <Box
+                          position="absolute" top={0} left={0} w="full" h="full"
+                          bgGradient="linear(to-t, blackAlpha.800, transparent)"
+                        />
+                        <Badge
+                          position="absolute" top={3} left={3}
+                          bg={isPackage ? "orange.500" : "blue.500"}
+                          color="white"
+                          variant="solid"
+                          borderRadius="md"
+                          px={2}
+                          py={1}
+                          fontSize="xs"
+                        >
+                          {isPackage ? "باقة" : "كورس"}
+                        </Badge>
+                        <Box position="absolute" bottom={3} right={3} color="white" w="90%">
+                          <Text fontSize="md" fontWeight="bold" noOfLines={1} textShadow="0 2px 4px rgba(0,0,0,0.5)">
+                            {item.title}
+                          </Text>
+                        </Box>
+                      </Box>
+
+                      <Box p={4}>
+                        <VStack align="stretch" spacing={3}>
+                          {item.description && (
+                            <Box>
+                              <Text
+                                fontSize="sm"
+                                color={subtextColor}
+                                noOfLines={expandedCards[item.id] ? undefined : 2}
+                                lineHeight="tall"
+                              >
+                                {item.description}
+                              </Text>
+                              {item.description.length > 80 && (
+                                <Button
+                                  size="xs"
+                                  variant="link"
+                                  color="blue.500"
+                                  mt={1}
+                                  onClick={(e) => { e.preventDefault(); toggleDescription(item.id); }}
+                                >
+                                  {expandedCards[item.id] ? "عرض أقل" : "عرض المزيد"}
+                                </Button>
+                              )}
+                            </Box>
+                          )}
+
+                          <Divider borderColor={cardBorder} />
+
+                          <HStack justify="space-between" fontSize="xs" color={subtextColor}>
+                            <HStack>
+                              <Icon as={FaCalendarAlt} color="blue.400" />
+                              <Text>{new Date(item.created_at).toLocaleDateString('ar-EG')}</Text>
+                            </HStack>
+                            <Badge bg="green.100" color="green.700" _dark={{ bg: "green.800", color: "green.200" }} fontSize="xs">{item.price} ج.م</Badge>
+                          </HStack>
+
+                          <Button
+                            w="full"
                             bg={isPackage ? "orange.500" : "blue.500"}
                             color="white"
-                            variant="solid"
-                            borderRadius="md"
-                            px={2}
-                            py={1}
-                            fontSize="xs"
+                            size="sm"
+                            borderRadius="xl"
+                            rightIcon={<Icon as={isPackage ? FaLayerGroup : FaPlay} size="sm" />}
+                            _hover={{ bg: isPackage ? "orange.400" : "blue.400", transform: "scale(1.02)" }}
+                            fontWeight="bold"
                           >
-                            {isPackage ? "باقة" : "كورس"}
-                          </Badge>
-                          <Box position="absolute" bottom={3} right={3} color="white" w="90%">
-                            <Text fontSize="md" fontWeight="bold" noOfLines={1} textShadow="0 2px 4px rgba(0,0,0,0.5)">
-                              {item.title}
-                            </Text>
-                          </Box>
-                        </Box>
-
-                        <CardBody p={4}>
-                          <VStack align="stretch" spacing={3}>
-                            {item.description && (
-                              <Box>
-                                <Text
-                                  fontSize="sm"
-                                  color={subtextColor}
-                                  noOfLines={expandedCards[item.id] ? undefined : 2}
-                                  lineHeight="tall"
-                                >
-                                  {item.description}
-                                </Text>
-                                {item.description.length > 80 && (
-                                  <Button
-                                    size="xs"
-                                    variant="link"
-                                    color="blue.500"
-                                    mt={1}
-                                    onClick={(e) => { e.preventDefault(); toggleDescription(item.id); }}
-                                  >
-                                    {expandedCards[item.id] ? "عرض أقل" : "عرض المزيد"}
-                                  </Button>
-                                )}
-                              </Box>
-                            )}
-
-                            <Divider borderColor={cardBorder} />
-
-                            <HStack justify="space-between" fontSize="xs" color={subtextColor}>
-                              <HStack>
-                                <Icon as={FaCalendarAlt} color="blue.400" />
-                                <Text>{new Date(item.created_at).toLocaleDateString('ar-EG')}</Text>
-                              </HStack>
-                              <Badge bg="green.100" color="green.700" _dark={{ bg: "green.800", color: "green.200" }} fontSize="xs">{item.price} ج.م</Badge>
-                            </HStack>
-
-                            <Button
-                              w="full"
-                              bg={isPackage ? "orange.500" : "blue.500"}
-                              color="white"
-                              size="sm"
-                              borderRadius="xl"
-                              rightIcon={<Icon as={isPackage ? FaLayerGroup : FaPlay} size="sm" />}
-                              _hover={{ bg: isPackage ? "orange.400" : "blue.400", transform: "scale(1.02)" }}
-                              fontWeight="bold"
-                            >
-                              {isPackage ? "تصفح الباقة" : "دخول الكورس"}
-                            </Button>
-                          </VStack>
-                        </CardBody>
-                      </Card>
-                    </Link>
-                  </MotionBox>
-                );
-              })}
-            </AnimatePresence>
-          </SimpleGrid>
-        ) : (
-          <Flex direction="column" align="center" justify="center" minH="280px" bg={cardBg} borderRadius="2xl" borderWidth="2px" borderStyle="dashed" borderColor={emptyBorder} textAlign="center" p={8}>
-            <Box w="16" h="16" borderRadius="2xl" bg="blue.100" _dark={{ bg: "blue.900" }} display="flex" alignItems="center" justifyContent="center" mb={4}>
-              <Icon as={FaBookOpen} boxSize="8" color="blue.500" />
-            </Box>
-            <Heading size="md" color={headingColor} mb={2}>لا توجد كورسات مفعلة</Heading>
-            <Text color={subtextColor} maxW="md" mb={6} fontSize="sm">
-              لم تقم بالاشتراك في أي كورسات أو باقات تعليمية حتى الآن.
-            </Text>
-            <Button
-              bg="orange.500"
-              color="white"
-              size="md"
-              leftIcon={<Icon as={FaQrcode} />}
-              borderRadius="xl"
-              _hover={{ bg: "orange.400" }}
-              onClick={() => setIsQrScannerOpen(true)}
-              fontWeight="bold"
-            >
-              تفعيل كورس الآن
-            </Button>
-          </Flex>
-        )}
+                            {isPackage ? "تصفح الباقة" : "دخول الكورس"}
+                          </Button>
+                        </VStack>
+                      </Box>
+                    </Box>
+                  </Link>
+                </MotionBox>
+              );
+            })}
+          </AnimatePresence>
+        </SimpleGrid>
+      ) : (
+        <Flex direction="column" align="center" justify="center" minH="280px" bg={cardBg} borderRadius="2xl" borderWidth="2px" borderStyle="dashed" borderColor={emptyBorder} textAlign="center" p={8}>
+          <Box w="16" h="16" borderRadius="2xl" bg="blue.100" _dark={{ bg: "blue.900" }} display="flex" alignItems="center" justifyContent="center" mb={4}>
+            <Icon as={FaBookOpen} boxSize="8" color="blue.500" />
+          </Box>
+          <Heading size="md" color={headingColor} mb={2}>لا توجد كورسات مفعلة</Heading>
+          <Text color={subtextColor} maxW="md" mb={6} fontSize="sm">
+            لم تقم بالاشتراك في أي كورسات أو باقات تعليمية حتى الآن.
+          </Text>
+          <Button
+            bg="orange.500"
+            color="white"
+            size="md"
+            leftIcon={<Icon as={FaQrcode} />}
+            borderRadius="xl"
+            _hover={{ bg: "orange.400" }}
+            onClick={() => setIsQrScannerOpen(true)}
+            fontWeight="bold"
+          >
+            تفعيل كورس الآن
+          </Button>
+        </Flex>
+      )
+      }
 
 
       {/* --- Modals (براند) --- */}
@@ -436,7 +444,7 @@ const MyCourses = ({ embedded = false, onLoadingChange }) => {
         </ModalContent>
       </Modal>
 
-    </Box>
+    </Box >
   );
 };
 

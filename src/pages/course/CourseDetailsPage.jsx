@@ -111,7 +111,9 @@ import {
   FaCheck,
   FaFilm, // For no data component
   FaCog, // For settings
+  FaBroadcastTower,
 } from "react-icons/fa";
+import { useQuery } from "@tanstack/react-query";
 import baseUrl from "../../api/baseUrl";
 import UserType from "../../Hooks/auth/userType";
 import { useParams, useNavigate } from "react-router-dom";
@@ -623,6 +625,22 @@ const CourseDetailsPage = () => {
   const [courseExamsLoading, setCourseExamsLoading] = useState(false);
   const [courseExamsError, setCourseExamsError] = useState(null);
   const [tabIndex, setTabIndex] = useState(0);
+
+  // جلسات البث المباشر للكورس — لظهور أيقونة "بث شغال" على تاب المحاضرات المباشرة
+  const { data: courseStreamsData } = useQuery({
+    queryKey: ["courseStreamsForTab", id],
+    queryFn: async () => {
+      const res = await baseUrl.get(`/api/meeting/course/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return res.data;
+    },
+    enabled: !!id && !!token,
+    refetchInterval: 15000,
+  });
+  const hasActiveLiveStream = (courseStreamsData?.meetings || []).some(
+    (m) => m.status === "started"
+  );
 
   // State لمودال إنشاء الأكواد
   const [codeModalOpen, setCodeModalOpen] = useState(false);
@@ -3653,6 +3671,50 @@ D) has made`}
                   position="relative"
                   zIndex={1}
                 >
+                  {hasActiveLiveStream && (
+                    <Tab
+                      fontWeight="bold"
+                      fontSize={{ base: "13px", sm: "15px" }}
+                      color={useColorModeValue("red.600", "red.400")}
+                      borderRadius="xl"
+                      py={{ base: 2.5, md: 3 }}
+                      px={{ base: 4, md: 6 }}
+                      flex={{ base: "1 1 calc(50% - 8px)", md: "initial" }}
+                      justifyContent="center"
+                      _selected={{
+                        color: "white",
+                        bg: "red.500",
+                        boxShadow: "0 4px 12px rgba(229, 62, 62, 0.4)",
+                        transform: "translateY(-1px)",
+                      }}
+                      _hover={{
+                        color: useColorModeValue("red.700", "red.300"),
+                        bg: useColorModeValue("red.50", "whiteAlpha.100"),
+                      }}
+                      border="2px solid"
+                      borderColor="red.400"
+                      transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                      display="flex"
+                      alignItems="center"
+                      gap={2}
+                    >
+                      <Icon
+                        as={FaBroadcastTower}
+                        fontSize="lg"
+                        animation="pulse 1.5s ease-in-out infinite"
+                      />
+                      المحاضرات المباشرة
+                      <Badge
+                        colorScheme="red"
+                        variant="solid"
+                        borderRadius="full"
+                        px={2}
+                        animation="pulse 1.5s ease-in-out infinite"
+                      >
+                        مباشر الآن
+                      </Badge>
+                    </Tab>
+                  )}
                   <Tab
                     fontWeight="bold"
                     fontSize={{ base: "13px", sm: "15px" }}
@@ -3666,11 +3728,11 @@ D) has made`}
                       color: "white",
                       bg: "blue.500",
                       boxShadow: "0 4px 12px rgba(49, 130, 206, 0.3)",
-                      transform: "translateY(-1px)"
+                      transform: "translateY(-1px)",
                     }}
                     _hover={{
                       color: useColorModeValue("blue.600", "blue.300"),
-                      bg: useColorModeValue("blue.50", "whiteAlpha.100")
+                      bg: useColorModeValue("blue.50", "whiteAlpha.100"),
                     }}
                     transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                     display="flex"
@@ -3680,33 +3742,35 @@ D) has made`}
                     <Icon as={FaPlayCircle} fontSize="lg" />
                     المحاضرات
                   </Tab>
-                  <Tab
-                    fontWeight="bold"
-                    fontSize={{ base: "13px", sm: "15px" }}
-                    color={useColorModeValue("gray.600", "gray.400")}
-                    borderRadius="xl"
-                    py={{ base: 2.5, md: 3 }}
-                    px={{ base: 4, md: 6 }}
-                    flex={{ base: "1 1 calc(50% - 8px)", md: "initial" }}
-                    justifyContent="center"
-                    _selected={{
-                      color: "white",
-                      bg: "green.500",
-                      boxShadow: "0 4px 12px rgba(56, 161, 105, 0.3)",
-                      transform: "translateY(-1px)"
-                    }}
-                    _hover={{
-                      color: useColorModeValue("green.600", "green.300"),
-                      bg: useColorModeValue("green.50", "whiteAlpha.100")
-                    }}
-                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-                    display="flex"
-                    alignItems="center"
-                    gap={2}
-                  >
-                    <Icon as={FaVideo} fontSize="lg" />
-                    الجلسات المباشرة
-                  </Tab>
+                  {!hasActiveLiveStream && (
+                    <Tab
+                      fontWeight="bold"
+                      fontSize={{ base: "13px", sm: "15px" }}
+                      color={useColorModeValue("gray.600", "gray.400")}
+                      borderRadius="xl"
+                      py={{ base: 2.5, md: 3 }}
+                      px={{ base: 4, md: 6 }}
+                      flex={{ base: "1 1 calc(50% - 8px)", md: "initial" }}
+                      justifyContent="center"
+                      _selected={{
+                        color: "white",
+                        bg: "green.500",
+                        boxShadow: "0 4px 12px rgba(56, 161, 105, 0.3)",
+                        transform: "translateY(-1px)",
+                      }}
+                      _hover={{
+                        color: useColorModeValue("green.600", "green.300"),
+                        bg: useColorModeValue("green.50", "whiteAlpha.100"),
+                      }}
+                      transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                      display="flex"
+                      alignItems="center"
+                      gap={2}
+                    >
+                      <Icon as={FaVideo} fontSize="lg" />
+                      المحاضرات المباشرة
+                    </Tab>
+                  )}
                   <Tab
                     fontWeight="bold"
                     fontSize={{ base: "13px", sm: "15px" }}
@@ -3720,11 +3784,11 @@ D) has made`}
                       color: "white",
                       bg: "purple.500",
                       boxShadow: "0 4px 12px rgba(128, 90, 213, 0.3)",
-                      transform: "translateY(-1px)"
+                      transform: "translateY(-1px)",
                     }}
                     _hover={{
                       color: useColorModeValue("purple.600", "purple.300"),
-                      bg: useColorModeValue("purple.50", "whiteAlpha.100")
+                      bg: useColorModeValue("purple.50", "whiteAlpha.100"),
                     }}
                     transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                     display="flex"
@@ -3747,11 +3811,11 @@ D) has made`}
                       color: "white",
                       bg: "orange.400",
                       boxShadow: "0 4px 12px rgba(237, 137, 54, 0.3)",
-                      transform: "translateY(-1px)"
+                      transform: "translateY(-1px)",
                     }}
                     _hover={{
                       color: useColorModeValue("orange.500", "orange.300"),
-                      bg: useColorModeValue("orange.50", "whiteAlpha.100")
+                      bg: useColorModeValue("orange.50", "whiteAlpha.100"),
                     }}
                     transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                     display="flex"
@@ -3765,7 +3829,25 @@ D) has made`}
               </Box>
 
               <TabPanels p={0}>
-                {/* Tab Panel للمحاضرات — يعرض المحاضرات فقط */}
+                {hasActiveLiveStream && (
+                  <TabPanel px={{ base: 2, sm: 4, md: 6, lg: 8 }} py={4}>
+                    <Box
+                      bg={sectionBg}
+                      borderRadius="xl"
+                      borderWidth="1px"
+                      borderColor={hasActiveLiveStream ? "red.300" : borderColor}
+                      boxShadow={hasActiveLiveStream ? "0 0 15px rgba(229, 62, 62, 0.15)" : "none"}
+                      p={4}
+                      minH="280px"
+                    >
+                      {isAdmin || isTeacher ? (
+                        <CourseStreams courseId={id} />
+                      ) : (
+                        <StudentStreamsList courseId={id} />
+                      )}
+                    </Box>
+                  </TabPanel>
+                )}
                 <TabPanel px={{ base: 0, sm: 2, md: 4 }} py={4}>
                   <Box
                     bg={sectionBg}
@@ -3807,25 +3889,24 @@ D) has made`}
                     />
                   </Box>
                 </TabPanel>
-
-                {/* Tab Panel للجلسات المباشرة — يعرض الجلسات المباشرة فقط */}
-                <TabPanel px={{ base: 2, sm: 4, md: 6, lg: 8 }} py={4}>
-                  <Box
-                    bg={sectionBg}
-                    borderRadius="xl"
-                    borderWidth="1px"
-                    borderColor={borderColor}
-                    p={4}
-                    minH="280px"
-                  >
-                    {isAdmin || isTeacher ? (
-                      <CourseStreams courseId={id} />
-                    ) : (
-                      <StudentStreamsList courseId={id} />
-                    )}
-                  </Box>
-                </TabPanel>
-
+                {!hasActiveLiveStream && (
+                  <TabPanel px={{ base: 2, sm: 4, md: 6, lg: 8 }} py={4}>
+                    <Box
+                      bg={sectionBg}
+                      borderRadius="xl"
+                      borderWidth="1px"
+                      borderColor={borderColor}
+                      p={4}
+                      minH="280px"
+                    >
+                      {isAdmin || isTeacher ? (
+                        <CourseStreams courseId={id} />
+                      ) : (
+                        <StudentStreamsList courseId={id} />
+                      )}
+                    </Box>
+                  </TabPanel>
+                )}
                 {/* Tab Panel للدعم العلمي — يعرض الدعم العلمي فقط */}
                 <TabPanel px={{ base: 2, sm: 4, md: 6, lg: 8 }} py={4}>
                   <Box

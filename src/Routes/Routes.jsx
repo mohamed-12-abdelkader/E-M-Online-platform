@@ -32,6 +32,8 @@ import GroupDetails from "../pages/package/GroupDetails";
 import AssignmentQuestions from "../pages/package/AssignmentQuestions";
 import AdminStreamsList from "../components/stream/adminList";
 import GeneralCourses from "../components/admin/GeneralCourses";
+import GeneralCourseDetailsPage from "../pages/generalCourse/GeneralCourseDetailsPage";
+import GeneralCourseGroupPage from "../pages/generalCourse/GeneralCourseGroupPage";
 
 // Teacher Components
 
@@ -136,7 +138,6 @@ const AppRouter = () => {
         <Route path="/" element={<Home />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/support-guest" element={<SupportGuestPage />} />
-        <Route path="*" element={<NotFound />} />
 
         {/* Auth Routes */}
         <Route
@@ -334,6 +335,8 @@ const AppRouter = () => {
           <Route path="competition/:id" element={<CompetitionDetails />} />
           <Route path="the_Firsts" element={<TheFirsts />} />
           <Route path="general-courses" element={<GeneralCourses />} />
+          <Route path="general-course/:id" element={<GeneralCourseDetailsPage />} />
+          <Route path="general-course/:id/group/:groupId" element={<GeneralCourseGroupPage />} />
           {/* Question Bank */}
           <Route path="question-bank/:id" element={<QuestionBank />} />
           <Route path="question_bank" element={<QuestionBank />} />
@@ -422,6 +425,9 @@ const AppRouter = () => {
           <Route path="support" element={<SupportChatStudent />} />
           <Route path="video/:videoId/:token?" element={<Vedio />} />
         </Route>
+
+        {/* 404 — يجب أن يكون آخر مسار لئلا يلتقط كل الطلبات */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );

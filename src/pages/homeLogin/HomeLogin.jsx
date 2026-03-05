@@ -34,12 +34,15 @@ const HomeLogin = () => {
   const badgeBg = useColorModeValue("blue.50", "blue.900");
   const badgeColor = useColorModeValue("blue.600", "blue.200");
 
-  // إخفاء السايدبار في صفحات المحتوى الكامل (كورس، إحصائيات، امتحان شامل، إلخ)
+  // إخفاء السايدبار في صفحات المحتوى الكامل (كورس، إحصائيات، امتحان شامل، بنك الأسئلة إلخ)
   const shouldHideSidebar =
     location.pathname.includes("CourseDetailsPage") ||
     location.pathname.includes("CourseStatisticsPage") ||
     location.pathname.includes("CourseStudentsPage") ||
-    location.pathname.includes("ComprehensiveExam");
+    location.pathname.includes("ComprehensiveExam") ||
+    location.pathname.toLowerCase().includes("question-bank") ||
+    location.pathname.toLowerCase().includes("question_bank") ||
+    location.pathname.toLowerCase().includes("teacher_subjects");
 
   return (
     <Flex
@@ -50,7 +53,7 @@ const HomeLogin = () => {
       {/* Sidebar - Hide if on CourseDetailsPage */}
       {!shouldHideSidebar && (
         <Box
-          display={{ base: "none", md: "flex" }}
+          display={{ base: "none", lg: "flex" }}
           flexDirection="column"
           width="280px"
           height="100vh"
@@ -129,7 +132,7 @@ const HomeLogin = () => {
 
           {/* الروابط */}
           <Box flex={1} py={3} px={3}>
-            <Links isSidebarOpen={true} setIsSidebarOpen={() => {}} />
+            <Links isSidebarOpen={true} setIsSidebarOpen={() => { }} />
           </Box>
 
           {/* تحميل التطبيق — CTA برتقالي مثل الصفحة الرئيسية */}
@@ -168,9 +171,11 @@ const HomeLogin = () => {
       {/* Main Content */}
       <Box
         flex={1}
-        mr={{ base: 0, md: shouldHideSidebar ? 0 : "280px" }} // Dynamic margin
+        mr={{ base: 0, lg: shouldHideSidebar ? 0 : "280px" }} // Dynamic margin
         mt="80px" // Navbar height
-        width="full"
+        w="full"
+        maxW="100vw"
+        overflowX="hidden"
         bg={mainBg}
         color={useColorModeValue("gray.800", "white")}
         transition="margin-right 0.3s"
