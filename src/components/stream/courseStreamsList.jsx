@@ -34,7 +34,8 @@ import {
   FaTrash,
   FaVideo,
   FaCalendarAlt,
-  FaClock
+  FaClock,
+  FaDownload
 } from "react-icons/fa";
 import { useState } from "react";
 import baseUrl from "../../api/baseUrl";
@@ -78,6 +79,7 @@ const CourseStreamsList = ({ courseId }) => {
   const [editingStream, setEditingStream] = useState(null);
   const [newTitle, setNewTitle] = useState("");
   const [deletingStream, setDeletingStream] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const handleUpdateTitle = async () => {
@@ -126,6 +128,30 @@ const CourseStreamsList = ({ courseId }) => {
       refetch();
     } catch {
       toast.error("فشل في حذف البث");
+    }
+  };
+
+  const handleDownload = async (streamId, title) => {
+    setDownloadingId(streamId);
+    try {
+      const response = await baseUrl.get(`/api/meeting/${streamId}/recording/download`, {
+        responseType: 'blob',
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `recording-${title || streamId}.mp4`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("بدأ تحميل التسجيل");
+    } catch (error) {
+      toast.error("التسجيل غير موجود أو حدث خطأ أثناء التحميل");
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -273,6 +299,21 @@ const CourseStreamsList = ({ courseId }) => {
                     width={{ base: "full", sm: "auto" }}
                   >
                     مشاهدة التسجيل
+                  </Button>
+                )}
+
+                {stream.status === "ended" && (
+                  <Button
+                    leftIcon={<Icon as={FaDownload} />}
+                    colorScheme="green"
+                    variant="solid"
+                    size="md"
+                    isLoading={downloadingId === stream.id}
+                    borderRadius="xl"
+                    width={{ base: "full", sm: "auto" }}
+                    onClick={() => handleDownload(stream.id, stream.title)}
+                  >
+                    تحميل التسجيل
                   </Button>
                 )}
 
