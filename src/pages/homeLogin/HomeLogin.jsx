@@ -132,7 +132,7 @@ const HomeLogin = () => {
 
           {/* الروابط */}
           <Box flex={1} py={3} px={3}>
-            <Links isSidebarOpen={true} setIsSidebarOpen={() => { }} />
+            <Links isSidebarOpen={true} setIsSidebarOpen={() => {}} />
           </Box>
 
           {/* تحميل التطبيق — CTA برتقالي مثل الصفحة الرئيسية */}

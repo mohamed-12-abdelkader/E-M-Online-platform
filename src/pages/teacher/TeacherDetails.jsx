@@ -169,7 +169,7 @@ const TeacherDetails = () => {
         <Flex
           direction={{ base: "column", sm: "row" }}
           justify="space-between"
-          align={{ base: "stretch", sm: "center" }}
+          align={{ base: "center", sm: "center" }}
           gap={4}
           mb={6}
           p={5}
@@ -179,11 +179,11 @@ const TeacherDetails = () => {
           borderColor={sectionBorder}
           boxShadow="sm"
         >
-          <HStack spacing={4} flexWrap="wrap">
+          <HStack spacing={4} flexWrap="wrap" justify={{ base: "center", sm: "flex-start" }}>
             <Flex w="12" h="12" borderRadius="xl" bg="blue.500" color="white" align="center" justify="center" boxShadow="md">
               <Icon as={FaFileVideo} boxSize={6} />
             </Flex>
-            <VStack align="flex-start" spacing={0}>
+            <VStack align={{ base: "center", sm: "flex-start" }} spacing={0}>
               <Heading size="md" color={headingColor} fontWeight="bold">
                 كل الكورسات المتاحة
               </Heading>
@@ -192,7 +192,7 @@ const TeacherDetails = () => {
               </Text>
             </VStack>
           </HStack>
-          <InputGroup maxW="320px" size="md">
+          <InputGroup maxW={{ base: "100%", sm: "320px" }} size="md" w={{ base: "full", sm: "auto" }}>
             <InputLeftElement pointerEvents="none" height="100%">
               <Icon as={FaSearch} color="gray.400" boxSize={4} />
             </InputLeftElement>
@@ -210,7 +210,15 @@ const TeacherDetails = () => {
         </Flex>
 
         {filteredCourses && filteredCourses.length > 0 ? (
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+          <Flex justify={{ base: "center", md: "flex-start" }} w="full">
+            <SimpleGrid
+              columns={{ base: 1, md: 2, lg: 3 }}
+              spacing={6}
+              w="full"
+              maxW={{ base: "400px", sm: "440px", md: "none" }}
+              mx={{ base: "auto", md: 0 }}
+              justifyItems={{ base: "center", md: "stretch" }}
+            >
             {filteredCourses.map((course) => (
               <Card
                 key={course.id}
@@ -342,7 +350,8 @@ const TeacherDetails = () => {
                 </Box>
               </Card>
             ))}
-          </SimpleGrid>
+            </SimpleGrid>
+          </Flex>
         ) : (
           <Box
             p={10}

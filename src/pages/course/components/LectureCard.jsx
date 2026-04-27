@@ -3,7 +3,7 @@ import {
   Box, Flex, HStack, VStack, Text, Badge, Icon, IconButton, Button, Collapse, Divider, Tooltip, useColorModeValue,
   Stack, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton,
   FormControl, FormLabel, Input, Textarea, Tabs, TabList, TabPanels, Tab, TabPanel,
-  Center, Heading, useToast
+  Center, Heading, useToast, Skeleton
 } from "@chakra-ui/react";
 import {
   FaPlayCircle, FaLock, FaEdit, FaTrash, FaPlus, FaGraduationCap, FaRegPaperPlane, FaVideo, FaFilePdf, FaLightbulb, FaClock, FaBookOpen, FaStar,
@@ -199,6 +199,9 @@ const LectureCard = ({
     }
   };
 
+  // نعرض lecture.exam أثناء التحميل، ولو متاح lectureExam من state يبقى هو المصدر
+  const examToShow = lectureExam || lecture.exam;
+
 
   return (
     <Box
@@ -253,7 +256,7 @@ const LectureCard = ({
             gap={{ base: 3, md: 4 }}
           >
             <VStack align="start" spacing={1} maxW={{ base: "100%", md: "70%" }} w="full">
-              <HStack spacing={2} align="start">
+              <HStack spacing={2} align="start" flexWrap="wrap">
                 {lecture.locked && <Icon as={FaLock} color="red.400" mt={1} boxSize={3} />}
                 <Text
                   fontSize={{ base: "md", md: "xl" }}
@@ -263,7 +266,44 @@ const LectureCard = ({
                 >
                   {lecture.title}
                 </Text>
+                {lecture.locked && (
+                  <Badge
+                    colorScheme="red"
+                    variant="solid"
+                    fontSize="xs"
+                    px={2}
+                    py={0.5}
+                    borderRadius="full"
+                    textTransform="none"
+                  >
+                    مغلقة
+                  </Badge>
+                )}
               </HStack>
+
+              {lecture.locked && (
+                <Box
+                  w="full"
+                  mt={1}
+                  p={2.5}
+                  borderRadius="lg"
+                  borderWidth="1px"
+                  borderColor={useColorModeValue("red.200", "red.600")}
+                  bg={useColorModeValue("red.50", "rgba(127, 29, 29, 0.35)")}
+                >
+                  <HStack align="start" spacing={2}>
+                    <Icon as={FaLock} color="red.500" boxSize={4} flexShrink={0} mt={0.5} />
+                    <Text
+                      fontSize="sm"
+                      fontWeight="semibold"
+                      color={useColorModeValue("red.700", "red.100")}
+                      lineHeight="tall"
+                    >
+                      هذه المحاضرة مغلقة إلى حين حل امتحان المحاضرة السابقة.
+                    </Text>
+                  </HStack>
+                </Box>
+              )}
 
               <HStack spacing={3} color="gray.500" fontSize="xs">
                 <HStack spacing={1}>
@@ -403,7 +443,7 @@ const LectureCard = ({
                         p={4}
                         bg="white"
                         _dark={{ bg: "gray.800" }}
-                        borderRadius="xl"
+                        borderRadius="2xl"
                         w="full"
                         shadow="sm"
                         border="1px solid"
@@ -437,7 +477,7 @@ const LectureCard = ({
                       </Flex>
                     ))
                   ) : (
-                    <Center flexDir="column" py={10} bg="white" borderRadius="xl" border="1px dashed" borderColor="gray.200" w="full">
+                    <Center flexDir="column" py={10} bg="white" borderRadius="2xl" border="1px dashed" borderColor="gray.200" w="full">
                       <Icon as={FaVideo} boxSize={10} color="gray.300" mb={3} />
                       <Text color="gray.500" fontWeight="medium">لا يوجد فيديوهات</Text>
                       {isTeacher && (
@@ -465,7 +505,7 @@ const LectureCard = ({
                         p={4}
                         bg="white"
                         _dark={{ bg: "gray.800" }}
-                        borderRadius="xl"
+                        borderRadius="2xl"
                         w="full"
                         shadow="md"
                         border="1px solid"
@@ -497,7 +537,7 @@ const LectureCard = ({
                       </Flex>
                     ))
                   ) : (
-                    <Center flexDir="column" py={10} bg="white" borderRadius="xl" border="1px dashed" borderColor="gray.200" w="full">
+                    <Center flexDir="column" py={10} bg="white" borderRadius="2xl" border="1px dashed" borderColor="gray.200" w="full">
                       <Icon as={FaFilePdf} boxSize={10} color="gray.300" mb={3} />
                       <Text color="gray.500" fontWeight="medium">لا يوجد ملفات</Text>
                       {isTeacher && (
@@ -517,7 +557,7 @@ const LectureCard = ({
               <TabPanel px={0} py={2}>
                 <VStack spacing={4} w="full">
                   {/* Main Lecture Exam */}
-                  {lecture.exam ? (
+                  {examToShow ? (
                     <Box p={5} bg="white" _dark={{ bg: "gray.800" }} borderRadius="2xl" shadow="md" border="1px solid" borderColor="green.200" w="full">
                       <Flex justify="space-between" direction={{ base: "column", sm: "row" }} align="center" gap={4}>
                         <HStack spacing={4}>
@@ -525,28 +565,34 @@ const LectureCard = ({
                             <Icon as={FaGraduationCap} color="green.500" boxSize={7} />
                           </Center>
                           <VStack align="start" spacing={1}>
-                            <Heading size="sm" color="gray.700" _dark={{ color: "gray.200" }}>{lecture.exam.title}</Heading>
-                            <Badge colorScheme={lecture.exam.is_visible ? "green" : "orange"}>{lecture.exam.is_visible ? "متاح للطلاب" : "مخفي"}</Badge>
+                            <Heading size="sm" color="gray.700" _dark={{ color: "gray.200" }}>{examToShow.title}</Heading>
+                            <Badge colorScheme={examToShow.is_visible ? "green" : "orange"}>
+                              {examToShow.is_visible ? "متاح للطلاب" : "مخفي"}
+                            </Badge>
                           </VStack>
                         </HStack>
 
                         <HStack spacing={2} w={{ base: "full", sm: "auto" }}>
-                          <Link to={`/ComprehensiveExam/${lecture.exam.id}`} style={{ width: '100%' }}>
+                          <Link to={`/ComprehensiveExam/${examToShow.id}`} style={{ width: '100%' }}>
                             <Button w="full" colorScheme="green" leftIcon={<Icon as={FaPlayCircle} />}>{isTeacher ? "معاينة" : "ابدأ"}</Button>
                           </Link>
 
                           {isTeacher && (
                             <>
-                              <IconButton icon={<Icon as={FaEdit} />} onClick={() => setExamModal({ isOpen: true, type: 'edit', data: lecture.exam })} aria-label="Edit Exam" />
-                              <IconButton icon={<Icon as={FaTrash} />} colorScheme="red" variant="ghost" onClick={() => setDeleteExamDialog({ isOpen: true, examId: lecture.exam.id })} aria-label="Delete Exam" />
+                              <IconButton icon={<Icon as={FaEdit} />} onClick={() => setExamModal({ isOpen: true, type: 'edit', data: examToShow })} aria-label="Edit Exam" />
+                              <IconButton icon={<Icon as={FaTrash} />} colorScheme="red" variant="ghost" onClick={() => setDeleteExamDialog({ isOpen: true, examId: examToShow.id })} aria-label="Delete Exam" />
                               <Tooltip label="تغيير الحالة">
                                 <IconButton
-                                  icon={<Icon as={lecture.exam.is_visible ? FaEye : FaEyeSlash} />}
+                                  icon={<Icon as={examToShow.is_visible ? FaEye : FaEyeSlash} />}
                                   onClick={async (e) => {
                                     // Toggle logic inline or separate handler
                                     try {
                                       const token = localStorage.getItem("token");
-                                      await baseUrl.patch(`/api/course/lecture/exam/${lecture.exam.id}/visibility`, { is_visible: !lecture.exam.is_visible }, { headers: { Authorization: `Bearer ${token}` } });
+                                      await baseUrl.patch(
+                                        `/api/course/lecture/exam/${examToShow.id}/visibility`,
+                                        { is_visible: !examToShow.is_visible },
+                                        { headers: { Authorization: `Bearer ${token}` } }
+                                      );
                                       // Ideally refresh or update state
                                       fetchLectureExam();
                                     } catch (err) { }
@@ -559,8 +605,14 @@ const LectureCard = ({
                         </HStack>
                       </Flex>
                     </Box>
+                  ) : examLoading ? (
+                    <Box p={5} bg={useColorModeValue("white", "gray.800")} _dark={{ bg: "gray.800" }} borderRadius="2xl" border="1px solid" borderColor={useColorModeValue("green.200", "green.600")}>
+                      <Skeleton height="22px" mb={3} borderRadius="md" />
+                      <Skeleton height="18px" mb={2} borderRadius="md" />
+                      <Skeleton height="44px" borderRadius="md" />
+                    </Box>
                   ) : (
-                    <Center flexDir="column" py={8} w="full" bg="gray.50" borderRadius="xl" border="1px dashed" borderColor="gray.300">
+                    <Center flexDir="column" py={8} w="full" bg="gray.50" borderRadius="2xl" border="1px dashed" borderColor="gray.300">
                       <Text color="gray.500" mb={2}>لا يوجد امتحان للمحاضرة</Text>
                       {isTeacher && <Button size="sm" colorScheme="green" leftIcon={<Icon as={FaPlus} />} onClick={() => setExamModal({ isOpen: true, type: 'add', lectureId: lecture.id, data: null })}>إنشاء امتحان</Button>}
                     </Center>
@@ -593,8 +645,14 @@ const LectureCard = ({
                         </HStack>
                       </Flex>
                     </Box>
+                  ) : essayExamLoading ? (
+                    <Box p={5} w="full" bg={useColorModeValue("white", "gray.800")} borderRadius="2xl" border="1px solid" borderColor={useColorModeValue("purple.200", "purple.600")}>
+                      <Skeleton height="22px" mb={3} borderRadius="md" />
+                      <Skeleton height="18px" mb={2} borderRadius="md" />
+                      <Skeleton height="44px" borderRadius="md" />
+                    </Box>
                   ) : (
-                    <Center flexDir="column" py={8} w="full" bg="gray.50" borderRadius="xl" border="1px dashed" borderColor="gray.300">
+                    <Center flexDir="column" py={8} w="full" bg="gray.50" borderRadius="2xl" border="1px dashed" borderColor="gray.300">
                       <Text color="gray.500" mb={2}>لا يوجد امتحانات مقالية</Text>
                       {isTeacher && <Button size="sm" colorScheme="purple" leftIcon={<Icon as={FaPlus} />} onClick={() => setEssayExamModal({ isOpen: true, type: 'add' })}>إنشاء امتحان مقالي</Button>}
                     </Center>

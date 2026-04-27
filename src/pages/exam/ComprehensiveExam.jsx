@@ -108,6 +108,14 @@ const ComprehensiveExam = () => {
   const [bulkTextInput, setBulkTextInput] = useState("");
   const [bulkCorrectAnswers, setBulkCorrectAnswers] = useState("");
   const [bulkTextLoading, setBulkTextLoading] = useState(false);
+  // State لإضافة أسئلة من قطعة
+  const [passageModalOpen, setPassageModalOpen] = useState(false);
+  const [passageForm, setPassageForm] = useState({
+    title: "",
+    content: "",
+    questionsBulkText: "",
+  });
+  const [passageLoading, setPassageLoading] = useState(false);
   // State لتقارير الامتحان
   const [examReport, setExamReport] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
@@ -239,9 +247,9 @@ const ComprehensiveExam = () => {
   };
 
   /**
-   * تسوية مصفوفة الأسئلة من الـ API: الأسئلة العادية تبقى كما هي،
-   * أسئلة القطعة (type: "passage") تُحوّل إلى عناصر منفصلة (واحد لكل sub_question)
-   * مع الاحتفاظ بنص القطعة لعرضه فوق كل سؤال فرعي.
+   * تسوية مصفوفة الأسئلة من الـ API:
+   * - تدعم صيغة sub_questions القديمة (type: "passage")
+   * - وتدعم الصيغة الجديدة حيث كل سؤال يحتوي passage مباشرة.
    */
   const normalizeQuestions = (questionsArray) => {
     if (!questionsArray || !Array.isArray(questionsArray)) return [];
@@ -275,6 +283,7 @@ const ComprehensiveExam = () => {
           text: q.text || null,
           image: q.image || null,
           grade: q.grade ?? 1,
+          passage: q.passage || null,
           choices: Array.isArray(q.choices)
             ? q.choices.map((c) => ({
                 id: c.id,
@@ -1153,6 +1162,74 @@ const ComprehensiveExam = () => {
     }
   };
 
+  const resetPassageForm = () => {
+    setPassageForm({
+      title: "",
+      content: "",
+      questionsBulkText: "",
+    });
+  };
+
+  // إنشاء قطعة + أسئلة bulk وربطها بالامتحان — POST /api/exams/lecture/:examId/questions/passage/bulk
+  const submitPassageQuestions = async () => {
+    if (
+      !passageForm.content.trim() ||
+      !passageForm.questionsBulkText.trim()
+    ) {
+      toast({
+        title: "يرجى إدخال المحتوى ونص الأسئلة",
+        status: "warning",
+        isClosable: true,
+      });
+      return;
+    }
+
+    setPassageLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await baseUrl.post(
+        `/api/exams/lecture/${id}/questions/passage/bulk`,
+        {
+          title: passageForm.title.trim(),
+          content: passageForm.content.trim(),
+          passage: passageForm.content.trim(),
+          text: passageForm.questionsBulkText.trim(),
+          questionText: passageForm.questionsBulkText.trim(),
+          questionsBulkText: passageForm.questionsBulkText.trim(),
+          bulkQuestionsText: passageForm.questionsBulkText.trim(),
+          mcqText: passageForm.questionsBulkText.trim(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      toast({
+        title: res.data?.message || "تمت إضافة أسئلة القطعة بنجاح",
+        status: "success",
+        isClosable: true,
+      });
+
+      resetPassageForm();
+      setPassageModalOpen(false);
+
+      if (isTeacher || isAdmin) await fetchQuestionsForTeacher();
+      else await fetchExamData();
+    } catch (err) {
+      toast({
+        title: "تعذر إضافة أسئلة القطعة",
+        description: err.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
+        isClosable: true,
+      });
+    } finally {
+      setPassageLoading(false);
+    }
+  };
+
   // فتح مودال إضافة صورة لسؤال محدد
   const openAddQuestionImageModal = (questionId) => {
     setAddQuestionImageModal({ open: true, questionId });
@@ -1779,6 +1856,22 @@ const ComprehensiveExam = () => {
                 >
                   إضافة أسئلة كنص
                 </Button>
+                <Button
+                  variant="outline"
+                  borderColor="teal.500"
+                  color="teal.600"
+                  onClick={() => setPassageModalOpen(true)}
+                  size={{ base: "sm", sm: "md", md: "lg" }}
+                  px={{ base: 5, sm: 6, md: 8 }}
+                  h={{ base: "40px", sm: "44px", md: "48px" }}
+                  borderRadius="xl"
+                  leftIcon={<Icon as={FaBookOpen} boxSize={4} />}
+                  _hover={{ bg: "teal.50", borderColor: "teal.400" }}
+                  transition="all 0.2s"
+                  fontWeight="bold"
+                >
+                  إضافة أسئلة من قطعة
+                </Button>
               </HStack>
             )}
             <VStack spacing={{ base: 6, sm: 7, md: 8 }} align="stretch">
@@ -2197,7 +2290,7 @@ const ComprehensiveExam = () => {
                             : q.choices;
                           const passageContent = isPassageSub
                             ? q.passage?.content
-                            : null;
+                            : q.passage?.content;
                           return (
                             <Box
                               key={displayId}
@@ -2581,7 +2674,7 @@ const ComprehensiveExam = () => {
                         : currentItem?.choices;
                       const passageContent = isPassageSub
                         ? currentItem?.passage?.content
-                        : null;
+                        : currentItem?.passage?.content;
                       return (
                         <>
                           {/* شريط التقدم المبسط */}
@@ -3711,6 +3804,113 @@ const ComprehensiveExam = () => {
                       setBulkTextModalOpen(false);
                       setBulkTextInput("");
                       setBulkCorrectAnswers("");
+                    }}
+                  >
+                    إلغاء
+                  </Button>
+                </ModalFooter>
+              </ModalContent>
+            </Modal>
+
+            {/* إضافة أسئلة من قطعة */}
+            <Modal
+              isOpen={passageModalOpen}
+              onClose={() => {
+                setPassageModalOpen(false);
+                resetPassageForm();
+              }}
+              size="xl"
+              isCentered
+            >
+              <ModalOverlay />
+              <ModalContent mx={{ base: 2, sm: 4 }}>
+                <ModalHeader fontSize={{ base: "md", sm: "lg" }}>
+                  إنشاء قطعة وإضافة أسئلتها
+                </ModalHeader>
+                <ModalCloseButton />
+                <ModalBody maxH="70vh" overflowY="auto">
+                  <VStack spacing={4} align="stretch">
+                    <Box
+                      p={4}
+                      bg="teal.50"
+                      borderRadius="lg"
+                      border="1px solid"
+                      borderColor="teal.200"
+                    >
+                      <Text fontSize="sm" color="teal.700">
+                        سيتم إنشاء قطعة جديدة وربط أسئلة الاختيار من متعدد بالامتحان من نص واحد.
+                      </Text>
+                    </Box>
+                    <FormControl>
+                      <FormLabel fontWeight="600">عنوان القطعة (اختياري)</FormLabel>
+                      <Input
+                        placeholder="Reading Passage 1"
+                        value={passageForm.title}
+                        onChange={(e) =>
+                          setPassageForm((prev) => ({
+                            ...prev,
+                            title: e.target.value,
+                          }))
+                        }
+                        borderRadius="lg"
+                      />
+                    </FormControl>
+                    <FormControl isRequired>
+                      <FormLabel fontWeight="600">محتوى القطعة</FormLabel>
+                      <Textarea
+                        rows={4}
+                        placeholder="Ali woke up early and went to school..."
+                        value={passageForm.content}
+                        onChange={(e) =>
+                          setPassageForm((prev) => ({
+                            ...prev,
+                            content: e.target.value,
+                          }))
+                        }
+                        borderRadius="lg"
+                      />
+                    </FormControl>
+                    <FormControl isRequired>
+                      <FormLabel fontWeight="600">questionsBulkText</FormLabel>
+                      <Textarea
+                        rows={10}
+                        placeholder={`1- السؤال الأول
+(أ) الاختيار الأول
+(ب) الاختيار الثاني
+(ج) الاختيار الثالث
+(د) الاختيار الرابع
+
+2- السؤال الثاني
+(أ) ...
+(ب) ...
+(ج) ...
+(د) ...`}
+                        value={passageForm.questionsBulkText}
+                        onChange={(e) =>
+                          setPassageForm((prev) => ({
+                            ...prev,
+                            questionsBulkText: e.target.value,
+                          }))
+                        }
+                        borderRadius="lg"
+                      />
+                    </FormControl>
+                  </VStack>
+                </ModalBody>
+                <ModalFooter>
+                  <Button
+                    colorScheme="teal"
+                    onClick={submitPassageQuestions}
+                    isLoading={passageLoading}
+                    size={{ base: "sm", sm: "md" }}
+                  >
+                    إضافة أسئلة القطعة
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setPassageModalOpen(false);
+                      resetPassageForm();
                     }}
                   >
                     إلغاء

@@ -52,6 +52,14 @@ const NavLinkItem = ({ to, Icon: LinkIcon, label, onClick, isSidebarOpen }) => {
   const activeColor = useColorModeValue("blue.600", "blue.300");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
   const textColor = useColorModeValue("gray.600", "gray.300");
+  const linkShadow = useColorModeValue(
+    "none",
+    "0 0 0 1px rgba(255,255,255,0.04), 0 0 12px rgba(255,255,255,0.06)"
+  );
+  const linkShadowHover = useColorModeValue(
+    "none",
+    "0 0 0 1px rgba(255,255,255,0.06), 0 0 16px rgba(255,255,255,0.1)"
+  );
 
   return (
     <Tooltip label={isSidebarOpen ? "" : label} placement="right" hasArrow>
@@ -62,10 +70,12 @@ const NavLinkItem = ({ to, Icon: LinkIcon, label, onClick, isSidebarOpen }) => {
           borderRadius="xl"
           bg={isActive ? activeBg : "transparent"}
           color={isActive ? activeColor : textColor}
+          boxShadow={linkShadow}
           _hover={{
             bg: isActive ? activeBg : hoverBg,
             color: isActive ? activeColor : "blue.500",
             transform: "translateX(4px)",
+            boxShadow: linkShadowHover,
           }}
           transition="all 0.2s"
           w="full"

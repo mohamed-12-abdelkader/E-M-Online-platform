@@ -87,25 +87,46 @@ const StudentDetailsPage = () => {
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
 
-  // جلب بيانات الطالب
+  // جلب بيانات الطالب (نفس التطبيق: GET center-groups/:groupId/students/:studentId)
   const fetchStudentData = async () => {
     setLoading(true);
     setError(null);
     try {
       const token = localStorage.getItem('token');
       const response = await baseUrl.get(
-        `/api/study-groups/${groupId}/students/${studentId}/attendance-details?month=${selectedMonth}&year=${selectedYear}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        `/api/center-groups/${groupId}/students/${studentId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      setStudentData(response.data);
+      const data = response.data;
+      const attendance = data.attendance || [];
+      const presentDates = attendance.filter((a) => a.status === 'present').map((a) => ({
+        date: a.date,
+        day_name: new Date(a.date).toLocaleDateString('ar-EG', { weekday: 'long' }),
+      }));
+      const absentDates = attendance.filter((a) => a.status === 'absent').map((a) => ({
+        date: a.date,
+        day_name: new Date(a.date).toLocaleDateString('ar-EG', { weekday: 'long' }),
+      }));
+      setStudentData({
+        student_info: data.student
+          ? { name: data.student.name, phone: data.student.phone, parent_phone: data.student.parent_phone }
+          : {},
+        student: data.student,
+        group: data.group,
+        membership: data.membership,
+        statistics: data.statistics || {},
+        attendance: data.attendance || [],
+        attendance_details: {
+          present_dates: presentDates,
+          absent_dates: absentDates,
+        },
+      });
     } catch (err) {
       console.error('Error fetching student data:', err);
       setError('فشل في جلب بيانات الطالب');
       toast({
         title: 'خطأ',
-        description: 'فشل في جلب بيانات الطالب',
+        description: err.response?.data?.message || 'فشل في جلب بيانات الطالب',
         status: 'error',
         duration: 3000,
         isClosable: true,

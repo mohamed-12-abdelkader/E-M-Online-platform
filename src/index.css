@@ -88,6 +88,10 @@ body {
   color: #2D3748;
 }
 
+[data-theme='dark'] .brand-section-title {
+  color: #e2e8f0;
+}
+
 .brand-section-title::after {
   content: '';
   position: absolute;

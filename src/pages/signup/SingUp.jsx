@@ -58,6 +58,16 @@ const SignUp = () => {
   const inputBg = useColorModeValue("white", "gray.700");
   const stepInactiveBg = useColorModeValue("gray.200", "gray.600");
   const stepInactiveColor = useColorModeValue("gray.500", "gray.400");
+  const stepIconBg = useColorModeValue("blue.50", "blue.900");
+  const categoryCardBg = useColorModeValue("white", "gray.700");
+  const categoryCardBorder = useColorModeValue("gray.200", "gray.600");
+  const categoryCardHover = useColorModeValue("gray.50", "gray.600");
+  const inputHoverBorder = useColorModeValue("gray.300", "gray.500");
+  const pageOverlayOpacity = useColorModeValue(0.4, 0.08);
+  const cardShadow = useColorModeValue(
+    "0 0 0 1px rgba(0,0,0,0.04), 0 12px 24px -8px rgba(0,0,0,0.12), 0 24px 48px -16px rgba(0,0,0,0.08)",
+    "0 0 0 1px rgba(255,255,255,0.08), 0 0 40px rgba(255,255,255,0.2), 0 0 80px rgba(255,255,255,0.1), 0 24px 48px -16px rgba(0,0,0,0.45), 0 12px 24px -8px rgba(0,0,0,0.35)"
+  );
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -68,6 +78,20 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [grades, setGrades] = useState([]); // الصفوف من API
   const [selectedCategory, setSelectedCategory] = useState(""); // الفئة الدراسية
+
+  // تنسيق موحد للحقول (وايت/دارك)
+  const inputStyles = {
+    size: "lg",
+    borderRadius: "xl",
+    px: 6,
+    py: 4,
+    borderColor: inputBorder,
+    bg: inputBg,
+    focusBorderColor: "blue.500",
+    _placeholder: { color: subtextColor },
+    _hover: { borderColor: inputHoverBorder },
+    _focus: { borderColor: "blue.500", boxShadow: "0 0 0 2px rgba(66, 153, 225, 0.25)" },
+  };
 
   // Steps configuration
   const steps = [
@@ -263,43 +287,36 @@ const SignUp = () => {
       case 0:
         return (
           <VStack spacing={6} align="stretch">
-            <Box textAlign="center" mb={6}>
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
-                <FiUser className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            <Box textAlign="center" mb={2}>
+              <Box
+                w="16"
+                h="16"
+                mx="auto"
+                mb={4}
+                borderRadius="2xl"
+                bg="blue.500"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                boxShadow="0 8px 24px rgba(66, 153, 225, 0.35)"
+              >
+                <Icon as={FiUser} w="8" h="8" color="white" />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" color={headingColor} mb={1}>
                 أدخل اسمك الكامل
-              </h2>
-              <p className="text-gray-600">سنحتاج إلى معرفة اسمك للبدء</p>
+              </Text>
+              <Text fontSize="sm" color={subtextColor}>سنحتاج إلى معرفة اسمك للبدء</Text>
             </Box>
 
             <FormControl>
-              <FormLabel
-                fontWeight="semibold"
-                color="gray.700"
-                mb={3}
-                fontSize="md"
-              >
+              <FormLabel fontWeight="semibold" color={labelColor} mb={2} fontSize="md">
                 الاسم بالكامل
               </FormLabel>
               <Input
                 placeholder="مثال: أحمد محمد علي"
-                size="lg"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="text-gray-800 transition-all duration-300"
-                focusBorderColor="blue.500"
-                _placeholder={{ color: "gray.400" }}
-                borderColor="gray.200"
-                borderRadius="xl"
-                px={6}
-                py={4}
-                _hover={{ borderColor: "gray.300" }}
-                _focus={{
-                  borderColor: "blue.500",
-                  boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)",
-                }}
+                {...inputStyles}
               />
             </FormControl>
           </VStack>
@@ -308,77 +325,52 @@ const SignUp = () => {
       case 1:
         return (
           <VStack spacing={6} align="stretch">
-            <Box textAlign="center" mb={6}>
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-green-500 to-teal-600 rounded-full mb-4">
-                <FiPhone className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            <Box textAlign="center" mb={2}>
+              <Box
+                w="16"
+                h="16"
+                mx="auto"
+                mb={4}
+                borderRadius="2xl"
+                bg="green.500"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                boxShadow="0 8px 24px rgba(34, 197, 94, 0.35)"
+              >
+                <Icon as={FiPhone} w="8" h="8" color="white" />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" color={headingColor} mb={1}>
                 معلومات الاتصال
-              </h2>
-              <p className="text-gray-600">
+              </Text>
+              <Text fontSize="sm" color={subtextColor}>
                 أدخل رقم هاتفك ورقم هاتف ولي الأمر
-              </p>
+              </Text>
             </Box>
 
             <FormControl>
-              <FormLabel
-                fontWeight="semibold"
-                color="gray.700"
-                mb={3}
-                fontSize="md"
-              >
+              <FormLabel fontWeight="semibold" color={labelColor} mb={2} fontSize="md">
                 رقم الهاتف
               </FormLabel>
               <Input
                 type="tel"
                 placeholder="01227145090"
-                size="lg"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="text-gray-800 transition-all duration-300"
-                focusBorderColor="blue.500"
-                _placeholder={{ color: "gray.400" }}
-                borderColor="gray.200"
-                borderRadius="xl"
-                px={6}
-                py={4}
-                _hover={{ borderColor: "gray.300" }}
-                _focus={{
-                  borderColor: "blue.500",
-                  boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)",
-                }}
+                {...inputStyles}
               />
             </FormControl>
 
             <FormControl>
-              <FormLabel
-                fontWeight="semibold"
-                color="gray.700"
-                mb={3}
-                fontSize="md"
-              >
+              <FormLabel fontWeight="semibold" color={labelColor} mb={2} fontSize="md">
                 رقم هاتف الوالد
               </FormLabel>
               <Input
                 type="tel"
                 placeholder="01227145091"
-                size="lg"
                 value={parentPhone}
                 onChange={(e) => setParentPhone(e.target.value)}
-                className="text-gray-800 transition-all duration-300"
-                focusBorderColor="blue.500"
-                _placeholder={{ color: "gray.400" }}
-                borderColor="gray.200"
-                borderRadius="xl"
-                px={6}
-                py={4}
-                _hover={{ borderColor: "gray.300" }}
-                _focus={{
-                  borderColor: "blue.500",
-                  boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)",
-                }}
+                {...inputStyles}
               />
             </FormControl>
           </VStack>
@@ -387,96 +379,59 @@ const SignUp = () => {
       case 2:
         return (
           <VStack spacing={6} align="stretch">
-            <Box textAlign="center" mb={6}>
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-orange-500 to-red-600 rounded-full mb-4">
-                <FiLock className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            <Box textAlign="center" mb={2}>
+              <Box
+                w="16"
+                h="16"
+                mx="auto"
+                mb={4}
+                borderRadius="2xl"
+                bg="orange.500"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                boxShadow="0 8px 24px rgba(237, 137, 54, 0.35)"
+              >
+                <Icon as={FiLock} w="8" h="8" color="white" />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" color={headingColor} mb={1}>
                 كلمة المرور
-              </h2>
-              <p className="text-gray-600">أنشئ كلمة مرور قوية لحماية حسابك</p>
+              </Text>
+              <Text fontSize="sm" color={subtextColor}>أنشئ كلمة مرور قوية لحماية حسابك</Text>
             </Box>
 
             <FormControl>
-              <FormLabel
-                fontWeight="semibold"
-                color="gray.700"
-                mb={3}
-                fontSize="md"
-              >
+              <FormLabel fontWeight="semibold" color={labelColor} mb={2} fontSize="md">
                 كلمة المرور
               </FormLabel>
               <Input
                 type="password"
-                placeholder="أدخل كلمة مرور قوية"
-                size="lg"
+                placeholder="أدخل كلمة مرور قوية (6 أحرف على الأقل)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="text-gray-800 transition-all duration-300"
-                focusBorderColor="blue.500"
-                _placeholder={{ color: "gray.400" }}
-                borderColor="gray.200"
-                borderRadius="xl"
-                px={6}
-                py={4}
-                _hover={{ borderColor: "gray.300" }}
-                _focus={{
-                  borderColor: "blue.500",
-                  boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)",
-                }}
+                {...inputStyles}
               />
               {password.length > 0 && (
-                <Text
-                  fontSize="sm"
-                  color={password.length >= 6 ? "green.500" : "red.500"}
-                  mt={2}
-                >
-                  {password.length >= 6
-                    ? "✓ كلمة المرور قوية"
-                    : "كلمة المرور يجب أن تكون 6 أحرف على الأقل"}
+                <Text fontSize="sm" color={password.length >= 6 ? "green.500" : "orange.500"} mt={2}>
+                  {password.length >= 6 ? "✓ كلمة المرور قوية" : "كلمة المرور يجب أن تكون 6 أحرف على الأقل"}
                 </Text>
               )}
             </FormControl>
 
             <FormControl>
-              <FormLabel
-                fontWeight="semibold"
-                color="gray.700"
-                mb={3}
-                fontSize="md"
-              >
+              <FormLabel fontWeight="semibold" color={labelColor} mb={2} fontSize="md">
                 تأكيد كلمة المرور
               </FormLabel>
               <Input
                 type="password"
                 placeholder="أعد إدخال كلمة المرور"
-                size="lg"
                 value={passwordConfirm}
                 onChange={(e) => setPasswordConfirm(e.target.value)}
-                className="text-gray-800 transition-all duration-300"
-                focusBorderColor="blue.500"
-                _placeholder={{ color: "gray.400" }}
-                borderColor="gray.200"
-                borderRadius="xl"
-                px={6}
-                py={4}
-                _hover={{ borderColor: "gray.300" }}
-                _focus={{
-                  borderColor: "blue.500",
-                  boxShadow: "0 0 0 1px #3B82F6",
-                  transform: "translateY(-1px)",
-                }}
+                {...inputStyles}
               />
               {passwordConfirm.length > 0 && (
-                <Text
-                  fontSize="sm"
-                  color={password === passwordConfirm ? "green.500" : "red.500"}
-                  mt={2}
-                >
-                  {password === passwordConfirm
-                    ? "✓ كلمات المرور متطابقة"
-                    : "كلمات المرور غير متطابقة"}
+                <Text fontSize="sm" color={password === passwordConfirm ? "green.500" : "red.500"} mt={2}>
+                  {password === passwordConfirm ? "✓ كلمات المرور متطابقة" : "كلمات المرور غير متطابقة"}
                 </Text>
               )}
             </FormControl>
@@ -486,172 +441,102 @@ const SignUp = () => {
       case 3:
         return (
           <VStack spacing={6} align="stretch">
-            <Box textAlign="center" mb={6}>
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mb-4">
-                <FiBookOpen className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            <Box textAlign="center" mb={2}>
+              <Box
+                w="16"
+                h="16"
+                mx="auto"
+                mb={4}
+                borderRadius="2xl"
+                bg="purple.500"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                boxShadow="0 8px 24px rgba(147, 51, 234, 0.35)"
+              >
+                <Icon as={FiBookOpen} w="8" h="8" color="white" />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" color={headingColor} mb={1}>
                 اختر فئتك الدراسية
-              </h2>
-              <p className="text-gray-600">
+              </Text>
+              <Text fontSize="sm" color={subtextColor}>
                 حدد المرحلة الدراسية التي تنتمي إليها
-              </p>
+              </Text>
             </Box>
 
-            <div className="grid grid-cols-2 gap-4">
-              {/* الفئة الابتدائية */}
-              <div
-                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
-                  selectedCategory === "ابتدائي"
-                    ? "border-blue-500 bg-blue-50 shadow-lg"
-                    : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-md"
-                }`}
-                onClick={() => {
-                  setSelectedCategory("ابتدائي");
-                  setGradeId("");
-                }}
-              >
-                <div className="text-center">
-                  <div
-                    className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
-                      selectedCategory === "ابتدائي"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
+            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={4}>
+              {[
+                { id: "ابتدائي", label: "ابتدائي", sub: "6 صفوف دراسية", num: "١", color: "blue" },
+                { id: "إعدادي", label: "إعدادي", sub: "3 صفوف دراسية", num: "٢", color: "green" },
+                { id: "ثانوي", label: "ثانوي", sub: "3 صفوف دراسية", num: "٣", color: "purple" },
+                { id: "جامعة", label: "جامعة", sub: "4 فرق دراسية", num: "٤", color: "orange" },
+              ].map(({ id, label, sub, num, color }) => {
+                const isSelected = selectedCategory === id;
+                return (
+                  <Box
+                    key={id}
+                    p={5}
+                    borderRadius="2xl"
+                    borderWidth="2px"
+                    borderColor={isSelected ? `${color}.500` : categoryCardBorder}
+                    bg={isSelected ? `${color}.50` : categoryCardBg}
+                    _dark={{ bg: isSelected ? `${color}.900` : categoryCardBg }}
+                    cursor="pointer"
+                    transition="all 0.25s"
+                    _hover={{
+                      borderColor: isSelected ? `${color}.500` : `${color}.300`,
+                      transform: "scale(1.02)",
+                      shadow: "md",
+                    }}
+                    onClick={() => {
+                      setSelectedCategory(id);
+                      setGradeId("");
+                    }}
+                    textAlign="center"
                   >
-                    <span className="text-2xl font-bold">١</span>
-                  </div>
-                  <h3
-                    className={`font-bold text-lg mb-2 ${
-                      selectedCategory === "ابتدائي"
-                        ? "text-blue-700"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    ابتدائي
-                  </h3>
-                  <p className="text-sm text-gray-500">6 صفوف دراسية</p>
-                </div>
-              </div>
+                    <Box
+                      w="12"
+                      h="12"
+                      mx="auto"
+                      mb={3}
+                      borderRadius="full"
+                      bg={isSelected ? `${color}.500` : stepInactiveBg}
+                      color={isSelected ? "white" : stepInactiveColor}
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      fontSize="xl"
+                      fontWeight="bold"
+                    >
+                      {num}
+                    </Box>
+                    <Text fontWeight="bold" fontSize="lg" color={headingColor} mb={1}>
+                      {label}
+                    </Text>
+                    <Text fontSize="sm" color={subtextColor}>{sub}</Text>
+                  </Box>
+                );
+              })}
+            </Box>
 
-              {/* الفئة الإعدادية */}
-              <div
-                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
-                  selectedCategory === "إعدادي"
-                    ? "border-green-500 bg-green-50 shadow-lg"
-                    : "border-gray-200 bg-white hover:border-green-300 hover:shadow-md"
-                }`}
-                onClick={() => {
-                  setSelectedCategory("إعدادي");
-                  setGradeId("");
-                }}
-              >
-                <div className="text-center">
-                  <div
-                    className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
-                      selectedCategory === "إعدادي"
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    <span className="text-2xl font-bold">٢</span>
-                  </div>
-                  <h3
-                    className={`font-bold text-lg mb-2 ${
-                      selectedCategory === "إعدادي"
-                        ? "text-green-700"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    إعدادي
-                  </h3>
-                  <p className="text-sm text-gray-500">3 صفوف دراسية</p>
-                </div>
-              </div>
-
-              {/* الفئة الثانوية */}
-              <div
-                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
-                  selectedCategory === "ثانوي"
-                    ? "border-purple-500 bg-purple-50 shadow-lg"
-                    : "border-gray-200 bg-white hover:border-purple-300 hover:shadow-md"
-                }`}
-                onClick={() => {
-                  setSelectedCategory("ثانوي");
-                  setGradeId("");
-                }}
-              >
-                <div className="text-center">
-                  <div
-                    className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
-                      selectedCategory === "ثانوي"
-                        ? "bg-purple-500 text-white"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    <span className="text-2xl font-bold">٣</span>
-                  </div>
-                  <h3
-                    className={`font-bold text-lg mb-2 ${
-                      selectedCategory === "ثانوي"
-                        ? "text-purple-700"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    ثانوي
-                  </h3>
-                  <p className="text-sm text-gray-500">3 صفوف دراسية</p>
-                </div>
-              </div>
-
-              {/* الفئة الجامعية */}
-              <div
-                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
-                  selectedCategory === "جامعة"
-                    ? "border-orange-500 bg-orange-50 shadow-lg"
-                    : "border-gray-200 bg-white hover:border-orange-300 hover:shadow-md"
-                }`}
-                onClick={() => {
-                  setSelectedCategory("جامعة");
-                  setGradeId("");
-                }}
-              >
-                <div className="text-center">
-                  <div
-                    className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center ${
-                      selectedCategory === "جامعة"
-                        ? "bg-orange-500 text-white"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    <span className="text-2xl font-bold">٤</span>
-                  </div>
-                  <h3
-                    className={`font-bold text-lg mb-2 ${
-                      selectedCategory === "جامعة"
-                        ? "text-orange-700"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    جامعة
-                  </h3>
-                  <p className="text-sm text-gray-500">4 فرق دراسية</p>
-                </div>
-              </div>
-            </div>
-
-            {/* رسالة تأكيد */}
             {selectedCategory && (
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl text-center">
-                <div className="flex items-center justify-center space-x-2 text-green-700">
-                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs">✓</span>
-                  </div>
-                  <span className="font-medium">
-                    تم اختيار: {selectedCategory}
-                  </span>
-                </div>
-              </div>
+              <HStack
+                bg="green.50"
+                _dark={{ bg: "green.900", borderColor: "green.700" }}
+                borderWidth="1px"
+                borderColor="green.200"
+                borderRadius="xl"
+                p={4}
+                justify="center"
+                spacing={2}
+              >
+                <Box w="5" h="5" bg="green.500" borderRadius="full" display="flex" alignItems="center" justifyContent="center">
+                  <Text as="span" color="white" fontSize="xs">✓</Text>
+                </Box>
+                <Text fontWeight="medium" color="green.700" _dark={{ color: "green.200" }}>
+                  تم اختيار: {selectedCategory}
+                </Text>
+              </HStack>
             )}
           </VStack>
         );
@@ -659,52 +544,40 @@ const SignUp = () => {
       case 4:
         return (
           <VStack spacing={6} align="stretch">
-            <Box textAlign="center" mb={6}>
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-full mb-4">
-                <FiBookOpen className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            <Box textAlign="center" mb={2}>
+              <Box
+                w="16"
+                h="16"
+                mx="auto"
+                mb={4}
+                borderRadius="2xl"
+                bg="blue.600"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                boxShadow="0 8px 24px rgba(37, 99, 235, 0.35)"
+              >
+                <Icon as={FiBookOpen} w="8" h="8" color="white" />
+              </Box>
+              <Text fontSize="xl" fontWeight="bold" color={headingColor} mb={1}>
                 اختر صفك الدراسي
-              </h2>
-              <p className="text-gray-600">حدد الصف الدراسي المحدد</p>
+              </Text>
+              <Text fontSize="sm" color={subtextColor}>حدد الصف الدراسي المحدد</Text>
             </Box>
 
             <FormControl>
-              <FormLabel
-                fontWeight="semibold"
-                color="gray.700"
-                mb={3}
-                fontSize="md"
-              >
+              <FormLabel fontWeight="semibold" color={labelColor} mb={2} fontSize="md">
                 الصف الدراسي
               </FormLabel>
               <Select
                 dir="ltr"
                 placeholder={
-                  selectedCategory
-                    ? "اختر الصف الدراسي"
-                    : "اختر الفئة الدراسية أولاً"
+                  selectedCategory ? "اختر الصف الدراسي" : "اختر الفئة الدراسية أولاً"
                 }
                 value={gradeId}
                 onChange={(e) => setGradeId(e.target.value)}
-                size="lg"
-                focusBorderColor="blue.500"
-                _placeholder={{ color: "gray.400" }}
-                borderColor="gray.200"
-                borderRadius="xl"
-                py={4}
-                px={6}
-                className="text-gray-800 transition-all duration-300"
-                bg="white"
                 isDisabled={!selectedCategory}
-                _hover={{
-                  borderColor: selectedCategory ? "gray.300" : "gray.200",
-                }}
-                _focus={{
-                  borderColor: selectedCategory ? "blue.500" : "gray.200",
-                  boxShadow: selectedCategory ? "0 0 0 1px #3B82F6" : "none",
-                  transform: selectedCategory ? "translateY(-1px)" : "none",
-                }}
+                {...inputStyles}
               >
                 {getFilteredGradesByCategory(selectedCategory).map((grade) => (
                   <option key={grade.id} value={grade.id}>
@@ -734,61 +607,119 @@ const SignUp = () => {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      p={4}
+      p={{ base: 4, md: 6 }}
       dir="rtl"
       style={{ fontFamily: "'Changa', sans-serif" }}
+      position="relative"
+      overflow="hidden"
     >
+      {/* خلفية خفيفة */}
+      <Box
+        position="absolute"
+        inset="0"
+        opacity={pageOverlayOpacity}
+        bgGradient="linear(to-br, blue.400, transparent)"
+        pointerEvents="none"
+      />
       <Box
         w="full"
-        maxW="4xl"
-        display="flex"
-        flexDirection={{ base: "column", lg: "row" }}
+        maxW="2xl"
         bg={cardBg}
         borderRadius="2xl"
-        boxShadow={useColorModeValue(
-          "0 25px 50px rgba(0,0,0,0.08)",
-          "0 25px 50px rgba(0,0,0,0.3)"
-        )}
+        boxShadow={cardShadow}
         borderWidth="1px"
         borderColor={cardBorder}
         overflow="hidden"
+        position="relative"
+        zIndex="1"
       >
-        <Box w="full" lg:w="1/2" p={{ base: 6, sm: 8, lg: 10 }}>
-          <Box mb={8}>
+        <Box w="full" p={{ base: 6, sm: 8, lg: 10 }}>
+          {/* التابات — مؤشر الخطوات المحسّن */}
+          <Box
+            mb={8}
+            p={4}
+            borderRadius="xl"
+            bg={stepIconBg}
+            borderWidth="1px"
+            borderColor={cardBorder}
+          >
+            <HStack justify="space-between" mb={4}>
+              <Text fontSize="md" fontWeight="bold" color={headingColor}>
+                إنشاء حساب جديد
+              </Text>
+              <Box
+                px={3}
+                py={1}
+                borderRadius="full"
+                bg="blue.500"
+                color="white"
+                fontSize="sm"
+                fontWeight="semibold"
+              >
+                {currentStep + 1} من {steps.length}
+              </Box>
+            </HStack>
             <Progress
               value={(currentStep / (steps.length - 1)) * 100}
               colorScheme="blue"
               borderRadius="full"
               height="2"
               bg={stepInactiveBg}
+              transition="all 0.4s ease"
+              mb={5}
             />
-            <Text fontSize="sm" color={subtextColor} mt={2} textAlign="center">
-              الخطوة {currentStep + 1} من {steps.length}
-            </Text>
+            <Box display="flex" justifyContent="space-between" position="relative" gap={0}>
+              {steps.map((step, index) => {
+                const isCompleted = index < currentStep;
+                const isActive = index === currentStep;
+                return (
+                  <Box
+                    key={index}
+                    flex="1"
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                    position="relative"
+                    zIndex={1}
+                  >
+                    <Box
+                      w={{ base: "10", sm: "12" }}
+                      h={{ base: "10", sm: "12" }}
+                      borderRadius="full"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      bg={isCompleted ? "green.500" : isActive ? "blue.500" : stepInactiveBg}
+                      color={isCompleted || isActive ? "white" : stepInactiveColor}
+                      borderWidth="2px"
+                      borderColor={isActive ? "blue.400" : "transparent"}
+                      boxShadow={isActive ? "0 0 0 3px rgba(66, 153, 225, 0.3)" : "none"}
+                      transition="all 0.3s"
+                      flexShrink={0}
+                    >
+                      {isCompleted ? (
+                        <Icon as={FiCheck} w={{ base: "5", sm: "6" }} h={{ base: "5", sm: "6" }} />
+                      ) : (
+                        <Icon as={step.icon} w={{ base: "4", sm: "5" }} h={{ base: "4", sm: "5" }} />
+                      )}
+                    </Box>
+                    <Text
+                      fontSize={{ base: "xs", sm: "sm" }}
+                      color={isActive ? "blue.600" : isCompleted ? headingColor : subtextColor}
+                      _dark={{ color: isActive ? "blue.300" : isCompleted ? "white" : "gray.400" }}
+                      fontWeight={isActive ? "bold" : "normal"}
+                      mt={2}
+                      textAlign="center"
+                      noOfLines={2}
+                      lineHeight="tight"
+                    >
+                      {step.title}
+                    </Text>
+                  </Box>
+                );
+              })}
+            </Box>
           </Box>
-
-          <HStack spacing={3} mb={8} justify="center" flexWrap="wrap">
-            {steps.map((step, index) => (
-              <Box
-                key={index}
-                w="10"
-                h="10"
-                borderRadius="full"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                bg={index <= currentStep ? "blue.500" : stepInactiveBg}
-                color={index <= currentStep ? "white" : stepInactiveColor}
-                transition="all 0.3s"
-              >
-                {index < currentStep ? (
-                  <Icon as={FiCheck} w="5" h="5" />
-                ) : (
-                  <Icon as={step.icon} w="5" h="5" />
-                )}
-              </Box>
-            ))}
-          </HStack>
 
           {/* Step Content */}
           <Box className="transition-all duration-500 ease-in-out">
@@ -796,7 +727,7 @@ const SignUp = () => {
           </Box>
 
           {/* Navigation Buttons */}
-          <HStack spacing={4} mt={8}>
+          <HStack spacing={4} mt={8} w="full">
             {currentStep > 0 && (
               <Button
                 onClick={prevStep}
@@ -805,8 +736,8 @@ const SignUp = () => {
                 flex={1}
                 borderRadius="xl"
                 borderColor={inputBorder}
-                _hover={{ borderColor: "gray.400", bg: "gray.50" }}
-                _dark={{ _hover: { bg: "gray.700" } }}
+                color={headingColor}
+                _hover={{ borderColor: inputHoverBorder, bg: categoryCardHover }}
                 transition="all 0.2s"
               >
                 السابق
@@ -824,10 +755,11 @@ const SignUp = () => {
                 color="white"
                 _hover={{
                   bg: "blue.400",
-                  boxShadow: "0 8px 20px rgba(66, 153, 225, 0.35)",
+                  boxShadow: "0 8px 24px rgba(66, 153, 225, 0.4)",
                 }}
                 _disabled={{
                   bg: "gray.300",
+                  color: "gray.500",
                   cursor: "not-allowed",
                   _hover: {},
                 }}
@@ -846,16 +778,15 @@ const SignUp = () => {
                 color="white"
                 _hover={{
                   bg: "orange.400",
-                  boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)",
+                  boxShadow: "0 8px 24px rgba(237, 137, 54, 0.4)",
                 }}
                 _disabled={{
                   bg: "gray.300",
+                  color: "gray.500",
                   cursor: "not-allowed",
                   _hover: {},
                 }}
-                leftIcon={
-                  loading ? <Spinner size="sm" color="white" /> : undefined
-                }
+                leftIcon={loading ? <Spinner size="sm" color="white" /> : undefined}
                 transition="all 0.2s"
               >
                 إنشاء الحساب
@@ -863,7 +794,7 @@ const SignUp = () => {
             )}
           </HStack>
 
-          <Box mt={6} textAlign="center">
+          <Box mt={6} textAlign="center" pt={4} borderTopWidth="1px" borderColor={cardBorder}>
             <Text color={subtextColor} fontSize="md">
               هل لديك حساب بالفعل؟{" "}
               <Box
@@ -877,49 +808,6 @@ const SignUp = () => {
                 تسجيل الدخول
               </Box>
             </Text>
-          </Box>
-        </Box>
-
-        <Box
-          w="full"
-          lg:w="1/2"
-          bgGradient="linear(to-br, blue.500, blue.600)"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          p={8}
-          position="relative"
-          overflow="hidden"
-        >
-          <Box position="absolute" inset="0" opacity={0.08} bg="white" />
-          <Box textAlign="center" position="relative" zIndex="1">
-            <Box mb={6}>
-              <img
-                src="/fc65e2d7-5777-4a66-bc27-7fea10bc89a7-removebg-preview.png"
-                alt="Signup Illustration"
-                style={{
-                  maxWidth: "100%",
-                  height: "auto",
-                  maxHeight: "280px",
-                  margin: "0 auto",
-                }}
-              />
-            </Box>
-            <Text fontSize="2xl" fontWeight="bold" color="white" mb={3}>
-              {steps[currentStep]?.title}
-            </Text>
-            <Text
-              color="blue.100"
-              fontSize="lg"
-              maxW="280px"
-              mx="auto"
-              lineHeight="1.6"
-            >
-              {steps[currentStep]?.description}
-            </Text>
-            <VStack mt={6} spacing={2} color="blue.100" fontSize="sm">
-              <Text>دروس تفاعلية • معلمون خبراء • متابعة مستمرة</Text>
-            </VStack>
           </Box>
         </Box>
       </Box>

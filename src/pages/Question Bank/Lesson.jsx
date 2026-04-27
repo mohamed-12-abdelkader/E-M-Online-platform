@@ -57,7 +57,10 @@ import {
   FaDatabase,
   FaClipboardList,
   FaFileAlt,
-  FaTimes
+  FaTimes,
+  FaSearchPlus,
+  FaLightbulb,
+  FaExclamationCircle
 } from "react-icons/fa";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -124,15 +127,26 @@ const Lesson = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // المستخدم مدرس؟ (لإظهار إضافة أسئلة/قطع للامتحان)
-  const [isTeacher] = useState(() => {
+  // المستخدم مدرس أو أدمن؟
+  const [isTeacher, setIsTeacher] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      return user?.role === "teacher";
-    } catch {
-      return false;
-    }
-  });
+      setIsTeacher(user?.role === "teacher");
+      setIsAdmin(user?.role === "admin");
+    } catch {}
+  }, []);
+
+  // وضع التحديد (لإضافة أسئلة للامتحان) — مثل التطبيق
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  // تكبير الصورة
+  const [zoomImageUri, setZoomImageUri] = useState(null);
+  // عرض نتيجة الإضافة للامتحان
+  const { isOpen: isAddSuccessOpen, onOpen: onAddSuccessOpen, onClose: onAddSuccessClose } = useDisclosure();
+  const [addSuccessMessage, setAddSuccessMessage] = useState("");
+  // إجابات مختارة (عرض تدريبي - يظهر صحيح/خطأ)
+  const [selectedAnswers, setSelectedAnswers] = useState({});
 
   // Data states
   const [questions, setQuestions] = useState([]);
@@ -230,6 +244,9 @@ const Lesson = () => {
   const optionCorrectText = useColorModeValue("green.800", "green.200");
   const optionHoverBg = useColorModeValue("blue.50", "whiteAlpha.100");
   const emptyIconBg = useColorModeValue("blue.50", "blue.900");
+  const optionWrongBg = useColorModeValue("red.50", "red.900");
+  const optionLetterBgNeutral = useColorModeValue("gray.200", "gray.600");
+  const explanationBg = useColorModeValue("blue.50", "blue.900");
 
   // Fetch questions data
   const fetchQuestionsData = async () => {
@@ -618,9 +635,13 @@ const Lesson = () => {
       setAddToExamLoading(true);
       const token = localStorage.getItem("token");
 
+      const body = examModalTab === "comprehensive"
+        ? { questionIds: selectedQuestions, type: "course-exam" }
+        : { questionIds: selectedQuestions };
+
       const response = await baseUrl.post(
         `/api/exams/${selectedExamId}/questions/from-bank`,
-        { questionIds: selectedQuestions },
+        body,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -633,16 +654,12 @@ const Lesson = () => {
       const count = data?.count ?? selectedQuestions.length;
       const message = data?.message || `تم إضافة ${count} سؤال للامتحان بنجاح`;
 
-      toast({
-        title: "نجح",
-        description: message,
-        status: "success",
-        duration: 3000,
-        isClosable: true
-      });
+      setAddSuccessMessage(message);
       onExamClose();
       setSelectedQuestions([]);
       setSelectedExamId("");
+      setIsSelectionMode(false);
+      onAddSuccessOpen();
     } catch (err) {
       console.error("Error adding questions to exam:", err);
       const msg = err.response?.data?.message || "حدث خطأ أثناء إضافة الأسئلة للامتحان";
@@ -657,6 +674,50 @@ const Lesson = () => {
       if (prev.includes(id)) return prev.filter(qId => qId !== id);
       return [...prev, id];
     });
+  };
+
+  // تبديل وضع التحديد (مثل التطبيق)
+  const toggleSelectionMode = () => {
+    setIsSelectionMode((prev) => !prev);
+    setSelectedQuestions([]);
+  };
+
+  // اختيار إجابة للعرض التدريبي (يظهر صحيح/خطأ)
+  const handleSelectAnswer = (questionId, optionIndex) => {
+    if (isSelectionMode) return;
+    setSelectedAnswers((prev) => ({ ...prev, [questionId]: optionIndex }));
+  };
+
+  // ألوان ونصوص الحالة والصعوبة (مطابقة للتطبيق)
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "approved": return "green.500";
+      case "rejected": return "red.500";
+      case "pending": return "orange.500";
+      default: return "gray.500";
+    }
+  };
+  const getStatusText = (status) => {
+    switch (status) {
+      case "approved": return "موافق عليه";
+      case "rejected": return "مرفوض";
+      case "pending": return "قيد المراجعة";
+      default: return status || "—";
+    }
+  };
+  const getDifficultyColor = (level) => {
+    switch (level) {
+      case "easy": return "green.500";
+      case "hard": return "red.500";
+      default: return "blue.500";
+    }
+  };
+  const getDifficultyText = (level) => {
+    switch (level) {
+      case "easy": return "سهل";
+      case "hard": return "صعب";
+      default: return "متوسط";
+    }
   };
 
   const handleSelectAll = () => {
@@ -891,105 +952,92 @@ const Lesson = () => {
   const resetEditForm = () => { setEditFormData({ text: '', options: ['', '', '', ''] }); };
   const removeImage = () => { setSelectedImage(null); setImagePreview(null); };
 
-  if (loading) {
+  if (loading && questions.length === 0) {
     return (
-      <Flex minH="100vh" align="center" justify="center" bg={pageBg} pt="80px" position="relative">
-        <Box position="absolute" inset={0} bgGradient={loadingGradient} opacity={0.9} />
-        <VStack spacing={5} position="relative" zIndex={1} p={8} bg={cardBg} borderRadius="2xl" boxShadow={cardShadow} borderWidth="1px" borderColor={cardBorder}>
-          <Spinner size="xl" color="blue.500" thickness="3px" />
-          <Text color={textPrimary} fontWeight="600" fontFamily={fontCairo}>جاري تحميل الأسئلة...</Text>
-        </VStack>
+      <Flex minH="100vh" align="center" justify="center" bg={useColorModeValue("#E3F2FD", "gray.900")} pt="80px" position="relative" overflow="hidden">
+        <Box position="absolute" top="-100px" right="-100px" w="300px" h="300px" borderRadius="full" bg="blue.400" opacity={0.1} />
+        <Box position="absolute" bottom="-80px" left="-80px" w="250px" h="250px" borderRadius="full" bg="purple.400" opacity={0.1} />
+        <Box position="relative" zIndex={1} p={12} bg={cardBg} borderRadius="3xl" boxShadow="xl" borderWidth="1px" borderColor={cardBorder} maxW="400px" textAlign="center">
+          <Box w="120px" h="120px" mx="auto" mb={6} borderRadius="full" bgGradient="linear(to-b, blue.200, blue.50)" display="flex" alignItems="center" justifyContent="center">
+            <Icon as={FaDatabase} color="blue.500" boxSize={16} />
+          </Box>
+          <Text color={textPrimary} fontWeight="700" fontSize="xl" fontFamily={fontCairo} mb={2}>جاري التحميل...</Text>
+          <Text color={textSecondary} fontFamily={fontCairo} mb={6}>جاري تحميل أسئلة الدرس</Text>
+          <Spinner size="lg" color="blue.500" thickness="3px" />
+        </Box>
       </Flex>
     );
   }
 
-  if (error) {
+  if (error && questions.length === 0) {
     return (
-      <Flex minH="100vh" align="center" justify="center" bg={pageBg} pt="80px" p={4}>
-        <VStack spacing={5} bg={cardBg} p={8} borderRadius="2xl" boxShadow={cardShadow} borderWidth="2px" borderColor={errorBorderColor} maxW="md" textAlign="center">
-          <Box w="14" h="14" borderRadius="full" bg={errorIconBg} display="flex" alignItems="center" justifyContent="center">
-            <Icon as={FaTrash} color="red.500" boxSize={6} />
-          </Box>
-          <Heading size="md" color={textPrimary} fontFamily={fontCairo}>فشل تحميل الأسئلة</Heading>
-          <Text color={textSecondary} fontSize="sm">{error}</Text>
-          <Button colorScheme="blue" onClick={fetchQuestionsData} leftIcon={<Icon as={FaPlus} />} fontFamily={fontCairo}>إعادة المحاولة</Button>
-        </VStack>
+      <Flex minH="100vh" direction="column" bg={useColorModeValue("#E3F2FD", "gray.900")} pt="80px">
+        <Flex px={4} py={3} borderBottomWidth="1px" borderColor={cardBorder} bg={cardBg} align="center">
+          <Button as={Link} to="/teacher/subjects" variant="ghost" size="sm" leftIcon={<Icon as={FaArrowRight} />} fontFamily={fontCairo}>رجوع</Button>
+        </Flex>
+        <Flex flex={1} align="center" justify="center" p={8}>
+          <VStack spacing={5} maxW="md" textAlign="center">
+            <Box w="20" h="20" borderRadius="full" bg="red.100" display="flex" alignItems="center" justifyContent="center">
+              <Icon as={FaExclamationCircle} color="red.500" boxSize={10} />
+            </Box>
+            <Text color={textPrimary} fontWeight="700" fontFamily={fontCairo}>{error}</Text>
+            <Button colorScheme="blue" onClick={() => fetchQuestionsData()} fontFamily={fontCairo} fontWeight="bold">إعادة المحاولة</Button>
+          </VStack>
+        </Flex>
       </Flex>
     );
   }
 
   return (
-    <Box minH="100vh" bg={pageBg} pt="100px" pb={10} px={{ base: 4, md: 6, lg: 8 }} position="relative">
-      <Box position="absolute" inset={0} opacity={patternOpacity} backgroundImage={useColorModeValue("radial-gradient(circle at 25px 25px, blue.400 1.5px, transparent 0)", "radial-gradient(circle at 25px 25px, blue.500 1.5px, transparent 0)")} backgroundSize="60px 60px" pointerEvents="none" />
+    <Box minH="100vh" bg={useColorModeValue("#E3F2FD", "gray.900")} pt="80px" pb={24} position="relative">
+      <Box position="absolute" top="-50px" right="-50px" w="200px" h="200px" borderRadius="full" bg="blue.400" opacity={0.08} />
+      <Box position="absolute" bottom="-30px" left="-30px" w="150px" h="150px" borderRadius="full" bg="purple.400" opacity={0.08} />
       <ScrollToTop />
       <Container maxW="1280px" position="relative" zIndex={1}>
 
-        {/* Header Section */}
+        {/* Header — مطابق للتطبيق: شريط علوي مع رجوع وأزرار */}
         <Flex
-          direction={{ base: "column", md: "row" }}
-          justify="space-between"
+          direction="row"
           align="center"
-          mb={8}
-          bgGradient="linear(to-r, blue.600, blue.500)"
-          borderRadius="2xl"
-          p={{ base: 6, md: 8 }}
-          color="white"
-          boxShadow={headerShadow}
-          position="relative"
-          overflow="hidden"
+          justify="space-between"
+          py={3}
+          px={{ base: 4, md: 6 }}
+          mb={4}
+          bg={cardBg}
+          borderBottomWidth="1.5px"
+          borderColor={cardBorder}
+          borderRadius="0 0 2xl 2xl"
+          fontFamily={fontCairo}
         >
-          <Box position="absolute" top={0} left={0} w="full" h="full" bgImage="radial-gradient(circle at 10% 20%, rgba(255,255,255,0.12) 2px, transparent 0)" bgSize="36px 36px" opacity={1} />
-          <VStack align={{ base: "center", md: "flex-start" }} spacing={1} zIndex={1}>
-            <HStack spacing={2} opacity={0.9} fontSize="sm" fontFamily={fontCairo}>
-              <Link to="/teacher/subjects"><Text _hover={{ textDecor: "underline" }}>المواد</Text></Link>
-              <Icon as={FaArrowRight} size="xs" />
-              <Text>بنك الأسئلة</Text>
-            </HStack>
-            <Heading size="xl" fontFamily={fontCairo} fontWeight="800" letterSpacing="-0.02em">إدارة أسئلة الدرس</Heading>
-            <Text fontSize="md" opacity={0.9} fontFamily={fontCairo}>{questions.length} سؤال</Text>
-          </VStack>
-
-          <HStack spacing={3} mt={{ base: 4, md: 0 }} zIndex={1} flexWrap="wrap" justify="center">
-            {isTeacher && questions.length > 0 && (
+          <Button as={Link} to="/teacher/subjects" variant="ghost" size="sm" leftIcon={<Icon as={FaArrowRight} />} fontFamily={fontCairo} color={textPrimary}>
+            رجوع
+          </Button>
+          <HStack spacing={2} flexWrap="wrap" justify="center">
+            {isAdmin && (
+              <>
+                <Button size="sm" leftIcon={<Icon as={FaPlus} />} colorScheme="blue" variant="outline" onClick={onOpen} fontFamily={fontCairo}>
+                  إضافة أسئلة
+                </Button>
+                <Button size="sm" leftIcon={<Icon as={FaImage} />} colorScheme="orange" variant="outline" onClick={() => { setQuestionType("image"); onOpen(); }} fontFamily={fontCairo}>
+                  سؤال صورة
+                </Button>
+              </>
+            )}
+            {(isAdmin || isTeacher) && questions.length > 0 && (
               <Button
-                variant="outline"
-                colorScheme="whiteAlpha"
-                color="white"
-                borderWidth="2px"
-                _hover={{ bg: "whiteAlpha.200" }}
-                onClick={handleSelectAll}
                 size="sm"
+                leftIcon={<Icon as={isSelectionMode ? FaTimes : FaClipboardList} />}
+                colorScheme={isSelectionMode ? "gray" : "blue"}
+                variant={isSelectionMode ? "solid" : "outline"}
+                onClick={toggleSelectionMode}
                 fontFamily={fontCairo}
               >
-                {selectedQuestions.length === questions.length ? "إلغاء الكل" : "تحديد الكل"}
+                {isSelectionMode ? "إلغاء التحديد" : "تحديد الأسئلة"}
               </Button>
             )}
-            {isTeacher && selectedQuestions.length > 0 && (
-              <Button
-                leftIcon={<Icon as={FaClipboardList} />}
-                bg="orange.400"
-                _hover={{ bg: "orange.500" }}
-                color="white"
-                onClick={() => { setExamModalMode("questions"); handleOpenExamModal(); }}
-                size="sm"
-                fontFamily={fontCairo}
-              >
-                إضافة للامتحان ({selectedQuestions.length})
-              </Button>
+            {isTeacher && !isAdmin && (
+              <Button size="sm" leftIcon={<Icon as={FaPlus} />} colorScheme="blue" onClick={onOpen} fontFamily={fontCairo} fontWeight="bold">أسئلة جديدة</Button>
             )}
-            <Button
-              leftIcon={<Icon as={FaPlus} />}
-              bg="white"
-              color="blue.600"
-              _hover={{ bg: "blue.50", transform: "translateY(-2px)", boxShadow: "lg" }}
-              transition="all 0.2s"
-              onClick={onOpen}
-              size="md"
-              fontFamily={fontCairo}
-              fontWeight="bold"
-            >
-              أسئلة جديدة
-            </Button>
           </HStack>
         </Flex>
 
@@ -1000,14 +1048,19 @@ const Lesson = () => {
             <Tab fontWeight="600">أسئلة القطع</Tab>
           </TabList>
           <TabPanels>
-            <TabPanel px={0} pt={4}>
-              {/* Questions Grid */}
+            <TabPanel px={{ base: 0, md: 0 }} pt={4}>
+              {/* Questions — موبايل: 95% عرض + في المنتصف | ديسكتوب: شبكة */}
               {questions.length > 0 ? (
-                <Box>
-                  <HStack mb={6} justify="space-between" align="center">
-                    <Text color={textSecondary} fontSize="sm" fontFamily={fontCairo}>عرض {questions.length} سؤال</Text>
-                  </HStack>
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                <Box
+                  w={{ base: "95%", md: "100%" }}
+                  maxW={{ base: "95%", md: "none" }}
+                  mx="auto"
+                  px={{ base: 0, md: 0 }}
+                >
+                  <Text color={textSecondary} fontSize="sm" fontFamily={fontCairo} mb={4} textAlign={{ base: "center", md: "left" }}>
+                    عرض {questions.length} سؤال
+                  </Text>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 5, md: 6 }} justifyContent="center">
                     <AnimatePresence>
                       {questions.map((question, index) => (
                         <MotionBox
@@ -1016,109 +1069,140 @@ const Lesson = () => {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.3) }}
                           position="relative"
+                          w="100%"
                         >
                           <Card
-                            bg={selectedQuestions.includes(question.id) ? selectedCardBg : cardBg}
+                            bg={isSelectionMode && selectedQuestions.includes(question.id) ? selectedCardBg : cardBg}
                             borderRadius="2xl"
                             overflow="hidden"
-                            boxShadow={selectedQuestions.includes(question.id) ? "md" : cardShadow}
-                            borderWidth="2px"
-                            borderColor={selectedQuestions.includes(question.id) ? "blue.400" : cardBorder}
-                            _hover={{ boxShadow: cardShadowHover, transform: "translateY(-4px)" }}
+                            boxShadow={isSelectionMode && selectedQuestions.includes(question.id) ? "lg" : "0 4px 24px rgba(0,0,0,0.06)"}
+                            borderWidth={isSelectionMode && selectedQuestions.includes(question.id) ? 2 : 1}
+                            borderColor={isSelectionMode && selectedQuestions.includes(question.id) ? "blue.400" : cardBorder}
+                            _hover={{ boxShadow: cardShadowHover }}
                             transition="all 0.25s ease"
                             h="100%"
                             display="flex"
                             flexDirection="column"
-                            cursor={isTeacher ? "pointer" : "default"}
-                            onClick={() => isTeacher && handleToggleSelectId(question.id)}
+                            cursor={isSelectionMode ? "pointer" : "default"}
+                            onClick={() => isSelectionMode && handleToggleSelectId(question.id)}
+                            position="relative"
+                            p={{ base: 4, md: 5 }}
                           >
-                            <CardHeader pb={2} pt={5} px={5}>
-                              <Flex justify="space-between" align="flex-start" wrap="wrap" gap={3}>
-                                <HStack spacing={3} flex={1} minW={0}>
-                                  {isTeacher && (
-                                    <Checkbox
-                                      isChecked={selectedQuestions.includes(question.id)}
-                                      onChange={() => handleToggleSelectId(question.id)}
-                                      size="md"
-                                      colorScheme="blue"
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                  )}
-                                  <Flex w="10" h="10" borderRadius="full" bgGradient="linear(to-br, blue.400, blue.600)" color="white" align="center" justify="center" fontWeight="bold" fontSize="lg" fontFamily={fontCairo} flexShrink={0}>
-                                    {index + 1}
-                                  </Flex>
-                                  <VStack align="flex-start" spacing={0}>
-                                    <HStack spacing={2} flexWrap="wrap">
-                                      <Badge colorScheme={question.difficulty_level === "hard" ? "red" : question.difficulty_level === "easy" ? "green" : "blue"} variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo}>
-                                        {question.difficulty_level === "hard" ? "صعب" : question.difficulty_level === "easy" ? "سهل" : "متوسط"}
-                                      </Badge>
-                                      {(question.points != null || question.points === 0) && (
-                                        <Badge colorScheme="yellow" variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo}>
-                                          {Number(question.points) || 1} نقطة
-                                        </Badge>
-                                      )}
-                                    </HStack>
-                                  </VStack>
-                                </HStack>
-                                <HStack spacing={1} onClick={(e) => e.stopPropagation()}>
-                                  <Tooltip label="تعديل" hasArrow>
-                                    <IconButton icon={<FaEdit />} size="sm" variant="ghost" colorScheme="blue" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setEditingQuestion(question); const opts = question.options ? question.options.map(o => typeof o === "string" ? o : (o.text_content || o.image_url)) : []; setEditFormData({ text: question.question_text || question.text || "", options: opts.length === 4 ? opts : ["", "", "", ""] }); onEditOpen(); }} />
-                                  </Tooltip>
-                                  <Tooltip label="صورة" hasArrow>
-                                    <IconButton icon={<FaImage />} size="sm" variant="ghost" colorScheme="purple" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setCurrentQuestion(question); setImagePreview(question.media?.media_url || question.image); onImageOpen(); }} />
-                                  </Tooltip>
-                                  <Tooltip label="حذف" hasArrow>
-                                    <IconButton icon={<FaTrash />} size="sm" variant="ghost" colorScheme="red" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setDeletingQuestion(question); onDeleteOpen(); }} />
-                                  </Tooltip>
-                                </HStack>
-                              </Flex>
-                            </CardHeader>
+                            {isSelectionMode && (
+                              <Box position="absolute" top={3} right={3} zIndex={2} w="26px" h="26px" borderRadius="lg" borderWidth="2px" borderColor={selectedQuestions.includes(question.id) ? "blue.500" : "gray.400"} bg={selectedQuestions.includes(question.id) ? "blue.500" : "transparent"} display="flex" alignItems="center" justifyContent="center" pointerEvents="none">
+                                {selectedQuestions.includes(question.id) && <Icon as={FaCheck} color="white" boxSize={3.5} />}
+                              </Box>
+                            )}
 
-                            <CardBody flex={1} pt={0} px={5} pb={5}>
-                              <Text fontSize="md" fontWeight="600" color={textPrimary} mb={4} lineHeight="1.7" fontFamily={fontCairo}>
-                                {question.question_text || question.text}
-                              </Text>
+                            {/* رأس السؤال — رقم + شارات + أزرار */}
+                            <Flex justify="space-between" align="flex-start" wrap="wrap" gap={3} mb={4} pb={4} borderBottomWidth="1px" borderColor={borderColor}>
+                              <HStack spacing={3} flex={1} minW={0}>
+                                <Flex w="12" h="12" borderRadius="2xl" bgGradient="linear(135deg, blue.400, blue.600)" color="white" align="center" justify="center" fontWeight="bold" fontSize="xl" fontFamily={fontCairo} flexShrink={0} boxShadow="md">
+                                  {index + 1}
+                                </Flex>
+                                <VStack align="flex-start" spacing={1}>
+                                  <HStack spacing={2} flexWrap="wrap">
+                                    {question.status && (
+                                      <Badge colorScheme={question.status === "approved" ? "green" : question.status === "rejected" ? "red" : "orange"} variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo} px={2}>
+                                        {getStatusText(question.status)}
+                                      </Badge>
+                                    )}
+                                    <Badge colorScheme={question.difficulty_level === "easy" ? "green" : question.difficulty_level === "hard" ? "red" : "blue"} variant="subtle" borderRadius="full" fontSize="xs" fontFamily={fontCairo} px={2}>
+                                      {getDifficultyText(question.difficulty_level)}
+                                    </Badge>
+                                    <HStack spacing={1} bg="yellow.50" _dark={{ bg: "yellow.900" }} color="yellow.700" px={2} py={0.5} borderRadius="full">
+                                      <Text fontSize="xs" fontWeight="700" fontFamily={fontCairo}>{Number(question.points) || 1} نقطة</Text>
+                                    </HStack>
+                                  </HStack>
+                                </VStack>
+                              </HStack>
+                              {(isAdmin || isTeacher) && (
+                                <HStack spacing={0} onClick={(e) => e.stopPropagation()}>
+                                  <Tooltip label="تعديل" hasArrow><IconButton icon={<FaEdit />} size="sm" variant="ghost" colorScheme="blue" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setEditingQuestion(question); const opts = question.options ? question.options.map(o => typeof o === "string" ? o : (o.text_content || o.image_url)) : []; setEditFormData({ text: question.question_text || question.text || "", options: opts.length === 4 ? opts : ["", "", "", ""] }); onEditOpen(); }} /></Tooltip>
+                                  <Tooltip label="صورة" hasArrow><IconButton icon={<FaImage />} size="sm" variant="ghost" colorScheme="purple" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setCurrentQuestion(question); setImagePreview(question.media?.media_url || question.image); onImageOpen(); }} /></Tooltip>
+                                  <Tooltip label="حذف" hasArrow><IconButton icon={<FaTrash />} size="sm" variant="ghost" colorScheme="red" borderRadius="lg" onClick={(e) => { e.stopPropagation(); setDeletingQuestion(question); onDeleteOpen(); }} /></Tooltip>
+                                </HStack>
+                              )}
+                            </Flex>
+
+                            {/* محتوى السؤال */}
+                            <Box flex={1} onClick={(e) => e.stopPropagation()}>
+                              {question.status === "rejected" && question.rejection_reason && (
+                                <Alert status="error" borderRadius="xl" mb={4}>
+                                  <AlertIcon />
+                                  <Box>
+                                    <AlertTitle fontSize="sm">سبب الرفض:</AlertTitle>
+                                    <Text fontSize="sm" mt={1}>{question.rejection_reason}</Text>
+                                  </Box>
+                                </Alert>
+                              )}
 
                               {question.media?.media_url && (
-                                <Box mb={4} borderRadius="xl" overflow="hidden" borderWidth="1px" borderColor={borderColor}>
-                                  <Image src={question.media.media_url} w="100%" maxH="180px" objectFit="cover" alt="Question" />
+                                <Box mb={4} borderRadius="xl" overflow="hidden" borderWidth="1px" borderColor={borderColor} cursor="pointer" onClick={(e) => { e.stopPropagation(); setZoomImageUri(question.media.media_url); }} position="relative" _hover={{ opacity: 0.95 }}>
+                                  <Image src={question.media.media_url} w="100%" maxH={{ base: 220, md: 260 }} objectFit="contain" alt="Question" />
+                                  <HStack position="absolute" bottom={2} left={2} bg="blackAlpha.700" color="white" px={3} py={1.5} borderRadius="lg" fontSize="xs" fontFamily={fontCairo} spacing={2}>
+                                    <Icon as={FaSearchPlus} />
+                                    <Text>تكبير</Text>
+                                  </HStack>
                                 </Box>
                               )}
 
-                              <Box onClick={(e) => e.stopPropagation()}>
-                                <Text fontSize="xs" color={textSecondary} mb={2} fontFamily={fontCairo}>اضغط على الخيار لتعيينه إجابةً صحيحة</Text>
-                                <VStack align="stretch" spacing={2}>
+                              <Text fontSize={{ base: "lg", md: "md" }} fontWeight="700" color={textPrimary} mb={4} lineHeight="1.8" fontFamily={fontCairo}>
+                                {question.question_text || question.text}
+                              </Text>
+
+                              <Box>
+                                {(isAdmin || isTeacher) && (
+                                  <Text fontSize="xs" color={textSecondary} mb={3} fontFamily={fontCairo}>اضغط على الخيار لتعيينه إجابةً صحيحة</Text>
+                                )}
+                                <VStack align="stretch" spacing={3}>
                                   {question.options && question.options.map((opt, i) => {
                                     const isCorrect = question.correct_answer_index === i;
                                     const content = typeof opt === "string" ? opt : (opt.text_content || opt.image_url);
                                     const isImg = typeof opt !== "string" && opt.option_type === "image";
                                     const isUpdating = correctAnswerUpdatingId === question.id;
-                                    const canSelect = !isCorrect && !isUpdating;
+                                    const canSelect = (isAdmin || isTeacher) && !isCorrect && !isUpdating;
+                                    const selectedAnswer = selectedAnswers[question.id];
+                                    const isSelected = selectedAnswer === i;
+                                    const showCorrect = isCorrect;
+                                    const showWrong = isSelected && !isCorrect;
+                                    let optBg = optionBg;
+                                    let optBorder = "transparent";
+                                    let optBorderW = 1;
+                                    if (showCorrect) { optBg = optionCorrectBg; optBorder = optionCorrectBorder; optBorderW = 2; }
+                                    if (showWrong) { optBg = optionWrongBg; optBorder = "red.400"; optBorderW = 2; }
+                                    if (isSelected && !showCorrect && !showWrong) { optBg = optionHoverBg; optBorder = "blue.400"; optBorderW = 2; }
                                     return (
-                                      <Tooltip key={i} label={canSelect ? "تحديد كإجابة صحيحة" : (isCorrect ? "الإجابة الصحيحة الحالية" : "")} hasArrow>
+                                      <Tooltip key={i} label={canSelect ? "تحديد كإجابة صحيحة" : (isCorrect ? "الإجابة الصحيحة" : "")} hasArrow>
                                         <HStack
-                                          p={3}
-                                          bg={isCorrect ? optionCorrectBg : optionBg}
+                                          p={{ base: 4, md: 3 }}
+                                          bg={optBg}
                                           borderRadius="xl"
-                                          borderWidth="1px"
-                                          borderColor={isCorrect ? optionCorrectBorder : "transparent"}
+                                          borderWidth={optBorderW}
+                                          borderColor={optBorder}
                                           justify="space-between"
-                                          cursor={canSelect ? "pointer" : "default"}
-                                          _hover={canSelect ? { bg: optionHoverBg, borderColor: "blue.200" } : { opacity: 0.95 }}
+                                          cursor={canSelect ? "pointer" : (isSelectionMode ? "default" : "pointer")}
+                                          _hover={canSelect ? { bg: optionHoverBg, borderColor: "blue.200" } : {}}
                                           transition="all 0.2s"
-                                          onClick={() => canSelect && handleUpdateCorrectAnswer(question.id, i)}
+                                          minH={{ base: "52px", md: "auto" }}
+                                          onClick={() => {
+                                            if (isSelectionMode) return;
+                                            if (canSelect) handleUpdateCorrectAnswer(question.id, i);
+                                            else handleSelectAnswer(question.id, i);
+                                          }}
                                         >
                                           <HStack spacing={3} minW={0} flex={1}>
-                                            <Box w="28px" h="28px" flexShrink={0} borderRadius="full" bg={isCorrect ? "green.500" : optionLetterBg} color="white" fontSize="xs" fontWeight="bold" display="flex" alignItems="center" justifyContent="center" fontFamily={fontCairo}>
+                                            <Flex w="9" h="9" flexShrink={0} borderRadius="full" bg={showCorrect ? "green.500" : showWrong ? "red.500" : optionLetterBgNeutral} color="white" fontSize="sm" fontWeight="bold" align="center" justify="center" fontFamily={fontCairo}>
                                               {String.fromCharCode(65 + i)}
-                                            </Box>
+                                            </Flex>
                                             {isImg ? (
-                                              <Image src={content} maxH="36px" borderRadius="md" />
+                                              <Image src={content} maxH="40px" borderRadius="md" />
                                             ) : (
-                                              <Text fontSize="sm" color={isCorrect ? optionCorrectText : textSecondary} noOfLines={2} fontFamily={fontCairo}>{content}</Text>
+                                              <Text fontSize={{ base: "sm", md: "sm" }} color={showCorrect ? optionCorrectText : textPrimary} noOfLines={3} fontFamily={fontCairo} lineHeight="1.6">{content}</Text>
                                             )}
                                           </HStack>
-                                          {isCorrect && !isUpdating && <Icon as={FaCheck} color="green.500" boxSize={4} flexShrink={0} />}
+                                          {showCorrect && !isUpdating && <Icon as={FaCheck} color="green.500" boxSize={5} flexShrink={0} />}
+                                          {showWrong && <Icon as={FaTimes} color="red.500" boxSize={5} flexShrink={0} />}
                                           {isCorrect && isUpdating && <Spinner size="sm" flexShrink={0} />}
                                         </HStack>
                                       </Tooltip>
@@ -1132,7 +1216,17 @@ const Lesson = () => {
                                   </HStack>
                                 )}
                               </Box>
-                            </CardBody>
+
+                              {question.explanation && (
+                                <Box mt={5} p={4} borderRadius="xl" borderWidth="1.5px" borderColor="blue.200" bg={explanationBg}>
+                                  <HStack spacing={2} mb={2}>
+                                    <Icon as={FaLightbulb} color="blue.500" boxSize={5} />
+                                    <Text fontWeight="700" color="blue.600" fontSize="sm" fontFamily={fontCairo}>التوضيح</Text>
+                                  </HStack>
+                                  <Text fontSize="sm" color={textPrimary} lineHeight="1.8" fontFamily={fontCairo}>{question.explanation}</Text>
+                                </Box>
+                              )}
+                            </Box>
                           </Card>
                         </MotionBox>
                       ))}
@@ -1141,14 +1235,16 @@ const Lesson = () => {
                 </Box>
               ) : (
                 <Flex direction="column" align="center" justify="center" minH="420px" bg={cardBg} borderRadius="2xl" borderWidth="2px" borderStyle="dashed" borderColor={cardBorder} textAlign="center" p={10} boxShadow={cardShadow}>
-                  <Box w="20" h="20" borderRadius="full" bg={emptyIconBg} display="flex" alignItems="center" justifyContent="center" mb={5}>
+                  <Box w="20" h="20" borderRadius="full" bgGradient="linear(to-b, blue.200, blue.50)" display="flex" alignItems="center" justifyContent="center" mb={5}>
                     <Icon as={FaDatabase} boxSize={10} color="blue.500" />
                   </Box>
-                  <Heading size="md" color={textPrimary} mb={2} fontFamily={fontCairo}>لا توجد أسئلة بعد</Heading>
-                  <Text color={textSecondary} mb={6} fontFamily={fontCairo}>ابدأ بإضافة أسئلة لهذا الدرس</Text>
-                  <Button colorScheme="blue" onClick={onOpen} leftIcon={<Icon as={FaPlus} />} fontFamily={fontCairo} fontWeight="bold" size="lg">
-                    إضافة أول سؤال
-                  </Button>
+                  <Heading size="md" color={textPrimary} mb={2} fontFamily={fontCairo}>لا توجد أسئلة</Heading>
+                  <Text color={textSecondary} mb={6} fontFamily={fontCairo}>لم يتم إضافة أي أسئلة لهذا الدرس بعد</Text>
+                  {(isAdmin || isTeacher) && (
+                    <Button colorScheme="blue" onClick={onOpen} leftIcon={<Icon as={FaPlus} />} fontFamily={fontCairo} fontWeight="bold" size="lg">
+                      إضافة سؤال جديد
+                    </Button>
+                  )}
                 </Flex>
               )}
             </TabPanel>
@@ -1285,6 +1381,25 @@ const Lesson = () => {
         </Tabs>
       </Container>
 
+      {/* FAB — إضافة للامتحان (مثل التطبيق) */}
+      {isSelectionMode && selectedQuestions.length > 0 && (
+        <Box position="fixed" bottom={6} left={{ base: 4, md: 20 }} right={{ base: 4, md: 20 }} zIndex={100} maxW="400px" mx="auto">
+          <Button
+            w="full"
+            size="lg"
+            colorScheme="blue"
+            leftIcon={<Icon as={FaClipboardList} />}
+            fontFamily={fontCairo}
+            fontWeight="bold"
+            borderRadius="2xl"
+            boxShadow="lg"
+            _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
+            onClick={() => { setExamModalMode("questions"); fetchExams(); onExamOpen(); }}
+          >
+            إضافة {selectedQuestions.length} سؤال للامتحان
+          </Button>
+        </Box>
+      )}
 
       {/* --- ADD TO EXAM MODAL (مدرس) — امتحان محاضرة | امتحان شامل، أسئلة أو قطع --- */}
       {isTeacher && (
@@ -1401,7 +1516,7 @@ const Lesson = () => {
           </ModalHeader>
           <ModalCloseButton color="white" _hover={{ bg: "whiteAlpha.200" }} />
           <ModalBody py={6}>
-            <Tabs variant="soft-rounded" colorScheme="blue" onChange={(idx) => setQuestionType(idx === 0 ? "text" : idx === 1 ? "image" : idx === 2 ? "passage" : "imageOnlyBulk")}>
+            <Tabs variant="soft-rounded" colorScheme="blue" index={questionType === "text" ? 0 : questionType === "image" ? 1 : questionType === "passage" ? 2 : 3} onChange={(idx) => setQuestionType(idx === 0 ? "text" : idx === 1 ? "image" : idx === 2 ? "passage" : "imageOnlyBulk")}>
               <TabList mb={4} bg="gray.50" p={1} borderRadius="xl" flexWrap="wrap">
                 <Tab flex="1" minW="100px">أسئلة نصية (Bulk)</Tab>
                 <Tab flex="1" minW="100px">سؤال بالصور</Tab>
@@ -1800,6 +1915,34 @@ const Lesson = () => {
             {imagePreview && <Button colorScheme="red" variant="ghost" mr="auto" fontFamily={fontCairo} onClick={removeImage}>مسح</Button>}
             <Button colorScheme="blue" onClick={handleImageSubmit} isLoading={imageLoading} fontFamily={fontCairo} fontWeight="bold">حفظ الصورة</Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* 5. Image Zoom Modal — مطابق للتطبيق */}
+      <Modal isOpen={!!zoomImageUri} onClose={() => setZoomImageUri(null)} size="full" isCentered>
+        <ModalOverlay bg="blackAlpha.900" />
+        <ModalContent bg="transparent" boxShadow="none" maxW="100vw">
+          <ModalBody p={0} display="flex" alignItems="center" justifyContent="center" minH="100vh">
+            <IconButton aria-label="إغلاق" icon={<FaTimes />} position="fixed" top={4} right={4} zIndex={10} colorScheme="blackAlpha" color="white" size="lg" onClick={() => setZoomImageUri(null)} />
+            {zoomImageUri && <Image src={zoomImageUri} maxW="100%" maxH="90vh" objectFit="contain" alt="تكبير" onClick={() => setZoomImageUri(null)} cursor="pointer" />}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* 6. Add to Exam Success Modal — مطابق للتطبيق */}
+      <Modal isOpen={isAddSuccessOpen} onClose={() => { onAddSuccessClose(); setAddSuccessMessage(""); }} size="sm" isCentered>
+        <ModalOverlay bg="blackAlpha.600" />
+        <ModalContent borderRadius="3xl" overflow="hidden" borderWidth="2px" borderColor="blue.200" boxShadow="xl">
+          <ModalBody py={8} textAlign="center">
+            <Box w="20" h="20" mx="auto" mb={5} borderRadius="full" bgGradient="linear(to-r, blue.500, blue.400)" display="flex" alignItems="center" justifyContent="center">
+              <Icon as={FaCheck} color="white" boxSize={12} />
+            </Box>
+            <Heading size="md" fontFamily={fontCairo} mb={2} color={textPrimary}>تمت الإضافة بنجاح</Heading>
+            <Text color={textSecondary} fontFamily={fontCairo} mb={6}>{addSuccessMessage}</Text>
+            <Button colorScheme="blue" size="lg" w="full" fontFamily={fontCairo} fontWeight="bold" onClick={() => { onAddSuccessClose(); setAddSuccessMessage(""); }}>
+              حسناً
+            </Button>
+          </ModalBody>
         </ModalContent>
       </Modal>
 

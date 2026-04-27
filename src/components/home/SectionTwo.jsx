@@ -4,12 +4,21 @@ import { useColorModeValue } from "@chakra-ui/react";
 import { FaTrophy, FaBook, FaRobot, FaChalkboardTeacher } from "react-icons/fa";
 
 const SectionTwo = () => {
+  const [hoveredId, setHoveredId] = React.useState(null);
   const sectionBg = useColorModeValue("bg-slate-50", "bg-gray.900");
   const headingColor = useColorModeValue("text-slate-900", "text-gray.100");
   const subtextColor = useColorModeValue("text-slate-600", "text-gray.400");
   const cardBg = useColorModeValue("bg-white", "bg-gray.800");
   const cardBorder = useColorModeValue("border-slate-200/80", "border-gray.700");
   const cardBorderHover = useColorModeValue("hover:border-slate-300/80", "hover:border-gray-600");
+  const cardShadow = useColorModeValue(
+    "0 0 0 1px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.12), 0 8px 12px -2px rgba(0,0,0,0.1), 0 16px 32px -8px rgba(0,0,0,0.08)",
+    "0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(255,255,255,0.15), 0 0 56px rgba(255,255,255,0.08), 0 8px 12px -2px rgba(0,0,0,0.25), 0 16px 32px -8px rgba(0,0,0,0.3)"
+  );
+  const cardShadowHover = useColorModeValue(
+    "0 0 0 1px rgba(255,255,255,0.7), 0 0 28px rgba(255,255,255,0.22), 0 0 48px rgba(255,255,255,0.1), 0 24px 32px -8px rgba(0,0,0,0.12), 0 12px 16px -4px rgba(0,0,0,0.06)",
+    "0 0 0 1px rgba(255,255,255,0.15), 0 0 40px rgba(255,255,255,0.28), 0 0 72px rgba(255,255,255,0.14), 0 24px 32px -8px rgba(0,0,0,0.4), 0 12px 16px -4px rgba(0,0,0,0.25)"
+  );
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 24 },
@@ -95,7 +104,12 @@ const SectionTwo = () => {
             <motion.div
               key={item.id}
               variants={fadeInUp}
-              className={`group relative p-6 rounded-2xl ${cardBg} border ${cardBorder} ${cardBorderHover} shadow-sm hover:shadow-lg transition-all duration-300`}
+              onMouseEnter={() => setHoveredId(item.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              className={`group relative p-6 rounded-2xl ${cardBg} border ${cardBorder} ${cardBorderHover} transition-all duration-300`}
+              style={{
+                boxShadow: hoveredId === item.id ? cardShadowHover : cardShadow,
+              }}
             >
               <div
                 className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${item.light} ${item.iconColor} mb-4 transition-transform duration-300 group-hover:scale-105`}

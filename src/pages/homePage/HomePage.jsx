@@ -415,15 +415,23 @@ const HomePage = () => {
   const cardBorder = useColorModeValue("gray.200", "gray.700");
   const headingColor = useColorModeValue("gray.800", "white");
   const subtextColor = useColorModeValue("gray.600", "gray.400");
-  const heroShadow = useColorModeValue(
-    "0 20px 40px rgba(66, 153, 225, 0.25)",
-    "0 20px 40px rgba(0,0,0,0.3)",
-  );
   const blurBlue = useColorModeValue(0.06, 0.08);
   const blurOrange = useColorModeValue(0.05, 0.07);
   const linkCardShadow = useColorModeValue(
     "0 16px 40px rgba(66, 153, 225, 0.12)",
     "0 16px 40px rgba(0,0,0,0.35)",
+  );
+  const mainLinkCardShadow = useColorModeValue(
+    "0 0 0 1px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.06)",
+    "0 0 0 1px rgba(255,255,255,0.08), 0 0 28px rgba(255,255,255,0.12), 0 0 48px rgba(255,255,255,0.06), 0 4px 12px rgba(0,0,0,0.2), 0 12px 28px rgba(0,0,0,0.25)"
+  );
+  const mainLinkCardShadowHover = useColorModeValue(
+    "0 16px 40px rgba(66, 153, 225, 0.12)",
+    "0 0 0 1px rgba(255,255,255,0.12), 0 0 36px rgba(255,255,255,0.18), 0 0 56px rgba(255,255,255,0.08), 0 16px 40px rgba(0,0,0,0.35)"
+  );
+  const cardShadow = useColorModeValue(
+    "0 0 0 1px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.06)",
+    "0 0 0 1px rgba(255,255,255,0.06), 0 0 24px rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.2), 0 12px 28px rgba(0,0,0,0.25)"
   );
   const modalBg = useColorModeValue("white", "gray.800");
   const modalBorder = useColorModeValue("gray.200", "gray.700");
@@ -488,7 +496,7 @@ const HomePage = () => {
           borderRadius="2xl"
           overflow="hidden"
           position="relative"
-          boxShadow={heroShadow}
+          boxShadow={cardShadow}
           bg={cardBg}
           borderWidth="1px"
           borderColor={cardBorder}
@@ -599,20 +607,20 @@ const HomePage = () => {
             <Link key={idx} to={link.href}>
               <Box
                 as="article"
-
+                bg={cardBg}
+                borderColor={cardBorder}
                 borderRadius="2xl"
                 overflow="hidden"
                 borderWidth="1px"
-
-                boxShadow="md"
+                boxShadow={mainLinkCardShadow}
                 h="100%"
                 display="flex"
                 flexDirection="column"
                 transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                 _hover={{
                   transform: "translateY(-8px) scale(1.02)",
-
                   borderColor: "blue.400",
+                  boxShadow: mainLinkCardShadowHover,
                 }}
               >
                 <Box h="4px" bg={link.iconBg} />

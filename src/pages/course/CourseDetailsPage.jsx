@@ -639,7 +639,7 @@ const CourseDetailsPage = () => {
     refetchInterval: 15000,
   });
   const hasActiveLiveStream = (courseStreamsData?.meetings || []).some(
-    (m) => m.status === "started"
+    (m) => m.status === "started",
   );
 
   // State لمودال إنشاء الأكواد
@@ -2604,8 +2604,6 @@ D) has made`}
         : `${window.location.origin}${nextEduLogo}`;
       const courseName = courseData?.course?.title || "الكورس";
       const teacherName = user?.name || "المدرس";
-      const contactPhone1 = "011111272393 &";
-      const contactPhone2 = "01288781012";
       const pdf = new jsPDF("l", "mm", "a4");
       for (let i = 0; i < codesToExport.length; i += codesPerPage) {
         const tempDiv = document.createElement("div");
@@ -2615,38 +2613,185 @@ D) has made`}
         tempDiv.style.background = "#fff";
         document.body.appendChild(tempDiv);
         tempDiv.innerHTML = `
-           <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 3mm; width: 100%; height: 100%; align-content: start;">
-            ${codesToExport
-            .slice(i, i + codesPerPage)
-            .map(
-              (code, index) => `
-                  <div style="padding: 0; width: 100%; height: 100%; border-radius: 12px; box-shadow: 0 2px 12px rgba(49,130,206,0.18); position: relative; overflow: hidden; background: #f8fafc; display: flex; flex-direction: column; min-height: 40mm; direction: rtl; border: 1px solid rgba(49,130,206,0.25);">
-                    <div style="position: absolute; inset: 0; background-image: url('${logoUrl}'); background-size: 50% auto; background-repeat: no-repeat; background-position: center; opacity: 0.22; pointer-events: none;"></div>
-                    <div style="position: relative; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 6px; background: #3182ce; padding: 8px 10px; min-height: 36px;">
-                      <h2 style="font-size: 13px; font-weight: 800; color: #fff; margin: 0; text-align: right; flex: 1; min-width: 0; line-height: 1.3; word-break: break-word;">${user.name || "عمرو علي"}</h2>
-                      <p style="font-size: 10px; font-weight: 700; color: #fff; margin: 0; text-align: center; flex-shrink: 0; padding: 0 6px;">${courseName}</p>
-                      <span style="font-size: 10px; color: #fff; font-weight: 700; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 8px; white-space: nowrap;">${code.grade_name || "الصف الثاني الثانوي"}</span>
-                    </div>
-                    <div style="position: relative; flex: 1 1 0; min-height: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 8px 10px; gap: 8px;">
-                      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-                        <div style="font-size: 10px; color: #2b6cb0; font-weight: 700; margin-bottom: 6px;">كود التفعيل</div>
-                        <div style="display: inline-block; font-size: 18px; color: #1a365d; font-weight: 800; letter-spacing: 2px; font-family: monospace; padding: 8px 14px; background: #fff; border: 2px solid #3182ce; border-radius: 8px; box-shadow: 0 2px 6px rgba(49,130,206,0.2);">${code.code
-                }</div>
-                      </div>
-                      <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin: 6px 0;">
-                        ${code.qr_code
-                  ? `<img src="${code.qr_code}" alt="QR" style="width: 100px; height: 100px; border: 2px solid #3182ce; border-radius: 10px; background: #fff; padding: 2px; display: block; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;" />`
-                  : '<div style="width: 100px; height: 100px; border: 2px dashed #3182ce; border-radius: 10px; background: #ebf8ff; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #3182ce; font-weight: bold;">QR</div>'
-                }
-                      </div>
-                    </div>
-                    <div style="position: relative; flex: 0 0 auto; min-height: 30px; padding: 10px 8px; background: #3182ce; display: flex; align-items: center; justify-content: center;">
-                      <p style="font-size: 14px; font-weight: 800; color: #ffffff; text-align: center; margin: 0; line-height: 1.4; letter-spacing: 0.8px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">01111272393 | 01288781012</p>
-                    </div>
-                  </div>`,
-            )
-            .join("")}
-          </div>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(4,1fr); gap:3mm; width:100%; height:100%; align-content:start;">
+${codesToExport
+  .slice(i, i + codesPerPage)
+  .map(
+    (code, index) => `
+
+<div style="
+width:100%;
+height:100%;
+border-radius:14px;
+overflow:hidden;
+background:#ffffff;
+display:flex;
+flex-direction:column;
+border:1px solid #dbeafe;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+position:relative;
+direction:rtl;
+min-height:36mm;
+">
+
+<!-- Header -->
+<div style="
+background:linear-gradient(90deg,#1e3a8a,#3b82f6);
+color:#fff;
+padding:8px 10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-size:11px;
+font-weight:700;
+">
+
+<span>${code.grade_name || "الصف الثالث الثانوي"}</span>
+
+<span style="
+font-size:10px;
+background:rgba(255,255,255,0.2);
+padding:3px 8px;
+border-radius:6px;
+">
+${courseName}
+</span>
+
+<span style="
+font-weight:800;
+font-size:12px;
+">
+${teacherName}
+</span>
+
+</div>
+
+<!-- Content -->
+<div style="
+flex:1;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:10px 14px;
+gap:10px;
+position:relative;
+flex-direction:row;
+">
+
+<!-- QR -->
+<div style="
+flex-shrink:0;
+margin-left:14px;
+">
+${
+  code.qr_code
+    ? `<img src="${code.qr_code}" style="
+width:90px;
+height:90px;
+background:#fff;
+border-radius:10px;
+border:2px solid #2563eb;
+padding:3px;
+object-fit:contain;
+"/>`
+    : `<div style="
+width:90px;
+height:90px;
+border:2px dashed #2563eb;
+border-radius:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:10px;
+color:#2563eb;
+">QR</div>`
+}
+</div>
+
+<!-- Logo -->
+<div style="
+flex:1;
+display:flex;
+align-items:center;
+justify-content:center;
+">
+<span style="
+display:inline-flex;
+align-items:center;
+justify-content:center;
+background:#fff;
+border:1px solid #dbeafe;
+border-radius:10px;
+padding:6px 10px;
+">
+<img src="${logoUrl}" alt="Logo" style="
+width:88px;
+height:auto;
+object-fit:contain;
+opacity:1;
+"/>
+</span>
+</div>
+
+<!-- Activation Code -->
+<div style="
+flex-shrink:0;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+text-align:center;
+margin-right:10px;
+">
+
+<div style="
+font-size:11px;
+font-weight:700;
+color:#fd7305;
+margin-bottom:6px;
+">
+كود التفعيل
+</div>
+
+<div style="
+font-size:16px;
+font-weight:800;
+font-family:monospace;
+letter-spacing:2px;
+color:#fd7305;
+">
+${code.code}
+</div>
+
+</div>
+
+</div>
+
+<!-- Footer -->
+<div style="
+background:linear-gradient(90deg,#1e3a8a,#2563eb);
+padding:6px 8px;
+text-align:center;
+">
+
+<span style="
+color:#fff;
+font-size:12px;
+font-weight:800;
+letter-spacing:0.3px;
+display:block;
+">
+ 01111272393 & 01288781012 & 01210726096
+</span>
+
+</div>
+
+</div>
+
+`,
+  )
+  .join("")}
+</div>
         `;
         await new Promise((resolve) => setTimeout(resolve, 350));
         try {
@@ -2915,6 +3060,54 @@ D) has made`}
   }
 
   const { course, lectures } = courseData;
+  // =========================
+  // MOCK DATA (جاهزة للاستبدال لاحقاً بـ APIs)
+  // =========================
+  const mockCompletionPercent = 62;
+  const mockStats = [
+    {
+      label: "عدد المحاضرات",
+      value: `${lectures?.length || 0}`,
+      icon: FaBookOpen,
+      tone: "blue",
+    },
+    {
+      label: "المدة المتوقعة",
+      value: "6 أسابيع",
+      icon: FaClock,
+      tone: "orange",
+    },
+    {
+      label: "المستوى",
+      value: course?.grade_name || "الصف الثالث الثانوي",
+      icon: FaGraduationCap,
+      tone: "purple",
+    },
+    {
+      label: "تقييم الطلاب",
+      value: "4.8/5",
+      icon: FaStar,
+      tone: "blue",
+    },
+  ];
+  const mockLearningPath = [
+    {
+      title: "الأسبوع 1",
+      desc: "تهيئة المفاهيم + تدريبات سريعة على نمط الأسئلة",
+    },
+    {
+      title: "الأسبوع 2",
+      desc: "حل تدريجي مع مراجعة نقاط الضعف (Mock نص)",
+    },
+    {
+      title: "الأسبوع 3",
+      desc: "اختبارات قصيرة + بنك أسئلة للتثبيت",
+    },
+    {
+      title: "الأسبوع 4",
+      desc: "مراجعة نهائية + امتحان تجريبي شامل",
+    },
+  ];
   return (
     <Box minH="100vh" bg={pageBg} dir="rtl" overflowX="hidden">
       {/* Hero Section - Full Width Image with Overlay */}
@@ -2934,6 +3127,8 @@ D) has made`}
         onToggleVisibility={handleToggleVideoVisibility}
         isTeacher={isTeacher}
       />
+      {/* Course Insights (Mock UI) */}
+
       {/* زر إنشاء أكواد للمدرس فقط */}
       {isTeacher && (
         <Flex
@@ -3656,12 +3851,12 @@ D) has made`}
               variant="unstyled"
               size={{ base: "sm", md: "md" }}
             >
-              <Box mb={6} overflow="hidden">
+              <Box mb={6} overflow={{ base: "visible", md: "hidden" }}>
                 <TabList
                   bg={useColorModeValue("gray.50", "whiteAlpha.100")}
                   p={2}
                   borderRadius="2xl"
-                  display="inline-flex"
+                  display="flex"
                   flexWrap={{ base: "wrap", md: "nowrap" }}
                   gap={2}
                   w={{ base: "full", md: "auto" }}
@@ -3835,8 +4030,14 @@ D) has made`}
                       bg={sectionBg}
                       borderRadius="xl"
                       borderWidth="1px"
-                      borderColor={hasActiveLiveStream ? "red.300" : borderColor}
-                      boxShadow={hasActiveLiveStream ? "0 0 15px rgba(229, 62, 62, 0.15)" : "none"}
+                      borderColor={
+                        hasActiveLiveStream ? "red.300" : borderColor
+                      }
+                      boxShadow={
+                        hasActiveLiveStream
+                          ? "0 0 15px rgba(229, 62, 62, 0.15)"
+                          : "none"
+                      }
                       p={4}
                       minH="280px"
                     >

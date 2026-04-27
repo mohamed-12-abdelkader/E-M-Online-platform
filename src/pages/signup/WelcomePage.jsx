@@ -20,7 +20,7 @@ const WelcomePage = () => {
 
   const pageBg = useColorModeValue(
     "linear(to-br, blue.50, white)",
-    "linear(to-br, gray.900, gray.800)"
+    "linear(to-br, gray.900, gray.800)",
   );
   const cardBg = useColorModeValue("white", "gray.800");
   const cardBorder = useColorModeValue("gray.200", "gray.700");
@@ -30,6 +30,10 @@ const WelcomePage = () => {
   const hintBorder = useColorModeValue("blue.200", "blue.800");
   const hintText = useColorModeValue("blue.700", "blue.200");
   const bottomColor = useColorModeValue("gray.600", "gray.500");
+  const cardShadow = useColorModeValue(
+    "0 0 0 1px rgba(0,0,0,0.04), 0 12px 24px -8px rgba(0,0,0,0.12), 0 24px 48px -16px rgba(0,0,0,0.08)",
+    "0 0 0 1px rgba(255,255,255,0.08), 0 0 40px rgba(255,255,255,0.2), 0 0 80px rgba(255,255,255,0.1), 0 24px 48px -16px rgba(0,0,0,0.45), 0 12px 24px -8px rgba(0,0,0,0.35)"
+  );
 
   const handleNewUser = () => navigate("/signup");
   const handleExistingUser = () => navigate("/login");
@@ -75,10 +79,7 @@ const WelcomePage = () => {
           bg={cardBg}
           borderRadius="2xl"
           p={{ base: 8, md: 10 }}
-          boxShadow={useColorModeValue(
-            "0 25px 50px rgba(0,0,0,0.08)",
-            "0 25px 50px rgba(0,0,0,0.3)"
-          )}
+          boxShadow={cardShadow}
           borderWidth="1px"
           borderColor={cardBorder}
           overflow="hidden"
@@ -111,7 +112,8 @@ const WelcomePage = () => {
                 maxW="400px"
                 lineHeight="1.6"
               >
-                إذا كان لديك حساب سجّل الدخول. إذا كنت جديداً أنشئ حساباً جديداً وابدأ رحلتك.
+                إذا كان لديك حساب سجّل الدخول. إذا كنت جديداً أنشئ حساباً جديداً
+                وابدأ رحلتك.
               </Text>
             </VStack>
 
@@ -128,7 +130,10 @@ const WelcomePage = () => {
                 h="56px"
                 bg="blue.500"
                 color="white"
-                _hover={{ bg: "blue.400", boxShadow: "0 10px 25px rgba(66, 153, 225, 0.35)" }}
+                _hover={{
+                  bg: "blue.400",
+                  boxShadow: "0 10px 25px rgba(66, 153, 225, 0.35)",
+                }}
                 borderRadius="xl"
                 fontSize="lg"
                 fontWeight="bold"
@@ -148,7 +153,10 @@ const WelcomePage = () => {
                 h="56px"
                 bg="orange.500"
                 color="white"
-                _hover={{ bg: "orange.400", boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)" }}
+                _hover={{
+                  bg: "orange.400",
+                  boxShadow: "0 10px 25px rgba(237, 137, 54, 0.35)",
+                }}
                 borderRadius="xl"
                 fontSize="lg"
                 fontWeight="bold"
@@ -170,7 +178,8 @@ const WelcomePage = () => {
               w="full"
             >
               <Text fontSize="sm" color={hintText} textAlign="center">
-                💡 غير متأكد؟ جرّب "تسجيل الدخول" أولاً. إن لم يكن لديك حساب سنوجهك لإنشاء حساب جديد.
+                💡 غير متأكد؟ جرّب "تسجيل الدخول" أولاً. إن لم يكن لديك حساب
+                سنوجهك لإنشاء حساب جديد.
               </Text>
             </Box>
 

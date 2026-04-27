@@ -4,13 +4,23 @@ import {
 } from '@chakra-ui/react';
 import { useState } from 'react';
 
-const AddGroupModal = ({ isOpen, onClose, onAdd, loading = false }) => {
+const defaultGrades = [
+    { id: 1, name: 'أولى إعدادي' },
+    { id: 2, name: 'ثانية إعدادي' },
+    { id: 3, name: 'ثالثة إعدادي' },
+    { id: 4, name: 'أولى ثانوي' },
+    { id: 5, name: 'ثانية ثانوي' },
+    { id: 6, name: 'ثالثة ثانوي' }
+];
+
+const AddGroupModal = ({ isOpen, onClose, onAdd, loading = false, grades: gradesProp }) => {
     const [name, setName] = useState('');
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [selectedDays, setSelectedDays] = useState([]);
     const [gradeId, setGradeId] = useState('');
     const toast = useToast();
+    const grades = Array.isArray(gradesProp) && gradesProp.length > 0 ? gradesProp : defaultGrades;
 
     const days = [
         { value: 'السبت', label: 'السبت' },
@@ -20,15 +30,6 @@ const AddGroupModal = ({ isOpen, onClose, onAdd, loading = false }) => {
         { value: 'الأربعاء', label: 'الأربعاء' },
         { value: 'الخميس', label: 'الخميس' },
         { value: 'الجمعة', label: 'الجمعة' }
-    ];
-
-    const grades = [
-        { id: 1, name: 'أولى إعدادي' },
-        { id: 2, name: 'ثانية إعدادي' },
-        { id: 3, name: 'ثالثة إعدادي' },
-        { id: 4, name: 'أولى ثانوي' },
-        { id: 5, name: 'ثانية ثانوي' },
-        { id: 6, name: 'ثالثة ثانوي' }
     ];
 
     const handleAdd = () => {

@@ -16,6 +16,10 @@ const AboutUsSection = () => {
   const logoBoxBorder = useColorModeValue("border-slate-100", "border-gray-700");
   const ctaColor = useColorModeValue("text-slate-700", "text-gray.300");
 
+  const logoCardShadow = useColorModeValue(
+    "0 0 0 1px rgba(255,255,255,0.8), 0 25px 50px -12px rgba(0,0,0,0.15), 0 12px 24px -8px rgba(0,0,0,0.1)",
+    "0 0 0 1px rgba(255,255,255,0.08), 0 0 40px rgba(255,255,255,0.18), 0 0 80px rgba(255,255,255,0.1), 0 25px 50px -12px rgba(0,0,0,0.4), 0 12px 24px -8px rgba(0,0,0,0.3)"
+  );
   const fadeInLeft = {
     hidden: { opacity: 0, x: -24 },
     visible: {
@@ -59,7 +63,10 @@ const AboutUsSection = () => {
             initial="hidden"
             animate="visible"
           >
-            <div className={`relative rounded-2xl overflow-hidden ${logoBoxBg} ${logoBoxBorder} p-8 flex items-center justify-center min-h-[320px] max-h-[420px] w-full shadow-xl border`}>
+            <div
+              className={`relative rounded-2xl overflow-hidden ${logoBoxBg} ${logoBoxBorder} p-8 flex items-center justify-center min-h-[320px] max-h-[420px] w-full border`}
+              style={{ boxShadow: logoCardShadow }}
+            >
               <img
                 src="/next%20logo.png"
                 alt="NextEdu School - شعار منصة التعليم"
@@ -79,15 +86,15 @@ const AboutUsSection = () => {
               <FaRocket className="text-base" />
               <span>من نحن</span>
             </div>
-            <h2 className={`text-3xl sm:text-4xl font-bold ${headingColor} mb-6 leading-tight`}>
-              Next Edu
+            <h2 className={`text-3xl sm:text-4xl font-bold mb-6 leading-tight`}>
+              <span className="text-blue-500">Next Edu</span>
               <span className={`block ${subheadingColor} text-2xl sm:text-3xl font-medium mt-1`}>
                 منصتك للتعلم الذكي
               </span>
             </h2>
             <p className={`${textColor} text-lg leading-relaxed mb-6`}>
               منصة{" "}
-              <span className={`font-semibold ${textBoldColor}`}>Next Edu</span>{" "}
+              <span className="font-semibold text-blue-500">Next Edu</span>{" "}
               وجهتك للتعلم الإلكتروني بطريقة مبتكرة وسهلة. نقدّم تجربة تعليمية
               متكاملة تجمع المحتوى المتميز والتقنيات الحديثة.
             </p>

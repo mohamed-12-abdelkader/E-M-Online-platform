@@ -254,11 +254,18 @@ const TeacherDashboardHome = () => {
   ];
 
   // Color mode values
-  const bg = useColorModeValue("white", "gray.900"); // Plain white background
+  const bg = useColorModeValue("white", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("gray.800", "white");
   const textColor = useColorModeValue("gray.600", "gray.300");
   const borderColor = useColorModeValue("gray.200", "gray.600");
+  const quickLinksHoverBg = useColorModeValue("gray.50", "whiteAlpha.100");
+  const inputBorderColor = useColorModeValue("gray.200", "gray.600");
+  const mutedTextColor = useColorModeValue("gray.500", "gray.400");
+  const dividerBorderColor = useColorModeValue("gray.100", "gray.600");
+  const greenBoxBg = useColorModeValue("green.50", "green.900");
+  const greenBoxBorder = useColorModeValue("green.200", "green.700");
+  const greenBoxText = useColorModeValue("green.700", "green.200");
 
   // Animation variants
   const containerVariants = {
@@ -654,6 +661,7 @@ const TeacherDashboardHome = () => {
       p={{ base: 3, sm: 4, md: 6, lg: 8 }}
       dir="rtl"
       overflowX="hidden"
+      bg={bg}
     >
       <Container maxW="8xl" mx="auto" px={{ base: 2, sm: 3, md: 4 }} w="full">
         <MotionVStack
@@ -811,7 +819,7 @@ const TeacherDashboardHome = () => {
               py={{ base: 2, sm: 0 }}
               px={{ base: 2, sm: 0 }}
               borderRadius="xl"
-              _hover={{ base: { bg: "gray.50" }, sm: {} }}
+              _hover={{ base: { bg: quickLinksHoverBg }, sm: {} }}
               display={{ base: "flex", lg: "none" }}
               role={{ base: "button", sm: "presentation" }}
               aria-expanded={{ base: isQuickLinksOpen, lg: undefined }}
@@ -833,7 +841,7 @@ const TeacherDashboardHome = () => {
                 <Icon
                   as={isQuickLinksOpen ? FaChevronDown : FaChevronLeft}
                   boxSize={5}
-                  color="gray.600"
+                  color={textColor}
                   transition="transform 0.2s"
                   transform={
                     isQuickLinksOpen ? "rotate(0deg)" : "rotate(-90deg)"
@@ -881,7 +889,7 @@ const TeacherDashboardHome = () => {
                           <Text
                             fontWeight="bold"
                             fontSize="sm"
-                            color="gray.800"
+                            color={headingColor}
                             noOfLines={1}
                           >
                             {link.title}
@@ -933,7 +941,7 @@ const TeacherDashboardHome = () => {
                           <Text
                             fontWeight="bold"
                             fontSize={{ sm: "md", md: "lg" }}
-                            color="gray.800"
+                            color={headingColor}
                             noOfLines={1}
                           >
                             {link.title}
@@ -970,7 +978,7 @@ const TeacherDashboardHome = () => {
                       color="orange.500"
                       thickness="4px"
                     />
-                    <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
+                    <Text color={mutedTextColor} fontSize={{ base: "sm", md: "md" }}>
                       جاري تحميل المواد...
                     </Text>
                   </VStack>
@@ -985,9 +993,9 @@ const TeacherDashboardHome = () => {
                     <Icon
                       as={FaBookOpen}
                       boxSize={{ base: 10, md: 12 }}
-                      color="gray.300"
+                      color={mutedTextColor}
                     />
-                    <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
+                    <Text color={mutedTextColor} fontSize={{ base: "sm", md: "md" }}>
                       لا توجد مواد دراسية حالياً
                     </Text>
                   </VStack>
@@ -1009,7 +1017,7 @@ const TeacherDashboardHome = () => {
                       as={Link}
                       to={`/subject/${subject.id}`}
                       position="relative"
-                      bg="white"
+                      bg={cardBg}
                       cursor="pointer"
                       w="full"
                       role="group"
@@ -1070,7 +1078,7 @@ const TeacherDashboardHome = () => {
                           >
                             <Heading
                               size={{ base: "sm", md: "md" }}
-                              color="gray.800"
+                              color={headingColor}
                               noOfLines={1}
                             >
                               {subject.name}
@@ -1085,7 +1093,7 @@ const TeacherDashboardHome = () => {
 
                           <HStack
                             fontSize={{ base: "xs", md: "sm" }}
-                            color="gray.500"
+                            color={mutedTextColor}
                             spacing={4}
                           >
                             <HStack>
@@ -1098,18 +1106,18 @@ const TeacherDashboardHome = () => {
                             </HStack>
                           </HStack>
 
-                          <Divider borderColor="gray.100" />
+                          <Divider borderColor={dividerBorderColor} />
 
                           <Button
                             w="full"
                             variant="outline"
                             colorScheme="blue"
-                            borderColor="blue.200"
-                            color="blue.600"
+                            borderColor={useColorModeValue("blue.200", "blue.600")}
+                            color={useColorModeValue("blue.600", "blue.300")}
                             _hover={{
-                              bg: "blue.50",
+                              bg: useColorModeValue("blue.50", "whiteAlpha.100"),
                               borderColor: "blue.500",
-                              color: "blue.700",
+                              color: useColorModeValue("blue.700", "blue.300"),
                             }}
                             size={{ base: "sm", md: "md" }}
                             borderRadius="xl"
@@ -1200,7 +1208,7 @@ const TeacherDashboardHome = () => {
                       color="blue.500"
                       thickness="4px"
                     />
-                    <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
+                    <Text color={mutedTextColor} fontSize={{ base: "sm", md: "md" }}>
                       جاري تحميل الكورسات...
                     </Text>
                   </VStack>
@@ -1218,7 +1226,7 @@ const TeacherDashboardHome = () => {
                       color="red.400"
                     />
                     <Text
-                      color="red.500"
+                      color="red.400"
                       fontSize={{ base: "md", md: "lg" }}
                       textAlign="center"
                     >
@@ -1244,10 +1252,10 @@ const TeacherDashboardHome = () => {
                     <Icon
                       as={FaBookOpen}
                       boxSize={{ base: 12, md: 16 }}
-                      color="gray.300"
+                      color={mutedTextColor}
                     />
                     <Text
-                      color="gray.500"
+                      color={mutedTextColor}
                       fontSize={{ base: "md", md: "lg" }}
                       textAlign="center"
                     >
@@ -1363,7 +1371,7 @@ const TeacherDashboardHome = () => {
                         <VStack align="start" spacing={{ base: 2, md: 3 }}>
                           <Heading
                             size={{ base: "sm", md: "md" }}
-                            color="gray.800"
+                            color={headingColor}
                             noOfLines={1}
                             lineHeight={1.4}
                           >
@@ -1371,7 +1379,7 @@ const TeacherDashboardHome = () => {
                           </Heading>
                           <Text
                             fontSize={{ base: "xs", md: "sm" }}
-                            color="gray.500"
+                            color={textColor}
                             noOfLines={2}
                             minH={{ base: "36px", md: "40px" }}
                           >
@@ -1380,12 +1388,12 @@ const TeacherDashboardHome = () => {
 
                           <HStack
                             fontSize="xs"
-                            color="gray.400"
+                            color={mutedTextColor}
                             spacing={4}
                             w="full"
                             pt={2}
                             borderTop="1px solid"
-                            borderColor="gray.100"
+                            borderColor={dividerBorderColor}
                           >
                             <HStack>
                               <Icon
@@ -1407,11 +1415,11 @@ const TeacherDashboardHome = () => {
                           >
                             <Button
                               w="full"
-                              bg="gray.900"
-                              color="white"
+                              bg={useColorModeValue("gray.800", "gray.200")}
+                              color={useColorModeValue("white", "gray.800")}
                               size={{ base: "sm", md: "md" }}
                               _hover={{
-                                bg: "gray.700",
+                                bg: useColorModeValue("gray.700", "gray.100"),
                                 shadow: "lg",
                                 transform: "translateY(-1px)",
                               }}
@@ -1488,7 +1496,8 @@ const TeacherDashboardHome = () => {
                   onChange={(e) => handleInputChange("title", e.target.value)}
                   borderRadius="xl"
                   border="2px solid"
-                  borderColor="gray.200"
+                  borderColor={inputBorderColor}
+                  bg={cardBg}
                   _focus={{ borderColor: "green.500" }}
                   size={{ base: "sm", md: "md" }}
                 />
@@ -1511,7 +1520,8 @@ const TeacherDashboardHome = () => {
                   borderRadius="xl"
                   rows={{ base: 3, md: 4 }}
                   border="2px solid"
-                  borderColor="gray.200"
+                  borderColor={inputBorderColor}
+                  bg={cardBg}
                   _focus={{ borderColor: "green.500" }}
                   size={{ base: "sm", md: "md" }}
                 />
@@ -1544,7 +1554,8 @@ const TeacherDashboardHome = () => {
                     <NumberInputField
                       borderRadius="xl"
                       border="2px solid"
-                      borderColor="gray.200"
+                      borderColor={inputBorderColor}
+                      bg={cardBg}
                       _focus={{ borderColor: "green.500" }}
                     />
                     <NumberInputStepper>
@@ -1570,7 +1581,8 @@ const TeacherDashboardHome = () => {
                     }
                     borderRadius="xl"
                     border="2px solid"
-                    borderColor="gray.200"
+                    borderColor={inputBorderColor}
+                    bg={cardBg}
                     _focus={{ borderColor: "green.500" }}
                     size={{ base: "sm", md: "md" }}
                   >
@@ -1620,14 +1632,14 @@ const TeacherDashboardHome = () => {
                   ) : (
                     <Box
                       border="2px dashed"
-                      borderColor="gray.300"
+                      borderColor={inputBorderColor}
                       borderRadius="xl"
                       p={{ base: 6, md: 8 }}
                       textAlign="center"
                       cursor="pointer"
                       _hover={{
                         borderColor: "green.400",
-                        bg: "green.50",
+                        bg: greenBoxBg,
                       }}
                       transition="all 0.2s"
                     >
@@ -1672,10 +1684,10 @@ const TeacherDashboardHome = () => {
 
               <Box
                 p={{ base: 3, md: 4 }}
-                bg={useColorModeValue("green.50", "green.900")}
+                bg={greenBoxBg}
                 borderRadius="xl"
                 border="1px solid"
-                borderColor="green.200"
+                borderColor={greenBoxBorder}
               >
                 <HStack spacing={3}>
                   <Icon
@@ -1685,7 +1697,7 @@ const TeacherDashboardHome = () => {
                   />
                   <Text
                     fontSize={{ base: "xs", md: "sm" }}
-                    color="green.700"
+                    color={greenBoxText}
                     fontWeight="medium"
                   >
                     يمكنك إضافة صورة للكورس لتحسين مظهره وجذب الطلاب. الصورة
@@ -1843,14 +1855,14 @@ const TeacherDashboardHome = () => {
                     </Button>
                   </Box>
 
-                  <Text fontSize="xs" color="gray.500" textAlign="center">
+                  <Text fontSize="xs" color={mutedTextColor} textAlign="center">
                     الصور المقبولة: JPG, PNG, GIF (حد أقصى 5MB)
                   </Text>
 
                   {!editAvatarPreview && (
                     <Text
                       fontSize="sm"
-                      color="blue.600"
+                      color={useColorModeValue("blue.600", "blue.300")}
                       textAlign="center"
                       fontWeight="medium"
                     >
@@ -1874,7 +1886,8 @@ const TeacherDashboardHome = () => {
                   onChange={(e) => handleEditChange("title", e.target.value)}
                   borderRadius="xl"
                   border="2px solid"
-                  borderColor="gray.200"
+                  borderColor={inputBorderColor}
+                  bg={cardBg}
                   _focus={{ borderColor: "blue.500" }}
                   size={{ base: "sm", md: "md" }}
                 />
@@ -1897,7 +1910,8 @@ const TeacherDashboardHome = () => {
                   borderRadius="xl"
                   rows={{ base: 3, md: 4 }}
                   border="2px solid"
-                  borderColor="gray.200"
+                  borderColor={inputBorderColor}
+                  bg={cardBg}
                   _focus={{ borderColor: "blue.500" }}
                   size={{ base: "sm", md: "md" }}
                 />
@@ -1930,7 +1944,8 @@ const TeacherDashboardHome = () => {
                     <NumberInputField
                       borderRadius="xl"
                       border="2px solid"
-                      borderColor="gray.200"
+                      borderColor={inputBorderColor}
+                      bg={cardBg}
                       _focus={{ borderColor: "blue.500" }}
                     />
                     <NumberInputStepper>
@@ -1956,7 +1971,8 @@ const TeacherDashboardHome = () => {
                     }
                     borderRadius="xl"
                     border="2px solid"
-                    borderColor="gray.200"
+                    borderColor={inputBorderColor}
+                    bg={cardBg}
                     _focus={{ borderColor: "blue.500" }}
                     size={{ base: "sm", md: "md" }}
                   >

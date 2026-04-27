@@ -49,7 +49,11 @@ const LoginPage = () => {
   const inputBorder = useColorModeValue("gray.200", "gray.600");
   const inputBg = useColorModeValue("white", "gray.700");
   const bottomTextColor = useColorModeValue("gray.500", "gray.500");
-  
+  const cardShadow = useColorModeValue(
+    "0 0 0 1px rgba(0,0,0,0.04), 0 12px 24px -8px rgba(0,0,0,0.12), 0 24px 48px -16px rgba(0,0,0,0.08)",
+    "0 0 0 1px rgba(255,255,255,0.08), 0 0 40px rgba(255,255,255,0.2), 0 0 80px rgba(255,255,255,0.1), 0 24px 48px -16px rgba(0,0,0,0.45), 0 12px 24px -8px rgba(0,0,0,0.35)"
+  );
+
   function generateString() {
     var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     var string = "";
@@ -161,7 +165,7 @@ const LoginPage = () => {
           bg={cardBg}
           borderRadius="2xl"
           p={8}
-          boxShadow={useColorModeValue("0 25px 50px rgba(0,0,0,0.08)", "0 25px 50px rgba(0,0,0,0.3)")}
+          boxShadow={cardShadow}
           borderWidth="1px"
           borderColor={cardBorder}
           overflow="hidden"

@@ -16,6 +16,10 @@ const SectionThree = () => {
   const cardBg = useColorModeValue("bg-white", "bg-gray.700");
   const cardBorder = useColorModeValue("border-slate-200", "border-gray-600");
   const cardBorderHover = useColorModeValue("hover:border-slate-300", "hover:border-gray-500");
+  const cardShadow = useColorModeValue(
+    "0 0 0 1px rgba(255,255,255,0.9), 0 0 24px rgba(255,255,255,0.15), 0 8px 16px -4px rgba(0,0,0,0.08), 0 16px 32px -8px rgba(0,0,0,0.06)",
+    "0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(255,255,255,0.2), 0 0 56px rgba(255,255,255,0.08), 0 8px 16px -4px rgba(0,0,0,0.25), 0 16px 32px -8px rgba(0,0,0,0.3)"
+  );
   const reviewCountColor = useColorModeValue("text-slate-500", "text-gray-500");
 
   const fadeInUp = {
@@ -88,7 +92,7 @@ const SectionThree = () => {
           transition={{ duration: 0.5 }}
         >
           <h2 className={`text-3xl sm:text-4xl font-bold ${headingColor} mb-3`}>
-            لماذا Next Edu؟
+            لماذا <span className="text-blue-500">Next Edu</span>؟
           </h2>
           <p className={`${subtextColor} text-lg max-w-xl mx-auto`}>
             خدمات مصممة لنجاحك مع تقييمات حقيقية من آلاف المستخدمين.
@@ -105,7 +109,8 @@ const SectionThree = () => {
             <motion.div
               key={item.id}
               variants={fadeInUp}
-              className={`group relative p-6 rounded-2xl ${cardBg} border ${cardBorder} ${cardBorderHover} shadow-sm hover:shadow-xl transition-all duration-300`}
+              className={`group relative p-6 rounded-2xl ${cardBg} border ${cardBorder} ${cardBorderHover} transition-all duration-300`}
+              style={{ boxShadow: cardShadow }}
             >
               <div
                 className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${accentClasses[item.accent]} mb-4 transition-transform duration-300 group-hover:scale-105`}

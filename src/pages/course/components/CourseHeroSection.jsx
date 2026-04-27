@@ -16,6 +16,7 @@ import {
   VStack,
   HStack,
   Text,
+  useColorModeValue,
   useDisclosure,
   Box,
   Heading,
@@ -26,9 +27,19 @@ import {
   Center,
   Image,
   SimpleGrid,
-  Container
+  Container,
 } from "@chakra-ui/react";
-import { FaUserGraduate, FaUserPlus, FaPlay, FaChartBar, FaClock, FaUsers, FaStar, FaArrowLeft, FaCheck } from "react-icons/fa";
+import {
+  FaUserGraduate,
+  FaUserPlus,
+  FaPlay,
+  FaChartBar,
+  FaClock,
+  FaUsers,
+  FaStar,
+  FaArrowLeft,
+  FaCheck,
+} from "react-icons/fa";
 import { IoIosSchool } from "react-icons/io";
 import { Link } from "react-router-dom";
 import baseUrl from "../../../api/baseUrl";
@@ -37,12 +48,90 @@ import { motion } from "framer-motion";
 const MotionBox = motion(Box);
 const MotionButton = motion(Button);
 
-const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }) => {
+const CourseHeroSection = ({
+  course,
+  isTeacher,
+  isAdmin,
+  handleViewEnrollments,
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [studentId, setStudentId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
   const token = localStorage.getItem("token");
+
+  // =========================
+  // HERO DATA (من API مع fallback)
+  // =========================
+  const ratingRaw =
+    course?.rating ??
+    course?.average_rating ??
+    course?.avg_rating ??
+    course?.course_rating ??
+    course?.rate;
+
+  const ratingNum = ratingRaw != null ? Number(ratingRaw) : null;
+  const ratingDisplay = Number.isFinite(ratingNum)
+    ? ratingNum.toFixed(1)
+    : "4.8";
+
+  const durationText =
+    course?.duration_text ??
+    (course?.duration_hours != null
+      ? `${course.duration_hours} ساعة`
+      : course?.duration_minutes != null
+        ? `${course.duration_minutes} دقيقة`
+        : "12 ساعة");
+
+  const studentsCountRaw =
+    course?.students_count ??
+    course?.enrolled_students ??
+    course?.total_students ??
+    course?.participants;
+
+  const studentsCountNum =
+    studentsCountRaw != null ? Number(studentsCountRaw) : null;
+
+  const studentsDisplay = (() => {
+    if (!Number.isFinite(studentsCountNum)) return "500+";
+    if (studentsCountNum >= 1000)
+      return `${Math.floor(studentsCountNum / 100) / 10}k+`;
+    return `${studentsCountNum}+`;
+  })();
+
+  const heroSubtitle =
+    course?.subtitle ??
+    course?.headline ??
+    course?.category_name ??
+    course?.grade_name ??
+    "كورس تعليمي احترافي";
+
+  const heroTitleRaw = course?.title_en ?? course?.title ?? "Course";
+  const heroTitleWords = String(heroTitleRaw)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  const heroTitleLine1 = heroTitleWords.slice(0, 3).join(" ");
+  const heroTitleLine2 = heroTitleWords.slice(3).join(" ");
+
+  const heroBgGradient = useColorModeValue(
+    "linear(to-b, white, blue.50)",
+    "linear(to-b, gray.900, blue.950)",
+  );
+  const dotBlueBg = useColorModeValue("blue.100", "blue.900");
+  const dotOrangeBg = useColorModeValue("orange.100", "orange.900");
+
+  const panelBg = useColorModeValue("white", "gray.800");
+  const panelTextMuted = useColorModeValue("gray.500", "gray.400");
+  const panelTextMain = useColorModeValue("gray.800", "gray.100");
+  const copyText = useColorModeValue("gray.600", "gray.300");
+  const featureText = useColorModeValue("gray.700", "gray.100");
+
+  const bottomPanelBg = useColorModeValue("whiteAlpha.200", "whiteAlpha.100");
+  const bottomPanelBorder = useColorModeValue(
+    "whiteAlpha.300",
+    "whiteAlpha.100",
+  );
 
   const buttonSize = useBreakpointValue({ base: "md", md: "lg" });
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -64,7 +153,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
       await baseUrl.post(
         `api/course/${course.id}/open-for-student/${studentId}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       toast({
@@ -93,284 +182,340 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
   return (
     <>
       <Box
-        bg="blue.500"
+        bgGradient={heroBgGradient}
         position="relative"
         overflow="hidden"
         dir="rtl"
+        pt={{ base: 8, md: 12 }}
+        pb={{ base: 10, md: 14 }}
       >
-        {/* Abstract Background Shapes */}
-        <Box position="absolute" inset="0" overflow="hidden">
+        {/* Soft decorative dots */}
+        <Box position="absolute" inset={0} pointerEvents="none">
           <Box
-            position="absolute" top="-20%" left="-10%" w="70%" h="140%"
-            bgGradient="linear(to-br, blue.400, transparent)"
+            position="absolute"
+            top="10%"
+            left="-5%"
+            w="260px"
+            h="260px"
+            bg={dotBlueBg}
             borderRadius="full"
-            opacity={0.3}
-            filter="blur(80px)"
+            filter="blur(30px)"
+            opacity={0.6}
           />
           <Box
-            position="absolute" bottom="-10%" right="-10%" w="50%" h="100%"
-            bgGradient="linear(to-tl, blue.300, transparent)"
+            position="absolute"
+            bottom="-10%"
+            right="-10%"
+            w="260px"
+            h="260px"
+            bg={dotOrangeBg}
             borderRadius="full"
-            opacity={0.2}
-            filter="blur(60px)"
+            filter="blur(30px)"
+            opacity={0.5}
           />
-          {/* Geometric overlay */}
-          <Box position="absolute" top="10%" left="5%" opacity={0.1}>
-            <Icon as={FaChartBar} boxSize={96} color="white" transform="rotate(-15deg)" />
-          </Box>
         </Box>
 
-        <Container maxW="8xl" pt={{ base: 10, md: 16 }} pb={{ base: 16, md: 24 }} position="relative" zIndex={1} px={{ base: 2, sm: 4, md: 6 }}>
+        <Container
+          maxW="8xl"
+          px={{ base: 3, sm: 4, md: 6 }}
+          position="relative"
+          zIndex={1}
+        >
           <Flex
             direction={{ base: "column", lg: "row" }}
             align="center"
             justify="space-between"
-            gap={{ base: 12, lg: 20 }}
+            gap={{ base: 10, lg: 14 }}
           >
-            {/* Left Content (Text) */}
+            {/* Left: Illustration */}
+            <MotionBox
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55 }}
+              flex={1}
+              w="full"
+            >
+              <Box
+                className="bg-blue-500"
+                borderRadius="3xl"
+                boxShadow="2xl"
+                p={{ base: 6, md: 7 }}
+                w={{ base: "full", lg: "520px" }}
+                maxW="100%"
+                position="relative"
+                overflow="hidden"
+              >
+                {/* hexagon */}
+                <Box
+                  mx="auto"
+                  mb={6}
+                  bg={panelBg}
+                  borderRadius="2xl"
+                  p={5}
+                  boxShadow="lg"
+                  style={{
+                    clipPath:
+                      "polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)",
+                    WebkitClipPath:
+                      "polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)",
+                  }}
+                >
+                  <VStack spacing={2}>
+                    <Text fontSize="xs" color={panelTextMuted} fontWeight="700">
+                      {course?.level_name || course?.type_name || "Course"}
+                    </Text>
+                    <Text fontSize="sm" fontWeight="900" color={panelTextMain}>
+                      {course?.title_en || course?.title || "Development"}
+                    </Text>
+                    <HStack spacing={2}>
+                      <Box w="6px" h="6px" bg="blue.500" borderRadius="full" />
+                      <Box w="6px" h="6px" bg="blue.200" borderRadius="full" />
+                      <Box w="6px" h="6px" bg="blue.300" borderRadius="full" />
+                    </HStack>
+                  </VStack>
+                </Box>
+
+                {/* bottom mini panel */}
+                <Box
+                  bg={bottomPanelBg}
+                  borderRadius="2xl"
+                  border="1px solid"
+                  borderColor={bottomPanelBorder}
+                  p={4}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="xs" color="white" fontWeight="800">
+                      NextEdu
+                    </Text>
+                    <Text fontSize="10px" color="whiteAlpha.900">
+                      {course.title}
+                    </Text>
+                  </VStack>
+                  <Box
+                    bg={panelBg}
+                    borderRadius="xl"
+                    w="72px"
+                    h="40px"
+                    overflow="hidden"
+                    border="1px solid"
+                    borderColor={bottomPanelBorder}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Image
+                      src={
+                        course.avatar ||
+                        "https://via.placeholder.com/120x60/0ea5e9/ffffff?text=Course"
+                      }
+                      alt={course.title}
+                      objectFit="cover"
+                      w="100%"
+                      h="100%"
+                    />
+                  </Box>
+                </Box>
+              </Box>
+            </MotionBox>
+
+            {/* Right: Copy */}
             <VStack
               flex={1}
+              spacing={4}
               align={{ base: "center", lg: "flex-start" }}
-              spacing={8}
               textAlign={{ base: "center", lg: "right" }}
               w="full"
             >
-              <MotionBox
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+              <HStack
+                bg={panelBg}
+                borderRadius="full"
+                px={4}
+                py={2}
+                boxShadow="lg"
+                spacing={2}
               >
-                <HStack
-                  bg="white"
-                  px={4} py={2}
-                  borderRadius="full"
-                  shadow="lg"
-                  spacing={3}
-                >
-                  <Badge colorScheme="blue" variant="solid" rounded="full" px={2}>جديد</Badge>
-                  <Text color="blue.600" fontWeight="bold" fontSize="sm">
-                    كورس تعليمي شامل واحترافي
+                <HStack spacing={1}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Icon key={i} as={FaStar} color="yellow.400" boxSize={3} />
+                  ))}
+                </HStack>
+                <Text fontSize="sm" fontWeight="900" color={panelTextMain}>
+                  ({ratingDisplay})
+                </Text>
+                <Text fontSize="xs" color={panelTextMuted}>
+                  تقييم
+                </Text>
+              </HStack>
+
+              <Heading
+                size="lg"
+                color={panelTextMain}
+                fontWeight="900"
+                letterSpacing="tight"
+              >
+                {heroSubtitle}
+              </Heading>
+
+              <Text
+                fontSize={{ base: "3xl", md: "4xl" }}
+                fontWeight="900"
+                lineHeight="1.1"
+                color="blue.700"
+              >
+                {heroTitleLine1}
+                {heroTitleLine2 ? (
+                  <>
+                    <br />
+                    {heroTitleLine2}
+                  </>
+                ) : null}
+              </Text>
+
+              <Text
+                color={copyText}
+                fontSize={{ base: "sm", md: "md" }}
+                lineHeight="1.9"
+                maxW="560px"
+              >
+                {course.description}
+              </Text>
+
+              {/* CTA Buttons like the mock */}
+              <HStack
+                spacing={3}
+                justify={{ base: "center", lg: "flex-start" }}
+                w="full"
+                flexWrap="wrap"
+              >
+                {(isTeacher || isAdmin) && (
+                  <Button
+                    colorScheme="orange"
+                    bg="orange.500"
+                    color="white"
+                    borderRadius="xl"
+                    px={8}
+                    _hover={{ bg: "orange.600" }}
+                    leftIcon={<Icon as={FaUserPlus} />}
+                    onClick={onOpen}
+                  >
+                    تفعيل طالب
+                  </Button>
+                )}
+
+                {isTeacher ? (
+                  <Link to={`/CourseStatisticsPage/${course.id}`}>
+                    <Button
+                      colorScheme="blue"
+                      bg="blue.600"
+                      color="white"
+                      borderRadius="xl"
+                      px={8}
+                      _hover={{ bg: "blue.700" }}
+                      leftIcon={<Icon as={FaChartBar} />}
+                    >
+                      الإحصائيات
+                    </Button>
+                  </Link>
+                ) : isAdmin ? (
+                  <Button
+                    colorScheme="blue"
+                    bg="blue.600"
+                    color="white"
+                    borderRadius="xl"
+                    px={8}
+                    _hover={{ bg: "blue.700" }}
+                    leftIcon={<Icon as={FaUserGraduate} />}
+                    onClick={handleViewEnrollments}
+                  >
+                    المشتركين
+                  </Button>
+                ) : null}
+              </HStack>
+
+              {/* Features row */}
+              <HStack
+                spacing={6}
+                justify={{ base: "center", lg: "flex-start" }}
+              >
+                <HStack spacing={2}>
+                  <Icon as={FaClock} color="blue.500" />
+                  <Text fontSize="sm" fontWeight="900" color={featureText}>
+                    {durationText}
                   </Text>
                 </HStack>
-              </MotionBox>
-
-              <MotionBox
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                w="full"
-              >
-                <Heading
-                  as="h1"
-                  color="white"
-                  fontSize={{ base: "4xl", md: "5xl", lg: "7xl" }}
-                  fontWeight="900"
-                  lineHeight="1.1"
-                  letterSpacing="tight"
-                  mb={4}
-                >
-                  {course.title}
-                  <Text as="span" color="blue.200">.</Text>
-                </Heading>
-                <Text
-                  color="blue.100"
-                  fontSize={{ base: "lg", lg: "2xl" }}
-                  maxW="2xl"
-                  lineHeight="1.6"
-                  mx={{ base: "auto", lg: 0 }}
-                >
-                  {course.description}
-                </Text>
-              </MotionBox>
-
-              {/* Stats Cards */}
-              <MotionBox
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                w="full"
-              >
-                <SimpleGrid columns={{ base: 2, sm: 4 }} spacing={{ base: 2, sm: 4 }} w="full">
-                  {[
-                    { icon: FaClock, label: "12 ساعة", sub: "مدة الكورس" },
-                    { icon: FaUsers, label: "500+", sub: "مشترك" },
-                    { icon: FaStar, label: "4.9", sub: "تقييم" },
-                    { icon: IoIosSchool, label: "معتمد", sub: "شهادة" },
-                  ].map((stat, i) => (
-                    <VStack
-                      key={i}
-                      bg="whiteAlpha.200"
-                      backdropFilter="blur(10px)"
-                      p={{ base: 2, sm: 3, md: 4 }}
-                      borderRadius={{ base: "xl", md: "2xl" }}
-                      align="center"
-                      border="1px solid whiteAlpha.300"
-                      transition="transform 0.2s"
-                      _hover={{ transform: "translateY(-5px)", bg: "whiteAlpha.300" }}
-                    >
-                      <Icon as={stat.icon} color="white" boxSize={{ base: 5, md: 6 }} mb={1} />
-                      <Text color="white" fontWeight="bold" fontSize={{ base: "sm", md: "lg" }}>{stat.label}</Text>
-                      <Text color="blue.200" fontSize="xs">{stat.sub}</Text>
-                    </VStack>
-                  ))}
-                </SimpleGrid>
-              </MotionBox>
-
-              {/* CTAs */}
-              <MotionBox
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                w="full"
-              >
-                <Flex gap={{ base: 2, md: 4 }} wrap="wrap" justify={{ base: "center", lg: "flex-start" }}>
-                  {isTeacher ? (
-                    <Link to={`/CourseStatisticsPage/${course.id}`}>
-                      <Button
-                        size={buttonSize}
-                        h={{ base: "10", md: "14" }}
-                        px={{ base: 4, md: 10 }}
-                        bg="white"
-                        color="blue.600"
-                        fontSize={{ base: "sm", md: "lg" }}
-                        fontWeight="bold"
-                        borderRadius="2xl"
-                        shadow="xl"
-                        _hover={{ transform: "translateY(-2px)", shadow: "2xl" }}
-                        leftIcon={<Icon as={FaChartBar} />}
-                      >
-                        الإحصائيات
-                      </Button>
-                    </Link>
-                  ) : null}
-
-                  {(isTeacher || isAdmin) && (
-                    <>
-                      <Button
-                        size={buttonSize}
-                        h={{ base: "10", md: "14" }}
-                        px={{ base: 4, md: 8 }}
-                        variant="outline"
-                        color="white"
-                        borderColor="whiteAlpha.500"
-                        fontSize={{ base: "sm", md: "lg" }}
-                        borderRadius="2xl"
-                        _hover={{ bg: "whiteAlpha.100", borderColor: "white" }}
-                        onClick={handleViewEnrollments}
-                        leftIcon={<Icon as={FaUserGraduate} />}
-                      >
-                        المشتركين
-                      </Button>
-                      <Button
-                        size={buttonSize}
-                        h={{ base: "10", md: "14" }}
-                        px={{ base: 4, md: 8 }}
-                        bg="blue.700"
-                        color="white"
-                        fontSize={{ base: "sm", md: "lg" }}
-                        borderRadius="2xl"
-                        _hover={{ bg: "blue.800" }}
-                        onClick={onOpen}
-                        leftIcon={<Icon as={FaUserPlus} />}
-                        shadow="lg"
-                      >
-                        تفعيل طالب
-                      </Button>
-                    </>
-                  )}
-                </Flex>
-              </MotionBox>
+                <HStack spacing={2}>
+                  <Icon as={FaUsers} color="blue.500" />
+                  <Text fontSize="sm" fontWeight="900" color={featureText}>
+                    {studentsDisplay} طالب
+                  </Text>
+                </HStack>
+                <HStack spacing={2}>
+                  <Icon as={FaStar} color="blue.500" />
+                  <Text fontSize="sm" fontWeight="900" color={featureText}>
+                    تقييم {ratingDisplay}
+                  </Text>
+                </HStack>
+              </HStack>
             </VStack>
-
-            {/* Right Content (Image) */}
-            <MotionBox
-              initial={{ opacity: 0, scale: 0.9, x: 50 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              flex={1}
-              w="full"
-              position="relative"
-            >
-              <Box
-                position="relative"
-                borderRadius="3xl"
-                overflow="hidden"
-                boxShadow="2xl"
-                border="8px solid"
-                borderColor="whiteAlpha.300"
-              >
-                <AspectRatio ratio={16 / 9}>
-                  <Image
-                    src={course.avatar || "https://via.placeholder.com/800x450/1e3a8a/ffffff?text=Course"}
-                    alt={course.title}
-                    objectFit="cover"
-                  />
-                </AspectRatio>
-
-                {/* Play Button Overlay */}
-                <Center position="absolute" inset="0" bg="blackAlpha.300" className="group" cursor="pointer">
-                  <Flex
-                    align="center" justify="center"
-                    w="20" h="20"
-                    bg="white"
-                    borderRadius="full"
-                    shadow="2xl"
-                    transition="all 0.3s"
-                    _groupHover={{ transform: "scale(1.1)" }}
-                  >
-                    <Icon as={FaPlay} color="blue.500" boxSize={6} ml={1} />
-                  </Flex>
-                </Center>
-              </Box>
-
-              {/* Floating Elements */}
-              <Box
-                position="absolute" top="-5%" right="-5%"
-                bg="white" p={4} borderRadius="2xl" shadow="xl"
-                animation="bounce 3s infinite"
-              >
-                <Icon as={FaStar} color="yellow.400" boxSize={8} />
-              </Box>
-              <Box
-                position="absolute" bottom="-5%" left="-5%"
-                bg="green.400" px={6} py={3} borderRadius="xl" shadow="xl"
-                color="white" fontWeight="bold"
-                display="flex" alignItems="center" gap={2}
-              >
-                <Icon as={FaCheck} />
-                متاح الآن
-              </Box>
-            </MotionBox>
           </Flex>
         </Container>
       </Box>
 
       {/* Activate Student Modal - متجاوب */}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered size={{ base: "full", md: "md" }} scrollBehavior="inside">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        isCentered
+        size={{ base: "full", md: "md" }}
+        scrollBehavior="inside"
+      >
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(5px)" />
         <ModalContent
-          bg="white"
+          bg={useColorModeValue("white", "gray.800")}
           borderRadius={{ base: "none", md: "2xl" }}
           boxShadow="2xl"
           mx={{ base: 0, md: 4 }}
           maxH={{ base: "100vh", md: "90vh" }}
         >
-          <ModalHeader pt={{ base: 4, md: 6 }} pb={{ base: 3, md: 4 }} borderBottomWidth="1px" borderColor="gray.100">
+          <ModalHeader
+            pt={{ base: 4, md: 6 }}
+            pb={{ base: 3, md: 4 }}
+            borderBottomWidth="1px"
+            borderColor="gray.100"
+          >
             <HStack spacing={3}>
               <Center w={10} h={10} bg="blue.100" borderRadius="full">
                 <Icon as={FaUserPlus} color="blue.500" boxSize={5} />
               </Center>
-              <Text fontWeight="bold" fontSize={{ base: "md", md: "xl" }} color="gray.800">تفعيل طالب للكورس</Text>
+              <Text
+                fontWeight="bold"
+                fontSize={{ base: "md", md: "xl" }}
+                color={useColorModeValue("gray.800", "gray.100")}
+              >
+                تفعيل طالب للكورس
+              </Text>
             </HStack>
           </ModalHeader>
           <ModalCloseButton left={4} right="auto" mt={2} />
           <ModalBody py={{ base: 4, md: 8 }}>
             <VStack spacing={{ base: 4, md: 6 }}>
-              <Text fontSize={{ base: "sm", md: "md" }} color="gray.500" textAlign="center">
+              <Text
+                fontSize={{ base: "sm", md: "md" }}
+                color={useColorModeValue("gray.500", "gray.300")}
+                textAlign="center"
+              >
                 قم بإدخال رقم الطالب (ID) لتفعيله في هذا الكورس مباشرة.
               </Text>
               <FormControl isRequired>
-                <FormLabel fontWeight="bold" color="gray.700">رقم الطالب</FormLabel>
+                <FormLabel
+                  fontWeight="bold"
+                  color={useColorModeValue("gray.700", "gray.200")}
+                >
+                  رقم الطالب
+                </FormLabel>
                 <Input
                   type="number"
                   value={studentId}
@@ -378,12 +523,12 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
                   placeholder="مثال: 12345"
                   size={{ base: "md", md: "lg" }}
                   borderRadius="xl"
-                  bg="gray.50"
+                  bg={useColorModeValue("gray.50", "gray.700")}
                   border="2px solid"
-                  borderColor="gray.200"
+                  borderColor={useColorModeValue("gray.200", "gray.600")}
                   _focus={{
                     borderColor: "blue.500",
-                    bg: "white",
+                    bg: useColorModeValue("white", "gray.900"),
                     boxShadow: "0 0 0 1px #3182ce",
                   }}
                 />
@@ -398,7 +543,7 @@ const CourseHeroSection = ({ course, isTeacher, isAdmin, handleViewEnrollments }
               isDisabled={isLoading}
               borderRadius="xl"
               size={{ base: "md", md: "lg" }}
-              color="gray.500"
+              color={useColorModeValue("gray.500", "gray.300")}
             >
               إلغاء
             </Button>

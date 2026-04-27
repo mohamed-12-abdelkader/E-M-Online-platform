@@ -165,6 +165,8 @@ const CourseExamsTab = ({
   const [bulkTextInput, setBulkTextInput] = useState("");
   const [bulkCorrectAnswers, setBulkCorrectAnswers] = useState("");
   const [bulkTextLoading, setBulkTextLoading] = useState(false);
+  const [passageIdInput, setPassageIdInput] = useState("");
+  const [passageLoading, setPassageLoading] = useState(false);
   const clearImageQuestionPreviews = (items) => {
     if (typeof URL === "undefined") return;
     items.forEach((item) => item.preview && URL.revokeObjectURL(item.preview));
@@ -690,10 +692,12 @@ const CourseExamsTab = ({
     setImageQuestionItems([]);
     setBulkTextInput("");
     setBulkCorrectAnswers("");
+    setPassageIdInput("");
     setQuestionManagerModal({ isOpen: false, exam: null, tabIndex: 0 });
     setSingleImageLoading(false);
     setImageQuestionsLoading(false);
     setBulkTextLoading(false);
+    setPassageLoading(false);
   };
 
   const handleOpenQuestionManagerModal = (exam, tabIndex = 0) => {
@@ -900,6 +904,44 @@ const CourseExamsTab = ({
       });
     } finally {
       setBulkTextLoading(false);
+    }
+  };
+
+  const handleSubmitPassageQuestions = async () => {
+    if (!questionManagerModal.exam) return;
+
+    const normalizedPassageId = Number(passageIdInput);
+    if (!normalizedPassageId || normalizedPassageId <= 0) {
+      toast({ title: "يرجى إدخال passageId صحيح", status: "warning" });
+      return;
+    }
+
+    setPassageLoading(true);
+    try {
+      const res = await baseUrl.post(
+        `/api/exams/${questionManagerModal.exam.id}/questions/from-passage`,
+        { passageId: normalizedPassageId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const addedCount = res.data?.added ?? 0;
+      toast({
+        title: res.data?.message || `تمت إضافة ${addedCount} سؤال من القطعة`,
+        status: "success",
+      });
+      if (refreshExams) refreshExams();
+    } catch (error) {
+      toast({
+        title: "تعذر إضافة أسئلة القطعة",
+        description: error.response?.data?.message || "حدث خطأ غير متوقع",
+        status: "error",
+      });
+    } finally {
+      setPassageLoading(false);
     }
   };
 
@@ -1547,6 +1589,7 @@ const CourseExamsTab = ({
                 <Tab>سؤال بصورة واحدة</Tab>
                 <Tab>صور متعددة</Tab>
                 <Tab>مجموعة أسئلة (نص)</Tab>
+                <Tab>إضافة من قطعة</Tab>
               </TabList>
               <TabPanels mt={4}>
                 <TabPanel px={0}>
@@ -1784,6 +1827,42 @@ const CourseExamsTab = ({
                       isLoading={bulkTextLoading}
                     >
                       إضافة مجموعة الأسئلة
+                    </Button>
+                  </VStack>
+                </TabPanel>
+                <TabPanel px={0}>
+                  <VStack spacing={4} align="stretch">
+                    <Box
+                      borderWidth="1px"
+                      borderColor={modalSectionBorder}
+                      borderRadius="lg"
+                      p={{ base: 3, md: 4 }}
+                      bg={modalSectionBg}
+                    >
+                      <Text fontSize="sm" color="gray.600" mb={3}>
+                        أضف كل أسئلة قطعة واحدة مباشرة إلى الامتحان باستخدام معرف القطعة.
+                      </Text>
+                      <FormControl isRequired>
+                        <FormLabel>معرف القطعة (passageId)</FormLabel>
+                        <Input
+                          type="number"
+                          min={1}
+                          placeholder="مثال: 44"
+                          value={passageIdInput}
+                          onChange={(e) => setPassageIdInput(e.target.value)}
+                        />
+                      </FormControl>
+                      <Text fontSize="xs" color="gray.500" mt={2}>
+                        سيتم استدعاء API: /api/exams/:examId/questions/from-passage
+                      </Text>
+                    </Box>
+                    <Button
+                      colorScheme="teal"
+                      alignSelf="flex-end"
+                      onClick={handleSubmitPassageQuestions}
+                      isLoading={passageLoading}
+                    >
+                      إضافة أسئلة القطعة
                     </Button>
                   </VStack>
                 </TabPanel>
