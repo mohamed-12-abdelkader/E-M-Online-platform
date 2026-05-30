@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const baseUrl = axios.create({
-  baseURL: "https://api.next-edu.online/",
+  // baseURL: "https://api.next-edu.online/",
+  baseURL: "http://127.0.0.1:8000",
 });
 
 // Response interceptor to handle token expiration globally
