@@ -25,7 +25,6 @@
     "html2canvas": "^1.4.1",
     "html5-qrcode": "^2.3.8",
     "jspdf": "^2.5.2",
-    "pdfjs-dist": "^5.7.284",
     "plyr": "^3.7.8",
     "qrcode": "^1.5.4",
     "react": "^18.2.0",
